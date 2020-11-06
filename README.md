@@ -44,6 +44,7 @@ This this not a complete migration yet. This still needs to be done:
  * use sass
  * update bootstrap version
 * Migrate all news to markdown
+* Fix links in blog excerpts
 
 ## License
 

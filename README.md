@@ -41,10 +41,9 @@ This this not a complete migration yet. This still needs to be done:
 * Github actions auto-deploy
 * Better downloads integrated with versions tree
 * Review HTML and CSS styling
- * use sass
- * update bootstrap version
+  * use sass
+  * update bootstrap version
 * Migrate all news to markdown
-* Fix links in blog excerpts
 
 ## License
 

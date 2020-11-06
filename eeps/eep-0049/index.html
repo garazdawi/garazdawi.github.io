@@ -1,0 +1,1563 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Fred Hebert &lt;mononcqc(at)ferd(dot)ca&gt;
+Status: Draft
+Type: Standards Track
+Created: 31-Aug-2018
+Post-History:
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 49: <a href="eep-0049.md" title="EEP Source"> Value-Based Error Handling Mechanisms</a></h2>
+
+<h1>Abstract</h1>
+
+<p>This EEP adds a contextual <code>&lt;~</code> operator to <code>begin ... end</code> expressions,
+which allows them to be usable for value-based error handling, based on
+standard <code>{ok, term()} | {error, term()}</code> return value types.</p>
+
+<p>This lets <code>begin ... end</code> become a control flow construct to replace or
+simplify deeply-nested <code>case ... end</code> expressions, and prevent using
+exceptions for control flow.</p>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+
+<h1>Specification</h1>
+
+<p>The current syntax for a <code>begin ... end</code> expression is:</p>
+
+<pre><code>begin
+    Exprs
+end
+</code></pre>
+
+<p>The expression does not have a restricted scope, and is mostly used to
+group multiple distinct expressions as a single block. We propose a new
+type of expressions (denoted <code>UnwrapExprs</code>), only valid within a
+<code>begin ... end</code> expression:</p>
+
+<pre><code>begin
+    Exprs | UnwrapExprs
+end
+</code></pre>
+
+<p><code>UnwrapExprs</code> are defined as having the following form:</p>
+
+<pre><code>Pattern &lt;~ Expr
+</code></pre>
+
+<p>This definition means that <code>UnwrapExprs</code> are only allowed at the
+top-level of <code>begin ... end</code> expressions.</p>
+
+<p>The <code>&lt;~</code> operator takes the value return by <code>Expr</code> and inspects it.
+If the value is a tuple of the form <code>{ok, Val}</code>, it unwraps <code>Val</code> from
+the tuple, and matches it against <code>Pattern</code>.</p>
+
+<p>If the pattern matches, all variables from <code>Pattern</code> are bound in the
+local environment, and the full value <code>{ok, Val}</code> is returned by the
+<code>UnwrapExpr</code>. If the value does not match, a <code>{badunwrap, Val}</code> error
+is raised.</p>
+
+<p>A special case exists when <code>Pattern</code> is the match-all
+variable (<code>_</code>), which on top of allowing the value to be considered a successful
+unwrapping if the returned value from <code>Expression</code> is <code>{ok, term()}</code>,
+it also considers the atom <code>ok</code> to be valid as well.</p>
+
+<p>If the value is a tuple of the form <code>{error, Reason}</code>, then the entire
+<code>begin ... end</code> expression is short-circuited and returns <code>{error,
+Reason}</code>. The variables that were bound in there remain bound, the
+rest are undefined.</p>
+
+<p>The compiler should warn about any variable that is used after the
+<code>begin ... end</code> expression that was bound in or after the first
+<code>UnwrapExpr</code> encountered within the block.</p>
+
+<p>If the value returned does not match any of <code>{ok | error, term()}</code> as a
+type, a <code>{badunwrap, Val}</code> error is raised.</p>
+
+<p>Given the structure described here, the final expression may look like:</p>
+
+<pre><code>begin
+    Foo = bar(),
+    X &lt;~ id({ok, 5}),
+    [H|T] &lt;~ id({ok, [1,2,3]}),
+    ...
+end
+</code></pre>
+
+<p>Do note that to allow easier pattern matching and more intuitive usage,
+the <code>&lt;~</code> operator should have associativity rules lower than <code>=</code>, such that:</p>
+
+<pre><code>begin
+    X = [H|T] &lt;~ exp()
+end
+</code></pre>
+
+<p>is a valid <code>UnwrapExp</code> equivalent to the non-infix form <code>'&lt;~'('='(X, [H|T]),
+exp())</code>, since reversing the priorities would give <code>'='('&lt;~'(X, [H|T]),
+exp())</code>, which would create an <code>UnwrapExp</code> out of context and be invalid.</p>
+
+<h1>Motivation</h1>
+
+<p>Erlang has some of the most flexible error handling available across a
+large number of programming languages. The language supports:</p>
+
+<ol>
+<li>three types of exceptions (<code>throw</code>, <code>error</code>, <code>exit</code>)
+<ul>
+<li>handled by <code>catch Exp</code></li>
+<li>handled by <code>try ... [of ...] catch ... [after ...] end</code></li>
+</ul></li>
+<li>links, <code>exit/2</code>, and <code>trap_exit</code></li>
+<li>monitors</li>
+<li>return values such as <code>{ok, Val} | {error, Term}</code>, <code>{ok, Val} |
+false</code>, or <code>ok | {error, Val}</code></li>
+<li>A combination of one or more of the above</li>
+</ol>
+
+<p>So why should we look to add more? There are various reasons for this,
+incuding trying to reduce deeply nested conditional expressions,
+cleaning up some messy patterns found in the wild, providing a better
+separation of concern when implementing functions, and encouraging more
+standard and idiomatic interfaces.</p>
+
+<h2>Reducing Nesting</h2>
+
+<p>One common pattern that can be seen in Erlang is deep nesting of <code>case
+... end</code> expressions, to check complex conditionals.</p>
+
+<p>Take the following code taken from
+<a href="https://github.com/erlang/otp/blob/a0ae44f324576104760a63fe6cf63e0ca31756fc/lib/mnesia/src/mnesia_backup.erl#L106-L126">Mnesia</a>,
+for example:</p>
+
+<pre><code>commit_write(OpaqueData) -&gt;
+    B = OpaqueData,
+    case disk_log:sync(B#backup.file_desc) of
+        ok -&gt;
+            case disk_log:close(B#backup.file_desc) of
+                ok -&gt;
+                    case file:rename(B#backup.tmp_file, B#backup.file) of
+                       ok -&gt;
+                            {ok, B#backup.file};
+                       {error, Reason} -&gt;
+                            {error, Reason}
+                    end;
+                {error, Reason} -&gt;
+                    {error, Reason}
+            end;
+        {error, Reason} -&gt;
+            {error, Reason}
+end.
+</code></pre>
+
+<p>The code is nested to the extent that shorter aliases must be introduced
+for variables (<code>OpaqueData</code> renamed to <code>B</code>), and half of the code just
+transparently returns the exact values each function was given.</p>
+
+<p>By comparison, the same code could be written as follows with the new
+construct:</p>
+
+<pre><code>commit_write(OpaqueData) -&gt;
+    begin
+        _ &lt;~ disk_log:sync(OpaqueData#backup.file_desc),
+        _ &lt;~ disk_log:close(OpaqueData#backup.file_desc),
+        _ &lt;~ file:rename(OpaqueData#backup.tmp_file, OpaqueData#backup.file),
+        {ok, OpaqueData#backup.file}
+    end.
+</code></pre>
+
+<p>The semantics of this call are entirely identical, except that it is now
+much easier to focus on the flow of individual operations.</p>
+
+<h2>Obsoleting Messy Patterns</h2>
+
+<p>Frequent ways in which people work with sequences of failable operations
+include folds over lists of functions, and abusing list comprehensions.
+Both patterns have heavy weaknesses that makes them less than ideal.</p>
+
+<p>Folds over list of functions use patterns such as those defined in
+<a href="http://erlang.org/pipermail/erlang-questions/2017-September/093575.html">posts from the
+mailing</a>:</p>
+
+<pre><code>pre_check(Action, User, Context, ExternalThingy) -&gt;
+    Checks =
+        [fun check_request/1,
+         fun check_permission/1,
+         fun check_dispatch_target/1,
+         fun check_condition/1],
+    Args = {Action, User, Context, ExternalThingy},
+    Harness =
+        fun
+            (Check, ok)    -&gt; Check(Args);
+            (_,     Error) -&gt; Error
+        end,
+    case lists:foldl(Harness, ok, Checks) of
+        ok    -&gt; dispatch(Action, User, Context);
+        Error -&gt; Error
+    end.
+</code></pre>
+
+<p>This code requires declaring the functions one by one, ensuring the
+entire context is carried from function to function. Since there is no
+shared scope between functions, all functions must operate on all
+arguments.</p>
+
+<p>By comparison, the same code could be implemented with the new construct
+as:</p>
+
+<pre><code>pre_check(Action, User, Context, ExternalThingy) -&gt;
+    begin
+        _ &lt;~ check_request(Context, User),
+        _ &lt;~ check_permissions(Action, User),
+        _ &lt;~ check_dispatch_target(ExternalThingy),
+        _ &lt;~ check_condition(Action, Context),
+        dispatch(Action, User, Context)
+    end
+</code></pre>
+
+<p>And if there was a need for derived state between any two steps, it
+would be easy to weave it in:</p>
+
+<pre><code>pre_check(Action, User, Context, ExternalThingy) -&gt;
+    begin
+        _ &lt;~ check_request(Context, User),
+        _ &lt;~ check_permissions(Action, User),
+        _ &lt;~ check_dispatch_target(ExternalThingy),
+        DispatchData &lt;~ dispatch_target(ExternalThingy),
+        _ &lt;~ check_condition(Action, Context),
+        dispatch(Action, User, Context)
+    end
+</code></pre>
+
+<p>The list comprehension <em>hack</em>, by comparison, is a bit more rare. In
+fact, it is mostly theoretical. Some things that hint at how it could
+work can be found in <a href="https://github.com/erlang/otp/blob/869537a9bf799c8d12fc46c2b413e532d6e3b10c/lib/diameter/test/diameter_examples_SUITE.erl#L254-L266">Diameter test
+cases</a>
+or the <a href="https://github.com/ferd/rebar3_proper/blob/e7eb96498a9d31f41c919474ec6800df62e237e1/src/rebar3_proper_prv.erl#L298-L308">PropEr plugin for
+Rebar3</a>.</p>
+
+<p>Its overal form uses generators in list comprehensions to tunnel a happy
+path:</p>
+
+<pre><code>[Res] =
+    [f(Z) || {ok, W} &lt;- [b()],
+             {ok, X} &lt;- [c(W)],
+             {ok, Y} &lt;- [d(X)],
+             Z &lt;- [e(Y)]],
+Res.
+</code></pre>
+
+<p>This form doesn't see too much usage since it is fairly obtuse and I
+suspect most people have either been reasonable enough not to use it, or
+did not think about it. Obviously the new form would be cleaner:</p>
+
+<pre><code>begin
+    W &lt;~ b(),
+    X &lt;~ c(W),
+    Y &lt;~ d(X),
+    Z = e(Y),
+    f(Z)
+end
+</code></pre>
+
+<p>which on top of it, has the benefit of returning an error value if one
+is found.</p>
+
+<h2>Better Separation of Concerns</h2>
+
+<p>This form is not necessarily obvious at a first glance. To better
+expose it, let's take a look at some functions defined in the
+<a href="https://github.com/erlang/otp/blob/869537a9bf799c8d12fc46c2b413e532d6e3b10c/lib/sasl/src/release_handler.erl#L1894-L1923"><code>release_handler</code> module in
+OTP</a>:</p>
+
+<pre><code>write_releases_m(Dir, NewReleases, Masters) -&gt;
+    RelFile = filename:join(Dir, "RELEASES"),
+    Backup = filename:join(Dir, "RELEASES.backup"),
+    Change = filename:join(Dir, "RELEASES.change"),
+    ensure_RELEASES_exists(Masters, RelFile),
+    case at_all_masters(Masters, ?MODULE, do_copy_files,
+                        [RelFile, [Backup, Change]]) of
+        ok -&gt;
+            case at_all_masters(Masters, ?MODULE, do_write_release,
+                                [Dir, "RELEASES.change", NewReleases]) of
+                ok -&gt;
+                    case at_all_masters(Masters, file, rename,
+                                        [Change, RelFile]) of
+                        ok -&gt;
+                            remove_files(all, [Backup, Change], Masters),
+                            ok;
+                        {error, {Master, R}} -&gt;
+                            takewhile(Master, Masters, file, rename,
+                                      [Backup, RelFile]),
+                            remove_files(all, [Backup, Change], Masters),
+                            throw({error, {Master, R, move_releases}})
+                    end;
+                {error, {Master, R}} -&gt;
+                    remove_files(all, [Backup, Change], Masters),
+                    throw({error, {Master, R, update_releases}})
+            end;
+        {error, {Master, R}} -&gt;
+            remove_files(Master, [Backup, Change], Masters),
+            throw({error, {Master, R, backup_releases}})
+    end.
+</code></pre>
+
+<p>At a glance, it is very difficult to clean up this code: there are 3
+multi-node operations (backing up, updating, and moving release data),
+each of which relies on the previous one to succeed.</p>
+
+<p>You'll also notice that each error requires special handling, reverting
+or removing specific operations on success or on failure. This is not a
+simple question of tunnelling values in and out of a narrow scope.</p>
+
+<p>Another thing to note is that this module, as a whole (and not just the
+snippet presented here) uses <code>throw</code> expressions to operate non-local
+return. The actual point of return handling these is spread through
+various locations in the file:
+<a href="https://github.com/erlang/otp/blob/869537a9bf799c8d12fc46c2b413e532d6e3b10c/lib/sasl/src/release_handler.erl#L381-L388"><code>create_RELEASES/4</code></a>,
+and
+<a href="https://github.com/erlang/otp/blob/869537a9bf799c8d12fc46c2b413e532d6e3b10c/lib/sasl/src/release_handler.erl#L1864-L1881"><code>write_releases_1/3</code></a>
+for example.</p>
+
+<p>The <code>case catch Exp of</code> form is used throughout the file because
+value-based error flow is painful in nested structures.</p>
+
+<p>So let's take a look at how we could refactor this with the new
+construct:</p>
+
+<pre><code>write_releases_m(Dir, NewReleases, Masters) -&gt;
+    RelFile = filename:join(Dir, "RELEASES"),
+    Backup = filename:join(Dir, "RELEASES.backup"),
+    Change = filename:join(Dir, "RELEASES.change"),
+    begin
+        _ &lt;~ backup_releases(Dir, NewReleases, Masters, Backup, Change,
+                             RelFile),
+        _ &lt;~ update_releases(Dir, NewReleases, Masters, Backup, Change),
+        _ &lt;~ move_releases(Dir, NewReleases, Masters, Backup, Change, RelFile)
+    end.
+
+backup_releases(Dir, NewReleases, Masters, Backup, Change, RelFile) -&gt;
+    case at_all_masters(Masters, ?MODULE, do_copy_files,
+                        [RelFile, [Backup, Change]]) of
+        ok -&gt;
+            ok;
+        {error, {Master, R}} -&gt;
+            remove_files(Master, [Backup, Change], Masters)
+            {error, {Master, R, backup_releases}}
+    end.
+
+update_releases(Dir, NewReleases, Masters, Backup, Change) -&gt;
+    case at_all_masters(Masters, ?MODULE, do_write_release,
+                        [Dir, "RELEASES.change", NewReleases]) of
+        ok -&gt;
+            ok;
+        {error, {Master, R}} -&gt;
+            remove_files(all, [Backup, Change], Masters),
+            {error, {Master, R, update_releases}}
+    end.
+
+move_releases(Dir, NewReleases, Masters, Backup, Change, RelFile) -&gt;
+    case at_all_masters(Masters, file, rename, [Change, RelFile]) of
+        ok -&gt;
+            remove_files(all, [Backup, Change], Masters),
+            ok;
+        {error, {Master, R}} -&gt;
+            takewhile(Master, Masters, file, rename, [Backup, RelFile]),
+            remove_files(all, [Backup, Change], Masters),
+            {error, {Master, R, move_releases}}
+    end.
+</code></pre>
+
+<p>The only reasonable way to rewrite the code was to extract all three
+major multi-node operations into distinct functions. The improvements
+are:</p>
+
+<ul>
+<li>The consequence of failing an operation is located near where the
+operation takes place</li>
+<li>The functions have return values that Dialyzer can more easily
+typecheck</li>
+<li>The functions are inherently more testable independently</li>
+<li>Context can still be added and carried on the generalized workflow at
+the parent level</li>
+<li>The chain of successful operations is very obvious and readable</li>
+<li>Exceptions are no longer required to make the code work, but if we
+needed it, only one <code>throw()</code> would be needed in <code>write_release_m</code>,
+therefore separating the flow control details from specific function
+implementations.</li>
+</ul>
+
+<p>As a control experiment, let's try reusing our shorter functions with
+the previous flow:</p>
+
+<pre><code>%% Here is the same done through exceptions:
+write_releases_m(Dir, NewReleases, Masters) -&gt;
+    RelFile = filename:join(Dir, "RELEASES"),
+    Backup = filename:join(Dir, "RELEASES.backup"),
+    Change = filename:join(Dir, "RELEASES.change"),
+    try
+        ok = backup_releases(Dir, NewReleases, Masters, Backup, Change,
+                             RelFile),
+        ok = update_releases(Dir, NewReleases, Masters, Backup, Change),
+        ok = move_releases(Dir, NewReleases, Masters, Backup, Change, RelFile)
+    catch
+        {error, Reason} -&gt; {error, Reason}
+    end.
+
+backup_releases(Dir, NewReleases, Masters, Backup, Change, RelFile) -&gt;
+    case at_all_masters(Masters, ?MODULE, do_copy_files,
+                        [RelFile, [Backup, Change]]) of
+        ok -&gt;
+            ok;
+        {error, {Master, R}} -&gt;
+            remove_files(Master, [Backup, Change], Masters)
+            throw({error, {Master, R, backup_releases}})
+    end.
+
+update_releases(Dir, NewReleases, Masters, Backup, Change) -&gt;
+    case at_all_masters(Masters, ?MODULE, do_write_release,
+                        [Dir, "RELEASES.change", NewReleases]) of
+        ok -&gt;
+            ok;
+        {error, {Master, R}} -&gt;
+            remove_files(all, [Backup, Change], Masters),
+            throw({error, {Master, R, update_releases}})
+    end.
+
+move_releases(Dir, NewReleases, Masters, Backup, Change, RelFile) -&gt;
+    case at_all_masters(Masters, file, rename, [Change, RelFile]) of
+        ok -&gt;
+            remove_files(all, [Backup, Change], Masters),
+            ok;
+        {error, {Master, R}} -&gt;
+            takewhile(Master, Masters, file, rename, [Backup, RelFile]),
+            remove_files(all, [Backup, Change], Masters),
+            throw({error, {Master, R, move_releases}})
+    end.
+</code></pre>
+
+<p>Very little changes in the three distributed functions. However, the weakness
+of this approach is that we have intimately tied implementation details of the
+small functions to their parent's context.  This makes it hard to reason about
+these functions in isolation or to reuse them in a different context.
+Furthermore, the parent function may capture <code>throws</code> not intended for it.</p>
+
+<p>It is my opinion that using value-based flow control, through similar
+refactorings, yields safer and cleaner code, which also happens to have
+far more reduced levels of nesting. It should therefore be possible to
+express more complex sequences of operations without making them any
+harder to read, nor reason about in isolation.</p>
+
+<p>That is in part due to the nesting, but also because we take a more
+compositional approach, where there is no need to tie local functions'
+implementation details to the complexity of their overall pipeline and
+execution context.</p>
+
+<p>It is also the best way to structure code in order to handle all
+exceptions and to provide the context they need as close as possible to
+their source, and as far as possible from the execution flow.</p>
+
+<h2>Encouraging Standards</h2>
+
+<p>In Erlang, <code>true</code> and <code>false</code> are regular atoms that only gained special
+status through usage in boolean expressions. It would be easy to think
+that more functions would return <code>yes</code> and <code>no</code> were it not from control
+flow constructs.</p>
+
+<p>Similarly, <code>undefined</code> has over years of use become a kind of default
+"not found" value. Values such as <code>nil</code>, <code>null</code>, <code>unknown</code>, <code>undef</code>,
+<code>false</code> and so on have seen some use, but a strong consistency in format
+has ended up aligning the community on one value.</p>
+
+<p>When it comes to return values for various functions, <code>{ok, Term}</code> is
+the most common one for positive results that need to communicate a
+value, <code>ok</code> for positive results with no other value than their own
+success, and <code>{error, Term}</code> is most often uses for errors. Pattern
+matching and assertions have enforced that it is easy to know whether a
+call worked or not by its own structure.</p>
+
+<p>However, many success values are still larger tuples: <code>{ok, Val,
+Warnings}</code>, <code>{ok, Code, Status, Headers, Body}</code>, and so on. Such
+variations are not problematic on their own, but it would likely not
+hurt too much either to use <code>{ok, {Val, Warnings}}</code> or <code>{ok, {Code,
+Status, Headers, Body}}</code>.</p>
+
+<p>In fact, using more standard forms could lead to easier generalizations
+and abstractions that can be applied to community-wide code. By choosing
+specific formats for control flow on value-based error handling, we
+explicitly encourage this form of standardization.</p>
+
+<h1>Rationale</h1>
+
+<p>This section will detail the decision-making behind this EEP, including:</p>
+
+<ul>
+<li>Prior Art in Other Languages</li>
+<li>The choice of <code>begin ... end</code> as a construct and its scope</li>
+<li>Why introduce a new operator</li>
+<li>Other disregarded approaches</li>
+<li>The choice of supported values</li>
+<li>The choice of <code>{badunwrap, Val}</code> as a default exception</li>
+</ul>
+
+<p>There's a lot of content to cover here.</p>
+
+<h2>Prior Art in Other Languages</h2>
+
+<p>Multiple languages have value-based exception handling, many of which
+have a strong functional slant.</p>
+
+<h3>Haskell</h3>
+
+<p>The most famous case is possibly Haskell with the <code>Maybe</code> monad, which
+uses either <code>Nothing</code> (meaning the computation returned nothing) or
+<code>Just x</code> (their type-based equivalent of <code>{ok, X}</code>). The union of both
+types is denoted <code>Maybe x</code>. The following examples are taken from
+<a href="https://en.wikibooks.org/wiki/Haskell/Understanding_monads/Maybe">Haskell/Understanding
+monads/Maybe</a>.</p>
+
+<p>Values for such errors are tagged in functions as follows:</p>
+
+<pre><code>safeLog :: (Floating a, Ord a) =&gt; a -&gt; Maybe a
+safeLog x
+    | x &gt; 0     = Just (log x)
+    | otherwise = Nothing
+</code></pre>
+
+<p>Using the type annotations directly, it is possible to extract values
+(if any) through pattern matching:</p>
+
+<pre><code>zeroAsDefault :: Maybe Int -&gt; Int
+zeroAsDefault mx = case mx of
+    Nothing -&gt; 0
+    Just x -&gt; x
+</code></pre>
+
+<p>One thing to note here is that as long as you are not able to find a
+value to substitute for <code>Nothing</code> or that you cannot take a different
+branch, you are forced to carry that uncertainty with you through all
+the types in the system.</p>
+
+<p>This is usually where Erlang stops. You have the same possibilities
+(albeit dynamically checked), along with the possibility of transforming
+invalid values into exceptions.</p>
+
+<p>Haskell, by comparison, offers monadic operations and its <em>do notation</em>
+to abstract over things:</p>
+
+<pre><code>getTaxOwed name = do
+  number       &lt;- lookup name phonebook
+  registration &lt;- lookup number governmentDatabase
+  lookup registration taxDatabase
+</code></pre>
+
+<p>In this snippet, even though the <code>lookup</code> function returns a <code>Maybe x</code>
+type, the do notation abstracts away the <code>Nothing</code> values, letting the
+programmer focus on the <code>x</code> part of <code>Just x</code>. Even though the code is
+written as if we can operate on discrete value, the function
+automatically re-wraps its result into <code>Just x</code> and any <code>Nothing</code> value
+just bypasses operations.</p>
+
+<p>As such, the developer is forced to acknowledge that the whole
+function's flow is conditional to values being in place, but they can
+nevertheless write it mostly as if everything were discrete.</p>
+
+<h3>OCaml</h3>
+
+<p>OCaml supports exceptions, with constructs such as <code>raise (Type
+"value")</code> to raise an exception, and <code>try ... with ...</code> to handle them.
+However, since exceptions wouldn't be tracked by the type system,
+maintainers introduced a <code>Result</code> type.</p>
+
+<p>The type is defined as</p>
+
+<pre><code>type ('a, 'b) result =
+  | Ok of 'a
+  | Error of 'b
+</code></pre>
+
+<p>which is reminiscent of Erlang's <code>{ok, A}</code> and <code>{error, B}</code>. OCaml users
+appear to mostly use pattern matching, combinator libraries, and monadic
+binding to deal with value-based error handling, something similar to
+Haskell's usage.</p>
+
+<h3>Rust</h3>
+
+<p>Rust defines two types of errors: unrecoverable ones (using <code>panic!</code>)
+and recoverable ones, using the <code>Error&lt;T, E&gt;</code> values. The latter is of
+interest to us, and defined as:</p>
+
+<pre><code>enum Result&lt;T, E&gt; {
+    Ok(T),
+    Err(E),
+}
+</code></pre>
+
+<p>Which would intuitively translate to Erlang terms <code>{ok, T}</code> and <code>{error,
+E}</code>. The simple way to handle these in Rust is through pattern matching:</p>
+
+<pre><code>let f = File::open("eep.txt");
+match f {
+    Ok(file) =&gt; do_something(file),
+    Err(error) =&gt; {
+        panic!("Error in file: {:?}", error)
+    },
+};
+</code></pre>
+
+<p>Specific error values have to be well-typed, and it seems that the Rust
+community is still debating implementation details about how to best get
+composability and annotations within a generic type.</p>
+
+<p>However, their workflow for handling these is well-defined already. This
+pattern matching form has been judged too cumbersome. To automatically
+panic on error values, the <code>.unwrap()</code> method is added:</p>
+
+<pre><code>let f = File::open("eep.txt").unwrap();
+</code></pre>
+
+<p>In Erlang, we could approximate this with:</p>
+
+<pre><code>unwrap({ok, X}) -&gt; X;
+unwrap({error, T}) -&gt; exit(T).
+
+F = unwrap(file:open("eep.txt", Opts)).
+</code></pre>
+
+<p>Another construct exists to return errors to caller code more directly,
+without panics, with the <code>?</code> operator:</p>
+
+<pre><code>fn read_eep() -&gt; Result&lt;String, io::Error&gt; {
+    let mut h = File::open("eep.txt")?;
+    let mut s = String::new();
+    h.read_to_string(&amp;mut s)?;
+    Ok(s)
+}
+</code></pre>
+
+<p>Any value <code>Ok(T)</code> encountering <code>?</code> is unwrapped. Any value <code>Err(E)</code>
+encountering <code>?</code> is returned to the caller as-is, as if a <code>match</code> with
+<code>return</code> had been used. This operator however requires that the
+function's type signature use the <code>Result&lt;T, E&gt;</code> type as a return value.</p>
+
+<p>Prior to version 1.13, Rust used the <code>try!(Exp)</code> macro to the same
+effect, but found it too cumbersome. Compare:</p>
+
+<pre><code>try!(try!(try!(foo()).bar()).baz())
+foo()?.bar()?.baz()?
+</code></pre>
+
+<h3>Swift</h3>
+
+<p>Swift supports exceptions, along with type annotations declaring that a
+function may raise exceptions, and <code>do ... catch</code> blocks.</p>
+
+<p>There is a special operator <code>try?</code> which catches any thrown exception
+and turns it into <code>nil</code>:</p>
+
+<pre><code>func someThrowingFunction() throws -&gt; Int {
+    // ...
+}
+let x = try? someThrowingFunction()
+</code></pre>
+
+<p>Here <code>x</code> can either have a value of <code>Int</code> or <code>nil</code>. The data flow is
+often simplified by using <code>let</code> assignments in a conditional expression:</p>
+
+<pre><code>func fetchEep() -&gt; Eep? {
+    if let x = try? fetchEepFromDisk() { return x }
+    if let x = try? fetchEepFromServer() { return x }
+    return nil
+}
+</code></pre>
+
+<h3>Go</h3>
+
+<p>Go has some fairly anemic error handling. It has panics, and error
+values. Error values must be assigned (or explicitly ignored) but they
+can be left unchecked and cause all kinds of issues.</p>
+
+<p>Nevertheless, Go exposed <a href="https://go.googlesource.com/proposal/+/master/design/go2draft-error-handling-overview.md">plans for new error
+handling</a>
+in future versions, which can be interesting.</p>
+
+<p>Rather than changing semantics of their error handling, Go designers are
+mostly considering syntactic changes to reduce the cumbersome nature of
+their errors.</p>
+
+<p>Go programs typically handled errors as follows:</p>
+
+<pre><code>func main() {
+        hex, err := ioutil.ReadAll(os.Stdin)
+        if err != nil {
+                log.Fatal(err)
+        }
+
+        data, err := parseHexdump(string(hex))
+        if err != nil {
+                log.Fatal(err)
+        }
+
+        os.Stdout.Write(data)
+}
+</code></pre>
+
+<p>The new proposed mechanism looks as follows:</p>
+
+<pre><code>func main() {
+    handle err {
+        log.Fatal(err)
+    }
+
+    hex := check ioutil.ReadAll(os.Stdin)
+    data := check parseHexdump(string(hex))
+    os.Stdout.Write(data)
+}
+</code></pre>
+
+<p>The <code>check</code> keyword asks to implicitly check whether the second return
+value <code>err</code> is equal to <code>nil</code> or not. If it is not equal to <code>nil</code>, the
+latest defined <code>handle</code> block is called. It can return the result out to
+exit the function, repair some values, or simply panic, to name a few
+options.</p>
+
+<h3>Elixir</h3>
+
+<p>Elixir has a slightly different semantic approach to error handling compared
+to Erlang. Exceptions are discouraged for control flow (while Erlang
+specifically uses <code>throw</code> for it), and the <code>with</code> macro is introduced:</p>
+
+<pre><code>with {:ok, var} &lt;- some_call(),
+     {:error, _} &lt;- fail(),
+     {:ok, x, y} &lt;- parse_name(var)
+do
+    success(x, y, var)
+else
+    {:error, err} -&gt; handle(err)
+    nil -&gt; {:error, nil}
+end
+</code></pre>
+
+<p>The macro allows a sequence of pattern matches, after which the ˋdo ...ˋ
+block is called. If any of the pattern matches fails, the failing value
+gets re-matched in the optional ˋelse ... end` section.</p>
+
+<p>This is the most general control flow in this document, being fully
+flexible with regards to which values it can handle. This was done in
+part because there is not a strong norm regarding error or valid values
+in either the Erlang nor Elixir APIs, at least compared to other
+languages here.</p>
+
+<p>This high level of flexibility has been criticized in some instances as
+being a bit confusing: it is possible for users to make error-only
+flows, success-only flows, mixed flows, and consequently the ˋelseˋ
+clause can become convoluted.</p>
+
+<p>The <a href="https://github.com/CrowdHailer/OK">OK library</a> was released to
+explicitly narrow the workflow to well-defined errors. It supports three forms,
+the first of which is the <code>for</code> block:</p>
+
+<pre><code>OK.for do
+  user &lt;- fetch_user(1)
+  cart &lt;- fetch_cart(1)
+  order = checkout(cart, user)
+  saved_order &lt;- save_order(order)
+after
+  saved_order
+end
+</code></pre>
+
+<p>It works by <em>only</em> matching on <code>{:ok, val}</code> to keep moving forwards when
+using the <code>&lt;-</code> operator: the <code>fetch_user/1</code> function above must return
+<code>{:ok, user}</code> in order for the code to proceed. The <code>=</code> operator is
+allowed for pattern matches the same way it usually does within Elixir.</p>
+
+<p>Any return value that matches <code>{:error, t}</code> ends up returning directly
+out of the expression. The <code>after ... end</code> section takes the last value
+returned, and if it isn't already in a tuple of the form <code>{:ok val}</code>, it
+wraps it as such.</p>
+
+<p>The second variant is the <code>try</code> block:</p>
+
+<pre><code>OK.try do
+  user &lt;- fetch_user(1)
+  cart &lt;- fetch_cart(1)
+  order = checkout(cart, user)
+  saved_order &lt;- save_order(order)
+after
+  saved_order
+rescue
+  :user_not_found -&gt; {:error, missing_user}
+end
+</code></pre>
+
+<p>This variant will capture exceptions as well (in the <code>rescue</code> block),
+and will not re-wrap the final return value in the <code>after</code> section.</p>
+
+<p>The last variant for the library is the pipe:</p>
+
+<pre><code>def get_employee_data(file, name) do
+  {:ok, file}
+  ~&gt;&gt; File.read
+  ~&gt; String.upcase
+end
+</code></pre>
+
+<p>The goal of this variant is to simply thread together operations that
+could result in either a success or error. The <code>~&gt;&gt;</code> operator matches
+and returns an <code>{:ok, term}</code> tuple, and the <code>~&gt;</code> operator wraps a value
+into an <code>{:ok, term}</code> tuple.</p>
+
+<h2>Choosing <code>begin ... end</code> Expressions</h2>
+
+<p>Abstractions over error flow requires to define a scope limiting the
+way flow is controlled. Before choosing the <code>begin ... end</code> expression,
+the following items needed consideration:</p>
+
+<ol>
+<li>what is the scope we need to cover</li>
+<li>what is the format of the structure to use</li>
+<li>why ending up with <code>begin ... end</code></li>
+</ol>
+
+<h3>Scoping Limits</h3>
+
+<p>In the languages mentioned earlier, two big error handling categories
+seem to emerge.</p>
+
+<p>The first group of language seems to track their error handling at the
+function level. For example, Go uses <code>return</code> to return early from the
+current function.  Swift and Rust also scope their error handling
+abstractions to the current function, but they also make use of their
+type signatures to keep information about the control flow
+transformations taking place. Rust uses the <code>Result&lt;T, E&gt;</code> type
+signature to define what operations are valid, and Swift asks of
+developers that they either handle the error locally, or annotate the
+function with <code>throws</code> to make things explicit.</p>
+
+<p>On the other hand, Haskell's do notation is restricted to specific
+expressions, and so are all of Elixir's mechanisms.</p>
+
+<p>Erlang, Haskell, and Elixir all primarily use recursion as an iteration
+mechanism, and (outside of Haskell's monadic constructs) do not support
+<code>return</code> control flow; it is conceptually more difficult for a <code>return</code>
+(or <code>break</code>) to be useful when iteration requires recursion:
+"returning" by exiting the current flow may not bail you out of what the
+programmer might consider a loop, for example.</p>
+
+<p>Instead, Erlang would use <code>throw()</code> exceptions as a control flow
+mechanism for non-local return, along with a <code>catch</code> or a <code>try ...
+catch</code>. Picking a value-based error handling construct that acts at the
+function level would not necessarily be very interesting since almost
+any recursive procedure would still require using exceptions.</p>
+
+<p>As such, it feels simpler to use a self-contained construct built to
+specifically focus on sequences of operations that contain value-based
+errors.</p>
+
+<h3>Format of Structure</h3>
+
+<p>Prior attempts at abstracting value-based error handling in Erlang
+overloaded special constructs with parse transforms in order to provide
+specific workflows.</p>
+
+<p>For example, the <a href="https://github.com/ferd/fancyflow"><code>fancyflow</code></a>
+library tried to abstract the following code:</p>
+
+<pre><code>sans_maybe() -&gt;
+    case file:get_cwd() of
+        {ok, Dir} -&gt;
+            case
+                file:read_file(
+                  filename:join([Dir, "demo", "data.txt"]))
+            of
+                {ok, Bin} -&gt;
+                    {ok, {byte_size(Bin), Bin}};
+                {error, Reason} -&gt;
+                    {error, Reason}
+            end;
+        {error, Reason} -&gt;
+            {error, Reason}
+    end.
+</code></pre>
+
+<p>as:</p>
+
+<pre><code>-spec maybe() -&gt; {ok, non_neg_integer()} | {error, term()}.
+maybe() -&gt;
+    [maybe](undefined,
+            file:get_cwd(),
+            file:read_file(filename:join([_, "demo", "data.txt"])),
+            {ok, {byte_size(_), _}}).
+</code></pre>
+
+<p>And Erlando would replace:</p>
+
+<pre><code>write_file(Path, Data, Modes) -&gt;
+    Modes1 = [binary, write | (Modes -- [binary, write])],
+    case make_binary(Data) of
+        Bin when is_binary(Bin) -&gt;
+            case file:open(Path, Modes1) of
+                {ok, Hdl} -&gt;
+                    case file:write(Hdl, Bin) of
+                        ok -&gt;
+                            case file:sync(Hdl) of
+                                ok -&gt;
+                                    file:close(Hdl);
+                                {error, _} = E -&gt;
+                                    file:close(Hdl),
+                                    E
+                            end;
+                        {error, _} = E -&gt;
+                            file:close(Hdl),
+                            E
+                    end;
+                {error, _} = E -&gt; E
+            end;
+        {error, _} = E -&gt; E
+    end.
+</code></pre>
+
+<p>With monadic constructs in list comprehensions:</p>
+
+<pre><code>write_file(Path, Data, Modes) -&gt;
+    Modes1 = [binary, write | (Modes -- [binary, write])],
+    do([error_m ||
+        Bin &lt;- make_binary(Data),
+        Hdl &lt;- file:open(Path, Modes1),
+        Result &lt;- return(do([error_m ||
+                             file:write(Hdl, Bin),
+                             file:sync(Hdl)])),
+        file:close(Hdl),
+        Result]).
+</code></pre>
+
+<p>Those cases specifically aimed for a way to write sequences of
+operations where pre-defined semantics are bound by a special context,
+but are limited to overloading constructs rather than introducing new
+ones.</p>
+
+<p>By comparison, most of Erlang's control flow expressions follow similar
+structures. See the following most common ones:</p>
+
+<pre><code>case ... of
+    Pattern [when Guard] -&gt; Expressions
+end
+
+if
+   Guard -&gt; Expressions
+end
+
+begin
+    Expressions
+end
+
+receive
+    Pattern [when Guard] -&gt; Expressions
+after                                               % optional
+    IntegerExp -&gt; Expressions
+end
+
+try
+    Expressions
+of                                                  % optional
+    Pattern [when Guard] -&gt; Expressions
+catch                                               % optional
+    ExceptionPattern [when Guard] -&gt; Expressions
+after                                               % optional
+    Expressions
+end
+</code></pre>
+
+<p>It therefore logically follows that if we were to add a new construct,
+it should be of the form</p>
+
+<pre><code>&lt;keyword&gt;
+    ...
+end
+</code></pre>
+
+<p>The questions remaining are: which keyword to choose, and which clauses
+to support.</p>
+
+<h3>Choosing <code>begin ... end</code></h3>
+
+<p>Initially, a format similar to Elixir's <code>with</code> expression was being
+considered:</p>
+
+<pre><code>&lt;keyword&gt;
+    Expressions | UnwrapExpressions
+of                                              % optional
+    Pattern [when Guard] -&gt; Expressions
+end
+</code></pre>
+
+<p>With this construct, the basic <code>&lt;keyword&gt; ... end</code> form would follow the
+currently proposed semantics, but the <code>of ...</code> section would allow
+pattern matching on any return value from the expression, whether
+<code>{error, Reason}</code> or any non-exception value returned by the last
+expression in the main section.</p>
+
+<p>This form would be in line with what <code>try ... of ... catch ... end</code>
+allows: once the main section is covered, more work can be done within
+the same construct.</p>
+
+<p>However, <code>try ... of ... catch ... end</code> has a specific reason for
+introducing the patterns and guards: protected code impacting tail
+recursion.</p>
+
+<p>In a loop such as:</p>
+
+<pre><code>map_nocrash(_, []) -&gt; [];
+map_nocrash(F, [H|T]) -&gt;
+    try
+        F(H)
+    of
+        Val -&gt; [Val | map_nocrash(F, T)]
+    catch
+        _:_ -&gt; map_nocrash(F, T)
+    end.
+</code></pre>
+
+<p>The <code>of</code> section allows to continue doing work in the case no exception
+has happened, <em>without</em> having to protect more than the current scope of
+the function, nor preventing tail-recursion by forcing a presence of
+each iteration on the stack.</p>
+
+<p>No such concerns exist for value-based error handling, and while the
+ <code>of ... end</code> section might be convenient at times, it is strictly not
+necessary for the construct to be useful.</p>
+
+<p>What was left was to choose a name. Initially, the <code>&lt;keyword&gt;</code> value
+chosen was <code>maybe</code>, based on the Maybe monad. The problem is that
+introducing any new keyword carries severe risks to backwards
+compatibility.</p>
+
+<p>For example, all of the following words were considered:</p>
+
+<pre><code>======= ================= =========================================
+Keyword Times used in OTP Rationale
+         as a function
+======= ================= =========================================
+maybe   0                 can clash with existing used words,
+                           otherwise respects the spirit
+option  88                definitely clashes with existing code
+opt     68                definitely clashes with existing code
+check   49                definitely clashes with existing code
+let     0                 word is already reserved and free, but
+                           makes no sense in context
+cond    0                 word is already reserved and free, may
+                           make sense, but would prevent the
+                           addition of a conditional expression
+given   0                 could work, kind of respects the context
+when    0                 reserved for guards, could hijack in new
+                          context but may be confusing
+begin   0                 carries no conditional meaning, mostly
+                          free for overrides
+</code></pre>
+
+<p>Initially, this proposal expected to use the <code>maybe</code> keyword:</p>
+
+<pre><code>maybe
+    Pattern &lt;op&gt; Exp,
+    ...
+of
+    Pattern -&gt; Exp  % optional
+end
+</code></pre>
+
+<p>but for the reasons mentioned in the previous section, the <code>of ...</code>
+section became non-essential.</p>
+
+<p>Then, with the strong requirements for backwards compatibility making it
+difficult to introduce new keywords, along with the possibility to reuse
+<code>begin</code> without changing any of its current behavior, this form became the
+most interesting one.</p>
+
+<p>The term <code>begin</code> is also reminiscent of transactions and abortive
+contexts, which means that although not an ideal fit for value-based
+error flow, it is also not entirely outlandish and could accept the new
+added optional semantics without being too out of place.</p>
+
+<h2>A New Infix Operator</h2>
+
+<p>In order to form <code>UnwrapExpr</code>, there is a need for a mechanism to
+introduce pattern matching with distinct semantics from regular pattern
+matching.</p>
+
+<p>A naive parse transform approach with fake function calls would be the
+most basic way to go:</p>
+
+<pre><code>begin
+    unwrap(Pattern, Exp),
+    % variables bound in Pattern are available in scope
+end
+</code></pre>
+
+<p>However, this would introduce pattern matches in non-left-hand-side
+positions and make nesting really weird to deal with without exposing
+parse transform details and knowing how the code is translated.</p>
+
+<p>A prefix keyword such <code>let &lt;Pattern&gt; = &lt;Exp&gt;</code> could also be used.
+Such keywords unfortunately suffer the same issues as <code>maybe</code> would
+have, and <code>let</code> typically has different implications.</p>
+
+<p>An infix operator seems like a good fit since pattern matching already
+uses them in multiple forms:</p>
+
+<ul>
+<li><code>=</code> is used for pattern matches. Overloading it in error flow would
+prevent regular matching from being used</li>
+<li><code>:=</code> is used for maps; using it could work, but would certainly be
+confusing when handling nested maps in a pattern</li>
+<li><code>&lt;-</code> could make sense. It is already restricted in scope to list and
+binary comprehensions and would therefore not clash nor be confused.
+However, the existing semantics of the operator imply a literal
+pattern match working like a filter. We're looking for the filter-like
+approach, but want to introduce implicit elements (<code>{ok|error, ...}</code>)</li>
+<li><code>&lt;=</code> same as <code>&lt;-</code> but for binary generators</li>
+</ul>
+
+<p>It would make sense to check for new operators specifically for this
+context given the semantics:</p>
+
+<pre><code>=======  ===========================================================
+Operator Description
+=======  ===========================================================
+#=       no clash with other syntax (maps, records, integers), no
+         clash with abstract patterns EEP either.
+!=       No clash with message passing, but is sure to annone used
+         to C-style inequality checks
+&lt;~       Works with no known conflict; shouldn't clash with ROK's
+         frame proposals (uses infix ~ and &lt; &gt; as delimiters).
+&lt;|       reverse pipe operator. No obvious clash either
+</code></pre>
+
+<p>There is no strong argument for or against most of these. The choice of
+<code>&lt;~</code> mostly comes down to having similarity to list comprehensions' <code>&lt;-</code>
+operator both in semantics and appearance, although being different
+overall.</p>
+
+<h3>Operator Priority</h3>
+
+<p>Within the expected usage of the unwrap expressions, the <code>&lt;~</code> operator
+needs to have a precedence rule such that:</p>
+
+<pre><code>X = {Y,X} &lt;~ &lt;Exp&gt;
+</code></pre>
+
+<p>Is considered a valid pattern match operation with <code>X = {Y,X}</code> being the
+whole left-hand-side pattern, such that operation priorities are:</p>
+
+<pre><code>lhs &lt;~ rhs
+</code></pre>
+
+<p>Instead of</p>
+
+<pre><code>lhs = rhs &lt;~ &lt;...&gt;
+</code></pre>
+
+<p>In all other regards, the precedence rules should be the same as <code>=</code> in
+order to provide the most unsurprising experience possible.</p>
+
+<h2>Other Disregarded Approaches and Variations</h2>
+
+<p>Other approaches were considered in making this proposal, and ultimately
+disregarded.</p>
+
+<h3>Elixir-Like Patterns in <code>with</code></h3>
+
+<p>The Elixir approach is fairly comprehensive, and rather powerful. Rather
+than handling success or errors, it generalizes over pattern matching as
+a whole.</p>
+
+<p>To explore bringing these semantics into the current proposed construct,
+we will use the <code>&lt;-</code> operator from list comprehensions to mean "match
+the whole pattern or exit the block". So instead of</p>
+
+<pre><code>begin
+    {X,Y} &lt;~ id({ok, {X,Y}})
+    ...
+end
+</code></pre>
+
+<p>We would have to write:</p>
+
+<pre><code>begin
+    {ok, {X,Y}} &lt;- id({ok, {X,Y}})
+    ...
+end
+</code></pre>
+
+<p>While this mechanism is fine to handle skipping pattern, it has some
+problematic weaknesses in the context of error handling.</p>
+
+<p>One example of this could be taken from the OTP pull request that adds
+new return value to packet reading based on inet options:
+<a href="https://github.com/erlang/otp/pull/1950">#1950</a>.</p>
+
+<p>This PR adds a possible value for packet reception to the current form:</p>
+
+<pre><code>{ok, {PeerIP, PeerPort, Data}}
+</code></pre>
+
+<p>To ask make it possible to alternatively get:</p>
+
+<pre><code>{ok, {PeerIP, PeerPort, AncData, Data}}
+</code></pre>
+
+<p>Based on socket options set earlier. So let’s put it in context for the
+current proposal:</p>
+
+<pre><code>begin
+    {X,Y} &lt;~ id({ok, {X,Y}}),
+    {PeerIP, PeerPort, Data} &lt;~ gen_udp:recv(...),
+    ...
+end
+</code></pre>
+
+<p>If <code>AncData</code> is received, an exception is raised: the value was not an
+error but didn’t have the shape or type expected for the successful
+pattern to match. Errors are still returned properly by exiting the
+<code>begin ... end</code> block, and we ensure correctness in what we handle and
+return.</p>
+
+<p>However, had we used this generalized form:</p>
+
+<pre><code>begin
+    {ok, {X,Y}} &lt;- id({ok, {X,Y}}),
+    {ok, {PeerIP, PeerPort, Data}} &lt;- gen_udp:recv(...),
+    ...
+end
+</code></pre>
+
+<p>Since the <code>&lt;-</code> operator would force a return on any non-matching value,
+the whole expression, if the socket is misconfigured to return
+<code>AncData</code>, would return <code>{ok, {PeerIP, PeerPort, AncData, Data}}</code> on a
+failure to match.</p>
+
+<p>Basically, an unexpected but good result could be returned from a
+function using the <code>begin ... end</code> construct, which would look like a
+success while it was actually a complete failure to match and handle the
+information given.  This is made even more ambiguous when data has the
+right shape and type, but a set of bound variables ultimately define
+whether the match succeeds or fails (in the case of a UDP socket,
+returning values that comes from the wrong peer, for example).</p>
+
+<p>In worst cases, It could let raw unformatted data exit a conditional
+pipeline with no way to detect it after the fact, particularly if later
+functions in <code>begin ... end</code> apply transformations to text, such as
+anonymizing or sanitizing data. This could be pretty unsafe
+and near impossible to debug well.</p>
+
+<p>Think for example of:</p>
+
+<pre><code>-spec fetch() -&gt; iodata().
+fetch() -&gt;
+    begin
+        {ok, B = &lt;&lt;_/binary&gt;&gt;} &lt;- f(),
+        true &lt;- validate(B),
+        {ok, sanitize(B)}
+    end.
+</code></pre>
+
+<p>If the value returned from <code>f()</code> turns out to be a list (say it’s a
+misconfigured socket using <code>list</code> instead of <code>binary</code> as an option), the
+expression will return early, the <code>fetch()</code> function will still return
+<code>{ok, iodata()}</code> but you couldn’t know as a caller whether it is the
+transformed data or non-matching content. It would not be obvious to
+most developers either that this could represent a major security risk
+by allowing unexpected data to be seen as clean data.</p>
+
+<p>This specific type of error is in fact possible in Elixir, but no such
+warning appears to have been circulating within its community so far.</p>
+
+<p>It is basically a risky pattern if you want your code to be strict or
+future-proof in the context of error handling. The current proposal, by
+comparison, would raise an exception on unexpected good values, therefore
+preventing ways to sneak such data into your control flow:</p>
+
+<pre><code>-spec fetch() -&gt; iodata().
+fetch() -&gt;
+    begin
+        B = &lt;&lt;_/binary&gt;&gt; &lt;~ f(),
+        _ &lt;~ validate(B), % returns ok if valid
+        {ok, sanitize(B)}
+    end.
+</code></pre>
+
+<p>Here misconfigured sockets won’t result in unchecked data passing trough
+your app.</p>
+
+<p>The only way to give a similar amount of safety to the general pattern
+approach is through an <code>else</code> clause which handles all known patterns to
+implicitly exclude all unknown patterns:</p>
+
+<pre><code>-spec fetch() -&gt; iodata().
+fetch() -&gt;
+    begin
+        {ok, B = &lt;&lt;_/binary&gt;&gt;} &lt;- f(),
+        true &lt;- validate(B),
+        {ok, sanitize(B)}
+    else
+        {error, _} = E -&gt; E;
+        false -&gt; false
+    end.
+</code></pre>
+
+<p>This is the solution Elixir uses as well. Unless the clause is mandatory
+(it is not in Elixir), this level of additional matching is purely
+optional; the developer has no obvious incentive to go and handle these
+errors, and if they do, the exception raised will be through a missing
+clause in the <code>else</code> section, which will obscure its origin and line
+nubmer.</p>
+
+<p>It would also allow some functions to return unexpected values from
+other ones. In the previous example, <code>f()</code> must be allowed to return
+<code>false</code> if <code>validate(B)</code> may return it. There is no way to separate such
+clauses.</p>
+
+<p>None of these problems exist as long as we normalize the matching
+mechanism on well-defined "good" and "bad" values (<code>ok | {ok, Term}</code> and
+<code>{error, Term}</code>). This separation between good and bad values allows to
+know what needs to return early without conflicts with what is a valid
+or invalid pattern.</p>
+
+<p>From the moment we decide to pick such values, unwrapping them in
+patterns can make code clearer: <code>{error, X} &lt;- exp()</code> would be a pattern
+that can never match by definition, since only good values are allowed
+to go through and all errors return early. Automatically unwrapping good
+values prevents such nonsensical expressions.</p>
+
+<p>These tricky corner cases explain why the <code>&lt;~</code> pattern is preferred to
+the general <code>&lt;-</code> pattern's semantics in this proposal.</p>
+
+<h3>Simplifying Chaining an Pipelining</h3>
+
+<p>One approach or pain point frequently brough up about Erlang concern
+pipelining of operations. Could it be possible to make some
+operations easier to chain?</p>
+
+<p>If we take a set of functions <code>f()</code>, <code>g()</code>, and <code>h()</code> that all return
+<code>{ok | error, _}</code> tuples, current day Erlang requires:</p>
+
+<pre><code>{ok, X} = f(),
+{ok, Y} = g(X),
+{ok, Z} = h(Y),
+Z
+</code></pre>
+
+<p>Could there be an easier way to handle this type of chaining, based on
+say, an <code>unwrap</code> function:</p>
+
+<pre><code>unwrap({ok, X}) -&gt; X.
+
+main() -&gt;
+    unwrap(h(unwrap(g(unwrap(f()))))).
+</code></pre>
+
+<p>And it appeared that generally, this turns out to be simple enough to do
+with the earlier fold approach we had mentioned.</p>
+
+<p>Overall, the various existing mechanisms appeared slightly inconvenient,
+but not inconvenient enough to be worth adding a whole new language
+mechanism just for it.</p>
+
+<h3><code>cond</code> and <code>cond let</code></h3>
+
+<p>Anthony Ramine recommended looking into reusing the already reserved
+<code>cond</code> and <code>let</code> keywords. He mentioned Rust planning something based on
+these and how it could be ported to Erlang based on his prior work on
+supporting the <code>cond</code> construct within the language.</p>
+
+<p>The proposed mechanism would look like:</p>
+
+<pre><code>cond
+    X &gt; 5 -&gt; % regular guard
+        Exp;
+    f() &lt; 18 -&gt; % function used in guard, as originally planned
+        Exp;
+    let {ok, Y} = exp(), Y &lt; 5 -&gt;
+        Exp
+end
+</code></pre>
+
+<p>The last clause would allow <code>Y</code> to be used in its own branch only if it
+matches and all guards succeed; if the binding fails, a switch is
+automatically made to the next branch.</p>
+
+<p>As such, more complex sequences of operations could be covered as:</p>
+
+<pre><code>cond
+    let {ok, _} = call1(),
+    let {ok, _} = call2(),
+    let Res = call3() -&gt;
+        Res;
+    true -&gt;
+        AlternativeBranch
+end
+</code></pre>
+
+<p>This mechanism is, in my opinion, worth exploring and maybe adding to
+the language, but on its own does not adequately solve error handling
+flow issues since errors cannot be exracted easily from failing
+operations.</p>
+
+<h3>Auto-Wrapping Return Values</h3>
+
+<p>Auto-wrapping return values is something the Elixir's <code>OK</code> library does,
+as well as Haskell's do notation, but that neither Rust nor Swift does.</p>
+
+<p>It seems that there is no very clear consensus on what could be done.
+Thus, for the simplicity of the implementation and backards
+compatibility of the <code>begin ... end</code> expression, just returning the
+value as-is without auto-wrapping seems sensible.</p>
+
+<p>It would therefore be up to the developer to just return whatever value
+best matches their function's type signature, making easier to still
+integrate return values with the system they have.</p>
+
+<p>It also lets sequences of operations potentially return <code>ok</code> on success,
+even if their individual functions returned values such as <code>true</code>, for
+example, rather than <code>{ok, true}</code>.</p>
+
+<h2>The choice of supported match values</h2>
+
+<p>It is kind of straightforward why <code>{ok, V}</code> and <code>{error, T}</code> are used in
+pattern matches as error values: they're the most standard way to
+communicate a value and an error in non-overlapping patterns whichever
+way you want to match.</p>
+
+<p>On the other hand, it is less obvious why <code>_ &lt;~ Exp</code> should positively
+match on <code>ok</code> alone, and why, for example, <code>error</code> as an atom would
+raise an exception as not matching any patterns.</p>
+
+<p>The reason <code>ok</code> is considered valid can be found in comparing common
+Erlang return values with their matches in other languages.</p>
+
+<p>The following functions return <code>ok</code> when everything went well but
+nothing is worth reporting. The list is not exhaustive:</p>
+
+<ul>
+<li><code>lists:foreach/2</code></li>
+<li>over 25 functions in the <code>file</code> module</li>
+<li>most functions in <code>disk_log</code></li>
+<li>most functions sending data or handling control of sockets and ports</li>
+<li>most output functions from the <code>io</code> module</li>
+<li>logging functions in the <code>logger</code> module</li>
+<li>functions from the <code>applications</code> module interacting with config and
+starting or loading applications</li>
+</ul>
+
+<p>The pattern is fully entrenched as a core pattern in Erlang and OTP, and
+very attached to side-effectful operations.</p>
+
+<p>The interesting aspect comes from seeing what Rust does for similar
+functions, which is just return their own unit type, denoted as <code>()</code>.
+When used with the <code>Result</code> types, it is to be returned a <code>OK(())</code>.</p>
+
+<p>The Erlang equivalent would probably be <code>{ok, undefined}</code>, but <code>ok</code> as a
+single atom currently plays that role fine, and so it was decided to
+support it; it will let error flow integrate well with side-effectful
+functions.</p>
+
+<p>The same cannot be said of <code>error</code> as an atom result. Most errors can
+and should return context with them that qualifies the error result,
+since they often have more than one reason to fail. As evidence for this
+line of thought, it is currently not possible to raise exceptions
+without a <code>Reason</code>, whether done through <code>throw/1</code>, <code>error/1</code>,
+<code>exit/1-2</code>, or <code>raise/3</code>.</p>
+
+<p>Aligning with the standard practices in the Erlang language validate
+using <code>_ &lt;~ Exp</code> as a pattern suitable for <code>ok</code>, and only this pattern
+since it allows to basically match on what would be a non-existing value
+that wouldn't need to be bound in further contexts.</p>
+
+<p>Discussions on earlier drafts of this proposal asked whether it would
+make sense to choose all good values to be those in a tuple starting
+with <code>ok</code> (<code>ok | {ok, _} | {ok, _, _} | ...</code>), and all error values all
+those starting with error (<code>{error, _} | {error, _, _} | ...</code>).</p>
+
+<p>This approach would allow more flexibility on possible error values, but
+would make composition more difficult. Let's take the following three
+function signatures as an example:</p>
+
+<pre><code>-spec f() -&gt; ok | {error, term()}.
+-spec g() -&gt; {ok, term()} | {error, term(), term()}.
+-spec h() -&gt; {ok, term(), [warning()]} | {error, term()}.
+</code></pre>
+
+<p>If a single <code>begin ... end</code> block calls to these as the potential return
+value of a function, the caller now has to have the following type
+specification:</p>
+
+<pre><code>-spec caller() -&gt; ok | {ok, term()} | {ok, term(), [warning()]}
+                | {error, term()} | {error, term(), term()}.
+</code></pre>
+
+<p>As you call more and more functions and compose them together, the
+cross-section of what is a valid returning function grows in complexity
+and may even end up giving more trouble to tools such as Dialyzer.</p>
+
+<p>By comparison, the currently suggested mechanism can never get more
+complex than:</p>
+
+<pre><code>-spec caller() -&gt; ok | {ok, term()} | {error, term()}.
+</code></pre>
+
+<p>Or, if we prefer parametrized types:</p>
+
+<pre><code>-type result(E) :: ok | {error, E}.
+-type result(R, E) :: {ok, R} | {error, E}.
+
+-spec caller() -&gt; result(term()) | result(term(), term()).
+</code></pre>
+
+<p>By restricting the possible patterns (and therefore return values), we
+can ensure better long-term composability and easier understanding of
+various such expressions.</p>
+
+<h2>Choosing Exceptions Raised</h2>
+
+<p>The exception format proposed here is <code>{badunwrap, Value}</code>. This format
+is chosen following Erlang/OTP standards:</p>
+
+<ul>
+<li><code>badarg</code></li>
+<li><code>badarith</code></li>
+<li><code>badfun</code></li>
+<li><code>{badmatch, Val}</code></li>
+</ul>
+
+<p>Since "unwrapping" is how the kind of operation where <code>X</code> is extracted
+from <code>{ok, X}</code>, the name <code>badunwrap</code> was chosen, along with the
+mismatching value being borrowed from <code>{badmatch, _}</code>.</p>
+
+<h1>Backwards Compatibility</h1>
+
+<p>The possibility of an early exit from a <code>begin ... end</code> expression
+means that variables declared within its scope are now potentially
+unsafe to use outside of it.</p>
+
+<p>This is a change of behaviour that brings <code>begin</code> in line with the
+variables bound within a <code>case ... end</code> branch, a <code>try/catch</code> clause, or
+a <code>receive ... end</code> branch.</p>
+
+<p>This lack of safety only needs to be started at the first <code>UnwrapExpr</code>
+encountered, since all variables bound before respect the same semantics
+as the existing <code>begin ... end</code> expression. If this analysis is done
+rather than just declaring all variables as unsafe wholesale, then there
+is no backwards compatibility concern to be had.</p>
+
+<p>The need for a new operator means code built with support for the new
+expressions won't be portable to older Erlang releases.</p>
+
+<h1>Reference Implementation</h1>
+
+<p>No reference implementation is usually required at this step, but one is
+nevertheless provided in the original repository for this EEP draft,
+at <a href="https://bitbucket.org/ferd/unwrap/">bitbucket.org/ferd/unwrap/</a>.
+The implementation uses parse transforms rather than an operator,
+since it would be difficult to add custom operators at this point of the process.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0049","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Fred Hebert \u0026lt;mononcqc(at)ferd(dot)ca\u0026gt;\nStatus: Draft\nType: Standards Track\nCreated: 31-Aug-2018\nPost-History:\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 49: \u003ca href=\"eep-0049.md\" title=\"EEP Source\"\u003e Value-Based Error Handling Mechanisms\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eThis EEP adds a contextual \u003ccode\u003e\u0026lt;~\u003c/code\u003e operator to \u003ccode\u003ebegin ... end\u003c/code\u003e expressions,\nwhich allows them to be usable for value-based error handling, based on\nstandard \u003ccode\u003e{ok, term()} | {error, term()}\u003c/code\u003e return value types.\u003c/p\u003e\n\n\u003cp\u003eThis lets \u003ccode\u003ebegin ... end\u003c/code\u003e become a control flow construct to replace or\nsimplify deeply-nested \u003ccode\u003ecase ... end\u003c/code\u003e expressions, and prevent using\nexceptions for control flow.\u003c/p\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n\n\u003ch1\u003eSpecification\u003c/h1\u003e\n\n\u003cp\u003eThe current syntax for a \u003ccode\u003ebegin ... end\u003c/code\u003e expression is:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    Exprs\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe expression does not have a restricted scope, and is mostly used to\ngroup multiple distinct expressions as a single block. We propose a new\ntype of expressions (denoted \u003ccode\u003eUnwrapExprs\u003c/code\u003e), only valid within a\n\u003ccode\u003ebegin ... end\u003c/code\u003e expression:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    Exprs | UnwrapExprs\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003e\u003ccode\u003eUnwrapExprs\u003c/code\u003e are defined as having the following form:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ePattern \u0026lt;~ Expr\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis definition means that \u003ccode\u003eUnwrapExprs\u003c/code\u003e are only allowed at the\ntop-level of \u003ccode\u003ebegin ... end\u003c/code\u003e expressions.\u003c/p\u003e\n\n\u003cp\u003eThe \u003ccode\u003e\u0026lt;~\u003c/code\u003e operator takes the value return by \u003ccode\u003eExpr\u003c/code\u003e and inspects it.\nIf the value is a tuple of the form \u003ccode\u003e{ok, Val}\u003c/code\u003e, it unwraps \u003ccode\u003eVal\u003c/code\u003e from\nthe tuple, and matches it against \u003ccode\u003ePattern\u003c/code\u003e.\u003c/p\u003e\n\n\u003cp\u003eIf the pattern matches, all variables from \u003ccode\u003ePattern\u003c/code\u003e are bound in the\nlocal environment, and the full value \u003ccode\u003e{ok, Val}\u003c/code\u003e is returned by the\n\u003ccode\u003eUnwrapExpr\u003c/code\u003e. If the value does not match, a \u003ccode\u003e{badunwrap, Val}\u003c/code\u003e error\nis raised.\u003c/p\u003e\n\n\u003cp\u003eA special case exists when \u003ccode\u003ePattern\u003c/code\u003e is the match-all\nvariable (\u003ccode\u003e_\u003c/code\u003e), which on top of allowing the value to be considered a successful\nunwrapping if the returned value from \u003ccode\u003eExpression\u003c/code\u003e is \u003ccode\u003e{ok, term()}\u003c/code\u003e,\nit also considers the atom \u003ccode\u003eok\u003c/code\u003e to be valid as well.\u003c/p\u003e\n\n\u003cp\u003eIf the value is a tuple of the form \u003ccode\u003e{error, Reason}\u003c/code\u003e, then the entire\n\u003ccode\u003ebegin ... end\u003c/code\u003e expression is short-circuited and returns \u003ccode\u003e{error,\nReason}\u003c/code\u003e. The variables that were bound in there remain bound, the\nrest are undefined.\u003c/p\u003e\n\n\u003cp\u003eThe compiler should warn about any variable that is used after the\n\u003ccode\u003ebegin ... end\u003c/code\u003e expression that was bound in or after the first\n\u003ccode\u003eUnwrapExpr\u003c/code\u003e encountered within the block.\u003c/p\u003e\n\n\u003cp\u003eIf the value returned does not match any of \u003ccode\u003e{ok | error, term()}\u003c/code\u003e as a\ntype, a \u003ccode\u003e{badunwrap, Val}\u003c/code\u003e error is raised.\u003c/p\u003e\n\n\u003cp\u003eGiven the structure described here, the final expression may look like:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    Foo = bar(),\n    X \u0026lt;~ id({ok, 5}),\n    [H|T] \u0026lt;~ id({ok, [1,2,3]}),\n    ...\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eDo note that to allow easier pattern matching and more intuitive usage,\nthe \u003ccode\u003e\u0026lt;~\u003c/code\u003e operator should have associativity rules lower than \u003ccode\u003e=\u003c/code\u003e, such that:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    X = [H|T] \u0026lt;~ exp()\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eis a valid \u003ccode\u003eUnwrapExp\u003c/code\u003e equivalent to the non-infix form \u003ccode\u003e'\u0026lt;~'('='(X, [H|T]),\nexp())\u003c/code\u003e, since reversing the priorities would give \u003ccode\u003e'='('\u0026lt;~'(X, [H|T]),\nexp())\u003c/code\u003e, which would create an \u003ccode\u003eUnwrapExp\u003c/code\u003e out of context and be invalid.\u003c/p\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eErlang has some of the most flexible error handling available across a\nlarge number of programming languages. The language supports:\u003c/p\u003e\n\n\u003col\u003e\n\u003cli\u003ethree types of exceptions (\u003ccode\u003ethrow\u003c/code\u003e, \u003ccode\u003eerror\u003c/code\u003e, \u003ccode\u003eexit\u003c/code\u003e)\n\u003cul\u003e\n\u003cli\u003ehandled by \u003ccode\u003ecatch Exp\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003ehandled by \u003ccode\u003etry ... [of ...] catch ... [after ...] end\u003c/code\u003e\u003c/li\u003e\n\u003c/ul\u003e\u003c/li\u003e\n\u003cli\u003elinks, \u003ccode\u003eexit/2\u003c/code\u003e, and \u003ccode\u003etrap_exit\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003emonitors\u003c/li\u003e\n\u003cli\u003ereturn values such as \u003ccode\u003e{ok, Val} | {error, Term}\u003c/code\u003e, \u003ccode\u003e{ok, Val} |\nfalse\u003c/code\u003e, or \u003ccode\u003eok | {error, Val}\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003eA combination of one or more of the above\u003c/li\u003e\n\u003c/ol\u003e\n\n\u003cp\u003eSo why should we look to add more? There are various reasons for this,\nincuding trying to reduce deeply nested conditional expressions,\ncleaning up some messy patterns found in the wild, providing a better\nseparation of concern when implementing functions, and encouraging more\nstandard and idiomatic interfaces.\u003c/p\u003e\n\n\u003ch2\u003eReducing Nesting\u003c/h2\u003e\n\n\u003cp\u003eOne common pattern that can be seen in Erlang is deep nesting of \u003ccode\u003ecase\n... end\u003c/code\u003e expressions, to check complex conditionals.\u003c/p\u003e\n\n\u003cp\u003eTake the following code taken from\n\u003ca href=\"https://github.com/erlang/otp/blob/a0ae44f324576104760a63fe6cf63e0ca31756fc/lib/mnesia/src/mnesia_backup.erl#L106-L126\"\u003eMnesia\u003c/a\u003e,\nfor example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ecommit_write(OpaqueData) -\u0026gt;\n    B = OpaqueData,\n    case disk_log:sync(B#backup.file_desc) of\n        ok -\u0026gt;\n            case disk_log:close(B#backup.file_desc) of\n                ok -\u0026gt;\n                    case file:rename(B#backup.tmp_file, B#backup.file) of\n                       ok -\u0026gt;\n                            {ok, B#backup.file};\n                       {error, Reason} -\u0026gt;\n                            {error, Reason}\n                    end;\n                {error, Reason} -\u0026gt;\n                    {error, Reason}\n            end;\n        {error, Reason} -\u0026gt;\n            {error, Reason}\nend.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe code is nested to the extent that shorter aliases must be introduced\nfor variables (\u003ccode\u003eOpaqueData\u003c/code\u003e renamed to \u003ccode\u003eB\u003c/code\u003e), and half of the code just\ntransparently returns the exact values each function was given.\u003c/p\u003e\n\n\u003cp\u003eBy comparison, the same code could be written as follows with the new\nconstruct:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ecommit_write(OpaqueData) -\u0026gt;\n    begin\n        _ \u0026lt;~ disk_log:sync(OpaqueData#backup.file_desc),\n        _ \u0026lt;~ disk_log:close(OpaqueData#backup.file_desc),\n        _ \u0026lt;~ file:rename(OpaqueData#backup.tmp_file, OpaqueData#backup.file),\n        {ok, OpaqueData#backup.file}\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe semantics of this call are entirely identical, except that it is now\nmuch easier to focus on the flow of individual operations.\u003c/p\u003e\n\n\u003ch2\u003eObsoleting Messy Patterns\u003c/h2\u003e\n\n\u003cp\u003eFrequent ways in which people work with sequences of failable operations\ninclude folds over lists of functions, and abusing list comprehensions.\nBoth patterns have heavy weaknesses that makes them less than ideal.\u003c/p\u003e\n\n\u003cp\u003eFolds over list of functions use patterns such as those defined in\n\u003ca href=\"http://erlang.org/pipermail/erlang-questions/2017-September/093575.html\"\u003eposts from the\nmailing\u003c/a\u003e:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003epre_check(Action, User, Context, ExternalThingy) -\u0026gt;\n    Checks =\n        [fun check_request/1,\n         fun check_permission/1,\n         fun check_dispatch_target/1,\n         fun check_condition/1],\n    Args = {Action, User, Context, ExternalThingy},\n    Harness =\n        fun\n            (Check, ok)    -\u0026gt; Check(Args);\n            (_,     Error) -\u0026gt; Error\n        end,\n    case lists:foldl(Harness, ok, Checks) of\n        ok    -\u0026gt; dispatch(Action, User, Context);\n        Error -\u0026gt; Error\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis code requires declaring the functions one by one, ensuring the\nentire context is carried from function to function. Since there is no\nshared scope between functions, all functions must operate on all\narguments.\u003c/p\u003e\n\n\u003cp\u003eBy comparison, the same code could be implemented with the new construct\nas:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003epre_check(Action, User, Context, ExternalThingy) -\u0026gt;\n    begin\n        _ \u0026lt;~ check_request(Context, User),\n        _ \u0026lt;~ check_permissions(Action, User),\n        _ \u0026lt;~ check_dispatch_target(ExternalThingy),\n        _ \u0026lt;~ check_condition(Action, Context),\n        dispatch(Action, User, Context)\n    end\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAnd if there was a need for derived state between any two steps, it\nwould be easy to weave it in:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003epre_check(Action, User, Context, ExternalThingy) -\u0026gt;\n    begin\n        _ \u0026lt;~ check_request(Context, User),\n        _ \u0026lt;~ check_permissions(Action, User),\n        _ \u0026lt;~ check_dispatch_target(ExternalThingy),\n        DispatchData \u0026lt;~ dispatch_target(ExternalThingy),\n        _ \u0026lt;~ check_condition(Action, Context),\n        dispatch(Action, User, Context)\n    end\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe list comprehension \u003cem\u003ehack\u003c/em\u003e, by comparison, is a bit more rare. In\nfact, it is mostly theoretical. Some things that hint at how it could\nwork can be found in \u003ca href=\"https://github.com/erlang/otp/blob/869537a9bf799c8d12fc46c2b413e532d6e3b10c/lib/diameter/test/diameter_examples_SUITE.erl#L254-L266\"\u003eDiameter test\ncases\u003c/a\u003e\nor the \u003ca href=\"https://github.com/ferd/rebar3_proper/blob/e7eb96498a9d31f41c919474ec6800df62e237e1/src/rebar3_proper_prv.erl#L298-L308\"\u003ePropEr plugin for\nRebar3\u003c/a\u003e.\u003c/p\u003e\n\n\u003cp\u003eIts overal form uses generators in list comprehensions to tunnel a happy\npath:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[Res] =\n    [f(Z) || {ok, W} \u0026lt;- [b()],\n             {ok, X} \u0026lt;- [c(W)],\n             {ok, Y} \u0026lt;- [d(X)],\n             Z \u0026lt;- [e(Y)]],\nRes.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis form doesn't see too much usage since it is fairly obtuse and I\nsuspect most people have either been reasonable enough not to use it, or\ndid not think about it. Obviously the new form would be cleaner:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    W \u0026lt;~ b(),\n    X \u0026lt;~ c(W),\n    Y \u0026lt;~ d(X),\n    Z = e(Y),\n    f(Z)\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhich on top of it, has the benefit of returning an error value if one\nis found.\u003c/p\u003e\n\n\u003ch2\u003eBetter Separation of Concerns\u003c/h2\u003e\n\n\u003cp\u003eThis form is not necessarily obvious at a first glance. To better\nexpose it, let's take a look at some functions defined in the\n\u003ca href=\"https://github.com/erlang/otp/blob/869537a9bf799c8d12fc46c2b413e532d6e3b10c/lib/sasl/src/release_handler.erl#L1894-L1923\"\u003e\u003ccode\u003erelease_handler\u003c/code\u003e module in\nOTP\u003c/a\u003e:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ewrite_releases_m(Dir, NewReleases, Masters) -\u0026gt;\n    RelFile = filename:join(Dir, \"RELEASES\"),\n    Backup = filename:join(Dir, \"RELEASES.backup\"),\n    Change = filename:join(Dir, \"RELEASES.change\"),\n    ensure_RELEASES_exists(Masters, RelFile),\n    case at_all_masters(Masters, ?MODULE, do_copy_files,\n                        [RelFile, [Backup, Change]]) of\n        ok -\u0026gt;\n            case at_all_masters(Masters, ?MODULE, do_write_release,\n                                [Dir, \"RELEASES.change\", NewReleases]) of\n                ok -\u0026gt;\n                    case at_all_masters(Masters, file, rename,\n                                        [Change, RelFile]) of\n                        ok -\u0026gt;\n                            remove_files(all, [Backup, Change], Masters),\n                            ok;\n                        {error, {Master, R}} -\u0026gt;\n                            takewhile(Master, Masters, file, rename,\n                                      [Backup, RelFile]),\n                            remove_files(all, [Backup, Change], Masters),\n                            throw({error, {Master, R, move_releases}})\n                    end;\n                {error, {Master, R}} -\u0026gt;\n                    remove_files(all, [Backup, Change], Masters),\n                    throw({error, {Master, R, update_releases}})\n            end;\n        {error, {Master, R}} -\u0026gt;\n            remove_files(Master, [Backup, Change], Masters),\n            throw({error, {Master, R, backup_releases}})\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAt a glance, it is very difficult to clean up this code: there are 3\nmulti-node operations (backing up, updating, and moving release data),\neach of which relies on the previous one to succeed.\u003c/p\u003e\n\n\u003cp\u003eYou'll also notice that each error requires special handling, reverting\nor removing specific operations on success or on failure. This is not a\nsimple question of tunnelling values in and out of a narrow scope.\u003c/p\u003e\n\n\u003cp\u003eAnother thing to note is that this module, as a whole (and not just the\nsnippet presented here) uses \u003ccode\u003ethrow\u003c/code\u003e expressions to operate non-local\nreturn. The actual point of return handling these is spread through\nvarious locations in the file:\n\u003ca href=\"https://github.com/erlang/otp/blob/869537a9bf799c8d12fc46c2b413e532d6e3b10c/lib/sasl/src/release_handler.erl#L381-L388\"\u003e\u003ccode\u003ecreate_RELEASES/4\u003c/code\u003e\u003c/a\u003e,\nand\n\u003ca href=\"https://github.com/erlang/otp/blob/869537a9bf799c8d12fc46c2b413e532d6e3b10c/lib/sasl/src/release_handler.erl#L1864-L1881\"\u003e\u003ccode\u003ewrite_releases_1/3\u003c/code\u003e\u003c/a\u003e\nfor example.\u003c/p\u003e\n\n\u003cp\u003eThe \u003ccode\u003ecase catch Exp of\u003c/code\u003e form is used throughout the file because\nvalue-based error flow is painful in nested structures.\u003c/p\u003e\n\n\u003cp\u003eSo let's take a look at how we could refactor this with the new\nconstruct:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ewrite_releases_m(Dir, NewReleases, Masters) -\u0026gt;\n    RelFile = filename:join(Dir, \"RELEASES\"),\n    Backup = filename:join(Dir, \"RELEASES.backup\"),\n    Change = filename:join(Dir, \"RELEASES.change\"),\n    begin\n        _ \u0026lt;~ backup_releases(Dir, NewReleases, Masters, Backup, Change,\n                             RelFile),\n        _ \u0026lt;~ update_releases(Dir, NewReleases, Masters, Backup, Change),\n        _ \u0026lt;~ move_releases(Dir, NewReleases, Masters, Backup, Change, RelFile)\n    end.\n\nbackup_releases(Dir, NewReleases, Masters, Backup, Change, RelFile) -\u0026gt;\n    case at_all_masters(Masters, ?MODULE, do_copy_files,\n                        [RelFile, [Backup, Change]]) of\n        ok -\u0026gt;\n            ok;\n        {error, {Master, R}} -\u0026gt;\n            remove_files(Master, [Backup, Change], Masters)\n            {error, {Master, R, backup_releases}}\n    end.\n\nupdate_releases(Dir, NewReleases, Masters, Backup, Change) -\u0026gt;\n    case at_all_masters(Masters, ?MODULE, do_write_release,\n                        [Dir, \"RELEASES.change\", NewReleases]) of\n        ok -\u0026gt;\n            ok;\n        {error, {Master, R}} -\u0026gt;\n            remove_files(all, [Backup, Change], Masters),\n            {error, {Master, R, update_releases}}\n    end.\n\nmove_releases(Dir, NewReleases, Masters, Backup, Change, RelFile) -\u0026gt;\n    case at_all_masters(Masters, file, rename, [Change, RelFile]) of\n        ok -\u0026gt;\n            remove_files(all, [Backup, Change], Masters),\n            ok;\n        {error, {Master, R}} -\u0026gt;\n            takewhile(Master, Masters, file, rename, [Backup, RelFile]),\n            remove_files(all, [Backup, Change], Masters),\n            {error, {Master, R, move_releases}}\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe only reasonable way to rewrite the code was to extract all three\nmajor multi-node operations into distinct functions. The improvements\nare:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003eThe consequence of failing an operation is located near where the\noperation takes place\u003c/li\u003e\n\u003cli\u003eThe functions have return values that Dialyzer can more easily\ntypecheck\u003c/li\u003e\n\u003cli\u003eThe functions are inherently more testable independently\u003c/li\u003e\n\u003cli\u003eContext can still be added and carried on the generalized workflow at\nthe parent level\u003c/li\u003e\n\u003cli\u003eThe chain of successful operations is very obvious and readable\u003c/li\u003e\n\u003cli\u003eExceptions are no longer required to make the code work, but if we\nneeded it, only one \u003ccode\u003ethrow()\u003c/code\u003e would be needed in \u003ccode\u003ewrite_release_m\u003c/code\u003e,\ntherefore separating the flow control details from specific function\nimplementations.\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eAs a control experiment, let's try reusing our shorter functions with\nthe previous flow:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e%% Here is the same done through exceptions:\nwrite_releases_m(Dir, NewReleases, Masters) -\u0026gt;\n    RelFile = filename:join(Dir, \"RELEASES\"),\n    Backup = filename:join(Dir, \"RELEASES.backup\"),\n    Change = filename:join(Dir, \"RELEASES.change\"),\n    try\n        ok = backup_releases(Dir, NewReleases, Masters, Backup, Change,\n                             RelFile),\n        ok = update_releases(Dir, NewReleases, Masters, Backup, Change),\n        ok = move_releases(Dir, NewReleases, Masters, Backup, Change, RelFile)\n    catch\n        {error, Reason} -\u0026gt; {error, Reason}\n    end.\n\nbackup_releases(Dir, NewReleases, Masters, Backup, Change, RelFile) -\u0026gt;\n    case at_all_masters(Masters, ?MODULE, do_copy_files,\n                        [RelFile, [Backup, Change]]) of\n        ok -\u0026gt;\n            ok;\n        {error, {Master, R}} -\u0026gt;\n            remove_files(Master, [Backup, Change], Masters)\n            throw({error, {Master, R, backup_releases}})\n    end.\n\nupdate_releases(Dir, NewReleases, Masters, Backup, Change) -\u0026gt;\n    case at_all_masters(Masters, ?MODULE, do_write_release,\n                        [Dir, \"RELEASES.change\", NewReleases]) of\n        ok -\u0026gt;\n            ok;\n        {error, {Master, R}} -\u0026gt;\n            remove_files(all, [Backup, Change], Masters),\n            throw({error, {Master, R, update_releases}})\n    end.\n\nmove_releases(Dir, NewReleases, Masters, Backup, Change, RelFile) -\u0026gt;\n    case at_all_masters(Masters, file, rename, [Change, RelFile]) of\n        ok -\u0026gt;\n            remove_files(all, [Backup, Change], Masters),\n            ok;\n        {error, {Master, R}} -\u0026gt;\n            takewhile(Master, Masters, file, rename, [Backup, RelFile]),\n            remove_files(all, [Backup, Change], Masters),\n            throw({error, {Master, R, move_releases}})\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eVery little changes in the three distributed functions. However, the weakness\nof this approach is that we have intimately tied implementation details of the\nsmall functions to their parent's context.  This makes it hard to reason about\nthese functions in isolation or to reuse them in a different context.\nFurthermore, the parent function may capture \u003ccode\u003ethrows\u003c/code\u003e not intended for it.\u003c/p\u003e\n\n\u003cp\u003eIt is my opinion that using value-based flow control, through similar\nrefactorings, yields safer and cleaner code, which also happens to have\nfar more reduced levels of nesting. It should therefore be possible to\nexpress more complex sequences of operations without making them any\nharder to read, nor reason about in isolation.\u003c/p\u003e\n\n\u003cp\u003eThat is in part due to the nesting, but also because we take a more\ncompositional approach, where there is no need to tie local functions'\nimplementation details to the complexity of their overall pipeline and\nexecution context.\u003c/p\u003e\n\n\u003cp\u003eIt is also the best way to structure code in order to handle all\nexceptions and to provide the context they need as close as possible to\ntheir source, and as far as possible from the execution flow.\u003c/p\u003e\n\n\u003ch2\u003eEncouraging Standards\u003c/h2\u003e\n\n\u003cp\u003eIn Erlang, \u003ccode\u003etrue\u003c/code\u003e and \u003ccode\u003efalse\u003c/code\u003e are regular atoms that only gained special\nstatus through usage in boolean expressions. It would be easy to think\nthat more functions would return \u003ccode\u003eyes\u003c/code\u003e and \u003ccode\u003eno\u003c/code\u003e were it not from control\nflow constructs.\u003c/p\u003e\n\n\u003cp\u003eSimilarly, \u003ccode\u003eundefined\u003c/code\u003e has over years of use become a kind of default\n\"not found\" value. Values such as \u003ccode\u003enil\u003c/code\u003e, \u003ccode\u003enull\u003c/code\u003e, \u003ccode\u003eunknown\u003c/code\u003e, \u003ccode\u003eundef\u003c/code\u003e,\n\u003ccode\u003efalse\u003c/code\u003e and so on have seen some use, but a strong consistency in format\nhas ended up aligning the community on one value.\u003c/p\u003e\n\n\u003cp\u003eWhen it comes to return values for various functions, \u003ccode\u003e{ok, Term}\u003c/code\u003e is\nthe most common one for positive results that need to communicate a\nvalue, \u003ccode\u003eok\u003c/code\u003e for positive results with no other value than their own\nsuccess, and \u003ccode\u003e{error, Term}\u003c/code\u003e is most often uses for errors. Pattern\nmatching and assertions have enforced that it is easy to know whether a\ncall worked or not by its own structure.\u003c/p\u003e\n\n\u003cp\u003eHowever, many success values are still larger tuples: \u003ccode\u003e{ok, Val,\nWarnings}\u003c/code\u003e, \u003ccode\u003e{ok, Code, Status, Headers, Body}\u003c/code\u003e, and so on. Such\nvariations are not problematic on their own, but it would likely not\nhurt too much either to use \u003ccode\u003e{ok, {Val, Warnings}}\u003c/code\u003e or \u003ccode\u003e{ok, {Code,\nStatus, Headers, Body}}\u003c/code\u003e.\u003c/p\u003e\n\n\u003cp\u003eIn fact, using more standard forms could lead to easier generalizations\nand abstractions that can be applied to community-wide code. By choosing\nspecific formats for control flow on value-based error handling, we\nexplicitly encourage this form of standardization.\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003cp\u003eThis section will detail the decision-making behind this EEP, including:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003ePrior Art in Other Languages\u003c/li\u003e\n\u003cli\u003eThe choice of \u003ccode\u003ebegin ... end\u003c/code\u003e as a construct and its scope\u003c/li\u003e\n\u003cli\u003eWhy introduce a new operator\u003c/li\u003e\n\u003cli\u003eOther disregarded approaches\u003c/li\u003e\n\u003cli\u003eThe choice of supported values\u003c/li\u003e\n\u003cli\u003eThe choice of \u003ccode\u003e{badunwrap, Val}\u003c/code\u003e as a default exception\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eThere's a lot of content to cover here.\u003c/p\u003e\n\n\u003ch2\u003ePrior Art in Other Languages\u003c/h2\u003e\n\n\u003cp\u003eMultiple languages have value-based exception handling, many of which\nhave a strong functional slant.\u003c/p\u003e\n\n\u003ch3\u003eHaskell\u003c/h3\u003e\n\n\u003cp\u003eThe most famous case is possibly Haskell with the \u003ccode\u003eMaybe\u003c/code\u003e monad, which\nuses either \u003ccode\u003eNothing\u003c/code\u003e (meaning the computation returned nothing) or\n\u003ccode\u003eJust x\u003c/code\u003e (their type-based equivalent of \u003ccode\u003e{ok, X}\u003c/code\u003e). The union of both\ntypes is denoted \u003ccode\u003eMaybe x\u003c/code\u003e. The following examples are taken from\n\u003ca href=\"https://en.wikibooks.org/wiki/Haskell/Understanding_monads/Maybe\"\u003eHaskell/Understanding\nmonads/Maybe\u003c/a\u003e.\u003c/p\u003e\n\n\u003cp\u003eValues for such errors are tagged in functions as follows:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003esafeLog :: (Floating a, Ord a) =\u0026gt; a -\u0026gt; Maybe a\nsafeLog x\n    | x \u0026gt; 0     = Just (log x)\n    | otherwise = Nothing\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eUsing the type annotations directly, it is possible to extract values\n(if any) through pattern matching:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ezeroAsDefault :: Maybe Int -\u0026gt; Int\nzeroAsDefault mx = case mx of\n    Nothing -\u0026gt; 0\n    Just x -\u0026gt; x\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eOne thing to note here is that as long as you are not able to find a\nvalue to substitute for \u003ccode\u003eNothing\u003c/code\u003e or that you cannot take a different\nbranch, you are forced to carry that uncertainty with you through all\nthe types in the system.\u003c/p\u003e\n\n\u003cp\u003eThis is usually where Erlang stops. You have the same possibilities\n(albeit dynamically checked), along with the possibility of transforming\ninvalid values into exceptions.\u003c/p\u003e\n\n\u003cp\u003eHaskell, by comparison, offers monadic operations and its \u003cem\u003edo notation\u003c/em\u003e\nto abstract over things:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003egetTaxOwed name = do\n  number       \u0026lt;- lookup name phonebook\n  registration \u0026lt;- lookup number governmentDatabase\n  lookup registration taxDatabase\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIn this snippet, even though the \u003ccode\u003elookup\u003c/code\u003e function returns a \u003ccode\u003eMaybe x\u003c/code\u003e\ntype, the do notation abstracts away the \u003ccode\u003eNothing\u003c/code\u003e values, letting the\nprogrammer focus on the \u003ccode\u003ex\u003c/code\u003e part of \u003ccode\u003eJust x\u003c/code\u003e. Even though the code is\nwritten as if we can operate on discrete value, the function\nautomatically re-wraps its result into \u003ccode\u003eJust x\u003c/code\u003e and any \u003ccode\u003eNothing\u003c/code\u003e value\njust bypasses operations.\u003c/p\u003e\n\n\u003cp\u003eAs such, the developer is forced to acknowledge that the whole\nfunction's flow is conditional to values being in place, but they can\nnevertheless write it mostly as if everything were discrete.\u003c/p\u003e\n\n\u003ch3\u003eOCaml\u003c/h3\u003e\n\n\u003cp\u003eOCaml supports exceptions, with constructs such as \u003ccode\u003eraise (Type\n\"value\")\u003c/code\u003e to raise an exception, and \u003ccode\u003etry ... with ...\u003c/code\u003e to handle them.\nHowever, since exceptions wouldn't be tracked by the type system,\nmaintainers introduced a \u003ccode\u003eResult\u003c/code\u003e type.\u003c/p\u003e\n\n\u003cp\u003eThe type is defined as\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003etype ('a, 'b) result =\n  | Ok of 'a\n  | Error of 'b\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhich is reminiscent of Erlang's \u003ccode\u003e{ok, A}\u003c/code\u003e and \u003ccode\u003e{error, B}\u003c/code\u003e. OCaml users\nappear to mostly use pattern matching, combinator libraries, and monadic\nbinding to deal with value-based error handling, something similar to\nHaskell's usage.\u003c/p\u003e\n\n\u003ch3\u003eRust\u003c/h3\u003e\n\n\u003cp\u003eRust defines two types of errors: unrecoverable ones (using \u003ccode\u003epanic!\u003c/code\u003e)\nand recoverable ones, using the \u003ccode\u003eError\u0026lt;T, E\u0026gt;\u003c/code\u003e values. The latter is of\ninterest to us, and defined as:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eenum Result\u0026lt;T, E\u0026gt; {\n    Ok(T),\n    Err(E),\n}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWhich would intuitively translate to Erlang terms \u003ccode\u003e{ok, T}\u003c/code\u003e and \u003ccode\u003e{error,\nE}\u003c/code\u003e. The simple way to handle these in Rust is through pattern matching:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003elet f = File::open(\"eep.txt\");\nmatch f {\n    Ok(file) =\u0026gt; do_something(file),\n    Err(error) =\u0026gt; {\n        panic!(\"Error in file: {:?}\", error)\n    },\n};\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eSpecific error values have to be well-typed, and it seems that the Rust\ncommunity is still debating implementation details about how to best get\ncomposability and annotations within a generic type.\u003c/p\u003e\n\n\u003cp\u003eHowever, their workflow for handling these is well-defined already. This\npattern matching form has been judged too cumbersome. To automatically\npanic on error values, the \u003ccode\u003e.unwrap()\u003c/code\u003e method is added:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003elet f = File::open(\"eep.txt\").unwrap();\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIn Erlang, we could approximate this with:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eunwrap({ok, X}) -\u0026gt; X;\nunwrap({error, T}) -\u0026gt; exit(T).\n\nF = unwrap(file:open(\"eep.txt\", Opts)).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAnother construct exists to return errors to caller code more directly,\nwithout panics, with the \u003ccode\u003e?\u003c/code\u003e operator:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efn read_eep() -\u0026gt; Result\u0026lt;String, io::Error\u0026gt; {\n    let mut h = File::open(\"eep.txt\")?;\n    let mut s = String::new();\n    h.read_to_string(\u0026amp;mut s)?;\n    Ok(s)\n}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAny value \u003ccode\u003eOk(T)\u003c/code\u003e encountering \u003ccode\u003e?\u003c/code\u003e is unwrapped. Any value \u003ccode\u003eErr(E)\u003c/code\u003e\nencountering \u003ccode\u003e?\u003c/code\u003e is returned to the caller as-is, as if a \u003ccode\u003ematch\u003c/code\u003e with\n\u003ccode\u003ereturn\u003c/code\u003e had been used. This operator however requires that the\nfunction's type signature use the \u003ccode\u003eResult\u0026lt;T, E\u0026gt;\u003c/code\u003e type as a return value.\u003c/p\u003e\n\n\u003cp\u003ePrior to version 1.13, Rust used the \u003ccode\u003etry!(Exp)\u003c/code\u003e macro to the same\neffect, but found it too cumbersome. Compare:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003etry!(try!(try!(foo()).bar()).baz())\nfoo()?.bar()?.baz()?\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch3\u003eSwift\u003c/h3\u003e\n\n\u003cp\u003eSwift supports exceptions, along with type annotations declaring that a\nfunction may raise exceptions, and \u003ccode\u003edo ... catch\u003c/code\u003e blocks.\u003c/p\u003e\n\n\u003cp\u003eThere is a special operator \u003ccode\u003etry?\u003c/code\u003e which catches any thrown exception\nand turns it into \u003ccode\u003enil\u003c/code\u003e:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efunc someThrowingFunction() throws -\u0026gt; Int {\n    // ...\n}\nlet x = try? someThrowingFunction()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHere \u003ccode\u003ex\u003c/code\u003e can either have a value of \u003ccode\u003eInt\u003c/code\u003e or \u003ccode\u003enil\u003c/code\u003e. The data flow is\noften simplified by using \u003ccode\u003elet\u003c/code\u003e assignments in a conditional expression:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efunc fetchEep() -\u0026gt; Eep? {\n    if let x = try? fetchEepFromDisk() { return x }\n    if let x = try? fetchEepFromServer() { return x }\n    return nil\n}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch3\u003eGo\u003c/h3\u003e\n\n\u003cp\u003eGo has some fairly anemic error handling. It has panics, and error\nvalues. Error values must be assigned (or explicitly ignored) but they\ncan be left unchecked and cause all kinds of issues.\u003c/p\u003e\n\n\u003cp\u003eNevertheless, Go exposed \u003ca href=\"https://go.googlesource.com/proposal/+/master/design/go2draft-error-handling-overview.md\"\u003eplans for new error\nhandling\u003c/a\u003e\nin future versions, which can be interesting.\u003c/p\u003e\n\n\u003cp\u003eRather than changing semantics of their error handling, Go designers are\nmostly considering syntactic changes to reduce the cumbersome nature of\ntheir errors.\u003c/p\u003e\n\n\u003cp\u003eGo programs typically handled errors as follows:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efunc main() {\n        hex, err := ioutil.ReadAll(os.Stdin)\n        if err != nil {\n                log.Fatal(err)\n        }\n\n        data, err := parseHexdump(string(hex))\n        if err != nil {\n                log.Fatal(err)\n        }\n\n        os.Stdout.Write(data)\n}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe new proposed mechanism looks as follows:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efunc main() {\n    handle err {\n        log.Fatal(err)\n    }\n\n    hex := check ioutil.ReadAll(os.Stdin)\n    data := check parseHexdump(string(hex))\n    os.Stdout.Write(data)\n}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe \u003ccode\u003echeck\u003c/code\u003e keyword asks to implicitly check whether the second return\nvalue \u003ccode\u003eerr\u003c/code\u003e is equal to \u003ccode\u003enil\u003c/code\u003e or not. If it is not equal to \u003ccode\u003enil\u003c/code\u003e, the\nlatest defined \u003ccode\u003ehandle\u003c/code\u003e block is called. It can return the result out to\nexit the function, repair some values, or simply panic, to name a few\noptions.\u003c/p\u003e\n\n\u003ch3\u003eElixir\u003c/h3\u003e\n\n\u003cp\u003eElixir has a slightly different semantic approach to error handling compared\nto Erlang. Exceptions are discouraged for control flow (while Erlang\nspecifically uses \u003ccode\u003ethrow\u003c/code\u003e for it), and the \u003ccode\u003ewith\u003c/code\u003e macro is introduced:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ewith {:ok, var} \u0026lt;- some_call(),\n     {:error, _} \u0026lt;- fail(),\n     {:ok, x, y} \u0026lt;- parse_name(var)\ndo\n    success(x, y, var)\nelse\n    {:error, err} -\u0026gt; handle(err)\n    nil -\u0026gt; {:error, nil}\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe macro allows a sequence of pattern matches, after which the ˋdo ...ˋ\nblock is called. If any of the pattern matches fails, the failing value\ngets re-matched in the optional ˋelse ... end` section.\u003c/p\u003e\n\n\u003cp\u003eThis is the most general control flow in this document, being fully\nflexible with regards to which values it can handle. This was done in\npart because there is not a strong norm regarding error or valid values\nin either the Erlang nor Elixir APIs, at least compared to other\nlanguages here.\u003c/p\u003e\n\n\u003cp\u003eThis high level of flexibility has been criticized in some instances as\nbeing a bit confusing: it is possible for users to make error-only\nflows, success-only flows, mixed flows, and consequently the ˋelseˋ\nclause can become convoluted.\u003c/p\u003e\n\n\u003cp\u003eThe \u003ca href=\"https://github.com/CrowdHailer/OK\"\u003eOK library\u003c/a\u003e was released to\nexplicitly narrow the workflow to well-defined errors. It supports three forms,\nthe first of which is the \u003ccode\u003efor\u003c/code\u003e block:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eOK.for do\n  user \u0026lt;- fetch_user(1)\n  cart \u0026lt;- fetch_cart(1)\n  order = checkout(cart, user)\n  saved_order \u0026lt;- save_order(order)\nafter\n  saved_order\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIt works by \u003cem\u003eonly\u003c/em\u003e matching on \u003ccode\u003e{:ok, val}\u003c/code\u003e to keep moving forwards when\nusing the \u003ccode\u003e\u0026lt;-\u003c/code\u003e operator: the \u003ccode\u003efetch_user/1\u003c/code\u003e function above must return\n\u003ccode\u003e{:ok, user}\u003c/code\u003e in order for the code to proceed. The \u003ccode\u003e=\u003c/code\u003e operator is\nallowed for pattern matches the same way it usually does within Elixir.\u003c/p\u003e\n\n\u003cp\u003eAny return value that matches \u003ccode\u003e{:error, t}\u003c/code\u003e ends up returning directly\nout of the expression. The \u003ccode\u003eafter ... end\u003c/code\u003e section takes the last value\nreturned, and if it isn't already in a tuple of the form \u003ccode\u003e{:ok val}\u003c/code\u003e, it\nwraps it as such.\u003c/p\u003e\n\n\u003cp\u003eThe second variant is the \u003ccode\u003etry\u003c/code\u003e block:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eOK.try do\n  user \u0026lt;- fetch_user(1)\n  cart \u0026lt;- fetch_cart(1)\n  order = checkout(cart, user)\n  saved_order \u0026lt;- save_order(order)\nafter\n  saved_order\nrescue\n  :user_not_found -\u0026gt; {:error, missing_user}\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis variant will capture exceptions as well (in the \u003ccode\u003erescue\u003c/code\u003e block),\nand will not re-wrap the final return value in the \u003ccode\u003eafter\u003c/code\u003e section.\u003c/p\u003e\n\n\u003cp\u003eThe last variant for the library is the pipe:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003edef get_employee_data(file, name) do\n  {:ok, file}\n  ~\u0026gt;\u0026gt; File.read\n  ~\u0026gt; String.upcase\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe goal of this variant is to simply thread together operations that\ncould result in either a success or error. The \u003ccode\u003e~\u0026gt;\u0026gt;\u003c/code\u003e operator matches\nand returns an \u003ccode\u003e{:ok, term}\u003c/code\u003e tuple, and the \u003ccode\u003e~\u0026gt;\u003c/code\u003e operator wraps a value\ninto an \u003ccode\u003e{:ok, term}\u003c/code\u003e tuple.\u003c/p\u003e\n\n\u003ch2\u003eChoosing \u003ccode\u003ebegin ... end\u003c/code\u003e Expressions\u003c/h2\u003e\n\n\u003cp\u003eAbstractions over error flow requires to define a scope limiting the\nway flow is controlled. Before choosing the \u003ccode\u003ebegin ... end\u003c/code\u003e expression,\nthe following items needed consideration:\u003c/p\u003e\n\n\u003col\u003e\n\u003cli\u003ewhat is the scope we need to cover\u003c/li\u003e\n\u003cli\u003ewhat is the format of the structure to use\u003c/li\u003e\n\u003cli\u003ewhy ending up with \u003ccode\u003ebegin ... end\u003c/code\u003e\u003c/li\u003e\n\u003c/ol\u003e\n\n\u003ch3\u003eScoping Limits\u003c/h3\u003e\n\n\u003cp\u003eIn the languages mentioned earlier, two big error handling categories\nseem to emerge.\u003c/p\u003e\n\n\u003cp\u003eThe first group of language seems to track their error handling at the\nfunction level. For example, Go uses \u003ccode\u003ereturn\u003c/code\u003e to return early from the\ncurrent function.  Swift and Rust also scope their error handling\nabstractions to the current function, but they also make use of their\ntype signatures to keep information about the control flow\ntransformations taking place. Rust uses the \u003ccode\u003eResult\u0026lt;T, E\u0026gt;\u003c/code\u003e type\nsignature to define what operations are valid, and Swift asks of\ndevelopers that they either handle the error locally, or annotate the\nfunction with \u003ccode\u003ethrows\u003c/code\u003e to make things explicit.\u003c/p\u003e\n\n\u003cp\u003eOn the other hand, Haskell's do notation is restricted to specific\nexpressions, and so are all of Elixir's mechanisms.\u003c/p\u003e\n\n\u003cp\u003eErlang, Haskell, and Elixir all primarily use recursion as an iteration\nmechanism, and (outside of Haskell's monadic constructs) do not support\n\u003ccode\u003ereturn\u003c/code\u003e control flow; it is conceptually more difficult for a \u003ccode\u003ereturn\u003c/code\u003e\n(or \u003ccode\u003ebreak\u003c/code\u003e) to be useful when iteration requires recursion:\n\"returning\" by exiting the current flow may not bail you out of what the\nprogrammer might consider a loop, for example.\u003c/p\u003e\n\n\u003cp\u003eInstead, Erlang would use \u003ccode\u003ethrow()\u003c/code\u003e exceptions as a control flow\nmechanism for non-local return, along with a \u003ccode\u003ecatch\u003c/code\u003e or a \u003ccode\u003etry ...\ncatch\u003c/code\u003e. Picking a value-based error handling construct that acts at the\nfunction level would not necessarily be very interesting since almost\nany recursive procedure would still require using exceptions.\u003c/p\u003e\n\n\u003cp\u003eAs such, it feels simpler to use a self-contained construct built to\nspecifically focus on sequences of operations that contain value-based\nerrors.\u003c/p\u003e\n\n\u003ch3\u003eFormat of Structure\u003c/h3\u003e\n\n\u003cp\u003ePrior attempts at abstracting value-based error handling in Erlang\noverloaded special constructs with parse transforms in order to provide\nspecific workflows.\u003c/p\u003e\n\n\u003cp\u003eFor example, the \u003ca href=\"https://github.com/ferd/fancyflow\"\u003e\u003ccode\u003efancyflow\u003c/code\u003e\u003c/a\u003e\nlibrary tried to abstract the following code:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003esans_maybe() -\u0026gt;\n    case file:get_cwd() of\n        {ok, Dir} -\u0026gt;\n            case\n                file:read_file(\n                  filename:join([Dir, \"demo\", \"data.txt\"]))\n            of\n                {ok, Bin} -\u0026gt;\n                    {ok, {byte_size(Bin), Bin}};\n                {error, Reason} -\u0026gt;\n                    {error, Reason}\n            end;\n        {error, Reason} -\u0026gt;\n            {error, Reason}\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eas:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-spec maybe() -\u0026gt; {ok, non_neg_integer()} | {error, term()}.\nmaybe() -\u0026gt;\n    [maybe](undefined,\n            file:get_cwd(),\n            file:read_file(filename:join([_, \"demo\", \"data.txt\"])),\n            {ok, {byte_size(_), _}}).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAnd Erlando would replace:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ewrite_file(Path, Data, Modes) -\u0026gt;\n    Modes1 = [binary, write | (Modes -- [binary, write])],\n    case make_binary(Data) of\n        Bin when is_binary(Bin) -\u0026gt;\n            case file:open(Path, Modes1) of\n                {ok, Hdl} -\u0026gt;\n                    case file:write(Hdl, Bin) of\n                        ok -\u0026gt;\n                            case file:sync(Hdl) of\n                                ok -\u0026gt;\n                                    file:close(Hdl);\n                                {error, _} = E -\u0026gt;\n                                    file:close(Hdl),\n                                    E\n                            end;\n                        {error, _} = E -\u0026gt;\n                            file:close(Hdl),\n                            E\n                    end;\n                {error, _} = E -\u0026gt; E\n            end;\n        {error, _} = E -\u0026gt; E\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWith monadic constructs in list comprehensions:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ewrite_file(Path, Data, Modes) -\u0026gt;\n    Modes1 = [binary, write | (Modes -- [binary, write])],\n    do([error_m ||\n        Bin \u0026lt;- make_binary(Data),\n        Hdl \u0026lt;- file:open(Path, Modes1),\n        Result \u0026lt;- return(do([error_m ||\n                             file:write(Hdl, Bin),\n                             file:sync(Hdl)])),\n        file:close(Hdl),\n        Result]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThose cases specifically aimed for a way to write sequences of\noperations where pre-defined semantics are bound by a special context,\nbut are limited to overloading constructs rather than introducing new\nones.\u003c/p\u003e\n\n\u003cp\u003eBy comparison, most of Erlang's control flow expressions follow similar\nstructures. See the following most common ones:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ecase ... of\n    Pattern [when Guard] -\u0026gt; Expressions\nend\n\nif\n   Guard -\u0026gt; Expressions\nend\n\nbegin\n    Expressions\nend\n\nreceive\n    Pattern [when Guard] -\u0026gt; Expressions\nafter                                               % optional\n    IntegerExp -\u0026gt; Expressions\nend\n\ntry\n    Expressions\nof                                                  % optional\n    Pattern [when Guard] -\u0026gt; Expressions\ncatch                                               % optional\n    ExceptionPattern [when Guard] -\u0026gt; Expressions\nafter                                               % optional\n    Expressions\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIt therefore logically follows that if we were to add a new construct,\nit should be of the form\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\u0026lt;keyword\u0026gt;\n    ...\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe questions remaining are: which keyword to choose, and which clauses\nto support.\u003c/p\u003e\n\n\u003ch3\u003eChoosing \u003ccode\u003ebegin ... end\u003c/code\u003e\u003c/h3\u003e\n\n\u003cp\u003eInitially, a format similar to Elixir's \u003ccode\u003ewith\u003c/code\u003e expression was being\nconsidered:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\u0026lt;keyword\u0026gt;\n    Expressions | UnwrapExpressions\nof                                              % optional\n    Pattern [when Guard] -\u0026gt; Expressions\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWith this construct, the basic \u003ccode\u003e\u0026lt;keyword\u0026gt; ... end\u003c/code\u003e form would follow the\ncurrently proposed semantics, but the \u003ccode\u003eof ...\u003c/code\u003e section would allow\npattern matching on any return value from the expression, whether\n\u003ccode\u003e{error, Reason}\u003c/code\u003e or any non-exception value returned by the last\nexpression in the main section.\u003c/p\u003e\n\n\u003cp\u003eThis form would be in line with what \u003ccode\u003etry ... of ... catch ... end\u003c/code\u003e\nallows: once the main section is covered, more work can be done within\nthe same construct.\u003c/p\u003e\n\n\u003cp\u003eHowever, \u003ccode\u003etry ... of ... catch ... end\u003c/code\u003e has a specific reason for\nintroducing the patterns and guards: protected code impacting tail\nrecursion.\u003c/p\u003e\n\n\u003cp\u003eIn a loop such as:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003emap_nocrash(_, []) -\u0026gt; [];\nmap_nocrash(F, [H|T]) -\u0026gt;\n    try\n        F(H)\n    of\n        Val -\u0026gt; [Val | map_nocrash(F, T)]\n    catch\n        _:_ -\u0026gt; map_nocrash(F, T)\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe \u003ccode\u003eof\u003c/code\u003e section allows to continue doing work in the case no exception\nhas happened, \u003cem\u003ewithout\u003c/em\u003e having to protect more than the current scope of\nthe function, nor preventing tail-recursion by forcing a presence of\neach iteration on the stack.\u003c/p\u003e\n\n\u003cp\u003eNo such concerns exist for value-based error handling, and while the\n \u003ccode\u003eof ... end\u003c/code\u003e section might be convenient at times, it is strictly not\nnecessary for the construct to be useful.\u003c/p\u003e\n\n\u003cp\u003eWhat was left was to choose a name. Initially, the \u003ccode\u003e\u0026lt;keyword\u0026gt;\u003c/code\u003e value\nchosen was \u003ccode\u003emaybe\u003c/code\u003e, based on the Maybe monad. The problem is that\nintroducing any new keyword carries severe risks to backwards\ncompatibility.\u003c/p\u003e\n\n\u003cp\u003eFor example, all of the following words were considered:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e======= ================= =========================================\nKeyword Times used in OTP Rationale\n         as a function\n======= ================= =========================================\nmaybe   0                 can clash with existing used words,\n                           otherwise respects the spirit\noption  88                definitely clashes with existing code\nopt     68                definitely clashes with existing code\ncheck   49                definitely clashes with existing code\nlet     0                 word is already reserved and free, but\n                           makes no sense in context\ncond    0                 word is already reserved and free, may\n                           make sense, but would prevent the\n                           addition of a conditional expression\ngiven   0                 could work, kind of respects the context\nwhen    0                 reserved for guards, could hijack in new\n                          context but may be confusing\nbegin   0                 carries no conditional meaning, mostly\n                          free for overrides\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eInitially, this proposal expected to use the \u003ccode\u003emaybe\u003c/code\u003e keyword:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003emaybe\n    Pattern \u0026lt;op\u0026gt; Exp,\n    ...\nof\n    Pattern -\u0026gt; Exp  % optional\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ebut for the reasons mentioned in the previous section, the \u003ccode\u003eof ...\u003c/code\u003e\nsection became non-essential.\u003c/p\u003e\n\n\u003cp\u003eThen, with the strong requirements for backwards compatibility making it\ndifficult to introduce new keywords, along with the possibility to reuse\n\u003ccode\u003ebegin\u003c/code\u003e without changing any of its current behavior, this form became the\nmost interesting one.\u003c/p\u003e\n\n\u003cp\u003eThe term \u003ccode\u003ebegin\u003c/code\u003e is also reminiscent of transactions and abortive\ncontexts, which means that although not an ideal fit for value-based\nerror flow, it is also not entirely outlandish and could accept the new\nadded optional semantics without being too out of place.\u003c/p\u003e\n\n\u003ch2\u003eA New Infix Operator\u003c/h2\u003e\n\n\u003cp\u003eIn order to form \u003ccode\u003eUnwrapExpr\u003c/code\u003e, there is a need for a mechanism to\nintroduce pattern matching with distinct semantics from regular pattern\nmatching.\u003c/p\u003e\n\n\u003cp\u003eA naive parse transform approach with fake function calls would be the\nmost basic way to go:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    unwrap(Pattern, Exp),\n    % variables bound in Pattern are available in scope\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHowever, this would introduce pattern matches in non-left-hand-side\npositions and make nesting really weird to deal with without exposing\nparse transform details and knowing how the code is translated.\u003c/p\u003e\n\n\u003cp\u003eA prefix keyword such \u003ccode\u003elet \u0026lt;Pattern\u0026gt; = \u0026lt;Exp\u0026gt;\u003c/code\u003e could also be used.\nSuch keywords unfortunately suffer the same issues as \u003ccode\u003emaybe\u003c/code\u003e would\nhave, and \u003ccode\u003elet\u003c/code\u003e typically has different implications.\u003c/p\u003e\n\n\u003cp\u003eAn infix operator seems like a good fit since pattern matching already\nuses them in multiple forms:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003ccode\u003e=\u003c/code\u003e is used for pattern matches. Overloading it in error flow would\nprevent regular matching from being used\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003e:=\u003c/code\u003e is used for maps; using it could work, but would certainly be\nconfusing when handling nested maps in a pattern\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003e\u0026lt;-\u003c/code\u003e could make sense. It is already restricted in scope to list and\nbinary comprehensions and would therefore not clash nor be confused.\nHowever, the existing semantics of the operator imply a literal\npattern match working like a filter. We're looking for the filter-like\napproach, but want to introduce implicit elements (\u003ccode\u003e{ok|error, ...}\u003c/code\u003e)\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003e\u0026lt;=\u003c/code\u003e same as \u003ccode\u003e\u0026lt;-\u003c/code\u003e but for binary generators\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eIt would make sense to check for new operators specifically for this\ncontext given the semantics:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e=======  ===========================================================\nOperator Description\n=======  ===========================================================\n#=       no clash with other syntax (maps, records, integers), no\n         clash with abstract patterns EEP either.\n!=       No clash with message passing, but is sure to annone used\n         to C-style inequality checks\n\u0026lt;~       Works with no known conflict; shouldn't clash with ROK's\n         frame proposals (uses infix ~ and \u0026lt; \u0026gt; as delimiters).\n\u0026lt;|       reverse pipe operator. No obvious clash either\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThere is no strong argument for or against most of these. The choice of\n\u003ccode\u003e\u0026lt;~\u003c/code\u003e mostly comes down to having similarity to list comprehensions' \u003ccode\u003e\u0026lt;-\u003c/code\u003e\noperator both in semantics and appearance, although being different\noverall.\u003c/p\u003e\n\n\u003ch3\u003eOperator Priority\u003c/h3\u003e\n\n\u003cp\u003eWithin the expected usage of the unwrap expressions, the \u003ccode\u003e\u0026lt;~\u003c/code\u003e operator\nneeds to have a precedence rule such that:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eX = {Y,X} \u0026lt;~ \u0026lt;Exp\u0026gt;\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIs considered a valid pattern match operation with \u003ccode\u003eX = {Y,X}\u003c/code\u003e being the\nwhole left-hand-side pattern, such that operation priorities are:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003elhs \u0026lt;~ rhs\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eInstead of\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003elhs = rhs \u0026lt;~ \u0026lt;...\u0026gt;\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIn all other regards, the precedence rules should be the same as \u003ccode\u003e=\u003c/code\u003e in\norder to provide the most unsurprising experience possible.\u003c/p\u003e\n\n\u003ch2\u003eOther Disregarded Approaches and Variations\u003c/h2\u003e\n\n\u003cp\u003eOther approaches were considered in making this proposal, and ultimately\ndisregarded.\u003c/p\u003e\n\n\u003ch3\u003eElixir-Like Patterns in \u003ccode\u003ewith\u003c/code\u003e\u003c/h3\u003e\n\n\u003cp\u003eThe Elixir approach is fairly comprehensive, and rather powerful. Rather\nthan handling success or errors, it generalizes over pattern matching as\na whole.\u003c/p\u003e\n\n\u003cp\u003eTo explore bringing these semantics into the current proposed construct,\nwe will use the \u003ccode\u003e\u0026lt;-\u003c/code\u003e operator from list comprehensions to mean \"match\nthe whole pattern or exit the block\". So instead of\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    {X,Y} \u0026lt;~ id({ok, {X,Y}})\n    ...\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWe would have to write:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    {ok, {X,Y}} \u0026lt;- id({ok, {X,Y}})\n    ...\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWhile this mechanism is fine to handle skipping pattern, it has some\nproblematic weaknesses in the context of error handling.\u003c/p\u003e\n\n\u003cp\u003eOne example of this could be taken from the OTP pull request that adds\nnew return value to packet reading based on inet options:\n\u003ca href=\"https://github.com/erlang/otp/pull/1950\"\u003e#1950\u003c/a\u003e.\u003c/p\u003e\n\n\u003cp\u003eThis PR adds a possible value for packet reception to the current form:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{ok, {PeerIP, PeerPort, Data}}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eTo ask make it possible to alternatively get:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{ok, {PeerIP, PeerPort, AncData, Data}}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eBased on socket options set earlier. So let’s put it in context for the\ncurrent proposal:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    {X,Y} \u0026lt;~ id({ok, {X,Y}}),\n    {PeerIP, PeerPort, Data} \u0026lt;~ gen_udp:recv(...),\n    ...\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIf \u003ccode\u003eAncData\u003c/code\u003e is received, an exception is raised: the value was not an\nerror but didn’t have the shape or type expected for the successful\npattern to match. Errors are still returned properly by exiting the\n\u003ccode\u003ebegin ... end\u003c/code\u003e block, and we ensure correctness in what we handle and\nreturn.\u003c/p\u003e\n\n\u003cp\u003eHowever, had we used this generalized form:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebegin\n    {ok, {X,Y}} \u0026lt;- id({ok, {X,Y}}),\n    {ok, {PeerIP, PeerPort, Data}} \u0026lt;- gen_udp:recv(...),\n    ...\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eSince the \u003ccode\u003e\u0026lt;-\u003c/code\u003e operator would force a return on any non-matching value,\nthe whole expression, if the socket is misconfigured to return\n\u003ccode\u003eAncData\u003c/code\u003e, would return \u003ccode\u003e{ok, {PeerIP, PeerPort, AncData, Data}}\u003c/code\u003e on a\nfailure to match.\u003c/p\u003e\n\n\u003cp\u003eBasically, an unexpected but good result could be returned from a\nfunction using the \u003ccode\u003ebegin ... end\u003c/code\u003e construct, which would look like a\nsuccess while it was actually a complete failure to match and handle the\ninformation given.  This is made even more ambiguous when data has the\nright shape and type, but a set of bound variables ultimately define\nwhether the match succeeds or fails (in the case of a UDP socket,\nreturning values that comes from the wrong peer, for example).\u003c/p\u003e\n\n\u003cp\u003eIn worst cases, It could let raw unformatted data exit a conditional\npipeline with no way to detect it after the fact, particularly if later\nfunctions in \u003ccode\u003ebegin ... end\u003c/code\u003e apply transformations to text, such as\nanonymizing or sanitizing data. This could be pretty unsafe\nand near impossible to debug well.\u003c/p\u003e\n\n\u003cp\u003eThink for example of:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-spec fetch() -\u0026gt; iodata().\nfetch() -\u0026gt;\n    begin\n        {ok, B = \u0026lt;\u0026lt;_/binary\u0026gt;\u0026gt;} \u0026lt;- f(),\n        true \u0026lt;- validate(B),\n        {ok, sanitize(B)}\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIf the value returned from \u003ccode\u003ef()\u003c/code\u003e turns out to be a list (say it’s a\nmisconfigured socket using \u003ccode\u003elist\u003c/code\u003e instead of \u003ccode\u003ebinary\u003c/code\u003e as an option), the\nexpression will return early, the \u003ccode\u003efetch()\u003c/code\u003e function will still return\n\u003ccode\u003e{ok, iodata()}\u003c/code\u003e but you couldn’t know as a caller whether it is the\ntransformed data or non-matching content. It would not be obvious to\nmost developers either that this could represent a major security risk\nby allowing unexpected data to be seen as clean data.\u003c/p\u003e\n\n\u003cp\u003eThis specific type of error is in fact possible in Elixir, but no such\nwarning appears to have been circulating within its community so far.\u003c/p\u003e\n\n\u003cp\u003eIt is basically a risky pattern if you want your code to be strict or\nfuture-proof in the context of error handling. The current proposal, by\ncomparison, would raise an exception on unexpected good values, therefore\npreventing ways to sneak such data into your control flow:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-spec fetch() -\u0026gt; iodata().\nfetch() -\u0026gt;\n    begin\n        B = \u0026lt;\u0026lt;_/binary\u0026gt;\u0026gt; \u0026lt;~ f(),\n        _ \u0026lt;~ validate(B), % returns ok if valid\n        {ok, sanitize(B)}\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHere misconfigured sockets won’t result in unchecked data passing trough\nyour app.\u003c/p\u003e\n\n\u003cp\u003eThe only way to give a similar amount of safety to the general pattern\napproach is through an \u003ccode\u003eelse\u003c/code\u003e clause which handles all known patterns to\nimplicitly exclude all unknown patterns:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-spec fetch() -\u0026gt; iodata().\nfetch() -\u0026gt;\n    begin\n        {ok, B = \u0026lt;\u0026lt;_/binary\u0026gt;\u0026gt;} \u0026lt;- f(),\n        true \u0026lt;- validate(B),\n        {ok, sanitize(B)}\n    else\n        {error, _} = E -\u0026gt; E;\n        false -\u0026gt; false\n    end.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis is the solution Elixir uses as well. Unless the clause is mandatory\n(it is not in Elixir), this level of additional matching is purely\noptional; the developer has no obvious incentive to go and handle these\nerrors, and if they do, the exception raised will be through a missing\nclause in the \u003ccode\u003eelse\u003c/code\u003e section, which will obscure its origin and line\nnubmer.\u003c/p\u003e\n\n\u003cp\u003eIt would also allow some functions to return unexpected values from\nother ones. In the previous example, \u003ccode\u003ef()\u003c/code\u003e must be allowed to return\n\u003ccode\u003efalse\u003c/code\u003e if \u003ccode\u003evalidate(B)\u003c/code\u003e may return it. There is no way to separate such\nclauses.\u003c/p\u003e\n\n\u003cp\u003eNone of these problems exist as long as we normalize the matching\nmechanism on well-defined \"good\" and \"bad\" values (\u003ccode\u003eok | {ok, Term}\u003c/code\u003e and\n\u003ccode\u003e{error, Term}\u003c/code\u003e). This separation between good and bad values allows to\nknow what needs to return early without conflicts with what is a valid\nor invalid pattern.\u003c/p\u003e\n\n\u003cp\u003eFrom the moment we decide to pick such values, unwrapping them in\npatterns can make code clearer: \u003ccode\u003e{error, X} \u0026lt;- exp()\u003c/code\u003e would be a pattern\nthat can never match by definition, since only good values are allowed\nto go through and all errors return early. Automatically unwrapping good\nvalues prevents such nonsensical expressions.\u003c/p\u003e\n\n\u003cp\u003eThese tricky corner cases explain why the \u003ccode\u003e\u0026lt;~\u003c/code\u003e pattern is preferred to\nthe general \u003ccode\u003e\u0026lt;-\u003c/code\u003e pattern's semantics in this proposal.\u003c/p\u003e\n\n\u003ch3\u003eSimplifying Chaining an Pipelining\u003c/h3\u003e\n\n\u003cp\u003eOne approach or pain point frequently brough up about Erlang concern\npipelining of operations. Could it be possible to make some\noperations easier to chain?\u003c/p\u003e\n\n\u003cp\u003eIf we take a set of functions \u003ccode\u003ef()\u003c/code\u003e, \u003ccode\u003eg()\u003c/code\u003e, and \u003ccode\u003eh()\u003c/code\u003e that all return\n\u003ccode\u003e{ok | error, _}\u003c/code\u003e tuples, current day Erlang requires:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{ok, X} = f(),\n{ok, Y} = g(X),\n{ok, Z} = h(Y),\nZ\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eCould there be an easier way to handle this type of chaining, based on\nsay, an \u003ccode\u003eunwrap\u003c/code\u003e function:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eunwrap({ok, X}) -\u0026gt; X.\n\nmain() -\u0026gt;\n    unwrap(h(unwrap(g(unwrap(f()))))).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAnd it appeared that generally, this turns out to be simple enough to do\nwith the earlier fold approach we had mentioned.\u003c/p\u003e\n\n\u003cp\u003eOverall, the various existing mechanisms appeared slightly inconvenient,\nbut not inconvenient enough to be worth adding a whole new language\nmechanism just for it.\u003c/p\u003e\n\n\u003ch3\u003e\u003ccode\u003econd\u003c/code\u003e and \u003ccode\u003econd let\u003c/code\u003e\u003c/h3\u003e\n\n\u003cp\u003eAnthony Ramine recommended looking into reusing the already reserved\n\u003ccode\u003econd\u003c/code\u003e and \u003ccode\u003elet\u003c/code\u003e keywords. He mentioned Rust planning something based on\nthese and how it could be ported to Erlang based on his prior work on\nsupporting the \u003ccode\u003econd\u003c/code\u003e construct within the language.\u003c/p\u003e\n\n\u003cp\u003eThe proposed mechanism would look like:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003econd\n    X \u0026gt; 5 -\u0026gt; % regular guard\n        Exp;\n    f() \u0026lt; 18 -\u0026gt; % function used in guard, as originally planned\n        Exp;\n    let {ok, Y} = exp(), Y \u0026lt; 5 -\u0026gt;\n        Exp\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe last clause would allow \u003ccode\u003eY\u003c/code\u003e to be used in its own branch only if it\nmatches and all guards succeed; if the binding fails, a switch is\nautomatically made to the next branch.\u003c/p\u003e\n\n\u003cp\u003eAs such, more complex sequences of operations could be covered as:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003econd\n    let {ok, _} = call1(),\n    let {ok, _} = call2(),\n    let Res = call3() -\u0026gt;\n        Res;\n    true -\u0026gt;\n        AlternativeBranch\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis mechanism is, in my opinion, worth exploring and maybe adding to\nthe language, but on its own does not adequately solve error handling\nflow issues since errors cannot be exracted easily from failing\noperations.\u003c/p\u003e\n\n\u003ch3\u003eAuto-Wrapping Return Values\u003c/h3\u003e\n\n\u003cp\u003eAuto-wrapping return values is something the Elixir's \u003ccode\u003eOK\u003c/code\u003e library does,\nas well as Haskell's do notation, but that neither Rust nor Swift does.\u003c/p\u003e\n\n\u003cp\u003eIt seems that there is no very clear consensus on what could be done.\nThus, for the simplicity of the implementation and backards\ncompatibility of the \u003ccode\u003ebegin ... end\u003c/code\u003e expression, just returning the\nvalue as-is without auto-wrapping seems sensible.\u003c/p\u003e\n\n\u003cp\u003eIt would therefore be up to the developer to just return whatever value\nbest matches their function's type signature, making easier to still\nintegrate return values with the system they have.\u003c/p\u003e\n\n\u003cp\u003eIt also lets sequences of operations potentially return \u003ccode\u003eok\u003c/code\u003e on success,\neven if their individual functions returned values such as \u003ccode\u003etrue\u003c/code\u003e, for\nexample, rather than \u003ccode\u003e{ok, true}\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch2\u003eThe choice of supported match values\u003c/h2\u003e\n\n\u003cp\u003eIt is kind of straightforward why \u003ccode\u003e{ok, V}\u003c/code\u003e and \u003ccode\u003e{error, T}\u003c/code\u003e are used in\npattern matches as error values: they're the most standard way to\ncommunicate a value and an error in non-overlapping patterns whichever\nway you want to match.\u003c/p\u003e\n\n\u003cp\u003eOn the other hand, it is less obvious why \u003ccode\u003e_ \u0026lt;~ Exp\u003c/code\u003e should positively\nmatch on \u003ccode\u003eok\u003c/code\u003e alone, and why, for example, \u003ccode\u003eerror\u003c/code\u003e as an atom would\nraise an exception as not matching any patterns.\u003c/p\u003e\n\n\u003cp\u003eThe reason \u003ccode\u003eok\u003c/code\u003e is considered valid can be found in comparing common\nErlang return values with their matches in other languages.\u003c/p\u003e\n\n\u003cp\u003eThe following functions return \u003ccode\u003eok\u003c/code\u003e when everything went well but\nnothing is worth reporting. The list is not exhaustive:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003ccode\u003elists:foreach/2\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003eover 25 functions in the \u003ccode\u003efile\u003c/code\u003e module\u003c/li\u003e\n\u003cli\u003emost functions in \u003ccode\u003edisk_log\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003emost functions sending data or handling control of sockets and ports\u003c/li\u003e\n\u003cli\u003emost output functions from the \u003ccode\u003eio\u003c/code\u003e module\u003c/li\u003e\n\u003cli\u003elogging functions in the \u003ccode\u003elogger\u003c/code\u003e module\u003c/li\u003e\n\u003cli\u003efunctions from the \u003ccode\u003eapplications\u003c/code\u003e module interacting with config and\nstarting or loading applications\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eThe pattern is fully entrenched as a core pattern in Erlang and OTP, and\nvery attached to side-effectful operations.\u003c/p\u003e\n\n\u003cp\u003eThe interesting aspect comes from seeing what Rust does for similar\nfunctions, which is just return their own unit type, denoted as \u003ccode\u003e()\u003c/code\u003e.\nWhen used with the \u003ccode\u003eResult\u003c/code\u003e types, it is to be returned a \u003ccode\u003eOK(())\u003c/code\u003e.\u003c/p\u003e\n\n\u003cp\u003eThe Erlang equivalent would probably be \u003ccode\u003e{ok, undefined}\u003c/code\u003e, but \u003ccode\u003eok\u003c/code\u003e as a\nsingle atom currently plays that role fine, and so it was decided to\nsupport it; it will let error flow integrate well with side-effectful\nfunctions.\u003c/p\u003e\n\n\u003cp\u003eThe same cannot be said of \u003ccode\u003eerror\u003c/code\u003e as an atom result. Most errors can\nand should return context with them that qualifies the error result,\nsince they often have more than one reason to fail. As evidence for this\nline of thought, it is currently not possible to raise exceptions\nwithout a \u003ccode\u003eReason\u003c/code\u003e, whether done through \u003ccode\u003ethrow/1\u003c/code\u003e, \u003ccode\u003eerror/1\u003c/code\u003e,\n\u003ccode\u003eexit/1-2\u003c/code\u003e, or \u003ccode\u003eraise/3\u003c/code\u003e.\u003c/p\u003e\n\n\u003cp\u003eAligning with the standard practices in the Erlang language validate\nusing \u003ccode\u003e_ \u0026lt;~ Exp\u003c/code\u003e as a pattern suitable for \u003ccode\u003eok\u003c/code\u003e, and only this pattern\nsince it allows to basically match on what would be a non-existing value\nthat wouldn't need to be bound in further contexts.\u003c/p\u003e\n\n\u003cp\u003eDiscussions on earlier drafts of this proposal asked whether it would\nmake sense to choose all good values to be those in a tuple starting\nwith \u003ccode\u003eok\u003c/code\u003e (\u003ccode\u003eok | {ok, _} | {ok, _, _} | ...\u003c/code\u003e), and all error values all\nthose starting with error (\u003ccode\u003e{error, _} | {error, _, _} | ...\u003c/code\u003e).\u003c/p\u003e\n\n\u003cp\u003eThis approach would allow more flexibility on possible error values, but\nwould make composition more difficult. Let's take the following three\nfunction signatures as an example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-spec f() -\u0026gt; ok | {error, term()}.\n-spec g() -\u0026gt; {ok, term()} | {error, term(), term()}.\n-spec h() -\u0026gt; {ok, term(), [warning()]} | {error, term()}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIf a single \u003ccode\u003ebegin ... end\u003c/code\u003e block calls to these as the potential return\nvalue of a function, the caller now has to have the following type\nspecification:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-spec caller() -\u0026gt; ok | {ok, term()} | {ok, term(), [warning()]}\n                | {error, term()} | {error, term(), term()}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAs you call more and more functions and compose them together, the\ncross-section of what is a valid returning function grows in complexity\nand may even end up giving more trouble to tools such as Dialyzer.\u003c/p\u003e\n\n\u003cp\u003eBy comparison, the currently suggested mechanism can never get more\ncomplex than:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-spec caller() -\u0026gt; ok | {ok, term()} | {error, term()}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eOr, if we prefer parametrized types:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-type result(E) :: ok | {error, E}.\n-type result(R, E) :: {ok, R} | {error, E}.\n\n-spec caller() -\u0026gt; result(term()) | result(term(), term()).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eBy restricting the possible patterns (and therefore return values), we\ncan ensure better long-term composability and easier understanding of\nvarious such expressions.\u003c/p\u003e\n\n\u003ch2\u003eChoosing Exceptions Raised\u003c/h2\u003e\n\n\u003cp\u003eThe exception format proposed here is \u003ccode\u003e{badunwrap, Value}\u003c/code\u003e. This format\nis chosen following Erlang/OTP standards:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003ccode\u003ebadarg\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003ebadarith\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003ebadfun\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003e{badmatch, Val}\u003c/code\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eSince \"unwrapping\" is how the kind of operation where \u003ccode\u003eX\u003c/code\u003e is extracted\nfrom \u003ccode\u003e{ok, X}\u003c/code\u003e, the name \u003ccode\u003ebadunwrap\u003c/code\u003e was chosen, along with the\nmismatching value being borrowed from \u003ccode\u003e{badmatch, _}\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003eThe possibility of an early exit from a \u003ccode\u003ebegin ... end\u003c/code\u003e expression\nmeans that variables declared within its scope are now potentially\nunsafe to use outside of it.\u003c/p\u003e\n\n\u003cp\u003eThis is a change of behaviour that brings \u003ccode\u003ebegin\u003c/code\u003e in line with the\nvariables bound within a \u003ccode\u003ecase ... end\u003c/code\u003e branch, a \u003ccode\u003etry/catch\u003c/code\u003e clause, or\na \u003ccode\u003ereceive ... end\u003c/code\u003e branch.\u003c/p\u003e\n\n\u003cp\u003eThis lack of safety only needs to be started at the first \u003ccode\u003eUnwrapExpr\u003c/code\u003e\nencountered, since all variables bound before respect the same semantics\nas the existing \u003ccode\u003ebegin ... end\u003c/code\u003e expression. If this analysis is done\nrather than just declaring all variables as unsafe wholesale, then there\nis no backwards compatibility concern to be had.\u003c/p\u003e\n\n\u003cp\u003eThe need for a new operator means code built with support for the new\nexpressions won't be portable to older Erlang releases.\u003c/p\u003e\n\n\u003ch1\u003eReference Implementation\u003c/h1\u003e\n\n\u003cp\u003eNo reference implementation is usually required at this step, but one is\nnevertheless provided in the original repository for this EEP draft,\nat \u003ca href=\"https://bitbucket.org/ferd/unwrap/\"\u003ebitbucket.org/ferd/unwrap/\u003c/a\u003e.\nThe implementation uses parse transforms rather than an operator,\nsince it would be difficult to add custom operators at this point of the process.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0049"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

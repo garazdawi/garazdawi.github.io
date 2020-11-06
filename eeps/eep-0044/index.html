@@ -1,0 +1,514 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Björn Gustavsson &lt;bjorn(at)erlang(dot)org&gt;
+Status: Accepted/19.0-we Proposal's -warning and -error directives are accepted to be implemented in OTP release 19.0
+Type: Standards Track
+Created: 30-Sep-2015
+Erlang-Version: R19
+Post-History: 16-Oct-2015, 22-Oct-2015, 29-Oct-2015
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 44: <a href="eep-0044.md" title="EEP Source"> Additional preprocessor directives</a></h2>
+
+<h1>Abstract</h1>
+
+<p>This EEP proposes extensions to the preprocessor to allow more
+powerful conditional compilation.  The existing <code>-ifdef</code> directive
+provides the bare minimum functionality for doing conditional
+compilation, but it will often require help from external tools such
+as <code>autoconf</code>.</p>
+
+<h1>Specification</h1>
+
+<p>We will introduce a new predefined macro and four new preprocessor
+directives.</p>
+
+<h2>The OTP_RELEASE macro</h2>
+
+<p>There will be a new predefined macro called <code>OTP_RELEASE</code>.  Its value
+will be an integer giving the release number for run-time system that
+is running the compiler.  In OTP 19, its value will be <code>19</code>.</p>
+
+<p>Code that must work both in both OTP 18 and OTP 19 can use the
+following construction:</p>
+
+<pre><code>-ifdef(OTP_RELEASE).
+  %% Code that will work in OTP 19 or higher.
+-else.
+  %% Code that will work in OTP 18.
+-endif.
+</code></pre>
+
+<p>From <code>OTP_RELEASE</code>, information about the <em>minimum</em> capabilities of
+the run-time system can be inferred.  It is especially useful for
+testing for the presence of major new features, especially language
+features.</p>
+
+<p>As a hypothetical example, assuming that OTP_RELEASE had been
+available in OTP 17, if <code>?OTP_RELEASE == 17</code> evaluated to <code>true</code>,
+we would know that maps were supported.</p>
+
+<h2>The -if And -elif Directives</h2>
+
+<p>The syntax for the new directives is as follows:</p>
+
+<pre><code>-if(Expression).
+   .
+   .
+   .
+-elif(Expression).
+   .
+   .
+   .
+-else.
+   .
+   .
+   .
+-endif.
+</code></pre>
+
+<p>The <code>-elif</code> directive may be repeated any number of times.</p>
+
+<p><em>Expression</em> is similar to the kind of expressions that are
+allowed in guards, with a few differences:</p>
+
+<ul>
+<li><p>Only a single expression is allowed. <code>,</code> and ';' may not be
+used. Use <code>andalso</code> or <code>orelse</code> instead.</p></li>
+<li><p>In addition to the guard BIFs that are allowed in guards, there are
+several additional functions allowed in the expression for an <code>-if</code> or
+<code>-elif</code>. Those functions are described in the next section.</p></li>
+<li><p>Calls to unknown functions will not cause a compilation error,
+but an evalution failure which will cause the lines that follows
+the <code>-if</code> or <code>-elif</code> to be skipped.  See the Examples section for
+an example to see why that is useful.  Calls to BIFs that are not
+guard BIFs (such as <code>integer_to_list/1</code>) will cause a compilation
+error.</p></li>
+</ul>
+
+<h2>Built-In Functions in -if/-elif</h2>
+
+<p>The following functions are available in <code>-if</code> and <code>-elif</code> expressions
+(and <em>only</em> there):</p>
+
+<ul>
+<li><code>defined(</code><em>Symbol</em><code>)</code></li>
+<li><code>is_deprecated(</code><em>Module</em><code>,</code> <em>Function</em><code>,</code> <em>Arity</em><code>)</code></li>
+<li><code>is_exported(</code><em>Module</em><code>,</code> <em>Function</em><code>,</code> <em>Arity</em><code>)</code></li>
+<li><code>is_header(</code><em>Header</em><code>)</code></li>
+<li><code>is_module(</code><em>Module</em><code>)</code></li>
+<li><code>version(</code><em>App</em><code>)</code></li>
+</ul>
+
+<p>Descriptions of each <code>if</code>-builtin follow.</p>
+
+<h3>defined/1</h3>
+
+<p><code>defined(</code><em>Symbol</em><code>)</code> tests whether the preprocessor symbol is
+defined, just like <code>-ifdef(Symbol)</code>.</p>
+
+<h3>is_deprecated/3</h3>
+
+<p><code>is_deprecated(</code><em>Module</em><code>,</code> <em>Function</em><code>,</code> <em>Arity</em><code>)</code> tests whether
+<em>Function</em><code>/</code><em>Arity</em> is deprecated.  It returns <code>true</code> if and only
+if the compiler would generate a deprecated warning for the function.</p>
+
+<p>To clarify, there are two ways that a function can be deprecated.</p>
+
+<ul>
+<li><p>One is by using the <code>-deprecated()</code> attribute.  This is what you use
+to deprecate your functions, and the Xref tool knows about it.  The
+compiler does not, and <code>is_deprecated/3</code> does not either.</p></li>
+<li><p>The other way is by listing the function in the compiler's table of
+deprecated functions in the <code>otp_internal</code> module.  This is what
+<code>is_deprecated/3</code> consults.  <code>is_deprecated(M, F, A)</code> is true if and
+only if <code>M:F/A</code> is listed in that table; the <code>nowarn_deprecated</code>
+option has no effect on this decision.</p></li>
+</ul>
+
+<h3>is_exported/3</h3>
+
+<p><code>is_exported(</code><em>Module</em><code>,</code> <em>Function</em><code>,</code> <em>Arity</em><code>)</code> tests whether
+<em>Function</em><code>/</code><em>Arity</em> is exported from <em>Module</em>.</p>
+
+<p><em>Module</em> must already have been compiled.  <code>is_exported/3</code> will first
+call <code>code:ensure_loaded/1</code> to load <em>Module</em> if it is not already
+loaded.  If <em>Module</em> is not loaded and <code>code:ensure_loaded/1</code> fails to
+load it, <code>is_exported/3</code> will return <code>false</code>.  When <em>Module</em> is known
+to be loaded, <code>is_exported/3</code> will test whether the
+<em>Function</em><code>/</code><em>Arity</em> is exported from <em>Module</em>.</p>
+
+<h3>is_header/1</h3>
+
+<p><code>is_header(</code><em>Header</em><code>)</code> tests whether the header file <em>Header</em>
+exists.  It searches for header files in the same way as
+<code>-include_lib</code>.</p>
+
+<h3>is_module/1</h3>
+
+<p><code>is_module(</code><em>Module</em><code>)</code> tests whether the module <em>Module</em> exists.</p>
+
+<p><em>Module</em> must already have been compiled.  <code>is_module/1</code> will call
+<code>code:ensure_loaded/1</code> to load <em>Module</em> if it is not already loaded.
+If and only if <code>code:ensure_loaded/1</code> returns <code>{module,</code><em>Module</em><code>}</code>,
+<code>is_module/1</code> will return <code>true</code>.</p>
+
+<h3>version/1</h3>
+
+<p><code>version(</code><em>App</em><code>)</code> returns the version number for the given
+application <em>App</em> as a list of integers and strings.</p>
+
+<p>First the version number string will be split at each "." to
+produce a list of strings.  Then an attempt will be made to convert
+each string in the list to an integer using <code>list_to_integer/1</code>.
+If the conversion fails, the string will be kept.</p>
+
+<p>Here is an example:</p>
+
+<pre><code>"1.10.7"
+</code></pre>
+
+<p>First the string will be split:</p>
+
+<pre><code>["1","10","7"]
+</code></pre>
+
+<p>Then each string in the list will be converted to an integer:</p>
+
+<pre><code>[1,10,7]
+</code></pre>
+
+<p>Here is another example:</p>
+
+<pre><code>"1.6.0c"
+</code></pre>
+
+<p>First the string will be split:</p>
+
+<pre><code>["1","6","0c"]
+</code></pre>
+
+<p>Then <code>version/1</code> will attempt to convert each string to an integer:</p>
+
+<pre><code>[1,6,"0c"]
+</code></pre>
+
+<p>The last string is not numeric, so it is kept.</p>
+
+<p>The version string is fetched from the app file for the application.
+If the application cannot be found in the code path, or if the app
+file cannot be read, or if there is no <code>vsn</code> record in the file, the
+return value will be <code>[]</code>.</p>
+
+<h2>The -error Directive</h2>
+
+<p>The syntax for the <code>-error</code> directive is:</p>
+
+<pre><code>-error(Term).
+</code></pre>
+
+<p>The directive will cause a compilation error. The error message
+will look like:</p>
+
+<pre><code>file.erl:Line: -error(Term).
+</code></pre>
+
+<p>Here is an example:</p>
+
+<pre><code>-module(example).
+-error("This is wrong").
+-error(wrong).
+-error("Macros will be expanded: " ?MODULE_STRING).
+</code></pre>
+
+<p>The error message will be:</p>
+
+<pre><code>example.erl:2: -error("This is wrong").
+example.erl:3: -error(wrong).
+example.erl:4: -error("Macros will be expanded: example").
+</code></pre>
+
+<h2>The -warning Directive</h2>
+
+<p>The syntax for the <code>-warning</code> directive is:</p>
+
+<pre><code>-warning(Term).
+</code></pre>
+
+<p>The directive will generate a warning, but the compilation will
+continue.  The warning message will look like:</p>
+
+<pre><code>file.erl:Line: Warning -warning(Term).
+</code></pre>
+
+<p>Here is an example:</p>
+
+<pre><code>-module(example).
+-warning("This module is obsolete").
+-warning("Macros will be expanded: " ?MODULE_STRING).
+</code></pre>
+
+<p>The warning message will be:</p>
+
+<pre><code>example.erl:2: Warning: -warning("This module is obsolete").
+example.erl:3: Warning: -warning("Macros will be expanded: example").
+</code></pre>
+
+<h2>Examples</h2>
+
+<p>Here is an example of code that will work in OTP 18 through OTP 20.
+There will be a compilation error if an attempt is made to compile
+the code in OTP 21 or higher.</p>
+
+<pre><code>-ifndef(OTP_RELEASE).
+  %% Code that will work in OTP 18.
+-else.
+  %% OTP 19 or higher.
+  -if(?OTP_RELEASE =:= 19).
+    %% Code that will work in OTP 19.
+  -elif(?OTP_RELEASE =:= 20).
+    %% Code that will work in OTP 20.
+  -else.
+    -error("Unsupported OTP release").
+  -endif.
+-endif.
+</code></pre>
+
+<p>(Note that current versions of the preprocessor has partial support
+for <code>-if</code> in that it can <em>skip</em> an <code>-if</code> ... <code>-endif</code> construction.
+Therefore this code example will work in OTP 18.)</p>
+
+<p>Here is an hypothetical example showing how a problem could have
+been solved in the past
+(see <a href="http://erlang.org/pipermail/erlang-questions/2013-July/074542.html" title="predefined Erlang version macros">predefined Erlang version macros</a>).</p>
+
+<pre><code>-if(is_module(ssh_daemon_channel)).
+  %% R16B: use new ssh behaviour
+  -behavior(ssh_daemon_channel).
+-else.
+  %% R15: use old ssh behaviour
+  -behaviour(ssh_channel).
+-endif.
+</code></pre>
+
+<p>Here is an example of dealing with a newly introduced header file.</p>
+
+<pre><code>-if(is_header("stdlib/include/assert.hrl")).
+  -include_lib("stdlib/include/assert.hrl").
+-else.
+  %% Define dummy macros just so that our code will compile.
+  -define(assert(E),ok).
+  -define(assertNot(E),ok).
+-endif.
+</code></pre>
+
+<p>Here is an hypothetical example showing how we could have tested
+for the presence of maps:</p>
+
+<pre><code>-if(not is_map(a)).
+  %% The guard BIF is_map/1 exists, i.e. maps are supported.
+-else.
+  %% No support for maps in this release.
+-endif.
+</code></pre>
+
+<p>Note that <code>not is_map(a)</code> will evaluate to <code>true</code> if the <code>is_map/1</code> is
+a supported guard BIF.  If <code>is_map/1</code> is not a supported guard BIF,
+the call to <code>is_map/1</code> will generate an exception which will fail the
+expression.</p>
+
+<p>Here is an example involving the hypothetical <code>foobar</code> application.
+Since it is not included in OTP, it might not have been compiled, and
+<code>is_exported/3</code> could return <code>false</code> for the wrong reason.  To guard
+against that, we will abort the compilation if the <code>foobar</code> module
+does not exist:</p>
+
+<pre><code>-if(not is_module(foobar)).
+-error("The foobar application has not been compiled").
+-endif.
+
+-if(is_exported(foobar, new_feature, 1)).
+%% Do something smart with the new feature.
+-else.
+%% Do as best as we can without the new feature.
+-endif.
+</code></pre>
+
+<h1>Motivation</h1>
+
+<p>It is common practice for many open-source applications (or libraries)
+to work with at least two major releases of OTP: the current release
+and the previous one.  An application may also have dependencies to
+other third-party libraries and may need to work with different
+versions of those.</p>
+
+<p>Some applications may support several releases by refraining from
+using features that are not available in both releases.  That may not
+always be possible, depending on the purpose of the application. A
+tool for pretty printing Erlang terms, for example, would not be very
+useful if it didn't support all data types in the release in which it
+was running.</p>
+
+<p>There is also another issue.  Modern applications are expected:</p>
+
+<ul>
+<li><p>To compile without any warnings.  Many developers use <code>-Werror</code> to
+turn warnings into compilation errors.  That means that warnings
+for deprecated functions must be suppressed or eliminated.  As an
+example, the <code>now/0</code> BIF was marked as deprecated in OTP 18.
+The recommended replacement BIFs were introduced in the same release.</p></li>
+<li><p>Not to cause any warnings in Dialyzer, and to have good type
+specifications for all exported functions to help finding errors.
+The type specifications must compile in all supported releases,
+and must not cause warnings.</p></li>
+</ul>
+
+<p>In many cases, the most practical solution for supporting several
+OTP releases is conditional compilation, that is, if some condition
+if fulfilled, one part of a source file will be compiled, and another
+part if not.  For example, to handle the deprecation of <code>now/0</code>:</p>
+
+<pre><code>-ifdef(NOW_DEPRECATED).
+  %% Use the recommended replacement functions.
+  sys_time() -&gt;
+    erlang:timestamp().
+  uniq_name() -&gt;
+    Uniq = erlang:unique_integer([positive]),
+    lists:flatten(io_lib:format("name_~w", [Uniq]));
+-else.
+  %% Use now/0.
+  sys_time() -&gt;
+    now().
+  uniq_name() -&gt;
+    {A,B,C} = now(),
+    lists:flatten(io_lib:format("name_~w_~w_~w", [A,B,C])).
+-endif.
+</code></pre>
+
+<p>That approach works, but some external tool (for example <code>autoconf</code>)
+will have to arrange for <code>-DNOW_DEPRECATED</code> to be added to the command
+line for <code>erlc</code> if <code>now/0</code> has been deprecated.</p>
+
+<p>Our suggestion for extending the preprocessor facilitates using
+conditional compilation without any external tools. Assuming that
+the extended preprocessor had been available earlier, the previous
+example can be rewritten to:</p>
+
+<pre><code>-if(is_exported(erlang, timestamp, 0)).
+  %% Use the recommended replacement functions.
+  sys_time() -&gt;
+    erlang:timestamp().
+  uniq_name() -&gt;
+    Uniq = erlang:unique_integer([positive]),
+    lists:flatten(io:lib_format("name_~w", [Uniq])).
+-else.
+  %% Use now/0.
+  sys_time() -&gt;
+    now().
+  uniq_name() -&gt;
+    {A,B,C} = now(),
+    lists:flatten(io:lib_format("name_~w_~w_~w", [A,B,C])).
+-endif.
+</code></pre>
+
+<p>Alternatively, the first <code>-if</code> could have been written:</p>
+
+<pre><code>-if(is_deprecated(erlang, now, 0)).
+</code></pre>
+
+<h1>Rationale</h1>
+
+<p>Preprocessors have a bad reputation, so why extend the preprocessor?</p>
+
+<p>A quick <a href="https://www.google.com/?gfe_rd=cr&amp;q=preprocessor+evil&amp;gws_rd=cr#safe=off&amp;q=preprocessor+evil" title="preprocessor evil">Google search for "preprocessor evil"</a>
+seems to indicate that it is the macro expansion in the preprocessor
+that is considered evil, not the conditional compilation part.</p>
+
+<p>That said, the major pitfall of conditional compilation is that the
+code may be misbehave if it is run in a different environment than it
+was compiled in.  This potential problem already exists with the
+<code>-ifdef</code> directive in the current preprocessor.  It is the
+responsibility of the user of conditional compilation to ensure that
+the code is run in an environment compatible with the compilation
+environment.</p>
+
+<p>There is one thing a preprocessor, and only a preprocessor, can do:
+skip code that is not syntactically correct (for example, code that
+uses the map syntax).  Therefore, it seems that there is no way
+getting around using a preprocessor.  We <em>could</em> invent a new
+preprocessor, but that is not the purpose of this EEP.</p>
+
+<p>What about feature detection instead of testing version numbers?</p>
+
+<p>We are all for that.  Whenever possible, tests against version numbers
+should be avoided if there is a better way.  For example, to test
+whether the new behavior <code>ssh_daemon_channel</code> exists, use
+<code>is_module(ssh_daemon_channel)</code>.</p>
+
+<p>Would it not be better to have a built-in <code>supported</code> function to test
+for language-related features instead of testing for the OTP release
+number?</p>
+
+<pre><code>-if(supported(maps)).
+%% Map code.
+-endif.
+</code></pre>
+
+<p>Perhaps.  It seems that for this to work the list of supported feature
+names accepted by <code>supported</code> must be carefully maintained and
+documented for each release.  The users must then look up the
+appropriate feature name to use.  It may also not be obvious how to
+name minor changes to the type specification syntax or to the language
+itself.  The resulting code may not be any easier to understand than a
+test against a release number.</p>
+
+<h3>Rationale for allowing unknown functions in expressions</h3>
+
+<p>The rules for expressions says that the following example is legal
+because <code>foobar/0</code> is an unknown function:</p>
+
+<pre><code>-if(foobar()).
+%% Always skipped.
+-endif.
+</code></pre>
+
+<p>The reason is that otherwise some expressions would be legal in
+some releases but not others.  For example, <code>-if(is_map(a))</code> would
+be legal in OTP releases that support maps, but cause a compilation
+error in other releases.  Also, as a side effect, testing guard
+BIFs can be used to test for new features instead of testing
+<code>OTP_RELEASE</code>.</p>
+
+<h1>Backwards Compatibility</h1>
+
+<p>Modules that define the <code>OTP_RELEASE</code> macro will fail to compile
+with a message similar to this:</p>
+
+<pre><code>example.erl:4: redefining predefined macro 'OTP_RELEASE'
+</code></pre>
+
+<p>Similarly, attempting to define <code>OTP_RELEASE</code> from the command
+line using <code>-D</code> will also fail.</p>
+
+<p>Modules that has attributes that looks like <code>-error(Term)</code> or
+<code>-warning(Term)</code> will need to be updated, as <code>-error(Term)</code> will
+now cause a compilation error and <code>-warning(Term)</code> will cause
+a compilation warning.</p>
+
+<p>The function <code>epp:parse_erl_form/1</code> can now return <code>{warning,Info}</code> in
+addition to its previous return values.  Applications that call
+<code>epp:parse_erl_form/1</code> will need to be updated to handle the new
+return value.  Similarly, the <code>epp:parse_file()</code> family of functions
+can now include <code>{warning,Info}</code> tuples in the returned list of forms.</p>
+
+<h1>Implementation</h1>
+
+<p>The reference implementation can be fetched from Github like this:</p>
+
+<pre><code>git fetch git://github.com/bjorng/otp.git bjorn/preprocessor-extensions
+</code></pre>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0044","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Björn Gustavsson \u0026lt;bjorn(at)erlang(dot)org\u0026gt;\nStatus: Accepted/19.0-we Proposal's -warning and -error directives are accepted to be implemented in OTP release 19.0\nType: Standards Track\nCreated: 30-Sep-2015\nErlang-Version: R19\nPost-History: 16-Oct-2015, 22-Oct-2015, 29-Oct-2015\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 44: \u003ca href=\"eep-0044.md\" title=\"EEP Source\"\u003e Additional preprocessor directives\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eThis EEP proposes extensions to the preprocessor to allow more\npowerful conditional compilation.  The existing \u003ccode\u003e-ifdef\u003c/code\u003e directive\nprovides the bare minimum functionality for doing conditional\ncompilation, but it will often require help from external tools such\nas \u003ccode\u003eautoconf\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch1\u003eSpecification\u003c/h1\u003e\n\n\u003cp\u003eWe will introduce a new predefined macro and four new preprocessor\ndirectives.\u003c/p\u003e\n\n\u003ch2\u003eThe OTP_RELEASE macro\u003c/h2\u003e\n\n\u003cp\u003eThere will be a new predefined macro called \u003ccode\u003eOTP_RELEASE\u003c/code\u003e.  Its value\nwill be an integer giving the release number for run-time system that\nis running the compiler.  In OTP 19, its value will be \u003ccode\u003e19\u003c/code\u003e.\u003c/p\u003e\n\n\u003cp\u003eCode that must work both in both OTP 18 and OTP 19 can use the\nfollowing construction:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-ifdef(OTP_RELEASE).\n  %% Code that will work in OTP 19 or higher.\n-else.\n  %% Code that will work in OTP 18.\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eFrom \u003ccode\u003eOTP_RELEASE\u003c/code\u003e, information about the \u003cem\u003eminimum\u003c/em\u003e capabilities of\nthe run-time system can be inferred.  It is especially useful for\ntesting for the presence of major new features, especially language\nfeatures.\u003c/p\u003e\n\n\u003cp\u003eAs a hypothetical example, assuming that OTP_RELEASE had been\navailable in OTP 17, if \u003ccode\u003e?OTP_RELEASE == 17\u003c/code\u003e evaluated to \u003ccode\u003etrue\u003c/code\u003e,\nwe would know that maps were supported.\u003c/p\u003e\n\n\u003ch2\u003eThe -if And -elif Directives\u003c/h2\u003e\n\n\u003cp\u003eThe syntax for the new directives is as follows:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(Expression).\n   .\n   .\n   .\n-elif(Expression).\n   .\n   .\n   .\n-else.\n   .\n   .\n   .\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe \u003ccode\u003e-elif\u003c/code\u003e directive may be repeated any number of times.\u003c/p\u003e\n\n\u003cp\u003e\u003cem\u003eExpression\u003c/em\u003e is similar to the kind of expressions that are\nallowed in guards, with a few differences:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003eOnly a single expression is allowed. \u003ccode\u003e,\u003c/code\u003e and ';' may not be\nused. Use \u003ccode\u003eandalso\u003c/code\u003e or \u003ccode\u003eorelse\u003c/code\u003e instead.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003eIn addition to the guard BIFs that are allowed in guards, there are\nseveral additional functions allowed in the expression for an \u003ccode\u003e-if\u003c/code\u003e or\n\u003ccode\u003e-elif\u003c/code\u003e. Those functions are described in the next section.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003eCalls to unknown functions will not cause a compilation error,\nbut an evalution failure which will cause the lines that follows\nthe \u003ccode\u003e-if\u003c/code\u003e or \u003ccode\u003e-elif\u003c/code\u003e to be skipped.  See the Examples section for\nan example to see why that is useful.  Calls to BIFs that are not\nguard BIFs (such as \u003ccode\u003einteger_to_list/1\u003c/code\u003e) will cause a compilation\nerror.\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003ch2\u003eBuilt-In Functions in -if/-elif\u003c/h2\u003e\n\n\u003cp\u003eThe following functions are available in \u003ccode\u003e-if\u003c/code\u003e and \u003ccode\u003e-elif\u003c/code\u003e expressions\n(and \u003cem\u003eonly\u003c/em\u003e there):\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003ccode\u003edefined(\u003c/code\u003e\u003cem\u003eSymbol\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003eis_deprecated(\u003c/code\u003e\u003cem\u003eModule\u003c/em\u003e\u003ccode\u003e,\u003c/code\u003e \u003cem\u003eFunction\u003c/em\u003e\u003ccode\u003e,\u003c/code\u003e \u003cem\u003eArity\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003eis_exported(\u003c/code\u003e\u003cem\u003eModule\u003c/em\u003e\u003ccode\u003e,\u003c/code\u003e \u003cem\u003eFunction\u003c/em\u003e\u003ccode\u003e,\u003c/code\u003e \u003cem\u003eArity\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003eis_header(\u003c/code\u003e\u003cem\u003eHeader\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003eis_module(\u003c/code\u003e\u003cem\u003eModule\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003eversion(\u003c/code\u003e\u003cem\u003eApp\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eDescriptions of each \u003ccode\u003eif\u003c/code\u003e-builtin follow.\u003c/p\u003e\n\n\u003ch3\u003edefined/1\u003c/h3\u003e\n\n\u003cp\u003e\u003ccode\u003edefined(\u003c/code\u003e\u003cem\u003eSymbol\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e tests whether the preprocessor symbol is\ndefined, just like \u003ccode\u003e-ifdef(Symbol)\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch3\u003eis_deprecated/3\u003c/h3\u003e\n\n\u003cp\u003e\u003ccode\u003eis_deprecated(\u003c/code\u003e\u003cem\u003eModule\u003c/em\u003e\u003ccode\u003e,\u003c/code\u003e \u003cem\u003eFunction\u003c/em\u003e\u003ccode\u003e,\u003c/code\u003e \u003cem\u003eArity\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e tests whether\n\u003cem\u003eFunction\u003c/em\u003e\u003ccode\u003e/\u003c/code\u003e\u003cem\u003eArity\u003c/em\u003e is deprecated.  It returns \u003ccode\u003etrue\u003c/code\u003e if and only\nif the compiler would generate a deprecated warning for the function.\u003c/p\u003e\n\n\u003cp\u003eTo clarify, there are two ways that a function can be deprecated.\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003eOne is by using the \u003ccode\u003e-deprecated()\u003c/code\u003e attribute.  This is what you use\nto deprecate your functions, and the Xref tool knows about it.  The\ncompiler does not, and \u003ccode\u003eis_deprecated/3\u003c/code\u003e does not either.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003eThe other way is by listing the function in the compiler's table of\ndeprecated functions in the \u003ccode\u003eotp_internal\u003c/code\u003e module.  This is what\n\u003ccode\u003eis_deprecated/3\u003c/code\u003e consults.  \u003ccode\u003eis_deprecated(M, F, A)\u003c/code\u003e is true if and\nonly if \u003ccode\u003eM:F/A\u003c/code\u003e is listed in that table; the \u003ccode\u003enowarn_deprecated\u003c/code\u003e\noption has no effect on this decision.\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003ch3\u003eis_exported/3\u003c/h3\u003e\n\n\u003cp\u003e\u003ccode\u003eis_exported(\u003c/code\u003e\u003cem\u003eModule\u003c/em\u003e\u003ccode\u003e,\u003c/code\u003e \u003cem\u003eFunction\u003c/em\u003e\u003ccode\u003e,\u003c/code\u003e \u003cem\u003eArity\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e tests whether\n\u003cem\u003eFunction\u003c/em\u003e\u003ccode\u003e/\u003c/code\u003e\u003cem\u003eArity\u003c/em\u003e is exported from \u003cem\u003eModule\u003c/em\u003e.\u003c/p\u003e\n\n\u003cp\u003e\u003cem\u003eModule\u003c/em\u003e must already have been compiled.  \u003ccode\u003eis_exported/3\u003c/code\u003e will first\ncall \u003ccode\u003ecode:ensure_loaded/1\u003c/code\u003e to load \u003cem\u003eModule\u003c/em\u003e if it is not already\nloaded.  If \u003cem\u003eModule\u003c/em\u003e is not loaded and \u003ccode\u003ecode:ensure_loaded/1\u003c/code\u003e fails to\nload it, \u003ccode\u003eis_exported/3\u003c/code\u003e will return \u003ccode\u003efalse\u003c/code\u003e.  When \u003cem\u003eModule\u003c/em\u003e is known\nto be loaded, \u003ccode\u003eis_exported/3\u003c/code\u003e will test whether the\n\u003cem\u003eFunction\u003c/em\u003e\u003ccode\u003e/\u003c/code\u003e\u003cem\u003eArity\u003c/em\u003e is exported from \u003cem\u003eModule\u003c/em\u003e.\u003c/p\u003e\n\n\u003ch3\u003eis_header/1\u003c/h3\u003e\n\n\u003cp\u003e\u003ccode\u003eis_header(\u003c/code\u003e\u003cem\u003eHeader\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e tests whether the header file \u003cem\u003eHeader\u003c/em\u003e\nexists.  It searches for header files in the same way as\n\u003ccode\u003e-include_lib\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch3\u003eis_module/1\u003c/h3\u003e\n\n\u003cp\u003e\u003ccode\u003eis_module(\u003c/code\u003e\u003cem\u003eModule\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e tests whether the module \u003cem\u003eModule\u003c/em\u003e exists.\u003c/p\u003e\n\n\u003cp\u003e\u003cem\u003eModule\u003c/em\u003e must already have been compiled.  \u003ccode\u003eis_module/1\u003c/code\u003e will call\n\u003ccode\u003ecode:ensure_loaded/1\u003c/code\u003e to load \u003cem\u003eModule\u003c/em\u003e if it is not already loaded.\nIf and only if \u003ccode\u003ecode:ensure_loaded/1\u003c/code\u003e returns \u003ccode\u003e{module,\u003c/code\u003e\u003cem\u003eModule\u003c/em\u003e\u003ccode\u003e}\u003c/code\u003e,\n\u003ccode\u003eis_module/1\u003c/code\u003e will return \u003ccode\u003etrue\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch3\u003eversion/1\u003c/h3\u003e\n\n\u003cp\u003e\u003ccode\u003eversion(\u003c/code\u003e\u003cem\u003eApp\u003c/em\u003e\u003ccode\u003e)\u003c/code\u003e returns the version number for the given\napplication \u003cem\u003eApp\u003c/em\u003e as a list of integers and strings.\u003c/p\u003e\n\n\u003cp\u003eFirst the version number string will be split at each \".\" to\nproduce a list of strings.  Then an attempt will be made to convert\neach string in the list to an integer using \u003ccode\u003elist_to_integer/1\u003c/code\u003e.\nIf the conversion fails, the string will be kept.\u003c/p\u003e\n\n\u003cp\u003eHere is an example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\"1.10.7\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eFirst the string will be split:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[\"1\",\"10\",\"7\"]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThen each string in the list will be converted to an integer:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[1,10,7]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHere is another example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\"1.6.0c\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eFirst the string will be split:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[\"1\",\"6\",\"0c\"]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThen \u003ccode\u003eversion/1\u003c/code\u003e will attempt to convert each string to an integer:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[1,6,\"0c\"]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe last string is not numeric, so it is kept.\u003c/p\u003e\n\n\u003cp\u003eThe version string is fetched from the app file for the application.\nIf the application cannot be found in the code path, or if the app\nfile cannot be read, or if there is no \u003ccode\u003evsn\u003c/code\u003e record in the file, the\nreturn value will be \u003ccode\u003e[]\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch2\u003eThe -error Directive\u003c/h2\u003e\n\n\u003cp\u003eThe syntax for the \u003ccode\u003e-error\u003c/code\u003e directive is:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-error(Term).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe directive will cause a compilation error. The error message\nwill look like:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efile.erl:Line: -error(Term).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHere is an example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-module(example).\n-error(\"This is wrong\").\n-error(wrong).\n-error(\"Macros will be expanded: \" ?MODULE_STRING).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe error message will be:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eexample.erl:2: -error(\"This is wrong\").\nexample.erl:3: -error(wrong).\nexample.erl:4: -error(\"Macros will be expanded: example\").\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch2\u003eThe -warning Directive\u003c/h2\u003e\n\n\u003cp\u003eThe syntax for the \u003ccode\u003e-warning\u003c/code\u003e directive is:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-warning(Term).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe directive will generate a warning, but the compilation will\ncontinue.  The warning message will look like:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efile.erl:Line: Warning -warning(Term).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHere is an example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-module(example).\n-warning(\"This module is obsolete\").\n-warning(\"Macros will be expanded: \" ?MODULE_STRING).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe warning message will be:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eexample.erl:2: Warning: -warning(\"This module is obsolete\").\nexample.erl:3: Warning: -warning(\"Macros will be expanded: example\").\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch2\u003eExamples\u003c/h2\u003e\n\n\u003cp\u003eHere is an example of code that will work in OTP 18 through OTP 20.\nThere will be a compilation error if an attempt is made to compile\nthe code in OTP 21 or higher.\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-ifndef(OTP_RELEASE).\n  %% Code that will work in OTP 18.\n-else.\n  %% OTP 19 or higher.\n  -if(?OTP_RELEASE =:= 19).\n    %% Code that will work in OTP 19.\n  -elif(?OTP_RELEASE =:= 20).\n    %% Code that will work in OTP 20.\n  -else.\n    -error(\"Unsupported OTP release\").\n  -endif.\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003e(Note that current versions of the preprocessor has partial support\nfor \u003ccode\u003e-if\u003c/code\u003e in that it can \u003cem\u003eskip\u003c/em\u003e an \u003ccode\u003e-if\u003c/code\u003e ... \u003ccode\u003e-endif\u003c/code\u003e construction.\nTherefore this code example will work in OTP 18.)\u003c/p\u003e\n\n\u003cp\u003eHere is an hypothetical example showing how a problem could have\nbeen solved in the past\n(see \u003ca href=\"http://erlang.org/pipermail/erlang-questions/2013-July/074542.html\" title=\"predefined Erlang version macros\"\u003epredefined Erlang version macros\u003c/a\u003e).\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(is_module(ssh_daemon_channel)).\n  %% R16B: use new ssh behaviour\n  -behavior(ssh_daemon_channel).\n-else.\n  %% R15: use old ssh behaviour\n  -behaviour(ssh_channel).\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHere is an example of dealing with a newly introduced header file.\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(is_header(\"stdlib/include/assert.hrl\")).\n  -include_lib(\"stdlib/include/assert.hrl\").\n-else.\n  %% Define dummy macros just so that our code will compile.\n  -define(assert(E),ok).\n  -define(assertNot(E),ok).\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHere is an hypothetical example showing how we could have tested\nfor the presence of maps:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(not is_map(a)).\n  %% The guard BIF is_map/1 exists, i.e. maps are supported.\n-else.\n  %% No support for maps in this release.\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eNote that \u003ccode\u003enot is_map(a)\u003c/code\u003e will evaluate to \u003ccode\u003etrue\u003c/code\u003e if the \u003ccode\u003eis_map/1\u003c/code\u003e is\na supported guard BIF.  If \u003ccode\u003eis_map/1\u003c/code\u003e is not a supported guard BIF,\nthe call to \u003ccode\u003eis_map/1\u003c/code\u003e will generate an exception which will fail the\nexpression.\u003c/p\u003e\n\n\u003cp\u003eHere is an example involving the hypothetical \u003ccode\u003efoobar\u003c/code\u003e application.\nSince it is not included in OTP, it might not have been compiled, and\n\u003ccode\u003eis_exported/3\u003c/code\u003e could return \u003ccode\u003efalse\u003c/code\u003e for the wrong reason.  To guard\nagainst that, we will abort the compilation if the \u003ccode\u003efoobar\u003c/code\u003e module\ndoes not exist:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(not is_module(foobar)).\n-error(\"The foobar application has not been compiled\").\n-endif.\n\n-if(is_exported(foobar, new_feature, 1)).\n%% Do something smart with the new feature.\n-else.\n%% Do as best as we can without the new feature.\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eIt is common practice for many open-source applications (or libraries)\nto work with at least two major releases of OTP: the current release\nand the previous one.  An application may also have dependencies to\nother third-party libraries and may need to work with different\nversions of those.\u003c/p\u003e\n\n\u003cp\u003eSome applications may support several releases by refraining from\nusing features that are not available in both releases.  That may not\nalways be possible, depending on the purpose of the application. A\ntool for pretty printing Erlang terms, for example, would not be very\nuseful if it didn't support all data types in the release in which it\nwas running.\u003c/p\u003e\n\n\u003cp\u003eThere is also another issue.  Modern applications are expected:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003eTo compile without any warnings.  Many developers use \u003ccode\u003e-Werror\u003c/code\u003e to\nturn warnings into compilation errors.  That means that warnings\nfor deprecated functions must be suppressed or eliminated.  As an\nexample, the \u003ccode\u003enow/0\u003c/code\u003e BIF was marked as deprecated in OTP 18.\nThe recommended replacement BIFs were introduced in the same release.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003eNot to cause any warnings in Dialyzer, and to have good type\nspecifications for all exported functions to help finding errors.\nThe type specifications must compile in all supported releases,\nand must not cause warnings.\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eIn many cases, the most practical solution for supporting several\nOTP releases is conditional compilation, that is, if some condition\nif fulfilled, one part of a source file will be compiled, and another\npart if not.  For example, to handle the deprecation of \u003ccode\u003enow/0\u003c/code\u003e:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-ifdef(NOW_DEPRECATED).\n  %% Use the recommended replacement functions.\n  sys_time() -\u0026gt;\n    erlang:timestamp().\n  uniq_name() -\u0026gt;\n    Uniq = erlang:unique_integer([positive]),\n    lists:flatten(io_lib:format(\"name_~w\", [Uniq]));\n-else.\n  %% Use now/0.\n  sys_time() -\u0026gt;\n    now().\n  uniq_name() -\u0026gt;\n    {A,B,C} = now(),\n    lists:flatten(io_lib:format(\"name_~w_~w_~w\", [A,B,C])).\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThat approach works, but some external tool (for example \u003ccode\u003eautoconf\u003c/code\u003e)\nwill have to arrange for \u003ccode\u003e-DNOW_DEPRECATED\u003c/code\u003e to be added to the command\nline for \u003ccode\u003eerlc\u003c/code\u003e if \u003ccode\u003enow/0\u003c/code\u003e has been deprecated.\u003c/p\u003e\n\n\u003cp\u003eOur suggestion for extending the preprocessor facilitates using\nconditional compilation without any external tools. Assuming that\nthe extended preprocessor had been available earlier, the previous\nexample can be rewritten to:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(is_exported(erlang, timestamp, 0)).\n  %% Use the recommended replacement functions.\n  sys_time() -\u0026gt;\n    erlang:timestamp().\n  uniq_name() -\u0026gt;\n    Uniq = erlang:unique_integer([positive]),\n    lists:flatten(io:lib_format(\"name_~w\", [Uniq])).\n-else.\n  %% Use now/0.\n  sys_time() -\u0026gt;\n    now().\n  uniq_name() -\u0026gt;\n    {A,B,C} = now(),\n    lists:flatten(io:lib_format(\"name_~w_~w_~w\", [A,B,C])).\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAlternatively, the first \u003ccode\u003e-if\u003c/code\u003e could have been written:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(is_deprecated(erlang, now, 0)).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003cp\u003ePreprocessors have a bad reputation, so why extend the preprocessor?\u003c/p\u003e\n\n\u003cp\u003eA quick \u003ca href=\"https://www.google.com/?gfe_rd=cr\u0026amp;q=preprocessor+evil\u0026amp;gws_rd=cr#safe=off\u0026amp;q=preprocessor+evil\" title=\"preprocessor evil\"\u003eGoogle search for \"preprocessor evil\"\u003c/a\u003e\nseems to indicate that it is the macro expansion in the preprocessor\nthat is considered evil, not the conditional compilation part.\u003c/p\u003e\n\n\u003cp\u003eThat said, the major pitfall of conditional compilation is that the\ncode may be misbehave if it is run in a different environment than it\nwas compiled in.  This potential problem already exists with the\n\u003ccode\u003e-ifdef\u003c/code\u003e directive in the current preprocessor.  It is the\nresponsibility of the user of conditional compilation to ensure that\nthe code is run in an environment compatible with the compilation\nenvironment.\u003c/p\u003e\n\n\u003cp\u003eThere is one thing a preprocessor, and only a preprocessor, can do:\nskip code that is not syntactically correct (for example, code that\nuses the map syntax).  Therefore, it seems that there is no way\ngetting around using a preprocessor.  We \u003cem\u003ecould\u003c/em\u003e invent a new\npreprocessor, but that is not the purpose of this EEP.\u003c/p\u003e\n\n\u003cp\u003eWhat about feature detection instead of testing version numbers?\u003c/p\u003e\n\n\u003cp\u003eWe are all for that.  Whenever possible, tests against version numbers\nshould be avoided if there is a better way.  For example, to test\nwhether the new behavior \u003ccode\u003essh_daemon_channel\u003c/code\u003e exists, use\n\u003ccode\u003eis_module(ssh_daemon_channel)\u003c/code\u003e.\u003c/p\u003e\n\n\u003cp\u003eWould it not be better to have a built-in \u003ccode\u003esupported\u003c/code\u003e function to test\nfor language-related features instead of testing for the OTP release\nnumber?\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(supported(maps)).\n%% Map code.\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ePerhaps.  It seems that for this to work the list of supported feature\nnames accepted by \u003ccode\u003esupported\u003c/code\u003e must be carefully maintained and\ndocumented for each release.  The users must then look up the\nappropriate feature name to use.  It may also not be obvious how to\nname minor changes to the type specification syntax or to the language\nitself.  The resulting code may not be any easier to understand than a\ntest against a release number.\u003c/p\u003e\n\n\u003ch3\u003eRationale for allowing unknown functions in expressions\u003c/h3\u003e\n\n\u003cp\u003eThe rules for expressions says that the following example is legal\nbecause \u003ccode\u003efoobar/0\u003c/code\u003e is an unknown function:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-if(foobar()).\n%% Always skipped.\n-endif.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe reason is that otherwise some expressions would be legal in\nsome releases but not others.  For example, \u003ccode\u003e-if(is_map(a))\u003c/code\u003e would\nbe legal in OTP releases that support maps, but cause a compilation\nerror in other releases.  Also, as a side effect, testing guard\nBIFs can be used to test for new features instead of testing\n\u003ccode\u003eOTP_RELEASE\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003eModules that define the \u003ccode\u003eOTP_RELEASE\u003c/code\u003e macro will fail to compile\nwith a message similar to this:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eexample.erl:4: redefining predefined macro 'OTP_RELEASE'\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eSimilarly, attempting to define \u003ccode\u003eOTP_RELEASE\u003c/code\u003e from the command\nline using \u003ccode\u003e-D\u003c/code\u003e will also fail.\u003c/p\u003e\n\n\u003cp\u003eModules that has attributes that looks like \u003ccode\u003e-error(Term)\u003c/code\u003e or\n\u003ccode\u003e-warning(Term)\u003c/code\u003e will need to be updated, as \u003ccode\u003e-error(Term)\u003c/code\u003e will\nnow cause a compilation error and \u003ccode\u003e-warning(Term)\u003c/code\u003e will cause\na compilation warning.\u003c/p\u003e\n\n\u003cp\u003eThe function \u003ccode\u003eepp:parse_erl_form/1\u003c/code\u003e can now return \u003ccode\u003e{warning,Info}\u003c/code\u003e in\naddition to its previous return values.  Applications that call\n\u003ccode\u003eepp:parse_erl_form/1\u003c/code\u003e will need to be updated to handle the new\nreturn value.  Similarly, the \u003ccode\u003eepp:parse_file()\u003c/code\u003e family of functions\ncan now include \u003ccode\u003e{warning,Info}\u003c/code\u003e tuples in the returned list of forms.\u003c/p\u003e\n\n\u003ch1\u003eImplementation\u003c/h1\u003e\n\n\u003cp\u003eThe reference implementation can be fetched from Github like this:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003egit fetch git://github.com/bjorng/otp.git bjorn/preprocessor-extensions\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0044"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

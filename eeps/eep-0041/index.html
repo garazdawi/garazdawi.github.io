@@ -1,0 +1,618 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Richard A. O'Keefe &lt;ok(at)cs(dot)otago(dot)ac(dot)nz&gt;
+Status: Draft
+Type: Standards Track
+Erlang-Version: R16A
+Created: 04-Feb-2013
+Post-History:
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 41: <a href="eep-0041.md" title="EEP Source"> Pseudo-assignment for Erlang</a></h2>
+
+<h1>Abstract</h1>
+
+<p>Add the infix token ':=' to Erlang with the purely
+functional update semantics of '&lt;-' in R.</p>
+
+<h1>Example</h1>
+
+<p>Given the declarations</p>
+
+<pre><code>-record(rect, {top,left,bottom,right}).
+-record(whatever, {region, ...}).
+
+centre(#rect{top=T,left=L,bottom=B,right=R}) -&gt;
+    {(L+R)/2, (T+B)/2}.
+
+'centre:='(#rect{top=T,left=L,bottom=B,right=R}, {X,Y}) -&gt;
+    DX = X - (L+R)/2,
+    DY = Y - (T+B)/2,
+    #rect{top=T+DY,left=L+DX,bottom=B+DY,right=R+DX}.
+</code></pre>
+
+<p>the pseudo-assignment</p>
+
+<pre><code>centre(W#whatever.region) := P
+</code></pre>
+
+<p>expands to</p>
+
+<pre><code>W' = W#whatever{
+       region = 'centre:='(W#whatever.region, P)}
+</code></pre>
+
+<p>with W' automatically replacing downstream mentions of W.</p>
+
+<h1>Specification</h1>
+
+<p>A new token ':=' is introduced.  It may only be used in
+the form</p>
+
+<pre><code>Lhs := Rhs
+</code></pre>
+
+<p>where Rhs is any Erlang expression, called the source, and
+Lhs, called the target, is</p>
+
+<ul>
+<li>a variable (not a wildcard),</li>
+<li>Lhs' #record.field, or</li>
+<li>~f(Lhs'), or</li>
+<li>f(Lhs', E2, ..., En), or</li>
+<li>m:f(Lhs', E2, ..., En)</li>
+</ul>
+
+<p>where E2 ... En are any Erlang expressions, Lhs'
+is another instance of the same form, f is an atom,
+and the module prefix m may only be an atom or a variable.</p>
+
+<p>The "ultimate target"</p>
+
+<ul>
+<li>of a variable is that variable,</li>
+<li>of L#r.f is the ultimate target of L,</li>
+<li>of ~f(L) is the ultimate target of L,</li>
+<li>of f(L,...) is the ultimate target of L,</li>
+<li>of m:f(L,...) is the ultimate target of L.</li>
+</ul>
+
+<p>Any pseudo-assignment is basically a (re)binding of its
+ultimate target and has as its value the value
+given to that variable, <em>not</em> the source right hand side.</p>
+
+<p>A pseudo-assignment is equivalent to a sequence of
+simple variable=expression bindings joined by comma,
+and may appear anywhere in an expression that such a
+sequence of bindings may appear, except that if it
+occurs inside a list comprehension, the ultimate
+target must not be mentioned outside that comprehension.</p>
+
+<p>The semantics of pseudo-assignment is defined using
+three conceptual stages:  protection, expansion, and
+renaming.</p>
+
+<h2>Protection</h2>
+
+<p>The basic idea is that</p>
+
+<pre><code>f(T, E2, ..., En) := S
+</code></pre>
+
+<p>is syntactic sugar for</p>
+
+<pre><code>T := 'f:='(T, E2, ..., En, S)
+</code></pre>
+
+<p>This form of pseudo-assignment comes from S (<a href="http://en.wikipedia.org/wiki/S_%28programming_language%29" title="The S programming language">S</a> <a href="http://www.r-project.org/" title="The R Project for Statistical Computing">R</a>),
+although Pop-2 (<a href="http://en.wikipedia.org/wiki/POP-2" title="Pop-2">P</a>) had an analogous approach much earlier,
+and somewhat similar "sinister function calls" were found in
+SETL (<a href="http://www.setl.org" title="GNU SETL">M</a>) (which looks imperative but whose values are
+semantically immutable).</p>
+
+<p>Where things get slightly complicated is that we want
+subexpressions of T1, E2, ..., En, S evaluated exactly
+once and in order.  This is like the way the Common Lisp
+(<a href="http://www.lispworks.com/documentation/common-lisp.html" title="The Common Lisp HyperSpec">L</a>) macros that work with generalised variables "[evaluate]
+the subforms of the macro call [...] exactly once in
+left-to-right order".  Let's start with an example:</p>
+
+<p>f(g(T, E1), E2) := E3</p>
+
+<p>=> V1 = E1,
+      g(T, V1) := 'f:='(g(T, V1), E2, E3)</p>
+
+<p>=> V1 = E1,
+      T := 'g:='(T, V1, 'f:='(g(T, V1), E2, E3))</p>
+
+<p>so that E1 is not evaluated twice.</p>
+
+<p>This step is defined using Erlang pseudo-code, in which
+&lt;[...]> brackets are "quasi-quotes" enclosing source
+syntax representations of abstract syntax trees.
+Informally, do a pre-order walk over the AST adding
+V=Arg bindings for every non-first argument Arg of each
+function but the top-most, for any Arg that needs it.
+Which arguments do not need this protection?  Ones whose
+evaluation cannot produce any observable effects, which
+we can approximate well enough by saying that variables
+and constants don't need protection and everything else does.</p>
+
+<pre><code>% protect(ast()) -&gt; ast()
+
+protect(&lt;[ Lhs := Rhs ]&gt;) -&gt;
+    {Lhs', Bindings} = protect(Lhs, 0, []),
+    prepend_bindings(Bindings, &lt;[ Lhs' := Rhs ]&gt;).
+
+% prepend_bindings([ast()], ast()) -&gt; ast().
+
+prepend_bindings([Binding|Bindings], E) -&gt;
+    E' = prepend_bindings(Bindings, E),
+    &lt;[ Binding, E' ]&gt;;
+prepend_bindings([], E) -&gt;
+    E.
+
+% protect(Expr::ast(), Depth::int(), [ast()]) -&gt;
+%     {ast(), [ast()].
+
+protect(&lt;[ Var ]&gt;, _, B) -&gt;
+    {&lt;[ Var ]&gt;, B};
+protect(&lt;[ ~F(T) ]&gt;, D, B) -&gt;
+    {T', B'} = protect(T, D+1, B),
+    {&lt;[ ~F(T') ]&gt;, B'};
+protect(&lt;[ T#R.F ]&gt;, D, B) -&gt;
+    {T', B'} = protect(T, D+1, B),
+    {&lt;[ T'@R.F ]&gt;, B'};
+protect(&lt;[ F(T,E2,...,En) ]&gt;, D = 0, B) -&gt;
+    {T', B'} = protect(T, D+1, B),
+    {&lt;[ F(T',E2,...,En) ]&gt;, B');
+protect(&lt;[ F(T,E2,...,En) ]&gt;, D, B) when D &gt; 0 -&gt;
+    {[E2',...,En'], B'} = protect_args([E2,...,En], B),
+    {T', B''} = protect(T, D+1, B),
+    {F(T',E2',...,En'), B''};
+protect(&lt;[ M:F(T,E2,...,En) ]&gt;, D = 0, B) -&gt;
+    {T', B'} = protect(T, D+1, B),
+    {&lt;[ M:F(T',E2,...,En) ]&gt;, B'');
+protect(&lt;[ M:F(T,E2,...,En) ]&gt;, D, B) when D &gt; 0 -&gt;
+    {[E2',...,En'], B'} = protect_args([E2,...,En], B),
+    {T', B''} = protect(T, D+1, B),
+    {M:F(T',E2',...,En'), B''};
+
+% protect_args([ast()], [ast()]) -&gt; {[ast()], [ast()]}.
+
+protect_args([], B) -&gt;
+    {[], B};
+protect_args([&lt;[ Var ]&gt;|Args], B) -&gt;
+    {Args', B'} = protect_args(Args, B),
+    {[&lt; Var ]&gt;|Args'], B'};
+protect_args([&lt;[ Const ]&gt;|Args], B) -&gt;
+    {Args', B'} = protect_args(Args, B),
+    {[&lt; Const ]&gt;|Args'], B'};
+protect_args([&lt;[ E ]&gt;|Args], B) -&gt;
+    V = a new variable,
+    {Args', B'} = protect_args(Args, [&lt;[ V = E ]&gt;|B]),
+    {[&lt;[ V ]&gt;|Args'], B'}.
+</code></pre>
+
+<h2>Expansion</h2>
+
+<p>Expansion recursively rewrites pseudo-assignments until
+the target is a simple variable.</p>
+
+<pre><code>L#r.f := E
+=&gt;  L := L#r{f = E}
+
+~f(L) := E          
+=&gt;  L := &lt;{f ~ E | L}&gt;
+
+f(L, E2, ..., En) := E
+=&gt; L := 'f:='(L, E2, ..., En, E)
+
+m:f(L, E2, ..., En) := E
+=&gt; L := m:'f:='(L, L2, ..., En, E)
+</code></pre>
+
+<p>An assignment function is not a special kind of function but
+an ordinary function with a special form of name.  They can
+be exported, imported, remote-called, passed around in or as
+funs, using existing Erlang means.</p>
+
+<p>In particular, there is no automatic connection between
+f/n and 'f:=/(n+1).  Importing or exporting one does not
+automatically import or export the other.</p>
+
+<h2>Renaming</h2>
+
+<p>After expansion and renaming, there are exactly as many
+pseudo-assignments as there were before, but each one now
+has a simple variable as its entire target.</p>
+
+<p>This is handled by renaming.  Instead of thinking of a
+variable as identified by a name, think of it as identified
+by a «name,version» pair.  So the assignment</p>
+
+<pre><code>V := E
+</code></pre>
+
+<p>is to be thought of (and indeed transformed to)</p>
+
+<pre><code>«V,n+1» = E
+</code></pre>
+
+<p>where n is the highest version of V appearing on the
+execution path to this rebinding.  If there is no
+such version, n = 0.  So</p>
+
+<pre><code>X := f(...),
+X := g(..X..),
+X := h(..X..),
+</code></pre>
+
+<p>becomes</p>
+
+<pre><code>«X,1» = f(...),
+«X,2» = g(..«X,1»..),
+«X,3» = h(..«X,2»..),
+</code></pre>
+
+<p>Sequenceas are easy.  The difficulty is control
+paths that split and rejoin, like 'if' or 'case'.</p>
+
+<p>If E is a split-join control path, and X is a variable that appears in
+in E and is live after it, and the last occurrences of X in each branch
+of E do not all have the same version, then let «X,m» be the highest
+version of X in E. On each branch of E where a version of X is created,
+replace the highest version of X by «X,m».  If a branch does not
+create a version of X and X is not live on entry to E, this is already
+an error in Erlang, and we don't change that.  If «X,p» is the version
+of X that is live on entry to E, then add</p>
+
+<pre><code>«X,m» = «X,p»
+</code></pre>
+
+<p>just after the -> arrow of each branch that does not update X.
+Here's an exmaple.</p>
+
+<pre><code>W = 137,
+if X &lt; Y  -&gt; Z = X-1, Z := Z*(Y+1)
+ ; X &gt;= Y -&gt; Z = 42, W := 3145
+end,
+f(Z, W)
+</code></pre>
+
+<p>becomes</p>
+
+<pre><code>«W,1» = 137,
+if «X,1» &lt; «Y,1» -&gt;
+      «W,2» = «W,1»,   % patch
+      «Z,1» = «X,1» - 1,
+      «Z,2» = «Z,1»*(«Y,1»+1)
+ ; «X,1» &gt;= «Y,1» -&gt;
+      «Z,2» = 42,     % patch
+      «W,2» = 3145
+end,
+f(«Z,2», «W,2»)
+</code></pre>
+
+<p>The first patch line is added because that branch does not
+update W, and it is added where it is so as not to interfere
+with the result of the rest of the branch.
+The second patch line would have bound «Z,1» except that
+the version was pushed up to to match the other branch.</p>
+
+<p>In effect, we are working with static single assignment form,
+and the patches are pushing the phi-function back into the
+branches.</p>
+
+<p>The semantic analyser and code generator of the compiler never
+get to hear about pseudo-assignment.  There is no reason why
+different versions of a variable should be allocated the same
+virtual register or memory cell; it's up to the register
+allocator to do that if it is useful or to do otherwise if
+that's more useful.</p>
+
+<h1>Motivation</h1>
+
+<p>Several people have complained on the Erlang mailing list
+that having to write</p>
+
+<pre><code>X  = f(...),
+X1 = g(..X..),
+X2 = h(..X1...)
+</code></pre>
+
+<p>is error prone as well as tedious because if they have to
+reorder the sequence of transformations, add a transformation,
+or remove one, they have to rename the variables.</p>
+
+<p>The fact that "assignment" to whole variables can be modelled
+in a pure declarative language using renaming has been known
+for a long time.  I knew it when writing "The Craft of Prolog",
+and it was folklore then.  The question was not <em>could</em> we
+support</p>
+
+<pre><code>X := f(...),
+X := g(..X..),
+X := h(..X..),
+</code></pre>
+
+<p>but <em>should</em> we?</p>
+
+<p>Loïc Hoguin has argued strongly that "[he] just want[s]
+primitives to easily update deep data structures" (26 Jan 2013),
+saying that Erlang's handling of records is inadequate because it
+makes this difficult.  He wrote (25 Jan 2013):</p>
+
+<blockquote>
+  <p>Assume a variable Character.
+This variable contains everything about the character.
+How do you best access and modify Character?
+The answer must not involve the process dictionary, processes or
+message passing.
+Today I have to write each access and modification function.
+Or I can generate it,
+but either way I end up with hundreds of functions in many modules. 
+Or I could use records, and have one line per sub-record per 
+modification function I write.
+That's not <em>easy</em> nor <em>practical</em>.
+Easy and practical is:</p>
+
+<p>Character.weapon.ability.cost</p>
+
+<p>for access, and:</p>
+
+<p>Character.weapon.ability.cost = 123</p>
+
+<p>for modification.</p>
+</blockquote>
+
+<p>I don't propose to give him that, but</p>
+
+<pre><code>C = cost(ability(Character#cinfo.weapon)),
+cost(ability(Character#cinfo.weapon)) := C + 123
+</code></pre>
+
+<p>he can have, where all functions might be inlined, or</p>
+
+<pre><code>C = ~cost ~ability ~weapon Character,
+~cost ~ability ~weapon Character := C + 123
+</code></pre>
+
+<p>in that bright future when we have frames.</p>
+
+<p>The good part, from my point of view, is that this brief
+syntax can be had without introducing mutable data structures.
+This is <em>pseudo</em>-assignment.  And it is a proven technique
+that has been used for over 25 years.</p>
+
+<p>The bad part, for die-hard assignment fans, is that updating
+deep paths this way requires allocating modified copies of
+records along the way, but we can't change that without
+altering fundamental properties of Erlang.</p>
+
+<h1>Rationale</h1>
+
+<p>The questions are: what kind of "assignment" should be offered,
+what syntax should be used for assignment and what targets should`
+be allowed.</p>
+
+<p>Without adding a type system that would permit Haskell-style
+monads or Clean/Mercury-style uniqueness tracking,
+there are two ways to add assignment to Erlang: the Lisp way
+and the S way.  The Lisp way is to offer the real thing in
+all its destructive power.  That would have the huge benefit
+of making Erlang much more comfortable for C/Java/JavaScript
+programmers, and we could look forward to the day when Erlang
+syntax is finally reformed to be JavaScript with threads.  It
+would also have the huge price of requiring major changes to
+the Erlang compiler and runtime system and of voiding one of
+the major guarantees ("your data is safe with us") cherished
+by Erlang programmers.  It would make Erlang programs harder
+to get right.  Frankly, if we want JavaScript with threads,
+we'd do much better to add threads to JavaScript.</p>
+
+<p>The other way is the S way.  S is a programming language
+devised by John Chambers at AT&amp;T for programming statistics
+algorithms.  The revised language definition was published
+in 1988.  The syntax of S looks like slightly deranged
+C, but the semantics is astonishingly functional.  In particular,
+at least up to S3, S values did not detectably share mutable
+parts.  An S assignment like</p>
+
+<pre><code>a[i,j] &lt;- 0
+</code></pre>
+
+<p>is equivalent to</p>
+
+<pre><code>"["(a, i, j) &lt;- 0
+</code></pre>
+
+<p>which is in turn equivalent to</p>
+
+<pre><code>a &lt;- "[&lt;-"(a, i, j, value = 0)
+</code></pre>
+
+<p>and this is not merely a fashion of speaking, there really is a
+function named "[&lt;-" which is really called.   With its C-like
+syntax, immutable data structures, and lazily evaluated
+function arguments, the S language is is definitely strange.
+But it is highly <em>practical</em>.  The R repository has a huge
+range of packages doing amazing and useful things; it is used
+in Statistics courses around the world; and there is an
+abundance of excellent books teaching and using S/R.  So while
+the idea of "assignment" being syntactic sugar for computing
+a new whole value and rebinding it to a value may seem unfamiliar,
+it is demonstrably both <em>workable</em> and <em>usable</em>.</p>
+
+<p>Since there is a battle-tested form of "assignment" that does
+not require mutable data structures, that's clearly the way for
+Erlang to go.</p>
+
+<p>As for syntax, I am familiar with</p>
+
+<ul>
+<li>Lhs = Rhs (Fortran, COBOL, BASIC, C)</li>
+<li>Lhs := Rhs (Algol, Pascal, Modula, Ada, ANSI Smalltalk)</li>
+<li>Lhs left-arrow Rhs (APL, classic Smalltalk)</li>
+<li>Lhs &lt;- Rhs (S)</li>
+<li>Rhs -> Lhs (S, Pop-2)</li>
+<li>(set! Lhs Rhs) (Scheme)</li>
+<li>(setf Lhs Rhs) (Lisp)</li>
+</ul>
+
+<p>Of these, Erlang already uses =, &lt;-, and -> for other purposes,
+and the Unicode left arrow remains difficult to type.  Erlang
+syntax is not Lisp syntax, and while LFE has Lispy macros,
+plain Erlang does not.  This leaves := as the sole credible contender.</p>
+
+<p>As for the targets of pseudo-assignments, we could simply allow
+Erlang variables.  The ability to do renaming-style assignments
+has been frequently requested in the Erlang mailing list.  It is
+important to understand that the renaming approach to variable
+"assignment" does not require the ability to rewrite a memory
+cell: different "versions" of a variable may well occupy different
+cells, and whether they do or not is up to the register allocator.</p>
+
+<p>We have also seen Erlang criticised for being unable to express
+chained record updates clearly.  Instead of</p>
+
+<pre><code>X1 = X#r{f = X#r.f#s{g = X#r.f#s.g#t{h = 42}}}
+</code></pre>
+
+<p>many people would rather write</p>
+
+<pre><code>X#r.f#s.g#t.h := 42
+</code></pre>
+
+<p>and who can blame them?  (Well, <em>me</em>.  I think they should not
+be writing code like that whatever the syntax, and found in my
+own C code that purging it of pointer chains uncovered a
+scary number of present and potential bugs.  The basic nature
+of the problem is excessive coupling.)  So we want to allow
+field references as targets.</p>
+
+<p>The ~f(L) syntax comes from the frames proposal.  If record
+fields are pseudo-assignable, so should frame slots be.</p>
+
+<p>If we want to pseudo-assign to elements of hash tables or
+array-like structures, we have to allow function calls.
+The example of S shows that we <em>can</em> include function calls on
+the left of assignments, meaning that we can do</p>
+
+<pre><code>at(Dict, Key) -&gt;
+    case dict:find(Dict, Key)
+      of {ok,V} -&gt; V
+       ; error  -&gt; 0
+    end.
+
+'at:='(Dict, Key, Value) -&gt;
+    dict:store(Key, Value, Dict).
+
+...
+
+    at(D, K) := at(D, K) + 1
+...
+'element:='(N, Tuple, V) -&gt;
+    setelement(N, Tuple, V).
+...
+   A := {0,0,0}, 
+   element(1, A) := 3,
+   element(2, A) := 1,
+   element(3, A) := 4
+</code></pre>
+
+<p>Some languages let you assign to substrings.
+If we can pseudo-assign to function calls, we need no
+extra machinery for that:</p>
+
+<pre><code>'substr:='(String, Start, New) -&gt;
+    string:substr(String, 1, Start - 1) ++ New.
+
+'substr:='(String, Start, Length, New) -&gt;
+    string:substr(String, 1, Start - 1) ++ New ++
+    string:substr(String, Start + Length - 1).
+</code></pre>
+
+<p>The next step in generality would be to follow Algol 68 and
+allow</p>
+
+<pre><code>if G1 -&gt; B1, L1
+ ; ...
+ ; Gn -&gt; Bn, Ln
+end := E
+</code></pre>
+
+<p>meaning</p>
+
+<pre><code>if G1 -&gt; B1, L1 := E
+ ; ...
+ ; Gn -&gt; Bn, Ln := E
+end
+</code></pre>
+
+<p>with similar definitions for 'case' &amp;c.  I can't see a
+straightforward way to implement that without either
+duplicating E or doing computations out of order, so it
+seemed like a good idea to stop just before this point.</p>
+
+<p>The 'expansion' step above says that importing or exporting
+f/n does not automatically import or export 'f:='/(n+1).
+This could be a source of unimportant but annoying errors.
+I expect using assignment functions to be more common than
+defining them, and you can write a remote call to a function
+without explicitly importing it, so <em>writing</em></p>
+
+<pre><code>string:substr(Line, Comment_Start) := ""
+</code></pre>
+
+<p>does not require any special declaration.  The possible
+mistake, then, is to define f/n and 'f:='/(n+1) in a module
+and export the first without exporting the second.  If this
+does turn out to be a problem, it will be easy enough to add
+a rule that if f/n is exported and 'f:='/(n+1) is defined,
+the assignment form is exported too.  Let's wait and see if
+it's really needed.</p>
+
+<p>Should pseudo-assignment syntax be allowed for a variable's
+initial binding?  There does not seem to be any compelling
+reason to forbid it.</p>
+
+<p>There <em>is</em> a compelling reason to forbid variables being
+pseudo-assigned inside a list comprehension that are used
+outside it.  List comprehensions could be compiled inline
+instead of generating out-of-line recursive functions, as
+they currently do.  And variable assignment by actual
+honest-to-goodness smash-that-memory-cell assignment could
+be used to implement such assignments.  And the formal
+semantics could remain renaming.  But the code generator
+would have to know about it.  The renaming semantics
+<em>could</em> be implemented with the out-of-line approach, but
+the current values of such variables would have to be
+passed in and returned, creating overheads that would
+surprise me, let alone other programmers.  Simpler by far
+just to forbid it.  This is not entirely unlike the
+somewhat fiddly scope rules for variables in anonymous
+functions.</p>
+
+<h1>Backwards Compatibility</h1>
+
+<p>The token ':=' and the token sequence ':' '=' are not currently
+legal anywhere in Erlang source code, so no existing code is
+directly affected.</p>
+
+<p>Pseudo-assignment is defined as a source to source transformation.
+This transformation is local to the function clause affected and
+can done entirely within the parser.</p>
+
+<p>This means that anything in the Erlang tool chain downstream from
+the parser is unaffected by this change.  In particular, profiling,
+monitoring, and debugging tools just see plain old Erlang.</p>
+
+<h1>Reference Implementation</h1>
+
+<p>None in this draft, though implementation hints are given.</p>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0041","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Richard A. O'Keefe \u0026lt;ok(at)cs(dot)otago(dot)ac(dot)nz\u0026gt;\nStatus: Draft\nType: Standards Track\nErlang-Version: R16A\nCreated: 04-Feb-2013\nPost-History:\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 41: \u003ca href=\"eep-0041.md\" title=\"EEP Source\"\u003e Pseudo-assignment for Erlang\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eAdd the infix token ':=' to Erlang with the purely\nfunctional update semantics of '\u0026lt;-' in R.\u003c/p\u003e\n\n\u003ch1\u003eExample\u003c/h1\u003e\n\n\u003cp\u003eGiven the declarations\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-record(rect, {top,left,bottom,right}).\n-record(whatever, {region, ...}).\n\ncentre(#rect{top=T,left=L,bottom=B,right=R}) -\u0026gt;\n    {(L+R)/2, (T+B)/2}.\n\n'centre:='(#rect{top=T,left=L,bottom=B,right=R}, {X,Y}) -\u0026gt;\n    DX = X - (L+R)/2,\n    DY = Y - (T+B)/2,\n    #rect{top=T+DY,left=L+DX,bottom=B+DY,right=R+DX}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ethe pseudo-assignment\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ecentre(W#whatever.region) := P\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eexpands to\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eW' = W#whatever{\n       region = 'centre:='(W#whatever.region, P)}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewith W' automatically replacing downstream mentions of W.\u003c/p\u003e\n\n\u003ch1\u003eSpecification\u003c/h1\u003e\n\n\u003cp\u003eA new token ':=' is introduced.  It may only be used in\nthe form\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eLhs := Rhs\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhere Rhs is any Erlang expression, called the source, and\nLhs, called the target, is\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003ea variable (not a wildcard),\u003c/li\u003e\n\u003cli\u003eLhs' #record.field, or\u003c/li\u003e\n\u003cli\u003e~f(Lhs'), or\u003c/li\u003e\n\u003cli\u003ef(Lhs', E2, ..., En), or\u003c/li\u003e\n\u003cli\u003em:f(Lhs', E2, ..., En)\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003ewhere E2 ... En are any Erlang expressions, Lhs'\nis another instance of the same form, f is an atom,\nand the module prefix m may only be an atom or a variable.\u003c/p\u003e\n\n\u003cp\u003eThe \"ultimate target\"\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003eof a variable is that variable,\u003c/li\u003e\n\u003cli\u003eof L#r.f is the ultimate target of L,\u003c/li\u003e\n\u003cli\u003eof ~f(L) is the ultimate target of L,\u003c/li\u003e\n\u003cli\u003eof f(L,...) is the ultimate target of L,\u003c/li\u003e\n\u003cli\u003eof m:f(L,...) is the ultimate target of L.\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eAny pseudo-assignment is basically a (re)binding of its\nultimate target and has as its value the value\ngiven to that variable, \u003cem\u003enot\u003c/em\u003e the source right hand side.\u003c/p\u003e\n\n\u003cp\u003eA pseudo-assignment is equivalent to a sequence of\nsimple variable=expression bindings joined by comma,\nand may appear anywhere in an expression that such a\nsequence of bindings may appear, except that if it\noccurs inside a list comprehension, the ultimate\ntarget must not be mentioned outside that comprehension.\u003c/p\u003e\n\n\u003cp\u003eThe semantics of pseudo-assignment is defined using\nthree conceptual stages:  protection, expansion, and\nrenaming.\u003c/p\u003e\n\n\u003ch2\u003eProtection\u003c/h2\u003e\n\n\u003cp\u003eThe basic idea is that\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ef(T, E2, ..., En) := S\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eis syntactic sugar for\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eT := 'f:='(T, E2, ..., En, S)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis form of pseudo-assignment comes from S (\u003ca href=\"http://en.wikipedia.org/wiki/S_%28programming_language%29\" title=\"The S programming language\"\u003eS\u003c/a\u003e \u003ca href=\"http://www.r-project.org/\" title=\"The R Project for Statistical Computing\"\u003eR\u003c/a\u003e),\nalthough Pop-2 (\u003ca href=\"http://en.wikipedia.org/wiki/POP-2\" title=\"Pop-2\"\u003eP\u003c/a\u003e) had an analogous approach much earlier,\nand somewhat similar \"sinister function calls\" were found in\nSETL (\u003ca href=\"http://www.setl.org\" title=\"GNU SETL\"\u003eM\u003c/a\u003e) (which looks imperative but whose values are\nsemantically immutable).\u003c/p\u003e\n\n\u003cp\u003eWhere things get slightly complicated is that we want\nsubexpressions of T1, E2, ..., En, S evaluated exactly\nonce and in order.  This is like the way the Common Lisp\n(\u003ca href=\"http://www.lispworks.com/documentation/common-lisp.html\" title=\"The Common Lisp HyperSpec\"\u003eL\u003c/a\u003e) macros that work with generalised variables \"[evaluate]\nthe subforms of the macro call [...] exactly once in\nleft-to-right order\".  Let's start with an example:\u003c/p\u003e\n\n\u003cp\u003ef(g(T, E1), E2) := E3\u003c/p\u003e\n\n\u003cp\u003e=\u003e V1 = E1,\n      g(T, V1) := 'f:='(g(T, V1), E2, E3)\u003c/p\u003e\n\n\u003cp\u003e=\u003e V1 = E1,\n      T := 'g:='(T, V1, 'f:='(g(T, V1), E2, E3))\u003c/p\u003e\n\n\u003cp\u003eso that E1 is not evaluated twice.\u003c/p\u003e\n\n\u003cp\u003eThis step is defined using Erlang pseudo-code, in which\n\u0026lt;[...]\u003e brackets are \"quasi-quotes\" enclosing source\nsyntax representations of abstract syntax trees.\nInformally, do a pre-order walk over the AST adding\nV=Arg bindings for every non-first argument Arg of each\nfunction but the top-most, for any Arg that needs it.\nWhich arguments do not need this protection?  Ones whose\nevaluation cannot produce any observable effects, which\nwe can approximate well enough by saying that variables\nand constants don't need protection and everything else does.\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e% protect(ast()) -\u0026gt; ast()\n\nprotect(\u0026lt;[ Lhs := Rhs ]\u0026gt;) -\u0026gt;\n    {Lhs', Bindings} = protect(Lhs, 0, []),\n    prepend_bindings(Bindings, \u0026lt;[ Lhs' := Rhs ]\u0026gt;).\n\n% prepend_bindings([ast()], ast()) -\u0026gt; ast().\n\nprepend_bindings([Binding|Bindings], E) -\u0026gt;\n    E' = prepend_bindings(Bindings, E),\n    \u0026lt;[ Binding, E' ]\u0026gt;;\nprepend_bindings([], E) -\u0026gt;\n    E.\n\n% protect(Expr::ast(), Depth::int(), [ast()]) -\u0026gt;\n%     {ast(), [ast()].\n\nprotect(\u0026lt;[ Var ]\u0026gt;, _, B) -\u0026gt;\n    {\u0026lt;[ Var ]\u0026gt;, B};\nprotect(\u0026lt;[ ~F(T) ]\u0026gt;, D, B) -\u0026gt;\n    {T', B'} = protect(T, D+1, B),\n    {\u0026lt;[ ~F(T') ]\u0026gt;, B'};\nprotect(\u0026lt;[ T#R.F ]\u0026gt;, D, B) -\u0026gt;\n    {T', B'} = protect(T, D+1, B),\n    {\u0026lt;[ T'@R.F ]\u0026gt;, B'};\nprotect(\u0026lt;[ F(T,E2,...,En) ]\u0026gt;, D = 0, B) -\u0026gt;\n    {T', B'} = protect(T, D+1, B),\n    {\u0026lt;[ F(T',E2,...,En) ]\u0026gt;, B');\nprotect(\u0026lt;[ F(T,E2,...,En) ]\u0026gt;, D, B) when D \u0026gt; 0 -\u0026gt;\n    {[E2',...,En'], B'} = protect_args([E2,...,En], B),\n    {T', B''} = protect(T, D+1, B),\n    {F(T',E2',...,En'), B''};\nprotect(\u0026lt;[ M:F(T,E2,...,En) ]\u0026gt;, D = 0, B) -\u0026gt;\n    {T', B'} = protect(T, D+1, B),\n    {\u0026lt;[ M:F(T',E2,...,En) ]\u0026gt;, B'');\nprotect(\u0026lt;[ M:F(T,E2,...,En) ]\u0026gt;, D, B) when D \u0026gt; 0 -\u0026gt;\n    {[E2',...,En'], B'} = protect_args([E2,...,En], B),\n    {T', B''} = protect(T, D+1, B),\n    {M:F(T',E2',...,En'), B''};\n\n% protect_args([ast()], [ast()]) -\u0026gt; {[ast()], [ast()]}.\n\nprotect_args([], B) -\u0026gt;\n    {[], B};\nprotect_args([\u0026lt;[ Var ]\u0026gt;|Args], B) -\u0026gt;\n    {Args', B'} = protect_args(Args, B),\n    {[\u0026lt; Var ]\u0026gt;|Args'], B'};\nprotect_args([\u0026lt;[ Const ]\u0026gt;|Args], B) -\u0026gt;\n    {Args', B'} = protect_args(Args, B),\n    {[\u0026lt; Const ]\u0026gt;|Args'], B'};\nprotect_args([\u0026lt;[ E ]\u0026gt;|Args], B) -\u0026gt;\n    V = a new variable,\n    {Args', B'} = protect_args(Args, [\u0026lt;[ V = E ]\u0026gt;|B]),\n    {[\u0026lt;[ V ]\u0026gt;|Args'], B'}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch2\u003eExpansion\u003c/h2\u003e\n\n\u003cp\u003eExpansion recursively rewrites pseudo-assignments until\nthe target is a simple variable.\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eL#r.f := E\n=\u0026gt;  L := L#r{f = E}\n\n~f(L) := E          \n=\u0026gt;  L := \u0026lt;{f ~ E | L}\u0026gt;\n\nf(L, E2, ..., En) := E\n=\u0026gt; L := 'f:='(L, E2, ..., En, E)\n\nm:f(L, E2, ..., En) := E\n=\u0026gt; L := m:'f:='(L, L2, ..., En, E)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAn assignment function is not a special kind of function but\nan ordinary function with a special form of name.  They can\nbe exported, imported, remote-called, passed around in or as\nfuns, using existing Erlang means.\u003c/p\u003e\n\n\u003cp\u003eIn particular, there is no automatic connection between\nf/n and 'f:=/(n+1).  Importing or exporting one does not\nautomatically import or export the other.\u003c/p\u003e\n\n\u003ch2\u003eRenaming\u003c/h2\u003e\n\n\u003cp\u003eAfter expansion and renaming, there are exactly as many\npseudo-assignments as there were before, but each one now\nhas a simple variable as its entire target.\u003c/p\u003e\n\n\u003cp\u003eThis is handled by renaming.  Instead of thinking of a\nvariable as identified by a name, think of it as identified\nby a «name,version» pair.  So the assignment\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eV := E\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eis to be thought of (and indeed transformed to)\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e«V,n+1» = E\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhere n is the highest version of V appearing on the\nexecution path to this rebinding.  If there is no\nsuch version, n = 0.  So\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eX := f(...),\nX := g(..X..),\nX := h(..X..),\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ebecomes\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e«X,1» = f(...),\n«X,2» = g(..«X,1»..),\n«X,3» = h(..«X,2»..),\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eSequenceas are easy.  The difficulty is control\npaths that split and rejoin, like 'if' or 'case'.\u003c/p\u003e\n\n\u003cp\u003eIf E is a split-join control path, and X is a variable that appears in\nin E and is live after it, and the last occurrences of X in each branch\nof E do not all have the same version, then let «X,m» be the highest\nversion of X in E. On each branch of E where a version of X is created,\nreplace the highest version of X by «X,m».  If a branch does not\ncreate a version of X and X is not live on entry to E, this is already\nan error in Erlang, and we don't change that.  If «X,p» is the version\nof X that is live on entry to E, then add\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e«X,m» = «X,p»\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ejust after the -\u003e arrow of each branch that does not update X.\nHere's an exmaple.\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eW = 137,\nif X \u0026lt; Y  -\u0026gt; Z = X-1, Z := Z*(Y+1)\n ; X \u0026gt;= Y -\u0026gt; Z = 42, W := 3145\nend,\nf(Z, W)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ebecomes\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e«W,1» = 137,\nif «X,1» \u0026lt; «Y,1» -\u0026gt;\n      «W,2» = «W,1»,   % patch\n      «Z,1» = «X,1» - 1,\n      «Z,2» = «Z,1»*(«Y,1»+1)\n ; «X,1» \u0026gt;= «Y,1» -\u0026gt;\n      «Z,2» = 42,     % patch\n      «W,2» = 3145\nend,\nf(«Z,2», «W,2»)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe first patch line is added because that branch does not\nupdate W, and it is added where it is so as not to interfere\nwith the result of the rest of the branch.\nThe second patch line would have bound «Z,1» except that\nthe version was pushed up to to match the other branch.\u003c/p\u003e\n\n\u003cp\u003eIn effect, we are working with static single assignment form,\nand the patches are pushing the phi-function back into the\nbranches.\u003c/p\u003e\n\n\u003cp\u003eThe semantic analyser and code generator of the compiler never\nget to hear about pseudo-assignment.  There is no reason why\ndifferent versions of a variable should be allocated the same\nvirtual register or memory cell; it's up to the register\nallocator to do that if it is useful or to do otherwise if\nthat's more useful.\u003c/p\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eSeveral people have complained on the Erlang mailing list\nthat having to write\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eX  = f(...),\nX1 = g(..X..),\nX2 = h(..X1...)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eis error prone as well as tedious because if they have to\nreorder the sequence of transformations, add a transformation,\nor remove one, they have to rename the variables.\u003c/p\u003e\n\n\u003cp\u003eThe fact that \"assignment\" to whole variables can be modelled\nin a pure declarative language using renaming has been known\nfor a long time.  I knew it when writing \"The Craft of Prolog\",\nand it was folklore then.  The question was not \u003cem\u003ecould\u003c/em\u003e we\nsupport\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eX := f(...),\nX := g(..X..),\nX := h(..X..),\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ebut \u003cem\u003eshould\u003c/em\u003e we?\u003c/p\u003e\n\n\u003cp\u003eLoïc Hoguin has argued strongly that \"[he] just want[s]\nprimitives to easily update deep data structures\" (26 Jan 2013),\nsaying that Erlang's handling of records is inadequate because it\nmakes this difficult.  He wrote (25 Jan 2013):\u003c/p\u003e\n\n\u003cblockquote\u003e\n  \u003cp\u003eAssume a variable Character.\nThis variable contains everything about the character.\nHow do you best access and modify Character?\nThe answer must not involve the process dictionary, processes or\nmessage passing.\nToday I have to write each access and modification function.\nOr I can generate it,\nbut either way I end up with hundreds of functions in many modules. \nOr I could use records, and have one line per sub-record per \nmodification function I write.\nThat's not \u003cem\u003eeasy\u003c/em\u003e nor \u003cem\u003epractical\u003c/em\u003e.\nEasy and practical is:\u003c/p\u003e\n\n\u003cp\u003eCharacter.weapon.ability.cost\u003c/p\u003e\n\n\u003cp\u003efor access, and:\u003c/p\u003e\n\n\u003cp\u003eCharacter.weapon.ability.cost = 123\u003c/p\u003e\n\n\u003cp\u003efor modification.\u003c/p\u003e\n\u003c/blockquote\u003e\n\n\u003cp\u003eI don't propose to give him that, but\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eC = cost(ability(Character#cinfo.weapon)),\ncost(ability(Character#cinfo.weapon)) := C + 123\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ehe can have, where all functions might be inlined, or\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eC = ~cost ~ability ~weapon Character,\n~cost ~ability ~weapon Character := C + 123\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ein that bright future when we have frames.\u003c/p\u003e\n\n\u003cp\u003eThe good part, from my point of view, is that this brief\nsyntax can be had without introducing mutable data structures.\nThis is \u003cem\u003epseudo\u003c/em\u003e-assignment.  And it is a proven technique\nthat has been used for over 25 years.\u003c/p\u003e\n\n\u003cp\u003eThe bad part, for die-hard assignment fans, is that updating\ndeep paths this way requires allocating modified copies of\nrecords along the way, but we can't change that without\naltering fundamental properties of Erlang.\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003cp\u003eThe questions are: what kind of \"assignment\" should be offered,\nwhat syntax should be used for assignment and what targets should`\nbe allowed.\u003c/p\u003e\n\n\u003cp\u003eWithout adding a type system that would permit Haskell-style\nmonads or Clean/Mercury-style uniqueness tracking,\nthere are two ways to add assignment to Erlang: the Lisp way\nand the S way.  The Lisp way is to offer the real thing in\nall its destructive power.  That would have the huge benefit\nof making Erlang much more comfortable for C/Java/JavaScript\nprogrammers, and we could look forward to the day when Erlang\nsyntax is finally reformed to be JavaScript with threads.  It\nwould also have the huge price of requiring major changes to\nthe Erlang compiler and runtime system and of voiding one of\nthe major guarantees (\"your data is safe with us\") cherished\nby Erlang programmers.  It would make Erlang programs harder\nto get right.  Frankly, if we want JavaScript with threads,\nwe'd do much better to add threads to JavaScript.\u003c/p\u003e\n\n\u003cp\u003eThe other way is the S way.  S is a programming language\ndevised by John Chambers at AT\u0026amp;T for programming statistics\nalgorithms.  The revised language definition was published\nin 1988.  The syntax of S looks like slightly deranged\nC, but the semantics is astonishingly functional.  In particular,\nat least up to S3, S values did not detectably share mutable\nparts.  An S assignment like\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea[i,j] \u0026lt;- 0\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eis equivalent to\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\"[\"(a, i, j) \u0026lt;- 0\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhich is in turn equivalent to\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea \u0026lt;- \"[\u0026lt;-\"(a, i, j, value = 0)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eand this is not merely a fashion of speaking, there really is a\nfunction named \"[\u0026lt;-\" which is really called.   With its C-like\nsyntax, immutable data structures, and lazily evaluated\nfunction arguments, the S language is is definitely strange.\nBut it is highly \u003cem\u003epractical\u003c/em\u003e.  The R repository has a huge\nrange of packages doing amazing and useful things; it is used\nin Statistics courses around the world; and there is an\nabundance of excellent books teaching and using S/R.  So while\nthe idea of \"assignment\" being syntactic sugar for computing\na new whole value and rebinding it to a value may seem unfamiliar,\nit is demonstrably both \u003cem\u003eworkable\u003c/em\u003e and \u003cem\u003eusable\u003c/em\u003e.\u003c/p\u003e\n\n\u003cp\u003eSince there is a battle-tested form of \"assignment\" that does\nnot require mutable data structures, that's clearly the way for\nErlang to go.\u003c/p\u003e\n\n\u003cp\u003eAs for syntax, I am familiar with\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003eLhs = Rhs (Fortran, COBOL, BASIC, C)\u003c/li\u003e\n\u003cli\u003eLhs := Rhs (Algol, Pascal, Modula, Ada, ANSI Smalltalk)\u003c/li\u003e\n\u003cli\u003eLhs left-arrow Rhs (APL, classic Smalltalk)\u003c/li\u003e\n\u003cli\u003eLhs \u0026lt;- Rhs (S)\u003c/li\u003e\n\u003cli\u003eRhs -\u003e Lhs (S, Pop-2)\u003c/li\u003e\n\u003cli\u003e(set! Lhs Rhs) (Scheme)\u003c/li\u003e\n\u003cli\u003e(setf Lhs Rhs) (Lisp)\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eOf these, Erlang already uses =, \u0026lt;-, and -\u003e for other purposes,\nand the Unicode left arrow remains difficult to type.  Erlang\nsyntax is not Lisp syntax, and while LFE has Lispy macros,\nplain Erlang does not.  This leaves := as the sole credible contender.\u003c/p\u003e\n\n\u003cp\u003eAs for the targets of pseudo-assignments, we could simply allow\nErlang variables.  The ability to do renaming-style assignments\nhas been frequently requested in the Erlang mailing list.  It is\nimportant to understand that the renaming approach to variable\n\"assignment\" does not require the ability to rewrite a memory\ncell: different \"versions\" of a variable may well occupy different\ncells, and whether they do or not is up to the register allocator.\u003c/p\u003e\n\n\u003cp\u003eWe have also seen Erlang criticised for being unable to express\nchained record updates clearly.  Instead of\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eX1 = X#r{f = X#r.f#s{g = X#r.f#s.g#t{h = 42}}}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003emany people would rather write\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eX#r.f#s.g#t.h := 42\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eand who can blame them?  (Well, \u003cem\u003eme\u003c/em\u003e.  I think they should not\nbe writing code like that whatever the syntax, and found in my\nown C code that purging it of pointer chains uncovered a\nscary number of present and potential bugs.  The basic nature\nof the problem is excessive coupling.)  So we want to allow\nfield references as targets.\u003c/p\u003e\n\n\u003cp\u003eThe ~f(L) syntax comes from the frames proposal.  If record\nfields are pseudo-assignable, so should frame slots be.\u003c/p\u003e\n\n\u003cp\u003eIf we want to pseudo-assign to elements of hash tables or\narray-like structures, we have to allow function calls.\nThe example of S shows that we \u003cem\u003ecan\u003c/em\u003e include function calls on\nthe left of assignments, meaning that we can do\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eat(Dict, Key) -\u0026gt;\n    case dict:find(Dict, Key)\n      of {ok,V} -\u0026gt; V\n       ; error  -\u0026gt; 0\n    end.\n\n'at:='(Dict, Key, Value) -\u0026gt;\n    dict:store(Key, Value, Dict).\n\n...\n\n    at(D, K) := at(D, K) + 1\n...\n'element:='(N, Tuple, V) -\u0026gt;\n    setelement(N, Tuple, V).\n...\n   A := {0,0,0}, \n   element(1, A) := 3,\n   element(2, A) := 1,\n   element(3, A) := 4\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eSome languages let you assign to substrings.\nIf we can pseudo-assign to function calls, we need no\nextra machinery for that:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e'substr:='(String, Start, New) -\u0026gt;\n    string:substr(String, 1, Start - 1) ++ New.\n\n'substr:='(String, Start, Length, New) -\u0026gt;\n    string:substr(String, 1, Start - 1) ++ New ++\n    string:substr(String, Start + Length - 1).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe next step in generality would be to follow Algol 68 and\nallow\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eif G1 -\u0026gt; B1, L1\n ; ...\n ; Gn -\u0026gt; Bn, Ln\nend := E\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003emeaning\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eif G1 -\u0026gt; B1, L1 := E\n ; ...\n ; Gn -\u0026gt; Bn, Ln := E\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewith similar definitions for 'case' \u0026amp;c.  I can't see a\nstraightforward way to implement that without either\nduplicating E or doing computations out of order, so it\nseemed like a good idea to stop just before this point.\u003c/p\u003e\n\n\u003cp\u003eThe 'expansion' step above says that importing or exporting\nf/n does not automatically import or export 'f:='/(n+1).\nThis could be a source of unimportant but annoying errors.\nI expect using assignment functions to be more common than\ndefining them, and you can write a remote call to a function\nwithout explicitly importing it, so \u003cem\u003ewriting\u003c/em\u003e\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003estring:substr(Line, Comment_Start) := \"\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003edoes not require any special declaration.  The possible\nmistake, then, is to define f/n and 'f:='/(n+1) in a module\nand export the first without exporting the second.  If this\ndoes turn out to be a problem, it will be easy enough to add\na rule that if f/n is exported and 'f:='/(n+1) is defined,\nthe assignment form is exported too.  Let's wait and see if\nit's really needed.\u003c/p\u003e\n\n\u003cp\u003eShould pseudo-assignment syntax be allowed for a variable's\ninitial binding?  There does not seem to be any compelling\nreason to forbid it.\u003c/p\u003e\n\n\u003cp\u003eThere \u003cem\u003eis\u003c/em\u003e a compelling reason to forbid variables being\npseudo-assigned inside a list comprehension that are used\noutside it.  List comprehensions could be compiled inline\ninstead of generating out-of-line recursive functions, as\nthey currently do.  And variable assignment by actual\nhonest-to-goodness smash-that-memory-cell assignment could\nbe used to implement such assignments.  And the formal\nsemantics could remain renaming.  But the code generator\nwould have to know about it.  The renaming semantics\n\u003cem\u003ecould\u003c/em\u003e be implemented with the out-of-line approach, but\nthe current values of such variables would have to be\npassed in and returned, creating overheads that would\nsurprise me, let alone other programmers.  Simpler by far\njust to forbid it.  This is not entirely unlike the\nsomewhat fiddly scope rules for variables in anonymous\nfunctions.\u003c/p\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003eThe token ':=' and the token sequence ':' '=' are not currently\nlegal anywhere in Erlang source code, so no existing code is\ndirectly affected.\u003c/p\u003e\n\n\u003cp\u003ePseudo-assignment is defined as a source to source transformation.\nThis transformation is local to the function clause affected and\ncan done entirely within the parser.\u003c/p\u003e\n\n\u003cp\u003eThis means that anything in the Erlang tool chain downstream from\nthe parser is unaffected by this change.  In particular, profiling,\nmonitoring, and debugging tools just see plain old Erlang.\u003c/p\u003e\n\n\u003ch1\u003eReference Implementation\u003c/h1\u003e\n\n\u003cp\u003eNone in this draft, though implementation hints are given.\u003c/p\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0041"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

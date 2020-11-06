@@ -1,0 +1,185 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Richard A. O'Keefe &lt;ok(at)cs(dot)otago(dot)ac(dot)nz&gt;
+Status: Draft
+Type: Standards Track
+Erlang-Version: R12B-4
+Created: 28-Nov-2008
+Post-History:
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 25: <a href="eep-0025.md" title="EEP Source"> Unnesting cases</a></h2>
+
+<h1>Abstract</h1>
+
+<p>Erlang 'case' expressions should adopt/adapt an idea from
+Algol 68 that in Erlang would strictly generalise 'cond'.</p>
+
+<h1>Specification</h1>
+
+<p>Currently a 'case' expression has the form</p>
+
+<pre><code>'case' Expression 'of'
+      Pattern ['when' Guard] '-&gt;' Expression
+ {';' Pattern ['when' Guard] '-&gt;' Expression}...
+'end'
+</code></pre>
+
+<p>It is well known that Algol 68 had</p>
+
+<pre><code>if .. then .. {elif .. then ..}... [else ..] fi
+</code></pre>
+
+<p>expressions.  It is less well known that it had a similar
+construction for case expression,</p>
+
+<pre><code>case .. in ... {ouse .. in ..}... [out ..] esac
+</code></pre>
+
+<p>where "ouse" (from "OUt caSE") let you iterate the case
+matching process and only need one 'esac'.</p>
+
+<p>This proposal adopts the Algol 68 idea.
+The revised form is</p>
+
+<pre><code>'case' Expression 'of'
+      Pattern ['when' Guard] '-&gt;' Expression
+ {';' Pattern ['when' Guard] '-&gt;' Expression}...
+{';' 'or' 'case' Expression 'of'    
+      Pattern ['when' Guard] '-&gt;' Expression
+ {';' Pattern ['when' Guard] '-&gt;' Expression}...}...
+'end'
+</code></pre>
+
+<h1>Motivation</h1>
+
+<p>Consider this example:</p>
+
+<pre><code>suffix(P, Suffix, List)
+  when is_function(P, 2), is_list(Suffix) -&gt;
+suffix_loop(P, Suffix, List).
+
+suffix_loop(P, Suffix, List) -&gt;
+case equal(P, Suffix, List)
+  of true  -&gt; true
+   ; false -&gt; case List
+        of [_|Tail] -&gt; suffix_loop(P, Suffix, Tail)
+         ; []       -&gt; false
+          end
+end.
+</code></pre>
+
+<p>With this proposal we could write</p>
+
+<pre><code>suffix_loop(P, Suffix, List) -&gt;
+case equal(P, Suffix, List)
+  of true     -&gt; true
+; or case List
+      of [_|Tail] -&gt; suffix_loop(P, Suffix, Tail)
+   ; []       -&gt; false
+end.
+</code></pre>
+
+<p>where all the alternatives to be selected have the same
+indentation.</p>
+
+<p>The old proposal for a Lisp-like 'cond' is no longer really
+needed.  Instead of</p>
+
+<pre><code>cond
+    C1 -&gt; B1
+  ; C2 -&gt; B2
+  ...
+  ; Cn -&gt; Bn
+end
+</code></pre>
+
+<p>one writes</p>
+
+<pre><code>case      C1 of true -&gt; B1
+; or case C2 of true -&gt; B2
+...
+; or case Cn of true -&gt; Bn
+end
+</code></pre>
+
+<p>What one loses here is the check that a result that is not
+'true' must be 'false', but that job can these days be done
+by the Dialyzer.  This is certainly clumsier than 'cond',
+but it achieves the main aim, that of selecting from a bunch
+of choices at the same logical (and therefore at the same
+indentation) level by means of a series of Boolean-valued
+expressions, but it is strictly more general.  It allows you
+to combine Boolean-valued expressions with guards (including
+any future generalisations of guards), and it allows you to
+make a choice based on any kind of pattern matching, not just
+Boolean.</p>
+
+<p>This is clumsier than 'cond', but over-using Boolean when some
+more intention-revealing enumeration should be used is an
+anti-pattern that has been recognised for over 20 years.  If
+'cond' existed, there would be a strong pressure for people
+to write functions that return a Boolean result when something
+else might be more useful, just so they could use 'cond'. <br />
+As an example, suppose that we want to continue if the voltage
+is nominal, shut the device off if the voltage is low and there
+is not an emergency, or set the speed slow if the voltage is
+low and there is an emergency.</p>
+
+<p>With cond:</p>
+
+<pre><code>cond voltage_nominal() -&gt; continue_operations()
+   ; in_emergency()    -&gt; set_speed_slow()
+   ; true              -&gt; shut_device_down()
+end
+</code></pre>
+
+<p>With case:</p>
+
+<pre><code>case      voltage() of nominal  -&gt; continue_operations()
+; or case status() of emergency -&gt; set_speed_slow()
+                    ; normal    -&gt; shut_device_down()
+end
+</code></pre>
+
+<p>When expressed this way, I for one find it easier to realise
+that "low" is not the opposite of "nominal"; a voltage that is
+not nominal might be high.  So we really should have</p>
+
+<pre><code>case      voltage() of nominal   -&gt; continue_operations()
+                     ; high      -&gt; WHAT DO WE DO HERE?
+; or case status()  of emergency -&gt; set_speed_slow()
+             ; normal    -&gt; shut_device_down()
+end
+</code></pre>
+
+<p>So an approach that gives you the "flat" structure of 'cond'
+while subtly encouraging the multiway thinking of 'case' has
+merit.  You could say that I am not so much for 'ouse' as
+against 'cond' and over-use of Boolean.</p>
+
+<h1>Rationale</h1>
+
+<p>I read one too many "why doesn't Erlang have an if" e-message,
+and suddently remember "Algol 68 could do that with 'case'".</p>
+
+<p>The main issue is how to spell 'ouse' in Erlang.  My first
+preference was for 'or case', but that can't work.  I do not
+love "; or case", and would be very happy to see something
+better.  Indeed, "; case" might do the job, I just felt that
+that was a bit too error-prone.</p>
+
+<h1>Backwards Compatibility</h1>
+
+<p>All existing Erlang code remains acceptable with unchanged
+semantics.  The implementation will be entirely in the parser,
+so even tools that examine ASTs will be unaffected.</p>
+
+<h1>Reference Implementation</h1>
+
+<p>None yet.  It will be entirely in the parser.</p>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0025","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Richard A. O'Keefe \u0026lt;ok(at)cs(dot)otago(dot)ac(dot)nz\u0026gt;\nStatus: Draft\nType: Standards Track\nErlang-Version: R12B-4\nCreated: 28-Nov-2008\nPost-History:\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 25: \u003ca href=\"eep-0025.md\" title=\"EEP Source\"\u003e Unnesting cases\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eErlang 'case' expressions should adopt/adapt an idea from\nAlgol 68 that in Erlang would strictly generalise 'cond'.\u003c/p\u003e\n\n\u003ch1\u003eSpecification\u003c/h1\u003e\n\n\u003cp\u003eCurrently a 'case' expression has the form\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e'case' Expression 'of'\n      Pattern ['when' Guard] '-\u0026gt;' Expression\n {';' Pattern ['when' Guard] '-\u0026gt;' Expression}...\n'end'\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIt is well known that Algol 68 had\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eif .. then .. {elif .. then ..}... [else ..] fi\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eexpressions.  It is less well known that it had a similar\nconstruction for case expression,\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ecase .. in ... {ouse .. in ..}... [out ..] esac\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhere \"ouse\" (from \"OUt caSE\") let you iterate the case\nmatching process and only need one 'esac'.\u003c/p\u003e\n\n\u003cp\u003eThis proposal adopts the Algol 68 idea.\nThe revised form is\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e'case' Expression 'of'\n      Pattern ['when' Guard] '-\u0026gt;' Expression\n {';' Pattern ['when' Guard] '-\u0026gt;' Expression}...\n{';' 'or' 'case' Expression 'of'    \n      Pattern ['when' Guard] '-\u0026gt;' Expression\n {';' Pattern ['when' Guard] '-\u0026gt;' Expression}...}...\n'end'\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eConsider this example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003esuffix(P, Suffix, List)\n  when is_function(P, 2), is_list(Suffix) -\u0026gt;\nsuffix_loop(P, Suffix, List).\n\nsuffix_loop(P, Suffix, List) -\u0026gt;\ncase equal(P, Suffix, List)\n  of true  -\u0026gt; true\n   ; false -\u0026gt; case List\n        of [_|Tail] -\u0026gt; suffix_loop(P, Suffix, Tail)\n         ; []       -\u0026gt; false\n          end\nend.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWith this proposal we could write\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003esuffix_loop(P, Suffix, List) -\u0026gt;\ncase equal(P, Suffix, List)\n  of true     -\u0026gt; true\n; or case List\n      of [_|Tail] -\u0026gt; suffix_loop(P, Suffix, Tail)\n   ; []       -\u0026gt; false\nend.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhere all the alternatives to be selected have the same\nindentation.\u003c/p\u003e\n\n\u003cp\u003eThe old proposal for a Lisp-like 'cond' is no longer really\nneeded.  Instead of\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003econd\n    C1 -\u0026gt; B1\n  ; C2 -\u0026gt; B2\n  ...\n  ; Cn -\u0026gt; Bn\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eone writes\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ecase      C1 of true -\u0026gt; B1\n; or case C2 of true -\u0026gt; B2\n...\n; or case Cn of true -\u0026gt; Bn\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWhat one loses here is the check that a result that is not\n'true' must be 'false', but that job can these days be done\nby the Dialyzer.  This is certainly clumsier than 'cond',\nbut it achieves the main aim, that of selecting from a bunch\nof choices at the same logical (and therefore at the same\nindentation) level by means of a series of Boolean-valued\nexpressions, but it is strictly more general.  It allows you\nto combine Boolean-valued expressions with guards (including\nany future generalisations of guards), and it allows you to\nmake a choice based on any kind of pattern matching, not just\nBoolean.\u003c/p\u003e\n\n\u003cp\u003eThis is clumsier than 'cond', but over-using Boolean when some\nmore intention-revealing enumeration should be used is an\nanti-pattern that has been recognised for over 20 years.  If\n'cond' existed, there would be a strong pressure for people\nto write functions that return a Boolean result when something\nelse might be more useful, just so they could use 'cond'. \u003cbr /\u003e\nAs an example, suppose that we want to continue if the voltage\nis nominal, shut the device off if the voltage is low and there\nis not an emergency, or set the speed slow if the voltage is\nlow and there is an emergency.\u003c/p\u003e\n\n\u003cp\u003eWith cond:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003econd voltage_nominal() -\u0026gt; continue_operations()\n   ; in_emergency()    -\u0026gt; set_speed_slow()\n   ; true              -\u0026gt; shut_device_down()\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWith case:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ecase      voltage() of nominal  -\u0026gt; continue_operations()\n; or case status() of emergency -\u0026gt; set_speed_slow()\n                    ; normal    -\u0026gt; shut_device_down()\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWhen expressed this way, I for one find it easier to realise\nthat \"low\" is not the opposite of \"nominal\"; a voltage that is\nnot nominal might be high.  So we really should have\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ecase      voltage() of nominal   -\u0026gt; continue_operations()\n                     ; high      -\u0026gt; WHAT DO WE DO HERE?\n; or case status()  of emergency -\u0026gt; set_speed_slow()\n             ; normal    -\u0026gt; shut_device_down()\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eSo an approach that gives you the \"flat\" structure of 'cond'\nwhile subtly encouraging the multiway thinking of 'case' has\nmerit.  You could say that I am not so much for 'ouse' as\nagainst 'cond' and over-use of Boolean.\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003cp\u003eI read one too many \"why doesn't Erlang have an if\" e-message,\nand suddently remember \"Algol 68 could do that with 'case'\".\u003c/p\u003e\n\n\u003cp\u003eThe main issue is how to spell 'ouse' in Erlang.  My first\npreference was for 'or case', but that can't work.  I do not\nlove \"; or case\", and would be very happy to see something\nbetter.  Indeed, \"; case\" might do the job, I just felt that\nthat was a bit too error-prone.\u003c/p\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003eAll existing Erlang code remains acceptable with unchanged\nsemantics.  The implementation will be entirely in the parser,\nso even tools that examine ASTs will be unaffected.\u003c/p\u003e\n\n\u003ch1\u003eReference Implementation\u003c/h1\u003e\n\n\u003cp\u003eNone yet.  It will be entirely in the parser.\u003c/p\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0025"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

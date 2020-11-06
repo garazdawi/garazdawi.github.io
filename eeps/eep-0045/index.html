@@ -1,0 +1,283 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Björn Gustavsson &lt;bjorn(at)erlang(dot)org&gt;
+Status: Accepted/19.0 Proposal is to be implemented in OTP release 19.0
+Type: Standards Track
+Created: 27-Oct-2015
+Erlang-Version: R19
+Post-History: 29-Oct-2015, 09-Nov-2015, 11-Nov-2015, 16-Nov-2015
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 45: <a href="eep-0045.md" title="EEP Source"> New macros for function name and arity</a></h2>
+
+<h1>Abstract</h1>
+
+<p>This EEP proposes two new macros called <code>FUNCTION_NAME</code> and
+<code>FUNCTION_ARITY</code> that will return the name and arity, respectively, of
+the current function.</p>
+
+<h1>Specification</h1>
+
+<p>The new predefined macro <code>FUNCTION_NAME</code> expands to the name of the
+current function (as an atom).  The new predefined macro
+<code>FUNCTION_ARITY</code> expands to arity of the current function (as an
+integer).  Example:</p>
+
+<pre><code>a_function(_, _) -&gt;
+  {?FUNCTION_NAME,?FUNCTION_ARITY}.
+</code></pre>
+
+<p>After preprocessing, the example will look like:</p>
+
+<pre><code>a_function(_, _) -&gt;
+  {a_function,2}.
+</code></pre>
+
+<p>The preprocessor will expand all other macros before expanding
+the <code>FUNCTION_NAME</code> and <code>FUNCTION_ARITY</code> macros. So if we have
+this example:</p>
+
+<pre><code>-define(F, a_function).
+?F(_, _) -&gt;
+  {?FUNCTION_NAME,?FUNCTION_ARITY}.
+</code></pre>
+
+<p>the preprocessor will first expand it to:</p>
+
+<pre><code>a_function(_, _) -&gt;
+  {?FUNCTION_NAME,?FUNCTION_ARITY}.
+</code></pre>
+
+<p>and then to:</p>
+
+<pre><code>a_function(_, _) -&gt;
+  {a_function,2}.
+</code></pre>
+
+<p>The <code>FUNCTION_NAME</code> and <code>FUNCTION_ARITY</code> macros can be used in any
+form that starts with an atom followed by a left parenthesis (when
+all other macros have been expanded).  The macros may be used even in
+a function head.  Thus, the following example is legal (albeit not
+very useful):</p>
+
+<pre><code>a(?FUNCTION_NAME) -&gt; ok.
+</code></pre>
+
+<p>It will be expanded to:</p>
+
+<pre><code>a(a) -&gt; ok.
+</code></pre>
+
+<p>The <code>FUNCTION_NAME</code> and <code>FUNCTION_ARITY</code> macros will also work in the
+presence of other macros in the function head.  Example:</p>
+
+<pre><code>-define(__, _, _).
+b(?FUNCTION_NAME, ?FUNCTION_ARITY, ?__) -&gt;
+   ok.
+</code></pre>
+
+<p>This code will first be expanded to:</p>
+
+<pre><code>b(?FUNCTION_NAME, ?FUNCTION_ARITY, _, _) -&gt;
+   ok.
+</code></pre>
+
+<p>and then to:</p>
+
+<pre><code>b(b, 4, _, _) -&gt;
+  ok.
+</code></pre>
+
+<p>Using <code>FUNCTION_NAME</code> or <code>FUNCTION_ARITY</code> in an attribute will cause a
+compilation error.  Example:</p>
+
+<pre><code>-attr(?FUNCTION_NAME).
+</code></pre>
+
+<p>The error message will look like this:</p>
+
+<pre><code>example.erl:4: ?FUNCTION_NAME can only be used within a function
+</code></pre>
+
+<p>An invocation of <code>FUNCTION_NAME</code> or <code>FUNCTION_ARITY</code> must not begin a
+form.  Therefore, the following example is illegal:</p>
+
+<pre><code>?FUNCTION_NAME() -&gt; ok.
+</code></pre>
+
+<p>The error message will look like this:</p>
+
+<pre><code>example.erl:4: ?FUNCTION_NAME must not begin a form
+</code></pre>
+
+<h2>Implementation Requirements</h2>
+
+<p>This EEP does not specify exactly how the <code>FUNCTION_NAME</code> and
+<code>FUNCTION_ARITY</code> macros should be implemented, but it does impose some
+requirements on the implementation:</p>
+
+<ul>
+<li><p>The implementation must be efficient.  In particular, there should
+not be any noticeable slowdowns for modules that don't use the
+<code>FUNCTION_NAME</code> or <code>FUNCTION_ARITY</code> macros.</p></li>
+<li><p>The expansion of <code>FUNCTION_NAME</code> and <code>FUNCTION_ARITY</code> must be done
+by the <code>epp</code> module.  Postponing expansion of the macros to a later
+compiler pass is not acceptable, as it could cause compatibility
+issues with parse transforms and other tools that operate on the
+abstract format.</p></li>
+</ul>
+
+<h2>Examples</h2>
+
+<pre><code>-define(FUNCTION_STRING, atom_to_list(?FUNCTION_NAME) ++ "/" ++
+          integer_to_list(?FUNCTION_ARITY)).
+
+test() -&gt;
+  ?FUNCTION_STRING.
+</code></pre>
+
+<p>The <code>test/0</code> function will return <code>"test/0"</code>.  Note that the
+BEAM compiler will evaluate constant expressions at compilation time;
+thus, <code>FUNCTION_STRING</code> will be turned into a string literal
+during compilation.</p>
+
+<pre><code>c() -&gt;
+  F = fun() -&gt; ?FUNCTION_NAME end,
+  F().
+</code></pre>
+
+<p>The <code>c/0</code> function will return <code>c</code>.</p>
+
+<p>The macros can be used when creating a fun that refers to the
+containing function:</p>
+
+<pre><code>self_ref(Data, Handler) -&gt;
+    ...
+    Handler(Data, fun ?FUNCTION_NAME/?FUNCTION_ARITY)
+    ...
+</code></pre>
+
+<h1>Motivation</h1>
+
+<p>Many users have asked for some sort of macro that could return the
+name of the current function, similar to <code>FILE</code>, <code>LINE</code>, and <code>MODULE</code>.
+For example: <a href="http://erlang.org/pipermail/erlang-questions/2007-September/029387.html" title="Why no ?FUNCTION macro">Why no ?FUNCTION macro</a>.</p>
+
+<p>The most common use case for a function name macro seems to be for
+logging information to a log file.  Possible workarounds include using
+a parse transform, using <code>process_info/2</code>, or generating and catching
+an exception.  Unless the application needs a parse transform for some
+other reason, implementing a parse transform just to catch the name of
+the current function is cumbersome.  The other workarounds have
+run-time penalties.</p>
+
+<h1>Rationale</h1>
+
+<h2>Why not only a single <code>FUNCTION</code> macro?</h2>
+
+<p>In order to minimize the pollution of the namespace of preprocessor
+symbols, should there not be only a single <code>FUNCTION</code> macro that would
+return a tuple with the name and arity of the current function?</p>
+
+<p>It would certainly be possible, but many common use cases would be
+somewhat cumbersome:</p>
+
+<pre><code>io:format("~p/~p: ~s\n", [element(1, ?FUNCTION),
+                          element(2, ?FUNCTION),
+                          Message])
+</code></pre>
+
+<p>Compare that to the more readable:</p>
+
+<pre><code>io:format("~p/~p: ~s\n", [?FUNCTION_NAME,
+                          ?FUNCTION_ARITY,
+                          Message])
+</code></pre>
+
+<p>There are also contexts where <code>element(1, ?FUNCTION)</code> or <code>element(2,
+?FUNCTION)</code> would be illegal, for example in function heads or after
+the <code>fun</code> keyword.  The following example would fail to compile:</p>
+
+<pre><code>fun element(1, ?FUNCTION)/element(2, ?FUNCTION)
+</code></pre>
+
+<h2>Why do I have to define <code>FUNCTION_STRING</code> myself?</h2>
+
+<p>The most important reason is that there are <em>two</em> reasonable
+definitions:</p>
+
+<pre><code>-define(FUNCTION_STRING,
+   atom_to_list(?FUNCTION_NAME) ++ "/" ++
+   integer_to_list(?FUNCTION_ARITY)).
+</code></pre>
+
+<p>and</p>
+
+<pre><code>-define(FUNCTION_STRING,
+   ?MODULE_STRING ++ ":" ++
+   atom_to_list(?FUNCTION_NAME) ++ "/" ++
+   integer_to_list(?FUNCTION_ARITY)).
+</code></pre>
+
+<p>There is no run-time penality for defining <code>FUNCTION_STRING</code>
+yourself, as the compiler will turn either definition of
+<code>FUNCTION_STRING</code> into a literal string during compilation.</p>
+
+<p>Another reason is to avoid polluting the macro namespace with
+more predefined macros than strictly needed.</p>
+
+<p>Historical note: <code>MODULE_STRING</code> was added as an optimization in OTP
+R7B, because at the time the compiler did not optimize constant
+expressions as well as it does now.</p>
+
+<h2>Why are <code>FUNCTION_NAME</code> and <code>FUNCTION_ARITY</code> allowed in function heads?</h2>
+
+<p>I cannot see any practical use for the <code>FUNCTION_NAME</code> and
+<code>FUNCTION_ARITY</code> macro in a function head.  Only allowing them to be
+used in function bodies would make sense.  But consider this example:</p>
+
+<pre><code>f(a, _) -&gt;
+  ok;
+f(?FUNCTION_NAME, ?FUNCTION_ARITY) -&gt;
+  ok.
+</code></pre>
+
+<p>To be able to reject invocations of <code>FUNCTION_NAME</code> and
+<code>FUNCTION_ARITY</code> in clauses other than the first, the preprocessor
+must basically be able to parse arbitrary Erlang code.  The only
+practical solution would be to use the existing parser in the
+<code>erl_parse</code> module.  That would slow down the preprocessor without
+providing any additional benefit.</p>
+
+<h1>Backwards Compatibility</h1>
+
+<p>Modules that define either <code>FUNCTION_NAME</code> or <code>FUNCTION_ARITY</code> will
+fail to compile with a message similar to this:</p>
+
+<pre><code>example.erl:4: redefining predefined macro 'FUNCTION_NAME'
+</code></pre>
+
+<p>Similarly, attempting to define <code>FUNCTION_NAME</code> or <code>FUNCTION_ARITY</code>
+from the command line using <code>-D</code> will also fail.</p>
+
+<h1>Implementation</h1>
+
+<p>The reference implementation has essentially zero extra cost for
+functions that do not use the <code>FUNCTION_NAME</code> or <code>FUNCTION_ARITY</code>
+macros.  The preprocessor will only start scanning to determine the
+name and arity of the current function when an invocation of either
+<code>FUNCTION_NAME</code> or <code>FUNCTION_ARITY</code> has been seen.  The scanning will
+stop as soon as the right parenthesis at the end of the argument list
+is found.  The name and arity will be saved and reused if another of
+invocation of <code>FUNCTION_NAME</code> or <code>FUNCTION_ARITY</code> is seen in the same
+function definition.</p>
+
+<p>The reference implementation can be fetched from Github like this:</p>
+
+<pre><code>git fetch git://github.com/bjorng/otp.git bjorn/function-macro
+</code></pre>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0045","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Björn Gustavsson \u0026lt;bjorn(at)erlang(dot)org\u0026gt;\nStatus: Accepted/19.0 Proposal is to be implemented in OTP release 19.0\nType: Standards Track\nCreated: 27-Oct-2015\nErlang-Version: R19\nPost-History: 29-Oct-2015, 09-Nov-2015, 11-Nov-2015, 16-Nov-2015\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 45: \u003ca href=\"eep-0045.md\" title=\"EEP Source\"\u003e New macros for function name and arity\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eThis EEP proposes two new macros called \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and\n\u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e that will return the name and arity, respectively, of\nthe current function.\u003c/p\u003e\n\n\u003ch1\u003eSpecification\u003c/h1\u003e\n\n\u003cp\u003eThe new predefined macro \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e expands to the name of the\ncurrent function (as an atom).  The new predefined macro\n\u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e expands to arity of the current function (as an\ninteger).  Example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea_function(_, _) -\u0026gt;\n  {?FUNCTION_NAME,?FUNCTION_ARITY}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAfter preprocessing, the example will look like:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea_function(_, _) -\u0026gt;\n  {a_function,2}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe preprocessor will expand all other macros before expanding\nthe \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e macros. So if we have\nthis example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-define(F, a_function).\n?F(_, _) -\u0026gt;\n  {?FUNCTION_NAME,?FUNCTION_ARITY}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ethe preprocessor will first expand it to:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea_function(_, _) -\u0026gt;\n  {?FUNCTION_NAME,?FUNCTION_ARITY}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eand then to:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea_function(_, _) -\u0026gt;\n  {a_function,2}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e macros can be used in any\nform that starts with an atom followed by a left parenthesis (when\nall other macros have been expanded).  The macros may be used even in\na function head.  Thus, the following example is legal (albeit not\nvery useful):\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea(?FUNCTION_NAME) -\u0026gt; ok.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIt will be expanded to:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea(a) -\u0026gt; ok.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e macros will also work in the\npresence of other macros in the function head.  Example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-define(__, _, _).\nb(?FUNCTION_NAME, ?FUNCTION_ARITY, ?__) -\u0026gt;\n   ok.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis code will first be expanded to:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eb(?FUNCTION_NAME, ?FUNCTION_ARITY, _, _) -\u0026gt;\n   ok.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eand then to:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eb(b, 4, _, _) -\u0026gt;\n  ok.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eUsing \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e or \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e in an attribute will cause a\ncompilation error.  Example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-attr(?FUNCTION_NAME).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe error message will look like this:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eexample.erl:4: ?FUNCTION_NAME can only be used within a function\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAn invocation of \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e or \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e must not begin a\nform.  Therefore, the following example is illegal:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e?FUNCTION_NAME() -\u0026gt; ok.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe error message will look like this:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eexample.erl:4: ?FUNCTION_NAME must not begin a form\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch2\u003eImplementation Requirements\u003c/h2\u003e\n\n\u003cp\u003eThis EEP does not specify exactly how the \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and\n\u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e macros should be implemented, but it does impose some\nrequirements on the implementation:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003eThe implementation must be efficient.  In particular, there should\nnot be any noticeable slowdowns for modules that don't use the\n\u003ccode\u003eFUNCTION_NAME\u003c/code\u003e or \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e macros.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003eThe expansion of \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e must be done\nby the \u003ccode\u003eepp\u003c/code\u003e module.  Postponing expansion of the macros to a later\ncompiler pass is not acceptable, as it could cause compatibility\nissues with parse transforms and other tools that operate on the\nabstract format.\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003ch2\u003eExamples\u003c/h2\u003e\n\n\u003cpre\u003e\u003ccode\u003e-define(FUNCTION_STRING, atom_to_list(?FUNCTION_NAME) ++ \"/\" ++\n          integer_to_list(?FUNCTION_ARITY)).\n\ntest() -\u0026gt;\n  ?FUNCTION_STRING.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe \u003ccode\u003etest/0\u003c/code\u003e function will return \u003ccode\u003e\"test/0\"\u003c/code\u003e.  Note that the\nBEAM compiler will evaluate constant expressions at compilation time;\nthus, \u003ccode\u003eFUNCTION_STRING\u003c/code\u003e will be turned into a string literal\nduring compilation.\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ec() -\u0026gt;\n  F = fun() -\u0026gt; ?FUNCTION_NAME end,\n  F().\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe \u003ccode\u003ec/0\u003c/code\u003e function will return \u003ccode\u003ec\u003c/code\u003e.\u003c/p\u003e\n\n\u003cp\u003eThe macros can be used when creating a fun that refers to the\ncontaining function:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eself_ref(Data, Handler) -\u0026gt;\n    ...\n    Handler(Data, fun ?FUNCTION_NAME/?FUNCTION_ARITY)\n    ...\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eMany users have asked for some sort of macro that could return the\nname of the current function, similar to \u003ccode\u003eFILE\u003c/code\u003e, \u003ccode\u003eLINE\u003c/code\u003e, and \u003ccode\u003eMODULE\u003c/code\u003e.\nFor example: \u003ca href=\"http://erlang.org/pipermail/erlang-questions/2007-September/029387.html\" title=\"Why no ?FUNCTION macro\"\u003eWhy no ?FUNCTION macro\u003c/a\u003e.\u003c/p\u003e\n\n\u003cp\u003eThe most common use case for a function name macro seems to be for\nlogging information to a log file.  Possible workarounds include using\na parse transform, using \u003ccode\u003eprocess_info/2\u003c/code\u003e, or generating and catching\nan exception.  Unless the application needs a parse transform for some\nother reason, implementing a parse transform just to catch the name of\nthe current function is cumbersome.  The other workarounds have\nrun-time penalties.\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003ch2\u003eWhy not only a single \u003ccode\u003eFUNCTION\u003c/code\u003e macro?\u003c/h2\u003e\n\n\u003cp\u003eIn order to minimize the pollution of the namespace of preprocessor\nsymbols, should there not be only a single \u003ccode\u003eFUNCTION\u003c/code\u003e macro that would\nreturn a tuple with the name and arity of the current function?\u003c/p\u003e\n\n\u003cp\u003eIt would certainly be possible, but many common use cases would be\nsomewhat cumbersome:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eio:format(\"~p/~p: ~s\\n\", [element(1, ?FUNCTION),\n                          element(2, ?FUNCTION),\n                          Message])\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eCompare that to the more readable:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eio:format(\"~p/~p: ~s\\n\", [?FUNCTION_NAME,\n                          ?FUNCTION_ARITY,\n                          Message])\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThere are also contexts where \u003ccode\u003eelement(1, ?FUNCTION)\u003c/code\u003e or \u003ccode\u003eelement(2,\n?FUNCTION)\u003c/code\u003e would be illegal, for example in function heads or after\nthe \u003ccode\u003efun\u003c/code\u003e keyword.  The following example would fail to compile:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efun element(1, ?FUNCTION)/element(2, ?FUNCTION)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch2\u003eWhy do I have to define \u003ccode\u003eFUNCTION_STRING\u003c/code\u003e myself?\u003c/h2\u003e\n\n\u003cp\u003eThe most important reason is that there are \u003cem\u003etwo\u003c/em\u003e reasonable\ndefinitions:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-define(FUNCTION_STRING,\n   atom_to_list(?FUNCTION_NAME) ++ \"/\" ++\n   integer_to_list(?FUNCTION_ARITY)).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eand\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-define(FUNCTION_STRING,\n   ?MODULE_STRING ++ \":\" ++\n   atom_to_list(?FUNCTION_NAME) ++ \"/\" ++\n   integer_to_list(?FUNCTION_ARITY)).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThere is no run-time penality for defining \u003ccode\u003eFUNCTION_STRING\u003c/code\u003e\nyourself, as the compiler will turn either definition of\n\u003ccode\u003eFUNCTION_STRING\u003c/code\u003e into a literal string during compilation.\u003c/p\u003e\n\n\u003cp\u003eAnother reason is to avoid polluting the macro namespace with\nmore predefined macros than strictly needed.\u003c/p\u003e\n\n\u003cp\u003eHistorical note: \u003ccode\u003eMODULE_STRING\u003c/code\u003e was added as an optimization in OTP\nR7B, because at the time the compiler did not optimize constant\nexpressions as well as it does now.\u003c/p\u003e\n\n\u003ch2\u003eWhy are \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e allowed in function heads?\u003c/h2\u003e\n\n\u003cp\u003eI cannot see any practical use for the \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and\n\u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e macro in a function head.  Only allowing them to be\nused in function bodies would make sense.  But consider this example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ef(a, _) -\u0026gt;\n  ok;\nf(?FUNCTION_NAME, ?FUNCTION_ARITY) -\u0026gt;\n  ok.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eTo be able to reject invocations of \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e and\n\u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e in clauses other than the first, the preprocessor\nmust basically be able to parse arbitrary Erlang code.  The only\npractical solution would be to use the existing parser in the\n\u003ccode\u003eerl_parse\u003c/code\u003e module.  That would slow down the preprocessor without\nproviding any additional benefit.\u003c/p\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003eModules that define either \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e or \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e will\nfail to compile with a message similar to this:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eexample.erl:4: redefining predefined macro 'FUNCTION_NAME'\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eSimilarly, attempting to define \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e or \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e\nfrom the command line using \u003ccode\u003e-D\u003c/code\u003e will also fail.\u003c/p\u003e\n\n\u003ch1\u003eImplementation\u003c/h1\u003e\n\n\u003cp\u003eThe reference implementation has essentially zero extra cost for\nfunctions that do not use the \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e or \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e\nmacros.  The preprocessor will only start scanning to determine the\nname and arity of the current function when an invocation of either\n\u003ccode\u003eFUNCTION_NAME\u003c/code\u003e or \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e has been seen.  The scanning will\nstop as soon as the right parenthesis at the end of the argument list\nis found.  The name and arity will be saved and reused if another of\ninvocation of \u003ccode\u003eFUNCTION_NAME\u003c/code\u003e or \u003ccode\u003eFUNCTION_ARITY\u003c/code\u003e is seen in the same\nfunction definition.\u003c/p\u003e\n\n\u003cp\u003eThe reference implementation can be fetched from Github like this:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003egit fetch git://github.com/bjorng/otp.git bjorn/function-macro\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0045"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Richard A. O'Keefe &lt;ok(at)cs(dot)otago(dot)ac(dot)nz&gt;
+Status: Draft
+Type: Standards Track
+Erlang-Version: R12B-4
+Created: 15-Jul-2008
+Post-History:
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 15: <a href="eep-0015.md" title="EEP Source"> Portable funs</a></h2>
+
+<h1>Abstract</h1>
+
+<p>Current Erlang has two kinds of funs.  An "external" fun,
+Module:Name/Arity, is just a name and can be used freely.
+A "local" fun contains code that is bound to the module it
+was defined in.  This means that you cannot save internal
+funs in data bases or send them to remote systems and expect them to
+work.</p>
+
+<p>I propose a "portable fun", which is a syntactically restricted
+kind of fun.  The restriction ensures that a programmer knows
+(and the run time can discover) exactly what modules are/will be
+required.  These funs can be safely sent to remote nodes, and 
+can safely be stored in data bases, retrieved at a later time,
+and executed.  Nor need a process holding a reference to such a
+fun be killed when the module it came from is unloaded.</p>
+
+<p>A new way of implementing these funs is required for best speed,
+so this is quite a large change.  However, a prototype that
+interpreted portable functions would be possible.</p>
+
+<h1>Specification</h1>
+
+<p>Currently, Erlang has</p>
+
+<pre><code>fun_expr -&gt; 'fun' fun_clauses 'end' : ...
+</code></pre>
+
+<p>We add</p>
+
+<pre><code>fun_expr -&gt; 'fun' '!' fun_clauses 'end' : ...
+</code></pre>
+
+<p>and make the following restrictions:</p>
+
+<ol>
+<li>A portable fun may not contain plain funs.</li>
+<li>A portable fun may not contain a call f(...)
+without a module prefix unless f is a built-in function.</li>
+<li>A portable fun may not contain any call of the
+form M:f(...) or m:F(...) or M:F(...).</li>
+<li>A portable fun may not contain any call of the
+form F(...) unless F is bound in its head.</li>
+<li>In a system where abstract patterns are available,
+they are restricted the same way as function calls.</li>
+</ol>
+
+<p>The intent of these restrictions is to ensure that
+every call is to a built in function, a known export
+of a known module, or to some kind of fun received as
+a parameter.</p>
+
+<p>The built-in function erlang:fun_info/1 is extended in
+the following ways:</p>
+
+<ol>
+<li>In a {type,Type} item, Type may be 'portable'.</li>
+<li>In a {module,Module} item for a portable fun, the Module
+will be present, but there will in fact be no other
+connection between a portable fun and any module by that name.</li>
+<li>In a {name,Name} item for a portable fun,
+Name will always be [].</li>
+<li>None of the items specified for 'local' funs will be
+returned for 'portable' funs.</li>
+<li>{calls,List} will be returned for a portable fun,
+where List is a list of {Module,Imports} pairs, where
+each Module that is used in a remote call in the fun is
+listed once, and the Imports are a list of {Name,Arity}
+pairs as reported in *:module_info/0.  This permits the
+receiver of a portable fun to determine which modules
+need loading and which functions they are expected to export.</li>
+<li>For consistency,
+erlang:fun_info(fun M:F/A, calls)
+=> [{M,[{F,A}]}]</li>
+</ol>
+
+<p>The built-in function erlang:fun_info/2 is extended similarly.
+An additional key 'source' is provided for this function.</p>
+
+<h3>fun_info(Fun, source)</h3>
+
+<ul>
+<li>for a local fun, the result is 'undefined'.</li>
+<li>for an external fun, the result is the abstract syntax
+tree the parser returns for fun M:F/A.</li>
+<li>for a portable fun, the result is the abstract syntax
+tree the parser returned for the fun!..... end form
+it came from.</li>
+</ul>
+
+<p>The built-in functions-and-guard-predicates
+erlang:is<em>function(Term) and erlang:is</em>function(Term, Arity)
+accept portable funs as well as external and local ones.</p>
+
+<p>Two new built-in functions-and-guard-predicates
+erlang:is<em>portable</em>function(Term) and
+erlang:is<em>portable</em>function(Term, Arity)
+are provided, which recognise 'portable' and 'external' functions. <br />
+(This proposal will definitely need to be revised to make the
+names clearer.)</p>
+
+<h1>Motivation</h1>
+
+<p>Imagine that you have an Erlang node reporting events to clients
+on other nodes.  Clients wish to receive only a few of the events.
+One approach is for the reporter to send all events to all clients
+and let the clients do the filtering.  A better approach lets the
+clients tell the reporter which events they want, and for it to
+send just the interesting events.  But how do the clients tell the
+reporter which events they are interested in?</p>
+
+<p>One approach is to simply have a fixed set of event classes.
+That is too coarse.</p>
+
+<p>Another approach would be to define an event description language,
+perhaps based in some way on match specifications.
+That is better, but there is currently no way to compile match
+specifications (that's another thing this is for!) so matching is
+slow, and it is still limited; the reporter might want to provide
+summary functions that the filters can use.</p>
+
+<p>Another approach would be to send a fun, which is really the
+obvious way to do it.  Unfortunately, this currently will not work,
+and there are reasons why it shouldn't.  (For example, the body of
+a local function may have been subject to inline expansion of
+functions whose definitions on the receiving node are different.)</p>
+
+<p>Another approach would be to send an entire module as a binary.
+This gets a bit heavyweight.  It also creates a problem of managing
+possibly large numbers of modules in the reporter.  It is also
+insecure unless the reporter does a lot of work to verify the code
+for safety.  Long term, it will also create version skew problems
+if the client and reporter are not using exactly the same BEAM
+(or other VM).</p>
+
+<p>For another example, consider storing functions in a data base.
+Since a local fun is tied to a specific version of a specific
+module, if you save a function one month, upgrade your system,
+and restore the module next month, you cannot expect it to work.
+This means that, for example, you cannot store a binary together
+with a function that knows how to decode it.</p>
+
+<p>For another example, consider something like a data base that
+dynamically receive matchspecs (or something like matchspecs)
+and wishes to apply such a thing to millions of records.  It
+is easy enough to transform a matchspec to Erlang code, and
+even to compile the result, but now you have a module to manage,
+not a simple thing that can be cleaned up by a garbage collector.</p>
+
+<p>Basically, the aim of this proposal is to move Erlang one step
+further along the "functions are data" functional programming way.</p>
+
+<p>However, it is necessary to do this in such a way that a process
+receiving a portable fun does not have to place total trust in
+the source.  The receiver must be able to inspect a portable fun
+as well as just call it.</p>
+
+<h1>Rationale</h1>
+
+<p>It would not be a good idea to just add the portability
+restrictions on top of existing fun syntax.  That would break
+most programs that use funs.</p>
+
+<p>Perhaps the obvious thing would be to use #fun...end, as the
+sharp seems to be Erlang's "oops, we didn't think of that in the
+Good Old Days" marker, much as it is in Common Lisp.  However, we
+want that notation for anonymous abstract patterns, and in any
+case, there is nothing iconic about the sharp in this context.</p>
+
+<p>The bang is used to suggest that this is a kind of fun that you
+might want to send, which indeed it is.  As for where it is
+placed, the bang is to be thought of as post-modifying the 'fun'
+keyword, not as pre-modifying the argument list, so that</p>
+
+<pre><code>fun!({a,X}) -&gt; ...
+   ;({b,Y}) -&gt; ...
+end
+</code></pre>
+
+<p>does not have a repeated bang.</p>
+
+<p>What do you send when you send a portable fun?</p>
+
+<ul>
+<li>the environment, of course</li>
+<li>some sort of header, of course</li>
+<li>but what does the CODE look like?</li>
+</ul>
+
+<p>If it is native code, you can't send a fun from a SPARC to a Mac.
+If it is BEAM code, you can't send a fun to another system unless
+it has exactly the same version of BEAM.
+In either case, you have made life extremely hard for a wary
+receiver that wants to inspect the code.
+If it is the source code, then</p>
+
+<ul>
+<li>it can be (lazily!) compiled to BEAM (or some other VM) </li>
+<li>it can be interpreted</li>
+<li>it can be debugged</li>
+<li>it can be inspected</li>
+<li>we don't have to worry about how the compiler deals with
+comprehensions -- sadly, the current compiler generates
+recursive auxiliary functions, which complicates things,
+and better approaches are possible</li>
+</ul>
+
+<p>Accordingly, the binary format for a portable fun would include
+the source tree, possibly compressed as in Kistler's Juice.
+The native representation would include a pointer to a block of
+BEAM code and optionally a pointer to a block of native code,
+but these would be filled in on first call.</p>
+
+<p>The possibility of interpretation means that there is a cheap way
+to implement a prototype of this EEP: always interpret.  This too
+argues against any change to existing funs; we don't want to slow
+them down.</p>
+
+<h1>Backwards Compatibility</h1>
+
+<p>"fun!" is currently a syntax error,
+so no existing code can be affected by that.</p>
+
+<p>As I read the documentation for erlang:fun_info/[1,2],
+programmers should always have treated these functions as
+open-ended.  Nothing promised by the existing manual is
+removed or altered, only new values provided.</p>
+
+<p>Any existing program that called
+erlang:is<em>portable</em>function/[1,2]
+didn't work anyway, there being no such functions.
+If a module defined is<em>portable</em>function/1 or /2,
+it would not have been allowed in a guard, but would have
+been allowed elsewhere; such a module could be affected.
+If the compiler discovers a definition of either function
+in a module, it should print a warning message, and use only
+the module's version.</p>
+
+<h1>Reference Implementation</h1>
+
+<p>None.</p>
+
+<p>Long term, this needs at least two things:</p>
+
+<ol>
+<li><p>a fun representation that holds instructions in a binary
+that is not part of any module, not unlike the classic
+Interlisp-D implementation, so that such funs can be
+individually garbage collected.  This is desirable anyway.</p></li>
+<li><p>a compilation strategy for comprehensions that, like the
+classic Pop-2 system, generates in-line loops instead of
+calls to out-of-line auxiliary functions.  This is
+desirable anyway; it should be noticeably faster.</p></li>
+</ol>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0015","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Richard A. O'Keefe \u0026lt;ok(at)cs(dot)otago(dot)ac(dot)nz\u0026gt;\nStatus: Draft\nType: Standards Track\nErlang-Version: R12B-4\nCreated: 15-Jul-2008\nPost-History:\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 15: \u003ca href=\"eep-0015.md\" title=\"EEP Source\"\u003e Portable funs\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eCurrent Erlang has two kinds of funs.  An \"external\" fun,\nModule:Name/Arity, is just a name and can be used freely.\nA \"local\" fun contains code that is bound to the module it\nwas defined in.  This means that you cannot save internal\nfuns in data bases or send them to remote systems and expect them to\nwork.\u003c/p\u003e\n\n\u003cp\u003eI propose a \"portable fun\", which is a syntactically restricted\nkind of fun.  The restriction ensures that a programmer knows\n(and the run time can discover) exactly what modules are/will be\nrequired.  These funs can be safely sent to remote nodes, and \ncan safely be stored in data bases, retrieved at a later time,\nand executed.  Nor need a process holding a reference to such a\nfun be killed when the module it came from is unloaded.\u003c/p\u003e\n\n\u003cp\u003eA new way of implementing these funs is required for best speed,\nso this is quite a large change.  However, a prototype that\ninterpreted portable functions would be possible.\u003c/p\u003e\n\n\u003ch1\u003eSpecification\u003c/h1\u003e\n\n\u003cp\u003eCurrently, Erlang has\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efun_expr -\u0026gt; 'fun' fun_clauses 'end' : ...\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWe add\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efun_expr -\u0026gt; 'fun' '!' fun_clauses 'end' : ...\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eand make the following restrictions:\u003c/p\u003e\n\n\u003col\u003e\n\u003cli\u003eA portable fun may not contain plain funs.\u003c/li\u003e\n\u003cli\u003eA portable fun may not contain a call f(...)\nwithout a module prefix unless f is a built-in function.\u003c/li\u003e\n\u003cli\u003eA portable fun may not contain any call of the\nform M:f(...) or m:F(...) or M:F(...).\u003c/li\u003e\n\u003cli\u003eA portable fun may not contain any call of the\nform F(...) unless F is bound in its head.\u003c/li\u003e\n\u003cli\u003eIn a system where abstract patterns are available,\nthey are restricted the same way as function calls.\u003c/li\u003e\n\u003c/ol\u003e\n\n\u003cp\u003eThe intent of these restrictions is to ensure that\nevery call is to a built in function, a known export\nof a known module, or to some kind of fun received as\na parameter.\u003c/p\u003e\n\n\u003cp\u003eThe built-in function erlang:fun_info/1 is extended in\nthe following ways:\u003c/p\u003e\n\n\u003col\u003e\n\u003cli\u003eIn a {type,Type} item, Type may be 'portable'.\u003c/li\u003e\n\u003cli\u003eIn a {module,Module} item for a portable fun, the Module\nwill be present, but there will in fact be no other\nconnection between a portable fun and any module by that name.\u003c/li\u003e\n\u003cli\u003eIn a {name,Name} item for a portable fun,\nName will always be [].\u003c/li\u003e\n\u003cli\u003eNone of the items specified for 'local' funs will be\nreturned for 'portable' funs.\u003c/li\u003e\n\u003cli\u003e{calls,List} will be returned for a portable fun,\nwhere List is a list of {Module,Imports} pairs, where\neach Module that is used in a remote call in the fun is\nlisted once, and the Imports are a list of {Name,Arity}\npairs as reported in *:module_info/0.  This permits the\nreceiver of a portable fun to determine which modules\nneed loading and which functions they are expected to export.\u003c/li\u003e\n\u003cli\u003eFor consistency,\nerlang:fun_info(fun M:F/A, calls)\n=\u003e [{M,[{F,A}]}]\u003c/li\u003e\n\u003c/ol\u003e\n\n\u003cp\u003eThe built-in function erlang:fun_info/2 is extended similarly.\nAn additional key 'source' is provided for this function.\u003c/p\u003e\n\n\u003ch3\u003efun_info(Fun, source)\u003c/h3\u003e\n\n\u003cul\u003e\n\u003cli\u003efor a local fun, the result is 'undefined'.\u003c/li\u003e\n\u003cli\u003efor an external fun, the result is the abstract syntax\ntree the parser returns for fun M:F/A.\u003c/li\u003e\n\u003cli\u003efor a portable fun, the result is the abstract syntax\ntree the parser returned for the fun!..... end form\nit came from.\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eThe built-in functions-and-guard-predicates\nerlang:is\u003cem\u003efunction(Term) and erlang:is\u003c/em\u003efunction(Term, Arity)\naccept portable funs as well as external and local ones.\u003c/p\u003e\n\n\u003cp\u003eTwo new built-in functions-and-guard-predicates\nerlang:is\u003cem\u003eportable\u003c/em\u003efunction(Term) and\nerlang:is\u003cem\u003eportable\u003c/em\u003efunction(Term, Arity)\nare provided, which recognise 'portable' and 'external' functions. \u003cbr /\u003e\n(This proposal will definitely need to be revised to make the\nnames clearer.)\u003c/p\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eImagine that you have an Erlang node reporting events to clients\non other nodes.  Clients wish to receive only a few of the events.\nOne approach is for the reporter to send all events to all clients\nand let the clients do the filtering.  A better approach lets the\nclients tell the reporter which events they want, and for it to\nsend just the interesting events.  But how do the clients tell the\nreporter which events they are interested in?\u003c/p\u003e\n\n\u003cp\u003eOne approach is to simply have a fixed set of event classes.\nThat is too coarse.\u003c/p\u003e\n\n\u003cp\u003eAnother approach would be to define an event description language,\nperhaps based in some way on match specifications.\nThat is better, but there is currently no way to compile match\nspecifications (that's another thing this is for!) so matching is\nslow, and it is still limited; the reporter might want to provide\nsummary functions that the filters can use.\u003c/p\u003e\n\n\u003cp\u003eAnother approach would be to send a fun, which is really the\nobvious way to do it.  Unfortunately, this currently will not work,\nand there are reasons why it shouldn't.  (For example, the body of\na local function may have been subject to inline expansion of\nfunctions whose definitions on the receiving node are different.)\u003c/p\u003e\n\n\u003cp\u003eAnother approach would be to send an entire module as a binary.\nThis gets a bit heavyweight.  It also creates a problem of managing\npossibly large numbers of modules in the reporter.  It is also\ninsecure unless the reporter does a lot of work to verify the code\nfor safety.  Long term, it will also create version skew problems\nif the client and reporter are not using exactly the same BEAM\n(or other VM).\u003c/p\u003e\n\n\u003cp\u003eFor another example, consider storing functions in a data base.\nSince a local fun is tied to a specific version of a specific\nmodule, if you save a function one month, upgrade your system,\nand restore the module next month, you cannot expect it to work.\nThis means that, for example, you cannot store a binary together\nwith a function that knows how to decode it.\u003c/p\u003e\n\n\u003cp\u003eFor another example, consider something like a data base that\ndynamically receive matchspecs (or something like matchspecs)\nand wishes to apply such a thing to millions of records.  It\nis easy enough to transform a matchspec to Erlang code, and\neven to compile the result, but now you have a module to manage,\nnot a simple thing that can be cleaned up by a garbage collector.\u003c/p\u003e\n\n\u003cp\u003eBasically, the aim of this proposal is to move Erlang one step\nfurther along the \"functions are data\" functional programming way.\u003c/p\u003e\n\n\u003cp\u003eHowever, it is necessary to do this in such a way that a process\nreceiving a portable fun does not have to place total trust in\nthe source.  The receiver must be able to inspect a portable fun\nas well as just call it.\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003cp\u003eIt would not be a good idea to just add the portability\nrestrictions on top of existing fun syntax.  That would break\nmost programs that use funs.\u003c/p\u003e\n\n\u003cp\u003ePerhaps the obvious thing would be to use #fun...end, as the\nsharp seems to be Erlang's \"oops, we didn't think of that in the\nGood Old Days\" marker, much as it is in Common Lisp.  However, we\nwant that notation for anonymous abstract patterns, and in any\ncase, there is nothing iconic about the sharp in this context.\u003c/p\u003e\n\n\u003cp\u003eThe bang is used to suggest that this is a kind of fun that you\nmight want to send, which indeed it is.  As for where it is\nplaced, the bang is to be thought of as post-modifying the 'fun'\nkeyword, not as pre-modifying the argument list, so that\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003efun!({a,X}) -\u0026gt; ...\n   ;({b,Y}) -\u0026gt; ...\nend\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003edoes not have a repeated bang.\u003c/p\u003e\n\n\u003cp\u003eWhat do you send when you send a portable fun?\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003ethe environment, of course\u003c/li\u003e\n\u003cli\u003esome sort of header, of course\u003c/li\u003e\n\u003cli\u003ebut what does the CODE look like?\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eIf it is native code, you can't send a fun from a SPARC to a Mac.\nIf it is BEAM code, you can't send a fun to another system unless\nit has exactly the same version of BEAM.\nIn either case, you have made life extremely hard for a wary\nreceiver that wants to inspect the code.\nIf it is the source code, then\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003eit can be (lazily!) compiled to BEAM (or some other VM) \u003c/li\u003e\n\u003cli\u003eit can be interpreted\u003c/li\u003e\n\u003cli\u003eit can be debugged\u003c/li\u003e\n\u003cli\u003eit can be inspected\u003c/li\u003e\n\u003cli\u003ewe don't have to worry about how the compiler deals with\ncomprehensions -- sadly, the current compiler generates\nrecursive auxiliary functions, which complicates things,\nand better approaches are possible\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eAccordingly, the binary format for a portable fun would include\nthe source tree, possibly compressed as in Kistler's Juice.\nThe native representation would include a pointer to a block of\nBEAM code and optionally a pointer to a block of native code,\nbut these would be filled in on first call.\u003c/p\u003e\n\n\u003cp\u003eThe possibility of interpretation means that there is a cheap way\nto implement a prototype of this EEP: always interpret.  This too\nargues against any change to existing funs; we don't want to slow\nthem down.\u003c/p\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003e\"fun!\" is currently a syntax error,\nso no existing code can be affected by that.\u003c/p\u003e\n\n\u003cp\u003eAs I read the documentation for erlang:fun_info/[1,2],\nprogrammers should always have treated these functions as\nopen-ended.  Nothing promised by the existing manual is\nremoved or altered, only new values provided.\u003c/p\u003e\n\n\u003cp\u003eAny existing program that called\nerlang:is\u003cem\u003eportable\u003c/em\u003efunction/[1,2]\ndidn't work anyway, there being no such functions.\nIf a module defined is\u003cem\u003eportable\u003c/em\u003efunction/1 or /2,\nit would not have been allowed in a guard, but would have\nbeen allowed elsewhere; such a module could be affected.\nIf the compiler discovers a definition of either function\nin a module, it should print a warning message, and use only\nthe module's version.\u003c/p\u003e\n\n\u003ch1\u003eReference Implementation\u003c/h1\u003e\n\n\u003cp\u003eNone.\u003c/p\u003e\n\n\u003cp\u003eLong term, this needs at least two things:\u003c/p\u003e\n\n\u003col\u003e\n\u003cli\u003e\u003cp\u003ea fun representation that holds instructions in a binary\nthat is not part of any module, not unlike the classic\nInterlisp-D implementation, so that such funs can be\nindividually garbage collected.  This is desirable anyway.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003ea compilation strategy for comprehensions that, like the\nclassic Pop-2 system, generates in-line loops instead of\ncalls to out-of-line auxiliary functions.  This is\ndesirable anyway; it should be noticeably faster.\u003c/p\u003e\u003c/li\u003e\n\u003c/ol\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0015"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

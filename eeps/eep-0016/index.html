@@ -1,0 +1,214 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Richard A. O'Keefe &lt;ok(at)cs(dot)otago(dot)ac(dot)nz&gt;
+Status: Draft
+Type: Standards Track
+Erlang-Version: R12B-4
+Created: 23-Jul-2008
+Post-History:
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 16: <a href="eep-0016.md" title="EEP Source"> is_between/3</a></h2>
+
+<h1>Abstract</h1>
+
+<p>There should be a new built in function for guards,</p>
+
+<pre><code>is_between(Term, Lower_Bound, Upper_Bound)
+</code></pre>
+
+<p>which succeeds when <code>Term</code>, <code>Lower_Bound</code>, and <code>Upper_Bound</code>
+are all integers, and <code>Lower_Bound =&lt; Term =&lt; Upper_Bound</code>.</p>
+
+<h1>Specification</h1>
+
+<p>A new guard BIF is added.</p>
+
+<pre><code>is_between(Term, LB, UB)
+</code></pre>
+
+<p>In expression use, if LB or UB is not an integer,
+a badarith exception is thrown, just like an attempt to
+do remainder or bitwise operations on non-integer arguments.
+In guard use, that exception becomes failure.</p>
+
+<p>This is a type test which succeeds (or returns true) if
+Term is an integer and lies between LB and UB inclusive,
+and fails (or returns false) for other values of Term.</p>
+
+<p>As an expression, it has the same effect as</p>
+
+<pre><code>( X = Term, Y = LB, Z = UB,
+  Y bor Z,
+  ( is_integer(X), X &gt;= Y, X =&lt; Z )
+)
+</code></pre>
+
+<p>where X, Y, and Z are new variables that are not exported.</p>
+
+<p>In particular,</p>
+
+<pre><code>is_integer(tom, dick, harry)
+</code></pre>
+
+<p>should raise an exception, not return false, as <code>is_integer(Term)</code>
+is only tested after LB and UB have been found to be integers.</p>
+
+<p>As a guard test, it has the same effect as</p>
+
+<pre><code>( X = Term, Y = LB, Z = UB,
+  is_integer(Y), is_integer(Z), is_integer(X),
+  X &gt;= Y, X =&lt; Z
+)
+</code></pre>
+
+<p>would have, were that allowed.  However, it admits a much
+more efficient implementation.</p>
+
+<h1>Motivation</h1>
+
+<p>Currently some people test whether a variable is a byte thus:</p>
+
+<pre><code>-define(is_byte(X), (X &gt;= 0 andalso X =&lt; 255)).
+</code></pre>
+
+<p>This is actual current practice.  However, it fails to check
+that <code>X</code> is an integer, so <code>?is_byte(1.5)</code> succeeds, it may
+evaluate <code>X</code> twice, so <code>?is_byte((Pid ! 0))</code> will send two messages,
+not the expected one, and the current Erlang compiler generates
+noticeably worse code in guards for 'andalso' and 'orelse' than
+it does for ',' and ';'.</p>
+
+<p>It is also useful to test whether a subscript is in range,</p>
+
+<pre><code>-define(in_range(X, T), (X &gt;= 1 andalso X =&lt; size(T))).
+</code></pre>
+
+<p>which has similar problems.</p>
+
+<p>Using <code>is_between</code>, we can replace these definitions with</p>
+
+<pre><code>-define(is_byte(X),     is_between(X, 0, 255)).
+-define(in_range(X, T), is_between(X, 1, size(T))).
+</code></pre>
+
+<p>which are free of those problems</p>
+
+<h1>Rationale</h1>
+
+<p>One alternative to this design would be to follow the example
+of Common Lisp (and the even earlier example of the systems
+programming language on HP 3000s) and allow</p>
+
+<pre><code>E1 =&lt; E2 =&lt; E3      % (&lt;= E1 E2 E3) in Lisp
+</code></pre>
+
+<p>(and possibly also</p>
+
+<pre><code>E1 =&lt; E2 &lt;  E3
+E1 &lt;  E2 =&lt; E3
+E1 &lt;  E2 &lt;  E3)     % (&lt;  E1 E2 E3) in Lisp
+</code></pre>
+
+<p>as guards and expressions, evaluating each expression exactl
+once.  I am very fond of this syntax and would be pleased to
+see it.  This would resolve the double evaluation of <code>E2</code>, the
+possible non-evaluation of <code>E3</code>, and the inefficiency of 'andalso'.
+However, it would not address the problem that a byte or an
+index is not just a NUMBER in a certain range, but an INTEGER.
+If Erlang had multiple comparison syntax, there would still be
+a use for <code>is_between/3</code>.</p>
+
+<h1>Backwards Compatibility</h1>
+
+<p>Code that defines a function named <code>is_between/3</code> will be
+affected.  Since the Erlang compiler parses an entire
+module before semantic analysis, it's easy to
+-   check for a definition of <code>is_between/3</code>
+-   warn if one is present
+-   disable the new built-in in such a case.</p>
+
+<h1>Reference Implementation</h1>
+
+<p>There is none.  However, we can sketch one.
+Two new BEAM instructions are required:</p>
+
+<pre><code>{test,is_between,Lbl,[Src1,Src2,Src3]}
+{bif,is_between,?,[Src1,Src2,Src3],Dst}
+</code></pre>
+
+<p>The test does</p>
+
+<pre><code>if Src2 is not an integer, goto Lbl.
+if Src3 is not an integer, goto Lbl.
+if Src1 is not an integer, goto Lbl.
+if Src1 &lt; Src2, goto Lbl.
+if Src3 &lt; Src1, goto Lbl.
+</code></pre>
+
+<p>The bif does</p>
+
+<pre><code>if Src2 is not an integer, except!
+if Src3 is not an integer, except!
+if Src1 is not an integer
+or Src1 &lt; Src2
+or Src3 &lt; Src1
+then move 'false' to Dst
+else move 'true'  to Dst.
+</code></pre>
+
+<p>Nothing here is fundamentally new, and only my unfamiliarity with
+how to add instructions to the emulator prevents me doing it.  And
+my total ignorance of how to tell HiPE about them!</p>
+
+<p>There might be some point in having variants of these instructions
+for use when Src2 and Src3 are integer literals; I would certainly
+expect HiPE to elide redundant tests here.</p>
+
+<p>The compiler would simply recognise <code>is_between/3</code> and emit the
+appropriate BEAM rather like it recognises <code>is_atom/1</code>.
+My ignorance of how to extend the emulator is exceeded by my
+ignorance of how to extend the compiler.  Certainly we'd need</p>
+
+<pre><code>...
+is_bif(erlang, is_between, 3) -&gt; true;
+...
+is_guard_bif(erlang, is_between, 3) -&gt; true;
+...
+is_pure(erlang, is_between, 3) -&gt; true;
+...
+</code></pre>
+
+<p>(but NOT an <code>is_safe</code> rule) in <code>erl_bifs.erl</code>.  Or would we?  I've
+not been able to figure out where <code>is_guard_bif/3</code> is called.
+There will need to be a new entry in genop.tab as well.
+Ohhh, <code>erl_internal.erl</code> is in <code>.../stdlib</code>, not <code>.../compiler</code>.
+OK, so a couple of functions in <code>erl_internal.erl</code> need to be patched
+to recognise <code>is_between/3</code>; what needs changing to generate BEAM?
+The annoying thing is that if I knew my way around the compiler,
+it would be easier to add this than to write it up.</p>
+
+<p>Here's some text to go in the documentation:</p>
+
+<blockquote>
+<pre><code>is_integer(Term, LB, UB) -&gt; bool()
+
+Types:
+  Term = term()
+  LB = integer()
+  UB = integer()
+</code></pre>
+
+<p>Returns true if Term is an integer lying between LB
+and UB inclusive (LB =&lt; Term, Term =&lt; UB); otherwise
+returns false.  In an expression, raises an exception
+if LB or UB is not an integer.  Having UB &lt; LB is not
+an error.</p>
+
+<p>Allowed in guard tests.</p>
+</blockquote>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0016","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Richard A. O'Keefe \u0026lt;ok(at)cs(dot)otago(dot)ac(dot)nz\u0026gt;\nStatus: Draft\nType: Standards Track\nErlang-Version: R12B-4\nCreated: 23-Jul-2008\nPost-History:\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 16: \u003ca href=\"eep-0016.md\" title=\"EEP Source\"\u003e is_between/3\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eThere should be a new built in function for guards,\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eis_between(Term, Lower_Bound, Upper_Bound)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhich succeeds when \u003ccode\u003eTerm\u003c/code\u003e, \u003ccode\u003eLower_Bound\u003c/code\u003e, and \u003ccode\u003eUpper_Bound\u003c/code\u003e\nare all integers, and \u003ccode\u003eLower_Bound =\u0026lt; Term =\u0026lt; Upper_Bound\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch1\u003eSpecification\u003c/h1\u003e\n\n\u003cp\u003eA new guard BIF is added.\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eis_between(Term, LB, UB)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIn expression use, if LB or UB is not an integer,\na badarith exception is thrown, just like an attempt to\ndo remainder or bitwise operations on non-integer arguments.\nIn guard use, that exception becomes failure.\u003c/p\u003e\n\n\u003cp\u003eThis is a type test which succeeds (or returns true) if\nTerm is an integer and lies between LB and UB inclusive,\nand fails (or returns false) for other values of Term.\u003c/p\u003e\n\n\u003cp\u003eAs an expression, it has the same effect as\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e( X = Term, Y = LB, Z = UB,\n  Y bor Z,\n  ( is_integer(X), X \u0026gt;= Y, X =\u0026lt; Z )\n)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhere X, Y, and Z are new variables that are not exported.\u003c/p\u003e\n\n\u003cp\u003eIn particular,\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eis_integer(tom, dick, harry)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eshould raise an exception, not return false, as \u003ccode\u003eis_integer(Term)\u003c/code\u003e\nis only tested after LB and UB have been found to be integers.\u003c/p\u003e\n\n\u003cp\u003eAs a guard test, it has the same effect as\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e( X = Term, Y = LB, Z = UB,\n  is_integer(Y), is_integer(Z), is_integer(X),\n  X \u0026gt;= Y, X =\u0026lt; Z\n)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewould have, were that allowed.  However, it admits a much\nmore efficient implementation.\u003c/p\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eCurrently some people test whether a variable is a byte thus:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-define(is_byte(X), (X \u0026gt;= 0 andalso X =\u0026lt; 255)).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis is actual current practice.  However, it fails to check\nthat \u003ccode\u003eX\u003c/code\u003e is an integer, so \u003ccode\u003e?is_byte(1.5)\u003c/code\u003e succeeds, it may\nevaluate \u003ccode\u003eX\u003c/code\u003e twice, so \u003ccode\u003e?is_byte((Pid ! 0))\u003c/code\u003e will send two messages,\nnot the expected one, and the current Erlang compiler generates\nnoticeably worse code in guards for 'andalso' and 'orelse' than\nit does for ',' and ';'.\u003c/p\u003e\n\n\u003cp\u003eIt is also useful to test whether a subscript is in range,\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-define(in_range(X, T), (X \u0026gt;= 1 andalso X =\u0026lt; size(T))).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhich has similar problems.\u003c/p\u003e\n\n\u003cp\u003eUsing \u003ccode\u003eis_between\u003c/code\u003e, we can replace these definitions with\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e-define(is_byte(X),     is_between(X, 0, 255)).\n-define(in_range(X, T), is_between(X, 1, size(T))).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhich are free of those problems\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003cp\u003eOne alternative to this design would be to follow the example\nof Common Lisp (and the even earlier example of the systems\nprogramming language on HP 3000s) and allow\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eE1 =\u0026lt; E2 =\u0026lt; E3      % (\u0026lt;= E1 E2 E3) in Lisp\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003e(and possibly also\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eE1 =\u0026lt; E2 \u0026lt;  E3\nE1 \u0026lt;  E2 =\u0026lt; E3\nE1 \u0026lt;  E2 \u0026lt;  E3)     % (\u0026lt;  E1 E2 E3) in Lisp\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eas guards and expressions, evaluating each expression exactl\nonce.  I am very fond of this syntax and would be pleased to\nsee it.  This would resolve the double evaluation of \u003ccode\u003eE2\u003c/code\u003e, the\npossible non-evaluation of \u003ccode\u003eE3\u003c/code\u003e, and the inefficiency of 'andalso'.\nHowever, it would not address the problem that a byte or an\nindex is not just a NUMBER in a certain range, but an INTEGER.\nIf Erlang had multiple comparison syntax, there would still be\na use for \u003ccode\u003eis_between/3\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003eCode that defines a function named \u003ccode\u003eis_between/3\u003c/code\u003e will be\naffected.  Since the Erlang compiler parses an entire\nmodule before semantic analysis, it's easy to\n-   check for a definition of \u003ccode\u003eis_between/3\u003c/code\u003e\n-   warn if one is present\n-   disable the new built-in in such a case.\u003c/p\u003e\n\n\u003ch1\u003eReference Implementation\u003c/h1\u003e\n\n\u003cp\u003eThere is none.  However, we can sketch one.\nTwo new BEAM instructions are required:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{test,is_between,Lbl,[Src1,Src2,Src3]}\n{bif,is_between,?,[Src1,Src2,Src3],Dst}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe test does\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eif Src2 is not an integer, goto Lbl.\nif Src3 is not an integer, goto Lbl.\nif Src1 is not an integer, goto Lbl.\nif Src1 \u0026lt; Src2, goto Lbl.\nif Src3 \u0026lt; Src1, goto Lbl.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe bif does\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eif Src2 is not an integer, except!\nif Src3 is not an integer, except!\nif Src1 is not an integer\nor Src1 \u0026lt; Src2\nor Src3 \u0026lt; Src1\nthen move 'false' to Dst\nelse move 'true'  to Dst.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eNothing here is fundamentally new, and only my unfamiliarity with\nhow to add instructions to the emulator prevents me doing it.  And\nmy total ignorance of how to tell HiPE about them!\u003c/p\u003e\n\n\u003cp\u003eThere might be some point in having variants of these instructions\nfor use when Src2 and Src3 are integer literals; I would certainly\nexpect HiPE to elide redundant tests here.\u003c/p\u003e\n\n\u003cp\u003eThe compiler would simply recognise \u003ccode\u003eis_between/3\u003c/code\u003e and emit the\nappropriate BEAM rather like it recognises \u003ccode\u003eis_atom/1\u003c/code\u003e.\nMy ignorance of how to extend the emulator is exceeded by my\nignorance of how to extend the compiler.  Certainly we'd need\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e...\nis_bif(erlang, is_between, 3) -\u0026gt; true;\n...\nis_guard_bif(erlang, is_between, 3) -\u0026gt; true;\n...\nis_pure(erlang, is_between, 3) -\u0026gt; true;\n...\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003e(but NOT an \u003ccode\u003eis_safe\u003c/code\u003e rule) in \u003ccode\u003eerl_bifs.erl\u003c/code\u003e.  Or would we?  I've\nnot been able to figure out where \u003ccode\u003eis_guard_bif/3\u003c/code\u003e is called.\nThere will need to be a new entry in genop.tab as well.\nOhhh, \u003ccode\u003eerl_internal.erl\u003c/code\u003e is in \u003ccode\u003e.../stdlib\u003c/code\u003e, not \u003ccode\u003e.../compiler\u003c/code\u003e.\nOK, so a couple of functions in \u003ccode\u003eerl_internal.erl\u003c/code\u003e need to be patched\nto recognise \u003ccode\u003eis_between/3\u003c/code\u003e; what needs changing to generate BEAM?\nThe annoying thing is that if I knew my way around the compiler,\nit would be easier to add this than to write it up.\u003c/p\u003e\n\n\u003cp\u003eHere's some text to go in the documentation:\u003c/p\u003e\n\n\u003cblockquote\u003e\n\u003cpre\u003e\u003ccode\u003eis_integer(Term, LB, UB) -\u0026gt; bool()\n\nTypes:\n  Term = term()\n  LB = integer()\n  UB = integer()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eReturns true if Term is an integer lying between LB\nand UB inclusive (LB =\u0026lt; Term, Term =\u0026lt; UB); otherwise\nreturns false.  In an expression, raises an exception\nif LB or UB is not an integer.  Having UB \u0026lt; LB is not\nan error.\u003c/p\u003e\n\n\u003cp\u003eAllowed in guard tests.\u003c/p\u003e\n\u003c/blockquote\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0016"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

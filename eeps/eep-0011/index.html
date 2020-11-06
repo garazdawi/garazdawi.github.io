@@ -1,0 +1,1084 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Patrik Nyblom &lt;pan(at)erlang(dot)org&gt;
+Status: Accepted/R12B-3u Proposal is implemented in OTP release R12B-3,
+ except for Unicode support according to EEP 10
+Type: Standards Track
+Created: 04-Jun-2008
+Erlang-Version: R12B-5
+Post-History: 01-Jan-1970
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 11: <a href="eep-0011.md" title="EEP Source"> Built in regular expressions in Erlang</a></h2>
+
+<h1>Abstract</h1>
+
+<p>This EEP suggests how to integrate an external regular expression
+library into the Erlang virtual machine.</p>
+
+<h1>Motivation</h1>
+
+<p>Regular expressions are widely used. Regardless of how other features
+of a language can be used to match or pick out parts of a string, many
+programmers prefer the regular expression syntax and expect
+regular expressions to be available in a modern language.</p>
+
+<p>The Perl programming language has integrated regular expressions
+directly into the syntax and Perl programmers are often highly skilled
+at writing complicated regular expressions that parse e.g. text files,
+HTTP requests or simple user input. The Perl extensions to the common
+regular expressions are widely known and many modern programming
+languages support something similar.</p>
+
+<p>Erlang currently has a minimalistic regular expression module (regexp
+module in STDLIB), which lacks features commonly available in other
+implementations. The current library is also painfully slow compared
+to the native C libraries utilized in other languages.</p>
+
+<p>Erlang needs to interface with a modern regular expression library in
+a way that does not break the properties of the virtual machine.</p>
+
+<h1>Rationale</h1>
+
+<h2>Preconditions</h2>
+
+<p>Writing a more efficient regular expression library purely in Erlang
+has been attempted, but so far no really efficient implementation has
+been proposed, and the work involved in creating one is deemed
+extensive.</p>
+
+<p>On the other hand, several more or less successful attempts to
+integrate an external regular expressions library into the virtual
+machine have been presented. None of them, however, have addressed the
+issue of long running regular expressions stalling the schedulers.</p>
+
+<p>A built in function in the Erlang VM needs to stop execution when it
+has run a certain amount of iterations, to avoid stalling a scheduler
+and thereby starving other processes in the system. When the Erlang
+process get's scheduled again, the built in function restarts and has
+provided some way of storing it's current state so that execution of
+the function can continue where it was once left. </p>
+
+<p>The execution of a regular expression match is in many ways similar to the
+virtual machine's execution of ordinary beam code, but the available
+libraries are (for obvious reasons) not prepared to give up the
+execution temporarily to allow other processes to execute. A
+complicated regular expression on large amounts of subject data can
+take seconds or even minutes to execute. Stalling one of the
+schedulers in the VM for that amount of time is not an option in a
+real parallel system. As suggested interfaces to external libraries
+have never addressed this problem, none have been accepted and/or
+integrated in the main Erlang distribution.</p>
+
+<p>Stack usage is another issue seldom addressed. The Erlang virtual
+machine may run a lot of scheduler threads, especially on processors
+with large amounts of cores. Multithreading applications need to be
+careful about stack usage, why recursive C routines are best
+avoided. The Erlang virtual machine avoids recursion in C code, why a
+linked in library should do the same. When it comes to realtime
+operating systems, the need to avoid recursion in the C code is even
+more obvious. The library used for Erlang regular expressions simply
+cannot be recursive on the C stack, at least not in a way where stack
+usage cannot be determined at compile time.</p>
+
+<h3>Multithreading versus interruptable execution</h3>
+
+<p>The problem of interrupting the execution of a regular expression (or
+other lengthy operations) when another Erlang process should be
+scheduled, has two obvious solutions:</p>
+
+<ol>
+<li><p>Count the number of iterations in a regular expression match, store
+the state after a certain amount of iterations (or a certain amount
+of time) and return control to the scheduler when execution time
+slot is exceeded.  </p></li>
+<li><p>Let the operating system take care of the problem by executing the
+regular expression matches in separate kernel threads.</p></li>
+</ol>
+
+<p>In the virtual machine's file driver, the second approach is used,
+introducing the concept of the asynchronous thread pool. The file I/O
+case is however special as the I/O operation in itself usually
+consumes far more time than the running time for the inter-thread
+communication and task switching involved when using asynchronous
+threads. Besides, there simply is no other solution at hand for I/O,
+so OS threads is the <em>only</em> solution at hand in that case.</p>
+
+<p>If regular expressions were to be executed in separate threads, even
+very small and simple expressions would have to carry the extra burden
+of OS level task switching and communication.</p>
+
+<p>Other lengthy operations in the virtual machine use the first
+approach of voluntary interruption and rescheduling. In the cases
+where external libraries are involved, like IP communication, the
+emulator provides ways to passively wait for events by supplying
+interfaces to I/O multiplexing (select/poll). This is the way to avoid
+blocking the schedulers in most drivers. Asynchronous threads are only
+utilized where there simply are no other options, like in file I/O
+(which cannot utilize I/O multiplexing).</p>
+
+<p>Using the first solution when interfacing an external library in a
+driver or BIF, involves either finding a library where interruption and
+restart of execution is possible, or modifying an existing library to
+support this.</p>
+
+<p>Even though modifying a library will make upgrading and patching of
+the library much harder, the benefits are significant. When executing e.g.
+regular expressions, the same thread that actually is executing the
+beam code will be utilized, why setup time and overhead in general is
+kept at a minimum. Of course execution time of the regexp itself will
+be slightly longer, as the implementation needs to keep track of the
+number of executed iterations and needs to be prepared to store the
+current state for later execution wakeup. The much smaller setup time
+is however expected to be dominating when it comes to smaller regular
+expressions (or rather expressions that involve a small number of
+loops). One also has to bear in mind that this solution imposes much
+less load on the operating system scheduler, which is a good thing for
+large and/or embedded systems.</p>
+
+<p>For operating systems where no kernel threads are available, the first
+solution is the only acceptable. Separate threads for pure user space
+code execution will do more harm than good to the realtime properties
+of the Erlang system.</p>
+
+<h3>Selecting a suitable library to integrate</h3>
+
+<p>The library to integrate into the virtual machine should in an ideal
+situation fulfill the following wishes:</p>
+
+<ul>
+<li>Interruptable, the execution of the regular expression match should
+stop after a certain amount of iterations and should then be
+restartable at a later time.</li>
+<li>The library should be implemented in plain C, not any other language
+or extension.</li>
+<li>The C implementation should be non-recursive.</li>
+<li>The library should implement modern (Perl like) regular expression 
+syntax.</li>
+<li>The library should be efficient.</li>
+<li>The library should provide Unicode support.</li>
+</ul>
+
+<p>No available regular expression library currently provides a perfect
+match. The best available is the <a href="http://www.pcre.org/" title="The PCRE homepage">PCRE</a> library, which has compile time
+options for not using the C stack, Perl (and Python) compatible
+regular expressions and also is written in a well structured way,
+making it suitable for integration, porting and implementing
+extensions needed in the Erlang case.</p>
+
+<p>Other alternatives include rxlib (no longer maintained), the Tcl/Tk
+regular expression implementation, GNU regex, Jakarta and Onigurama,
+among others. Of those the Tcl/Tk implementation seems the most
+promising, especially as it for many situations is much faster than
+other implementations. The algorithms and code are however quite
+incomprehensible and the regular expression flavor not the most
+widespread.</p>
+
+<p>After having had a good look at the alternatives, I came to the
+conclusion that PCRE was the best choice for the following reasons:</p>
+
+<ul>
+<li>The code is maintained, very readable and easy to work with.</li>
+<li>The library is fast, although not the fastest.</li>
+<li>Extensive test suites.</li>
+<li>Perl compatible syntax.</li>
+<li>Widely spread: Used in Apache, PHP, Apple Safari etc.</li>
+<li>The regexp engine is pure C.</li>
+<li>Unicode support (UTF-8) which fits nicely into the suggested
+Unicode representation in Erlang (<a href="/eeps/eep-0010" title="EEP 10">EEP 10</a>).</li>
+<li>Recursion on the C stack can be avoided.</li>
+<li>The library has most of the infrastructure for an interruptable
+execution of the expressions present, although restarting of
+interrupted matches is not (yet) implemented.</li>
+</ul>
+
+<p>Although the subjective reasoning about code readability might seem
+somewhat out of place, the PCRE code base makes updates to the library
+easier to integrate, as relatively few and comprehensible alterations
+need to be done to the library to make it fit into the virtual
+machine. To be able to maintain the library is important and being
+able to understand the code is crucial.</p>
+
+<p>The most appealing feature of the library is however the extensive
+support for Perl compatible regular expressions. PCRE is certainly one
+of the most powerful libraries around and Erlang programmers used to
+Perl's regular expressions will feel at home.</p>
+
+<h2>Programmers interface</h2>
+
+<p>In Perl, the regular expressions are integrated into the language
+itself. This could of course be done in Erlang too. However, Erlang
+already has syntax for matching structured data as well as binary
+ditto. Introducing new primitives for string matching with regular
+expressions seems out of place. Erlang is also not a language designed
+for processing textual data in the way Perl is, but a language that
+can handle complicated structured data. The bit-syntax however might
+one day benefit from regular expression extensions, but that is beyond
+the scope of this EEP.</p>
+
+<p>A regular expression module interfacing with the library through built
+in functions is the usual way to do it in Erlang, and that's the way
+this EEP suggests. As the module name regexp is already taken, the
+abbreviation "re" for module name seems to be a good choice.</p>
+
+<p>As a base implementation, I suggest a module with two basic functions:
+one for precompiling a regular expression into "bytecode" for the
+regular expression matching execution; and one for actually running
+the regexp matching. The function that runs the matching should take
+either a compiled regular expression, or the source of a regular
+expression as input (together with the subject string and the options
+for execution). </p>
+
+<p>Around these two suggested functions one can implement functionality
+in Erlang to mimic the existing regular expression library or
+implement new functionality. </p>
+
+<p>The current regexp module can, apart from matching, split a string
+according to a regular expression (functionality similar to the Perl
+built in function split) and do substitution of sub-strings based on
+regular expression matching (like the s/<RE>/<String>/ expression in
+Perl or awk). With corresponding functions in the "re" module, the new
+module would provide all functionality of the old one.</p>
+
+<p>The names of the functions should, as much as possible, be chosen so
+that mix up with the current regexp library functions is avoided, why I
+suggest "compile" and "run" and "replace" as names for regexp
+compilation, execution and substitution respectively. As no good
+synonym for the name "split" has emerged, that name is retained in the
+new module.</p>
+
+<p>Here follows part of the suggested manual page:</p>
+
+<h3>Excerpt from a suggested manual page</h3>
+
+<h4>DATA TYPES</h4>
+
+<pre><code>iodata() = iolist() | binary()
+iolist() = [char() | binary() | iolist()]
+           % a binary is allowed as the tail of the list
+
+mp() = Opaque datatype containing a compiled regular expression.
+</code></pre>
+
+<h4>EXPORTS</h4>
+
+<h5>compile(Regexp) -> {ok, MP} | {error, ErrSpec}</h5>
+
+<p>Types:</p>
+
+<pre><code>Regexp = iodata()
+</code></pre>
+
+<p>The same as compile(Regexp,[])</p>
+
+<h5>compile(Regexp,Options) -> {ok, MP} | {error, ErrSpec}</h5>
+
+<p>Types:</p>
+
+<pre><code>Regexp = iodata()
+Options = [ Option ]
+Option = anchored | caseless | dollar_endonly | dotall | extended |
+         firstline | multiline | no_auto_capture | dupnames |
+         ungreedy | {newline, NLSpec}
+NLSpec = cr | crlf | lf | anycrlf
+MP = mp()
+ErrSpec = {ErrString, Position}
+ErrString = string()
+Position = int()
+</code></pre>
+
+<p>This function compiles a regular expression with the syntax described below
+into an internal format to be used later as a parameter to the run/2,3 functions.</p>
+
+<p>Compiling the regular expression before matching is useful if the same
+expression is to be used in matching against multiple subjects during the
+program's lifetime. Compiling once and executing many times is far more
+efficient than compiling each time one wants to match.</p>
+
+<p>The options have the following meanings:</p>
+
+<ul>
+<li><p><code>anchored</code> <br />
+The pattern is forced to be "anchored", that is, it is constrained to match
+only at the first matching point in the string that is being searched
+(the "subject string"). This effect can also be achieved by appropriate
+constructs in the pattern itself.</p></li>
+<li><p><code>caseless</code> <br />
+Letters in the pattern match both upper and lower case letters.
+It is equivalent to Perl's <code>/i</code> option, and it can be changed within
+a pattern by a <code>(?i)</code> option setting. Uppercase and lowercase letters
+are defined as in the ISO-8859-1 character set.</p></li>
+<li><p><code>dollar_endonly</code> <br />
+A dollar metacharacter in the pattern matches only at the end of the subject
+string. Without this option, a dollar also matches immediately before a newline
+at the end of the string (but not before any other newlines). The dollar_endonly
+option is ignored if multiline is given. There is no equivalent option in Perl,
+and no way to set it within a pattern.</p></li>
+<li><p><code>dotall</code> <br />
+A dot maturate in the pattern matches all characters, including those that
+indicate newline. Without it, a dot does not match when the current position
+is at a newline. This option is equivalent to Perl's <code>/s</code> option, and it
+can be changed within a pattern by a <code>(?s)</code> option setting. A negative class
+such as <code>[^a]</code> always matches newline characters,
+independent of the setting of this option.</p></li>
+<li><p><code>extended</code> <br />
+Whitespace data characters in the pattern are ignored except when escaped or
+inside a character class. Whitespace does not include the VT character
+(ASCII 11). In addition, characters between an unescaped <code>#</code> outside a
+character class and the next newline, inclusive, are also ignored. This is
+equivalent to Perl's <code>/x</code> option, and it can be changed within a pattern by
+a <code>(?x)</code> option setting. This option makes it possible to include comments
+inside complicated patterns. Note, however, that this applies only to data
+characters. Whitespace characters may never appear within special character
+sequences in a pattern, for example within the sequence <code>(?(</code> which introduces
+a conditional subpattern.</p></li>
+<li><p><code>firstline</code> <br />
+An unanchored pattern is required to match before or at the first newline
+in the subject string, though the matched text may continue over the newline.</p></li>
+<li><p><code>multiline</code> <br />
+By default, PCRE treats the subject string as consisting of a single line of
+characters (even if it actually contains newlines). The "start of line"
+metacharacter (<code>^</code>) matches only at the start of the string, while the
+"end of line" metacharacter (<code>$</code>) matches only at the end of the string,
+or before a terminating newline (unless dollar_endonly is given). This is
+the same as Perl.</p>
+
+<p>When multiline it is given, the "start of line" and "end of line" constructs
+match immediately following or immediately before internal newlines in the
+subject string, respectively, as well as at the very start and end. This is
+equivalent to Perl's <code>/m</code> option, and it can be changed within a pattern by
+a <code>(?m)</code> option setting. If there are no newlines in a subject string,
+or no occurrences of <code>^</code> or <code>$</code> in a pattern, setting multiline has no effect.</p></li>
+<li><p><code>no_auto_capture</code> <br />
+Disables the use of numbered capturing parentheses in the pattern.
+Any opening parenthesis that is not followed by <code>?</code> behaves as if it were
+followed by <code>?:</code> but named parentheses can still be used for capturing
+(and they acquire numbers in the usual way). There is no equivalent
+of this option in Perl.</p></li>
+<li><p><code>dupnames</code> <br />
+Names used to identify capturing subpatterns need not be unique.
+This can be helpful for certain types of pattern when it is known
+that only one instance of the named subpattern can ever be matched.
+There are more details of named subpatterns below.</p></li>
+<li><p><code>ungreedy</code> <br />
+This option inverts the "greediness" of the quantifiers so that they
+are not greedy by default, but become greedy if followed by <code>?</code>.
+It is not compatible with Perl. It can also be set by a <code>(?U)</code> option
+setting within the pattern.</p></li>
+<li><p><code>{newline, NLSpec}</code> <br />
+Override the default definition of a newline in the subject string, which is LF (ASCII 10) in Erlang.</p>
+
+<ul>
+<li><code>cr</code> <br />
+Newline is indicated by a single character CR (ASCII 13) </li>
+<li><code>lf</code> <br />
+Newline is indicated by a single character LF (ASCII 10), the default </li>
+<li><code>crlf</code> <br />
+Newline is indicated by the two-character CRLF (ASCII 13 followed by ASCII 10) sequence. </li>
+<li><code>anycrlf</code> <br />
+Any of the three preceding sequences should be recognized. </li>
+</ul></li>
+</ul>
+
+<h5>run(Subject,RE) -> {match, Captured} | nomatch | {error, ErrSpec}</h5>
+
+<p>Types:</p>
+
+<pre><code>Subject = iodata()
+RE = mp() | iodata()
+Captured = [ CaptureData ]
+CaptureData = {int(),int()} | string() | binary()
+ErrSpec = {ErrString, Position}
+ErrString = string()
+Position = int()
+</code></pre>
+
+<p>The same as run(Subject,RE,[]).</p>
+
+<h5>run(Subject,RE) -> {match, Captured} | match | nomatch | {error, ErrSpec}</h5>
+
+<p>Types:</p>
+
+<pre><code>Subject = iodata()
+RE = mp() | iodata()
+Options = [ Option ]
+Option = anchored | global | notbol | noteol | notempty | {offset, int()} |
+         {newline, NLSpec} | {capture, ValueSpec} |
+         {capture, ValueSpec, Type} | CompileOpt
+Type = index | list | binary
+ValueSpec = all | all_but_first | first | ValueList
+ValueList = [ ValueID ]
+ValueID = int() | string() | atom()
+CompileOpt = see compile/2 above
+NLSpec = cr | crlf | lf | anycrlf
+Captured = [ CaptureData ] | [ [ CaptureData ] ... ]
+CaptureData = {int(),int()} | string() | binary()
+ErrSpec = {ErrString, Position}
+ErrString = string()
+Position = int()
+</code></pre>
+
+<p>Executes a regexp matching, returning <code>match</code> / <code>{match, Captured}</code> or
+<code>nomatch</code>. The regular expression can be given either as iodata()
+in which case it is automatically compiled (as by re:compile/2)
+and executed, or as a pre compiled mp() in which case it is executed
+against the subject directly.</p>
+
+<p>When compilation is involved, the function may return compilation errors
+as when compiling separately (<code>{error, {string(),int()}}</code>); when
+only matching, no errors are returned.</p>
+
+<p>If the regular expression is previously compiled, the option list can
+only contain the options <code>anchored</code>, <code>global</code>, <code>notbol</code>, <code>noteol</code>, <code>notempty</code>,
+<code>{offset, int()}</code>, <code>{newline, NLSpec}</code> and <code>{capture, ValueSpec}</code> /
+<code>{capture, ValueSpec, Type}</code>. Otherwise all options valid for the
+<code>re:compile/2</code> function are allowed as well. Options allowed both
+for compilation and execution of a match, namely <code>anchored</code> and
+<code>{newline, NLSpec}</code>, will affect both the compilation and execution
+if present together with a non pre-compiled regular expression.</p>
+
+<p>The <code>{capture, ValueSpec}</code> / <code>{capture, ValueSpec, Type}</code> defines
+what to return from the function upon successful matching. The capture
+tuple may contain both a value specification telling which of the captured
+substrings are to be returned, and a type specification, telling how
+captured substrings are to be returned (as index tuples, lists or binaries).
+The capture option makes the function quite flexible and powerful.
+The different options are described in detail below</p>
+
+<p>If the capture options describe that no substring capturing at all is to be
+done (<code>{capture, none}</code>), the function will return the single atom match
+upon successful matching, otherwise the tuple <code>{match, ValueList}</code>
+is returned. Disabling capturing can be done either by specifying
+none or an empty list as ValueSpec.</p>
+
+<p>A description of all the options relevant for execution follows:</p>
+
+<ul>
+<li><p><code>anchored</code> <br />
+Limits <code>re:run/3</code> to matching at the first matching position. If a pattern
+was compiled with anchored, or turned out to be anchored by virtue of its
+contents, it cannot be made unachored at matching time, hence there is no
+unanchored option.</p></li>
+<li><p><code>global</code> <br />
+Implements global (repetitive) search as the <code>/g</code> flag in i.e. Perl.
+Each match found is returned as a separate list() containing
+the specific match as well as any matching subexpressions (or as
+specified by the capture option). The Captured part of the return
+value will hence be a list() of list()'s when this option is given.</p>
+
+<p>When the regular expression matches an empty string, the behaviour
+might seem non-intuitive, why the behaviour requites some clarifying.
+With the global option, <code>re:run/3</code> handles empty matches in the same way
+as Perl, meaning that a match at any point giving an empty string
+(with length 0) will be retried with the options <code>[anchored, notempty]</code>
+as well. If that search gives a result of length > 0, the result
+is included. An example:</p>
+
+<pre><code>re:run("cat","(|at)",[global]).
+</code></pre>
+
+<p>The matching will be performed as following:</p>
+
+<ul>
+<li><p><strong>At offset 0</strong> <br />
+The regexp <code>(|at)</code> will first match at the initial position of
+the string cat, giving the result set <code>[{0,0},{0,0}]</code> (the
+second <code>{0,0}</code> is due to the subexpression marked by the
+parentheses). As the length of the match is 0, we don't
+advance to the next position yet.</p></li>
+<li><p><strong>At offset 0 with <code>[anchored, notempty]</code></strong> <br />
+The search is retried with the options [anchored, notempty] at
+the same position, which does not give any interesting result of
+longer length, why the search position is now advanced to the next
+character (<code>a</code>).</p></li>
+<li><p><strong>At offset 1</strong> <br />
+Now the search results in <code>[{1,0}, {1,0}]</code> meaning this search
+will also be repeated with the extra options.</p></li>
+<li><strong>At offset 1 with <code>[anchored, notempty]</code></strong> <br />
+Now the ab alternative is found and the result will be
+<code>[{1,2}, {1,2}]</code>. The result is added to the list of results
+and the position in the search string is advanced two steps.</li>
+<li><strong>At offset 3</strong> 
+The search now once again matches the empty string,
+giving <code>[{3,0}, {3,0}]</code>.</li>
+<li><strong>At offset 1 with `[anchored, notempty]</strong> <br />
+This will give no result of length > 0 and we are at the last
+position, so the global search is complete. </li>
+</ul>
+
+<p>The result of the call is:</p>
+
+<pre><code>{match,[[{0,0},{0,0}],[{1,0},{1,0}],[{1,2},{1,2}],[{3,0},{3,0}]]}
+</code></pre></li>
+<li><p><code>notempty</code> <br />
+An empty string is not considered to be a valid match if this option
+is given. If there are alternatives in the pattern, they are tried.
+If all the alternatives match the empty string, the entire match fails.
+For example, if the pattern:</p>
+
+<pre><code>a?b?
+</code></pre>
+
+<p>is applied to a string not beginning with "a" or "b", it matches the
+empty string at the start of the subject. With notempty given,
+this match is not valid, so <code>re:run/3</code> searches further into the string
+for occurrences of "a" or "b".</p>
+
+<p>Perl has no direct equivalent of notempty, but it does make a special
+case of a pattern match of the empty string within its <code>split()</code> function,
+and when using the <code>/g</code> modifier. It is possible to emulate Perl's
+behavior after matching a null string by first trying the match
+again at the same offset with notempty and anchored, and then
+if that fails by advancing the starting offset (see below)
+and trying an ordinary match again.</p></li>
+<li><p><code>notbol</code> <br />
+This option specifies that the first character of the subject string
+is not the beginning of a line, so the circumflex metacharacter should
+not match before it. Setting this without multiline (at compile time)
+causes circumflex never to match. This option affects only the behavior
+of the circumflex metacharacter. It does not affect <code>\A</code>.</p></li>
+<li><p><code>noteol</code> <br />
+This option specifies that the end of the subject string is not the end
+of a line, so the dollar metacharacter should not match it nor
+(except in multiline mode) a newline immediately before it.
+Setting this without multiline (at compile time) causes dollar
+never to match. This option affects only the behavior of the dollar
+metacharacter. It does not affect <code>\Z</code> or <code>\z</code>.</p></li>
+<li><p><code>{offset`` , int()}</code> <br />
+Start matching at the offset (position) given in the subject string.
+The offset is zero-based, so that the default is <code>{offset,0}</code>
+(all of the subject string). </p></li>
+<li><p><code>{newline, NLSpec}</code>
+Override the default definition of a newline in the subject string,
+which is LF (ASCII 10) in Erlang.</p>
+
+<ul>
+<li><code>cr</code> <br />
+Newline is indicated by a single character CR (ASCII 13).</li>
+<li><code>lf</code> <br />
+Newline is indicated by a single character LF (ASCII 10),
+the default.</li>
+<li><code>crlf</code> <br />
+Newline is indicated by the two-character CRLF
+(ASCII 13 followed by ASCII 10) sequence. </li>
+<li><code>anycrlf</code> <br />
+Any of the three preceding sequences should be recognized</li>
+</ul></li>
+<li><p><code>{capture, ValueSpec}</code> / <code>{capture, ValueSpec, Type}</code> <br />
+Specifies which captured substrings are returned and in what format.
+By default, <code>re:run/3</code> captures all of the matching part of the substring
+as well as all capturing subpatterns (all of the pattern is
+automatically captured). The default return type is (zero-based)
+indexes of the captured parts of the string, given as <code>{Offset,Length}</code>
+pairs (the index Type of capturing).</p>
+
+<p>As an example of the default behavior, the following call:</p>
+
+<pre><code>re:run("ABCabcdABC","abcd",[]).
+</code></pre>
+
+<p>returns, as first and only captured string the matching part of
+the subject ("abcd" in the middle) as a index pair <code>{3,4}</code>, where
+character positions are zero based, just as in offsets. The return
+value of the call above would then be:</p>
+
+<pre><code>{match,[{3,4}]}
+</code></pre>
+
+<p>Another (and quite common) case is where the regular expression
+matches all of the subject, as in:</p>
+
+<pre><code>re:run("ABCabcdABC",".*abcd.*",[]).
+</code></pre>
+
+<p>where the return value correspondingly will point out all of the string,
+beginning at index 0 and being 10 characters long:</p>
+
+<pre><code>{match,[{0,10}]}
+</code></pre>
+
+<p>If the regular expression contains capturing subpatterns,
+like in the following case:</p>
+
+<pre><code>re:run("ABCabcdABC",".*(abcd).*",[]).
+</code></pre>
+
+<p>all of the matched subject is captured, as well as
+the captured substrings:</p>
+
+<pre><code>{match,[{0,10},{3,4}]}
+</code></pre>
+
+<p>the complete matching pattern always giving the first return value in
+the list and the rest of the subpatterns being added in the order they
+occurred in the regular expression.</p>
+
+<p>The capture tuple is built up as follows:</p>
+
+<ul>
+<li><p><code>ValueSpec</code> <br />
+Specifies which captured (sub)patterns are to be returned.
+The <code>ValueSpec</code> can either be an atom describing a predefined set
+of return values, or a list containing either the indexes or the
+names of specific subpatterns to return.</p>
+
+<p>The predefined sets of subpatterns are:</p>
+
+<ul>
+<li><p><code>all</code>
+All captured subpatterns including the complete matching string.
+This is the default.</p></li>
+<li><p><code>first</code> <br />
+Only the first captured subpattern, which is always the complete
+matching part of the subject. All explicitly captured subpatterns
+are discarded.</p></li>
+<li><p><code>all_but_first</code> <br />
+All but the first matching subpattern, i.e. all explicitly
+captured subpatterns, but not the complete matching part of the
+subject string. This is useful if the regular expression as
+a whole matches a large part of the subject, but the part you're
+interested in is in an explicitly captured subpattern.
+If the return type is list or binary, not returning subpatterns
+you're not interested in is a good way to optimize.</p></li>
+<li><p><code>none</code>
+Do not return matching subpatterns at all, yielding the single
+atom match as the return value of the function when matching
+successfully instead of the {match, list()} return. Specifying
+an empty list gives the same behavior. </p></li>
+</ul>
+
+<p>The value list is a list of indexes for the subpatterns to return,
+where index 0 is for all of the pattern, and 1 is for the first
+explicit capturing subpattern in the regular expression,
+and so forth. When using named captured subpatterns (see below)
+in the regular expression, one can use <code>atom()</code>'s or <code>string()</code>'s
+to specify the subpatterns to be returned. This deserves an example,
+consider the following regular expression::</p>
+
+<pre><code>".*(abcd).*"
+</code></pre>
+
+<p>matched against the string <code>"ABCabcdABC"</code>, capturing only the
+<code>"abcd"</code> part (the first explicit subpattern):</p>
+
+<pre><code>re:run("ABCabcdABC",".*(abcd).*",[{capture,[1]}]).
+</code></pre>
+
+<p>The call will yield the following result:</p>
+
+<pre><code>{match,[{3,4}]}
+</code></pre>
+
+<p>as the first explicitly captured subpattern is <code>"(abcd)"</code>,
+matching <code>"abcd"</code> in the subject, at (zero-based) position 3,
+of length 4.</p>
+
+<p>Now consider the same regular expression, but with the subpattern
+explicitly named <code>'FOO'</code>:</p>
+
+<pre><code>".*(?&lt;FOO&gt;abcd).*"
+</code></pre>
+
+<p>With this expression, we could still give the index of the subpattern
+with the following call::</p>
+
+<pre><code>re:run("ABCabcdABC",".*(?&lt;FOO&gt;abcd).*",[{capture,[1]}]).
+</code></pre>
+
+<p>giving the same result as before. But as the subpattern is named,
+we can also give its name in the value list::</p>
+
+<pre><code>re:run("ABCabcdABC",".*(?&lt;FOO&gt;abcd).*",[{capture,['FOO']}]).
+</code></pre>
+
+<p>which would yield the same result as the earlier examples, namely:</p>
+
+<pre><code>{match,[{3,4}]}
+</code></pre>
+
+<p>The values list might specify indexes or names not present in the
+regular expression, in which case the return values vary depending
+on the type. If the type is <code>index</code>, the tuple <code>{-1,0}</code> is returned
+for values having no corresponding subpattern in the regexp, but for
+the other types (binary and list), the values are the empty binary
+or list respectively.</p></li>
+<li><p><code>Type</code> <br />
+Optionally specifies how captured substrings are to be returned.
+If omitted, the default of index is used. The Type can be one of
+the following:</p>
+
+<ul>
+<li><p><code>index</code> <br />
+Return captured substrings as pairs of byte indexes into
+the subject string and length of the matching string in
+the subject (as if the subject string was flattened with
+iolist<em>to</em>binary prior to matching). This is the default.</p></li>
+<li><p><code>list</code> <br />
+Return matching substrings as lists of characters
+(Erlang <code>string()</code>'s).</p></li>
+<li><p><code>binary</code> <br />
+Return matching substrings as binaries.</p></li>
+</ul></li>
+</ul>
+
+<p>In general, subpatterns that got assigned no value in the match
+are returned as the tuple <code>{-1,0}</code> when type is <code>index</code>.
+Unasigned subpatterns are returned as the empty binary or list
+respectively for other return types. Consider the regular expression:</p>
+
+<pre><code>".*((?&lt;FOO&gt;abdd)|a(..d)).*"
+</code></pre>
+
+<p>There are three explicitly capturing subpatterns, where the opening
+parenthesis position determines the order in the result,
+hence <code>"((?&lt;FOO&gt;abdd)|a(..d))"</code> is subpattern index 1,
+<code>"(?&lt;FOO&gt;abdd)"</code> is subpattern index 2 and <code>"(..d)"</code>
+is subpattern index 3. When matched against the following string:</p>
+
+<pre><code>"ABCabcdABC"
+</code></pre>
+
+<p>the subpattern at index 2 won't match, as <code>"abdd"</code> is not present
+in the string, but the complete pattern matches (due to the alternative
+<code>"a(..d)"</code>. The subpattern at index 2 is therefore unassigned and
+the default return value will be:</p>
+
+<pre><code>{match,[{0,10},{3,4},{-1,0},{4,3}]}
+</code></pre>
+
+<p>Setting the capture Type to binary would give the following:</p>
+
+<pre><code>{match,[&lt;&lt;"ABCabcdABC"&gt;&gt;,&lt;&lt;"abcd"&gt;&gt;,&lt;&lt;&gt;&gt;,&lt;&lt;"bcd"&gt;&gt;]}
+</code></pre>
+
+<p>where the empty binary (<code>&lt;&lt;&gt;&gt;</code>) represents the unassigned subpattern.
+In the binary case, some information about the matching is therefore lost,
+the <code>&lt;&lt;&gt;&gt;</code> might just as well be an empty string captured.</p>
+
+<p>If differentiation between empty matches and non existing subpatterns
+is necessary, use the type index and do the conversion to
+the final type in Erlang code.</p>
+
+<p>When the option global is given, the capture specification affects each
+match separately, so that:</p>
+
+<pre><code>re:run("cacb","c(a|b)",[global,{capture,[1],list}]).
+</code></pre>
+
+<p>gives the result:</p>
+
+<p><p><code>{match,[["a"],["b"]]}</code></p></li>
+</ul>
+The options solely affecting the compilation step are described in
+the <code>re:compile/2</code> function.</p>
+
+<h5>replace(Subject, RE, Replacement) -> iodata() | {error, ErrSpec}</h5>
+
+<p>Types:</p>
+
+<pre><code>Subject = iodata()
+RE = mp() | iodata()
+Replacement = iodata()
+ErrSpec = {ErrString, Position}
+ErrString = string()
+Position = int()
+</code></pre>
+
+<p>The same as replace(Subject, RE, Replacement,[]).</p>
+
+<h5>replace(Subject, RE, Replacement, Options) -> iodata() | binary() | list() | {error, ErrSpec}</h5>
+
+<p>Types:</p>
+
+<pre><code>Subject = iodata()
+RE = mp() | iodata()
+Replacement = iodata()
+Options = [ Option ]
+Option = anchored | global | notbol | noteol | notempty |
+         {offset, int()} | {newline, NLSpec} |
+         {return, ReturnType} | CompileOpt
+ReturnType = iodata | list | binary
+CompileOpt = see compile/2 above
+NLSpec = cr | crlf | lf | anycrlf
+ErrSpec = {ErrString, Position}
+ErrString = string()
+Position = int()
+</code></pre>
+
+<p>Replaces the matched part of the Subject string with
+the content of Replacement.</p>
+
+<p>Options are given as to the re:run/3 function except that the <code>capture</code>
+option of re:run/3 is not allowed. Instead a <code>{return, ReturnType}</code>
+is present. The default return type is <code>iodata</code> , constructed in a way
+to minimize copying. The iodata result can be used directly in many
+I/O-operations. If a flat list() is desired, specify <code>{return, list}</code>
+and if a binary is preferred, specify <code>{return, binary}</code>.</p>
+
+<p>The replacement string can contain the special character <code>&amp;</code>,
+which inserts the whole matching expression in the result,
+and the special sequence <code>\N</code> (where N is an integer > 0),
+resulting in the subexpression number N will be inserted in the result.
+If no subexpression with that number is generated by the regular expression,
+nothing is inserted.</p>
+
+<p>To insert an <code>&amp;</code> or <code>\</code> in the result, precede it with a <code>\</code>.
+Note that Erlang already gives a special meaning to <code>\</code> in literal strings,
+why a single <code>\</code> has to be written as <code>"\\"</code> and therefore
+a double <code>\</code> as <code>"\\\\"</code>. Example:</p>
+
+<pre><code>re:replace("abcd","c","[&amp;]",[{return,list}]).
+</code></pre>
+
+<p>gives:</p>
+
+<pre><code>"ab[c]d"
+</code></pre>
+
+<p>while:</p>
+
+<pre><code>re:replace("abcd","c","[\\&amp;]",[{return,list}]).
+</code></pre>
+
+<p>gives:</p>
+
+<pre><code>"ab[&amp;]d"
+</code></pre>
+
+<p>The <code>{error, ErrSpec}</code> return value can only arise from compilation,
+i.e. when a non precompiled malformed RE is given.</p>
+
+<h5>split(Subject,RE) -> SplitList | {error, ErrSpec}</h5>
+
+<p>Types:</p>
+
+<pre><code>Subject = iodata()
+RE = mp() | iodata()
+SplitList = [ iodata() ]
+ErrSpec = {ErrString, Position}
+ErrString = string()
+Position = int()
+</code></pre>
+
+<p>The same as <code>split(Subject, RE, [])</code>.</p>
+
+<h5>split(Subject,RE,Options) -> SplitList | {error, ErrSpec}</h5>
+
+<p>Types:</p>
+
+<pre><code>Subject = iodata()
+RE = mp() | iodata()
+Options = [ Option ]
+Option = anchored | global | notbol | noteol | notempty |
+         {offset, int()} | {newline, NLSpec} | {return, ReturnType} |
+         {parts, NumParts} | group | CompileOpt
+NumParts = int() | infinity
+ReturnType = iodata | list | binary
+CompileOpt = see compile/2 above
+NLSpec = cr | crlf | lf | anycrlf
+SplitList = [ RetData ] | [ GroupedRetData ]
+GroupedRetData = [ RetData ]
+RetData = iodata() | binary() | list()
+ErrSpec = {ErrString, Position}
+ErrString = string()
+Position = int()
+</code></pre>
+
+<p>This function splits the input into parts by finding tokens according to
+the regular expression supplied.</p>
+
+<p>The splitting is done basically by running a global regexp match and dividing
+the initial string wherever a match occurs. The matching part of the string
+is removed from the output.</p>
+
+<p>The result is given as a list of "strings", the preferred datatype given in
+the return option (default <code>iodata</code>).</p>
+
+<p>If subexpressions are given in the regular expression, the matching
+subexpressions are returned in the resulting list as well. An example:</p>
+
+<pre><code>re:split("Erlang","[ln]",[{return,list}]).
+</code></pre>
+
+<p>will yield the result:</p>
+
+<pre><code>["Er","a","g"]
+</code></pre>
+
+<p>while:</p>
+
+<pre><code>re:split("Erlang","([ln])",[{return,list}]).
+</code></pre>
+
+<p>will yield:</p>
+
+<pre><code>["Er","l","a","n","g"]
+</code></pre>
+
+<p>The text matching the subexpression (marked by the parantheses in the regexp)
+is inserted in the result list where it was found. In effect this means that
+concatenating the result of a split where the whole regexp is
+a single subexpression (as in the example above) will always
+result in the original string.</p>
+
+<p>As there is no matching subexpression for the last part in the example
+(the <code>"g"</code>), there is nothing inserted after that. To make the group of
+strings and the parts matching the subexpressions more obvious, one might use
+the group option, which groups together the part of the subject string with
+the parts matching the subexpressions when the string was split:</p>
+
+<pre><code>re:split("Erlang","([ln])",[{return,list},group]).
+</code></pre>
+
+<p>gives:</p>
+
+<pre><code>[["Er","l"],["a","n"],["g"]]
+</code></pre>
+
+<p>Here the regular expression matched first the <code>"l"</code>, causing <code>"Er"</code> to be
+the first part in the result. When the regular expression matched,
+the (only) subexpression was bound to the <code>"l"</code>, why the <code>"l"</code> is inserted in
+the group together with <code>"Er"</code>. The next match is of the <code>"n"</code>, making <code>"a"</code>
+the next part to be returned. As the subexpression is bound to
+the substring <code>"n"</code> in this case, the <code>"n"</code> is inserted into this group.
+The last group consists of the rest of the string, as no more matches are found.</p>
+
+<p>All empty strings are per default removed from the end of the result list,
+the semantics beeing that we split the string in as many parts as possible
+until we reach the end of the string. In effect this means that all empty
+strings are stripped from the result list (or all empty groups if the group
+option is given). The <code>parts</code> option can be used to change this behaviour.
+Let's look at an example:</p>
+
+<pre><code>re:split("Erlang","[lg]",[{return,list}]).
+</code></pre>
+
+<p>The result will be::</p>
+
+<pre><code>["Er","an"]
+</code></pre>
+
+<p>as the matching of the "g" in the end effectively makes the matching reach
+the end of the string. If we however say we want more parts:</p>
+
+<pre><code>re:split("Erlang","[lg]",[{return,list},{parts,3}]).
+</code></pre>
+
+<p>We will get the last part as well, even though there is only an empty string
+after the last match (matching the <code>"g"</code>):</p>
+
+<pre><code>["Er","an",[]]
+</code></pre>
+
+<p>More than three parts are not possible with this indata, why:</p>
+
+<pre><code>re:split("Erlang","[lg]",[{return,list},{parts,4}]).
+</code></pre>
+
+<p>will give the same result. To specify that as many results as possible
+are to be returned, including any empty results at end, you can specify
+infinity as the number of parts to return. Specifying 0 as the number of
+parts gives the default behaviour of returning all parts except empty
+parts at the end.</p>
+
+<p>If subexpressions are captured, empty subexpression matches at the end
+are also stripped from the result if <code>{parts, N}</code> is not specified.
+If you are familiar with Perl, the default behaviour corresponds exactly
+to the Perl default, the <code>{parts, N}</code> where <code>N</code> is a positive integer
+corresponds exactly to the Perl behaviour with a positive numerical
+third parameter and the {parts, infinity} behaviour corresponds to that
+when the Perl routine is given a negative integer as the third parameter.</p>
+
+<p>Summary of options not previously described for the <code>re:run/3</code> function:</p>
+
+<ul>
+<li><p><code>{return, ReturnType}</code> <br />
+Specifies how the parts of the original string are presented in
+the result list. The possible types are:</p>
+
+<ul>
+<li><p><code>iodata</code> <br />
+The variant of iodata() that gives the least copying of data with
+the current implementation (often a binary, but don't depend on it).</p></li>
+<li><p><code>binary</code> <br />
+All parts returned as binaries. </p></li>
+<li><p><code>list</code> <br />
+All parts returned as lists of characters ("strings").</p></li>
+</ul></li>
+<li><p><code>group</code> <br />
+Groups together the part of the string with the parts of the string
+matching the subexpressions of the regexp.</p>
+
+<p>The return value from the function will in this case be a <code>list()</code>
+of <code>list()</code>'s. Each sublist begins with the string picked out of
+the subject string, followed by the parts matching each of
+the subexpressions in order of occurence in the regular expression.</p></li>
+<li><p><code>{parts, N}</code> <br />
+Specifies the number of parts the subject string is to be split into.</p>
+
+<p>The number of parts should be 0 for the default behaviour
+"as many as there are, skipping empty parts at the end", a positive
+integer for a specific maximum on the number of parts and infinity for
+the maximum number of parts possible, regardless of if the parts are
+empty strings at the end.</p></li>
+</ul>
+
+<h3>Supported string representations</h3>
+
+<p>As can be viewed in the manual excerpt, I suggest allowing both the
+regular expressions and the subject strings to be provided as
+<code>iodata()</code>, which means either binaries, lists or a mix of binaries
+and deep lists. When Unicode is not involved, this basically means a
+implicit <code>iolist_to_binary()</code> when supplying data to the re module.</p>
+
+<h3>Further extensions</h3>
+
+<p>The following extensions are not yet implemented in the prototype, but
+should be included in a final release:</p>
+
+<ul>
+<li><p>Unicode support. Unicode strings should be represented as suggested
+in <a href="/eeps/eep-0010" title="EEP 10">EEP 10</a>, which means either UTF-8 in binaries, lists of Unicode
+characters as integers, or a mix thereof. If the regular expression
+was compiled for Unicode or a <code>unicode</code> option is supplied when
+compiling and running in one go, the data is expected to be in one
+of the supported Unicode formats, otherwise a <code>badarg</code> exception
+will be thrown.</p></li>
+<li><p>Match predicates to make it easy to use regular expressions in
+logical Erlang expressions.</p></li>
+</ul>
+
+<p>Of these, Unicode support is the far most important, and also the one
+that can not be implemented efficiently purely in Erlang code.</p>
+
+<h2>Prototype implementation</h2>
+
+<p>A prototype implementation using the PCRE library is present along
+with a reference manual page in the R12B-4 distribution. This
+implementation does not yet fully support Unicode, as <a href="/eeps/eep-0010" title="EEP 10">EEP 10</a> is not
+accepted at the time of writing. The prototype implementation also 
+lacks the "split" function, which was implemented after the R12B-4 release. </p>
+
+<p>In terms of performance, fairly simple regular expressions matches are
+with this prototype up to 75 times faster than with the current regexp
+module. The bookkeeping to allow for interruptions of the regular
+expression execution costs between 1 and 2% of the performance when no
+out scheduling is needed. In worst cases a 5% performance loss can be
+noted compared to an untouched library, but then actual restarting is
+involved, so the numbers are not fully comparable.</p>
+
+<p>Compiling PCRE to use the C stack for recursive calls and avoid
+restarting is expected to give the best results in terms of execution
+speed. The difference in benchmarks to the fully interruptable version
+is however only in the range of 1 to 3% when no restarting occurs and
+still no more than 6% when restarting actually occurs.</p>
+
+<p>The conclusion is that the extra cost imposed on the PCRE library to
+allow an integration into the Erlang emulator without using
+asynchronous threads is in an absolute worst scenario no more than 6%
+compared to a theoretical maximum.</p>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0011","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Patrik Nyblom \u0026lt;pan(at)erlang(dot)org\u0026gt;\nStatus: Accepted/R12B-3u Proposal is implemented in OTP release R12B-3,\n except for Unicode support according to EEP 10\nType: Standards Track\nCreated: 04-Jun-2008\nErlang-Version: R12B-5\nPost-History: 01-Jan-1970\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 11: \u003ca href=\"eep-0011.md\" title=\"EEP Source\"\u003e Built in regular expressions in Erlang\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eThis EEP suggests how to integrate an external regular expression\nlibrary into the Erlang virtual machine.\u003c/p\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eRegular expressions are widely used. Regardless of how other features\nof a language can be used to match or pick out parts of a string, many\nprogrammers prefer the regular expression syntax and expect\nregular expressions to be available in a modern language.\u003c/p\u003e\n\n\u003cp\u003eThe Perl programming language has integrated regular expressions\ndirectly into the syntax and Perl programmers are often highly skilled\nat writing complicated regular expressions that parse e.g. text files,\nHTTP requests or simple user input. The Perl extensions to the common\nregular expressions are widely known and many modern programming\nlanguages support something similar.\u003c/p\u003e\n\n\u003cp\u003eErlang currently has a minimalistic regular expression module (regexp\nmodule in STDLIB), which lacks features commonly available in other\nimplementations. The current library is also painfully slow compared\nto the native C libraries utilized in other languages.\u003c/p\u003e\n\n\u003cp\u003eErlang needs to interface with a modern regular expression library in\na way that does not break the properties of the virtual machine.\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003ch2\u003ePreconditions\u003c/h2\u003e\n\n\u003cp\u003eWriting a more efficient regular expression library purely in Erlang\nhas been attempted, but so far no really efficient implementation has\nbeen proposed, and the work involved in creating one is deemed\nextensive.\u003c/p\u003e\n\n\u003cp\u003eOn the other hand, several more or less successful attempts to\nintegrate an external regular expressions library into the virtual\nmachine have been presented. None of them, however, have addressed the\nissue of long running regular expressions stalling the schedulers.\u003c/p\u003e\n\n\u003cp\u003eA built in function in the Erlang VM needs to stop execution when it\nhas run a certain amount of iterations, to avoid stalling a scheduler\nand thereby starving other processes in the system. When the Erlang\nprocess get's scheduled again, the built in function restarts and has\nprovided some way of storing it's current state so that execution of\nthe function can continue where it was once left. \u003c/p\u003e\n\n\u003cp\u003eThe execution of a regular expression match is in many ways similar to the\nvirtual machine's execution of ordinary beam code, but the available\nlibraries are (for obvious reasons) not prepared to give up the\nexecution temporarily to allow other processes to execute. A\ncomplicated regular expression on large amounts of subject data can\ntake seconds or even minutes to execute. Stalling one of the\nschedulers in the VM for that amount of time is not an option in a\nreal parallel system. As suggested interfaces to external libraries\nhave never addressed this problem, none have been accepted and/or\nintegrated in the main Erlang distribution.\u003c/p\u003e\n\n\u003cp\u003eStack usage is another issue seldom addressed. The Erlang virtual\nmachine may run a lot of scheduler threads, especially on processors\nwith large amounts of cores. Multithreading applications need to be\ncareful about stack usage, why recursive C routines are best\navoided. The Erlang virtual machine avoids recursion in C code, why a\nlinked in library should do the same. When it comes to realtime\noperating systems, the need to avoid recursion in the C code is even\nmore obvious. The library used for Erlang regular expressions simply\ncannot be recursive on the C stack, at least not in a way where stack\nusage cannot be determined at compile time.\u003c/p\u003e\n\n\u003ch3\u003eMultithreading versus interruptable execution\u003c/h3\u003e\n\n\u003cp\u003eThe problem of interrupting the execution of a regular expression (or\nother lengthy operations) when another Erlang process should be\nscheduled, has two obvious solutions:\u003c/p\u003e\n\n\u003col\u003e\n\u003cli\u003e\u003cp\u003eCount the number of iterations in a regular expression match, store\nthe state after a certain amount of iterations (or a certain amount\nof time) and return control to the scheduler when execution time\nslot is exceeded.  \u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003eLet the operating system take care of the problem by executing the\nregular expression matches in separate kernel threads.\u003c/p\u003e\u003c/li\u003e\n\u003c/ol\u003e\n\n\u003cp\u003eIn the virtual machine's file driver, the second approach is used,\nintroducing the concept of the asynchronous thread pool. The file I/O\ncase is however special as the I/O operation in itself usually\nconsumes far more time than the running time for the inter-thread\ncommunication and task switching involved when using asynchronous\nthreads. Besides, there simply is no other solution at hand for I/O,\nso OS threads is the \u003cem\u003eonly\u003c/em\u003e solution at hand in that case.\u003c/p\u003e\n\n\u003cp\u003eIf regular expressions were to be executed in separate threads, even\nvery small and simple expressions would have to carry the extra burden\nof OS level task switching and communication.\u003c/p\u003e\n\n\u003cp\u003eOther lengthy operations in the virtual machine use the first\napproach of voluntary interruption and rescheduling. In the cases\nwhere external libraries are involved, like IP communication, the\nemulator provides ways to passively wait for events by supplying\ninterfaces to I/O multiplexing (select/poll). This is the way to avoid\nblocking the schedulers in most drivers. Asynchronous threads are only\nutilized where there simply are no other options, like in file I/O\n(which cannot utilize I/O multiplexing).\u003c/p\u003e\n\n\u003cp\u003eUsing the first solution when interfacing an external library in a\ndriver or BIF, involves either finding a library where interruption and\nrestart of execution is possible, or modifying an existing library to\nsupport this.\u003c/p\u003e\n\n\u003cp\u003eEven though modifying a library will make upgrading and patching of\nthe library much harder, the benefits are significant. When executing e.g.\nregular expressions, the same thread that actually is executing the\nbeam code will be utilized, why setup time and overhead in general is\nkept at a minimum. Of course execution time of the regexp itself will\nbe slightly longer, as the implementation needs to keep track of the\nnumber of executed iterations and needs to be prepared to store the\ncurrent state for later execution wakeup. The much smaller setup time\nis however expected to be dominating when it comes to smaller regular\nexpressions (or rather expressions that involve a small number of\nloops). One also has to bear in mind that this solution imposes much\nless load on the operating system scheduler, which is a good thing for\nlarge and/or embedded systems.\u003c/p\u003e\n\n\u003cp\u003eFor operating systems where no kernel threads are available, the first\nsolution is the only acceptable. Separate threads for pure user space\ncode execution will do more harm than good to the realtime properties\nof the Erlang system.\u003c/p\u003e\n\n\u003ch3\u003eSelecting a suitable library to integrate\u003c/h3\u003e\n\n\u003cp\u003eThe library to integrate into the virtual machine should in an ideal\nsituation fulfill the following wishes:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003eInterruptable, the execution of the regular expression match should\nstop after a certain amount of iterations and should then be\nrestartable at a later time.\u003c/li\u003e\n\u003cli\u003eThe library should be implemented in plain C, not any other language\nor extension.\u003c/li\u003e\n\u003cli\u003eThe C implementation should be non-recursive.\u003c/li\u003e\n\u003cli\u003eThe library should implement modern (Perl like) regular expression \nsyntax.\u003c/li\u003e\n\u003cli\u003eThe library should be efficient.\u003c/li\u003e\n\u003cli\u003eThe library should provide Unicode support.\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eNo available regular expression library currently provides a perfect\nmatch. The best available is the \u003ca href=\"http://www.pcre.org/\" title=\"The PCRE homepage\"\u003ePCRE\u003c/a\u003e library, which has compile time\noptions for not using the C stack, Perl (and Python) compatible\nregular expressions and also is written in a well structured way,\nmaking it suitable for integration, porting and implementing\nextensions needed in the Erlang case.\u003c/p\u003e\n\n\u003cp\u003eOther alternatives include rxlib (no longer maintained), the Tcl/Tk\nregular expression implementation, GNU regex, Jakarta and Onigurama,\namong others. Of those the Tcl/Tk implementation seems the most\npromising, especially as it for many situations is much faster than\nother implementations. The algorithms and code are however quite\nincomprehensible and the regular expression flavor not the most\nwidespread.\u003c/p\u003e\n\n\u003cp\u003eAfter having had a good look at the alternatives, I came to the\nconclusion that PCRE was the best choice for the following reasons:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003eThe code is maintained, very readable and easy to work with.\u003c/li\u003e\n\u003cli\u003eThe library is fast, although not the fastest.\u003c/li\u003e\n\u003cli\u003eExtensive test suites.\u003c/li\u003e\n\u003cli\u003ePerl compatible syntax.\u003c/li\u003e\n\u003cli\u003eWidely spread: Used in Apache, PHP, Apple Safari etc.\u003c/li\u003e\n\u003cli\u003eThe regexp engine is pure C.\u003c/li\u003e\n\u003cli\u003eUnicode support (UTF-8) which fits nicely into the suggested\nUnicode representation in Erlang (\u003ca href=\"/eeps/eep-0010\" title=\"EEP 10\"\u003eEEP 10\u003c/a\u003e).\u003c/li\u003e\n\u003cli\u003eRecursion on the C stack can be avoided.\u003c/li\u003e\n\u003cli\u003eThe library has most of the infrastructure for an interruptable\nexecution of the expressions present, although restarting of\ninterrupted matches is not (yet) implemented.\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eAlthough the subjective reasoning about code readability might seem\nsomewhat out of place, the PCRE code base makes updates to the library\neasier to integrate, as relatively few and comprehensible alterations\nneed to be done to the library to make it fit into the virtual\nmachine. To be able to maintain the library is important and being\nable to understand the code is crucial.\u003c/p\u003e\n\n\u003cp\u003eThe most appealing feature of the library is however the extensive\nsupport for Perl compatible regular expressions. PCRE is certainly one\nof the most powerful libraries around and Erlang programmers used to\nPerl's regular expressions will feel at home.\u003c/p\u003e\n\n\u003ch2\u003eProgrammers interface\u003c/h2\u003e\n\n\u003cp\u003eIn Perl, the regular expressions are integrated into the language\nitself. This could of course be done in Erlang too. However, Erlang\nalready has syntax for matching structured data as well as binary\nditto. Introducing new primitives for string matching with regular\nexpressions seems out of place. Erlang is also not a language designed\nfor processing textual data in the way Perl is, but a language that\ncan handle complicated structured data. The bit-syntax however might\none day benefit from regular expression extensions, but that is beyond\nthe scope of this EEP.\u003c/p\u003e\n\n\u003cp\u003eA regular expression module interfacing with the library through built\nin functions is the usual way to do it in Erlang, and that's the way\nthis EEP suggests. As the module name regexp is already taken, the\nabbreviation \"re\" for module name seems to be a good choice.\u003c/p\u003e\n\n\u003cp\u003eAs a base implementation, I suggest a module with two basic functions:\none for precompiling a regular expression into \"bytecode\" for the\nregular expression matching execution; and one for actually running\nthe regexp matching. The function that runs the matching should take\neither a compiled regular expression, or the source of a regular\nexpression as input (together with the subject string and the options\nfor execution). \u003c/p\u003e\n\n\u003cp\u003eAround these two suggested functions one can implement functionality\nin Erlang to mimic the existing regular expression library or\nimplement new functionality. \u003c/p\u003e\n\n\u003cp\u003eThe current regexp module can, apart from matching, split a string\naccording to a regular expression (functionality similar to the Perl\nbuilt in function split) and do substitution of sub-strings based on\nregular expression matching (like the s/\u003cRE\u003e/\u003cString\u003e/ expression in\nPerl or awk). With corresponding functions in the \"re\" module, the new\nmodule would provide all functionality of the old one.\u003c/p\u003e\n\n\u003cp\u003eThe names of the functions should, as much as possible, be chosen so\nthat mix up with the current regexp library functions is avoided, why I\nsuggest \"compile\" and \"run\" and \"replace\" as names for regexp\ncompilation, execution and substitution respectively. As no good\nsynonym for the name \"split\" has emerged, that name is retained in the\nnew module.\u003c/p\u003e\n\n\u003cp\u003eHere follows part of the suggested manual page:\u003c/p\u003e\n\n\u003ch3\u003eExcerpt from a suggested manual page\u003c/h3\u003e\n\n\u003ch4\u003eDATA TYPES\u003c/h4\u003e\n\n\u003cpre\u003e\u003ccode\u003eiodata() = iolist() | binary()\niolist() = [char() | binary() | iolist()]\n           % a binary is allowed as the tail of the list\n\nmp() = Opaque datatype containing a compiled regular expression.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch4\u003eEXPORTS\u003c/h4\u003e\n\n\u003ch5\u003ecompile(Regexp) -\u003e {ok, MP} | {error, ErrSpec}\u003c/h5\u003e\n\n\u003cp\u003eTypes:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eRegexp = iodata()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe same as compile(Regexp,[])\u003c/p\u003e\n\n\u003ch5\u003ecompile(Regexp,Options) -\u003e {ok, MP} | {error, ErrSpec}\u003c/h5\u003e\n\n\u003cp\u003eTypes:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eRegexp = iodata()\nOptions = [ Option ]\nOption = anchored | caseless | dollar_endonly | dotall | extended |\n         firstline | multiline | no_auto_capture | dupnames |\n         ungreedy | {newline, NLSpec}\nNLSpec = cr | crlf | lf | anycrlf\nMP = mp()\nErrSpec = {ErrString, Position}\nErrString = string()\nPosition = int()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis function compiles a regular expression with the syntax described below\ninto an internal format to be used later as a parameter to the run/2,3 functions.\u003c/p\u003e\n\n\u003cp\u003eCompiling the regular expression before matching is useful if the same\nexpression is to be used in matching against multiple subjects during the\nprogram's lifetime. Compiling once and executing many times is far more\nefficient than compiling each time one wants to match.\u003c/p\u003e\n\n\u003cp\u003eThe options have the following meanings:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eanchored\u003c/code\u003e \u003cbr /\u003e\nThe pattern is forced to be \"anchored\", that is, it is constrained to match\nonly at the first matching point in the string that is being searched\n(the \"subject string\"). This effect can also be achieved by appropriate\nconstructs in the pattern itself.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003ecaseless\u003c/code\u003e \u003cbr /\u003e\nLetters in the pattern match both upper and lower case letters.\nIt is equivalent to Perl's \u003ccode\u003e/i\u003c/code\u003e option, and it can be changed within\na pattern by a \u003ccode\u003e(?i)\u003c/code\u003e option setting. Uppercase and lowercase letters\nare defined as in the ISO-8859-1 character set.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003edollar_endonly\u003c/code\u003e \u003cbr /\u003e\nA dollar metacharacter in the pattern matches only at the end of the subject\nstring. Without this option, a dollar also matches immediately before a newline\nat the end of the string (but not before any other newlines). The dollar_endonly\noption is ignored if multiline is given. There is no equivalent option in Perl,\nand no way to set it within a pattern.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003edotall\u003c/code\u003e \u003cbr /\u003e\nA dot maturate in the pattern matches all characters, including those that\nindicate newline. Without it, a dot does not match when the current position\nis at a newline. This option is equivalent to Perl's \u003ccode\u003e/s\u003c/code\u003e option, and it\ncan be changed within a pattern by a \u003ccode\u003e(?s)\u003c/code\u003e option setting. A negative class\nsuch as \u003ccode\u003e[^a]\u003c/code\u003e always matches newline characters,\nindependent of the setting of this option.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eextended\u003c/code\u003e \u003cbr /\u003e\nWhitespace data characters in the pattern are ignored except when escaped or\ninside a character class. Whitespace does not include the VT character\n(ASCII 11). In addition, characters between an unescaped \u003ccode\u003e#\u003c/code\u003e outside a\ncharacter class and the next newline, inclusive, are also ignored. This is\nequivalent to Perl's \u003ccode\u003e/x\u003c/code\u003e option, and it can be changed within a pattern by\na \u003ccode\u003e(?x)\u003c/code\u003e option setting. This option makes it possible to include comments\ninside complicated patterns. Note, however, that this applies only to data\ncharacters. Whitespace characters may never appear within special character\nsequences in a pattern, for example within the sequence \u003ccode\u003e(?(\u003c/code\u003e which introduces\na conditional subpattern.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003efirstline\u003c/code\u003e \u003cbr /\u003e\nAn unanchored pattern is required to match before or at the first newline\nin the subject string, though the matched text may continue over the newline.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003emultiline\u003c/code\u003e \u003cbr /\u003e\nBy default, PCRE treats the subject string as consisting of a single line of\ncharacters (even if it actually contains newlines). The \"start of line\"\nmetacharacter (\u003ccode\u003e^\u003c/code\u003e) matches only at the start of the string, while the\n\"end of line\" metacharacter (\u003ccode\u003e$\u003c/code\u003e) matches only at the end of the string,\nor before a terminating newline (unless dollar_endonly is given). This is\nthe same as Perl.\u003c/p\u003e\n\n\u003cp\u003eWhen multiline it is given, the \"start of line\" and \"end of line\" constructs\nmatch immediately following or immediately before internal newlines in the\nsubject string, respectively, as well as at the very start and end. This is\nequivalent to Perl's \u003ccode\u003e/m\u003c/code\u003e option, and it can be changed within a pattern by\na \u003ccode\u003e(?m)\u003c/code\u003e option setting. If there are no newlines in a subject string,\nor no occurrences of \u003ccode\u003e^\u003c/code\u003e or \u003ccode\u003e$\u003c/code\u003e in a pattern, setting multiline has no effect.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eno_auto_capture\u003c/code\u003e \u003cbr /\u003e\nDisables the use of numbered capturing parentheses in the pattern.\nAny opening parenthesis that is not followed by \u003ccode\u003e?\u003c/code\u003e behaves as if it were\nfollowed by \u003ccode\u003e?:\u003c/code\u003e but named parentheses can still be used for capturing\n(and they acquire numbers in the usual way). There is no equivalent\nof this option in Perl.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003edupnames\u003c/code\u003e \u003cbr /\u003e\nNames used to identify capturing subpatterns need not be unique.\nThis can be helpful for certain types of pattern when it is known\nthat only one instance of the named subpattern can ever be matched.\nThere are more details of named subpatterns below.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eungreedy\u003c/code\u003e \u003cbr /\u003e\nThis option inverts the \"greediness\" of the quantifiers so that they\nare not greedy by default, but become greedy if followed by \u003ccode\u003e?\u003c/code\u003e.\nIt is not compatible with Perl. It can also be set by a \u003ccode\u003e(?U)\u003c/code\u003e option\nsetting within the pattern.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003e{newline, NLSpec}\u003c/code\u003e \u003cbr /\u003e\nOverride the default definition of a newline in the subject string, which is LF (ASCII 10) in Erlang.\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003ccode\u003ecr\u003c/code\u003e \u003cbr /\u003e\nNewline is indicated by a single character CR (ASCII 13) \u003c/li\u003e\n\u003cli\u003e\u003ccode\u003elf\u003c/code\u003e \u003cbr /\u003e\nNewline is indicated by a single character LF (ASCII 10), the default \u003c/li\u003e\n\u003cli\u003e\u003ccode\u003ecrlf\u003c/code\u003e \u003cbr /\u003e\nNewline is indicated by the two-character CRLF (ASCII 13 followed by ASCII 10) sequence. \u003c/li\u003e\n\u003cli\u003e\u003ccode\u003eanycrlf\u003c/code\u003e \u003cbr /\u003e\nAny of the three preceding sequences should be recognized. \u003c/li\u003e\n\u003c/ul\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003ch5\u003erun(Subject,RE) -\u003e {match, Captured} | nomatch | {error, ErrSpec}\u003c/h5\u003e\n\n\u003cp\u003eTypes:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eSubject = iodata()\nRE = mp() | iodata()\nCaptured = [ CaptureData ]\nCaptureData = {int(),int()} | string() | binary()\nErrSpec = {ErrString, Position}\nErrString = string()\nPosition = int()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe same as run(Subject,RE,[]).\u003c/p\u003e\n\n\u003ch5\u003erun(Subject,RE) -\u003e {match, Captured} | match | nomatch | {error, ErrSpec}\u003c/h5\u003e\n\n\u003cp\u003eTypes:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eSubject = iodata()\nRE = mp() | iodata()\nOptions = [ Option ]\nOption = anchored | global | notbol | noteol | notempty | {offset, int()} |\n         {newline, NLSpec} | {capture, ValueSpec} |\n         {capture, ValueSpec, Type} | CompileOpt\nType = index | list | binary\nValueSpec = all | all_but_first | first | ValueList\nValueList = [ ValueID ]\nValueID = int() | string() | atom()\nCompileOpt = see compile/2 above\nNLSpec = cr | crlf | lf | anycrlf\nCaptured = [ CaptureData ] | [ [ CaptureData ] ... ]\nCaptureData = {int(),int()} | string() | binary()\nErrSpec = {ErrString, Position}\nErrString = string()\nPosition = int()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eExecutes a regexp matching, returning \u003ccode\u003ematch\u003c/code\u003e / \u003ccode\u003e{match, Captured}\u003c/code\u003e or\n\u003ccode\u003enomatch\u003c/code\u003e. The regular expression can be given either as iodata()\nin which case it is automatically compiled (as by re:compile/2)\nand executed, or as a pre compiled mp() in which case it is executed\nagainst the subject directly.\u003c/p\u003e\n\n\u003cp\u003eWhen compilation is involved, the function may return compilation errors\nas when compiling separately (\u003ccode\u003e{error, {string(),int()}}\u003c/code\u003e); when\nonly matching, no errors are returned.\u003c/p\u003e\n\n\u003cp\u003eIf the regular expression is previously compiled, the option list can\nonly contain the options \u003ccode\u003eanchored\u003c/code\u003e, \u003ccode\u003eglobal\u003c/code\u003e, \u003ccode\u003enotbol\u003c/code\u003e, \u003ccode\u003enoteol\u003c/code\u003e, \u003ccode\u003enotempty\u003c/code\u003e,\n\u003ccode\u003e{offset, int()}\u003c/code\u003e, \u003ccode\u003e{newline, NLSpec}\u003c/code\u003e and \u003ccode\u003e{capture, ValueSpec}\u003c/code\u003e /\n\u003ccode\u003e{capture, ValueSpec, Type}\u003c/code\u003e. Otherwise all options valid for the\n\u003ccode\u003ere:compile/2\u003c/code\u003e function are allowed as well. Options allowed both\nfor compilation and execution of a match, namely \u003ccode\u003eanchored\u003c/code\u003e and\n\u003ccode\u003e{newline, NLSpec}\u003c/code\u003e, will affect both the compilation and execution\nif present together with a non pre-compiled regular expression.\u003c/p\u003e\n\n\u003cp\u003eThe \u003ccode\u003e{capture, ValueSpec}\u003c/code\u003e / \u003ccode\u003e{capture, ValueSpec, Type}\u003c/code\u003e defines\nwhat to return from the function upon successful matching. The capture\ntuple may contain both a value specification telling which of the captured\nsubstrings are to be returned, and a type specification, telling how\ncaptured substrings are to be returned (as index tuples, lists or binaries).\nThe capture option makes the function quite flexible and powerful.\nThe different options are described in detail below\u003c/p\u003e\n\n\u003cp\u003eIf the capture options describe that no substring capturing at all is to be\ndone (\u003ccode\u003e{capture, none}\u003c/code\u003e), the function will return the single atom match\nupon successful matching, otherwise the tuple \u003ccode\u003e{match, ValueList}\u003c/code\u003e\nis returned. Disabling capturing can be done either by specifying\nnone or an empty list as ValueSpec.\u003c/p\u003e\n\n\u003cp\u003eA description of all the options relevant for execution follows:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eanchored\u003c/code\u003e \u003cbr /\u003e\nLimits \u003ccode\u003ere:run/3\u003c/code\u003e to matching at the first matching position. If a pattern\nwas compiled with anchored, or turned out to be anchored by virtue of its\ncontents, it cannot be made unachored at matching time, hence there is no\nunanchored option.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eglobal\u003c/code\u003e \u003cbr /\u003e\nImplements global (repetitive) search as the \u003ccode\u003e/g\u003c/code\u003e flag in i.e. Perl.\nEach match found is returned as a separate list() containing\nthe specific match as well as any matching subexpressions (or as\nspecified by the capture option). The Captured part of the return\nvalue will hence be a list() of list()'s when this option is given.\u003c/p\u003e\n\n\u003cp\u003eWhen the regular expression matches an empty string, the behaviour\nmight seem non-intuitive, why the behaviour requites some clarifying.\nWith the global option, \u003ccode\u003ere:run/3\u003c/code\u003e handles empty matches in the same way\nas Perl, meaning that a match at any point giving an empty string\n(with length 0) will be retried with the options \u003ccode\u003e[anchored, notempty]\u003c/code\u003e\nas well. If that search gives a result of length \u003e 0, the result\nis included. An example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:run(\"cat\",\"(|at)\",[global]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe matching will be performed as following:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003e\u003cstrong\u003eAt offset 0\u003c/strong\u003e \u003cbr /\u003e\nThe regexp \u003ccode\u003e(|at)\u003c/code\u003e will first match at the initial position of\nthe string cat, giving the result set \u003ccode\u003e[{0,0},{0,0}]\u003c/code\u003e (the\nsecond \u003ccode\u003e{0,0}\u003c/code\u003e is due to the subexpression marked by the\nparentheses). As the length of the match is 0, we don't\nadvance to the next position yet.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003cstrong\u003eAt offset 0 with \u003ccode\u003e[anchored, notempty]\u003c/code\u003e\u003c/strong\u003e \u003cbr /\u003e\nThe search is retried with the options [anchored, notempty] at\nthe same position, which does not give any interesting result of\nlonger length, why the search position is now advanced to the next\ncharacter (\u003ccode\u003ea\u003c/code\u003e).\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003cstrong\u003eAt offset 1\u003c/strong\u003e \u003cbr /\u003e\nNow the search results in \u003ccode\u003e[{1,0}, {1,0}]\u003c/code\u003e meaning this search\nwill also be repeated with the extra options.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eAt offset 1 with \u003ccode\u003e[anchored, notempty]\u003c/code\u003e\u003c/strong\u003e \u003cbr /\u003e\nNow the ab alternative is found and the result will be\n\u003ccode\u003e[{1,2}, {1,2}]\u003c/code\u003e. The result is added to the list of results\nand the position in the search string is advanced two steps.\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eAt offset 3\u003c/strong\u003e \nThe search now once again matches the empty string,\ngiving \u003ccode\u003e[{3,0}, {3,0}]\u003c/code\u003e.\u003c/li\u003e\n\u003cli\u003e\u003cstrong\u003eAt offset 1 with `[anchored, notempty]\u003c/strong\u003e \u003cbr /\u003e\nThis will give no result of length \u003e 0 and we are at the last\nposition, so the global search is complete. \u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eThe result of the call is:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{match,[[{0,0},{0,0}],[{1,0},{1,0}],[{1,2},{1,2}],[{3,0},{3,0}]]}\n\u003c/code\u003e\u003c/pre\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003enotempty\u003c/code\u003e \u003cbr /\u003e\nAn empty string is not considered to be a valid match if this option\nis given. If there are alternatives in the pattern, they are tried.\nIf all the alternatives match the empty string, the entire match fails.\nFor example, if the pattern:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ea?b?\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eis applied to a string not beginning with \"a\" or \"b\", it matches the\nempty string at the start of the subject. With notempty given,\nthis match is not valid, so \u003ccode\u003ere:run/3\u003c/code\u003e searches further into the string\nfor occurrences of \"a\" or \"b\".\u003c/p\u003e\n\n\u003cp\u003ePerl has no direct equivalent of notempty, but it does make a special\ncase of a pattern match of the empty string within its \u003ccode\u003esplit()\u003c/code\u003e function,\nand when using the \u003ccode\u003e/g\u003c/code\u003e modifier. It is possible to emulate Perl's\nbehavior after matching a null string by first trying the match\nagain at the same offset with notempty and anchored, and then\nif that fails by advancing the starting offset (see below)\nand trying an ordinary match again.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003enotbol\u003c/code\u003e \u003cbr /\u003e\nThis option specifies that the first character of the subject string\nis not the beginning of a line, so the circumflex metacharacter should\nnot match before it. Setting this without multiline (at compile time)\ncauses circumflex never to match. This option affects only the behavior\nof the circumflex metacharacter. It does not affect \u003ccode\u003e\\A\u003c/code\u003e.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003enoteol\u003c/code\u003e \u003cbr /\u003e\nThis option specifies that the end of the subject string is not the end\nof a line, so the dollar metacharacter should not match it nor\n(except in multiline mode) a newline immediately before it.\nSetting this without multiline (at compile time) causes dollar\nnever to match. This option affects only the behavior of the dollar\nmetacharacter. It does not affect \u003ccode\u003e\\Z\u003c/code\u003e or \u003ccode\u003e\\z\u003c/code\u003e.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003e{offset`` , int()}\u003c/code\u003e \u003cbr /\u003e\nStart matching at the offset (position) given in the subject string.\nThe offset is zero-based, so that the default is \u003ccode\u003e{offset,0}\u003c/code\u003e\n(all of the subject string). \u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003e{newline, NLSpec}\u003c/code\u003e\nOverride the default definition of a newline in the subject string,\nwhich is LF (ASCII 10) in Erlang.\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003ccode\u003ecr\u003c/code\u003e \u003cbr /\u003e\nNewline is indicated by a single character CR (ASCII 13).\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003elf\u003c/code\u003e \u003cbr /\u003e\nNewline is indicated by a single character LF (ASCII 10),\nthe default.\u003c/li\u003e\n\u003cli\u003e\u003ccode\u003ecrlf\u003c/code\u003e \u003cbr /\u003e\nNewline is indicated by the two-character CRLF\n(ASCII 13 followed by ASCII 10) sequence. \u003c/li\u003e\n\u003cli\u003e\u003ccode\u003eanycrlf\u003c/code\u003e \u003cbr /\u003e\nAny of the three preceding sequences should be recognized\u003c/li\u003e\n\u003c/ul\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003e{capture, ValueSpec}\u003c/code\u003e / \u003ccode\u003e{capture, ValueSpec, Type}\u003c/code\u003e \u003cbr /\u003e\nSpecifies which captured substrings are returned and in what format.\nBy default, \u003ccode\u003ere:run/3\u003c/code\u003e captures all of the matching part of the substring\nas well as all capturing subpatterns (all of the pattern is\nautomatically captured). The default return type is (zero-based)\nindexes of the captured parts of the string, given as \u003ccode\u003e{Offset,Length}\u003c/code\u003e\npairs (the index Type of capturing).\u003c/p\u003e\n\n\u003cp\u003eAs an example of the default behavior, the following call:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:run(\"ABCabcdABC\",\"abcd\",[]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ereturns, as first and only captured string the matching part of\nthe subject (\"abcd\" in the middle) as a index pair \u003ccode\u003e{3,4}\u003c/code\u003e, where\ncharacter positions are zero based, just as in offsets. The return\nvalue of the call above would then be:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{match,[{3,4}]}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eAnother (and quite common) case is where the regular expression\nmatches all of the subject, as in:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:run(\"ABCabcdABC\",\".*abcd.*\",[]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhere the return value correspondingly will point out all of the string,\nbeginning at index 0 and being 10 characters long:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{match,[{0,10}]}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eIf the regular expression contains capturing subpatterns,\nlike in the following case:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:run(\"ABCabcdABC\",\".*(abcd).*\",[]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eall of the matched subject is captured, as well as\nthe captured substrings:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{match,[{0,10},{3,4}]}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ethe complete matching pattern always giving the first return value in\nthe list and the rest of the subpatterns being added in the order they\noccurred in the regular expression.\u003c/p\u003e\n\n\u003cp\u003eThe capture tuple is built up as follows:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eValueSpec\u003c/code\u003e \u003cbr /\u003e\nSpecifies which captured (sub)patterns are to be returned.\nThe \u003ccode\u003eValueSpec\u003c/code\u003e can either be an atom describing a predefined set\nof return values, or a list containing either the indexes or the\nnames of specific subpatterns to return.\u003c/p\u003e\n\n\u003cp\u003eThe predefined sets of subpatterns are:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eall\u003c/code\u003e\nAll captured subpatterns including the complete matching string.\nThis is the default.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003efirst\u003c/code\u003e \u003cbr /\u003e\nOnly the first captured subpattern, which is always the complete\nmatching part of the subject. All explicitly captured subpatterns\nare discarded.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eall_but_first\u003c/code\u003e \u003cbr /\u003e\nAll but the first matching subpattern, i.e. all explicitly\ncaptured subpatterns, but not the complete matching part of the\nsubject string. This is useful if the regular expression as\na whole matches a large part of the subject, but the part you're\ninterested in is in an explicitly captured subpattern.\nIf the return type is list or binary, not returning subpatterns\nyou're not interested in is a good way to optimize.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003enone\u003c/code\u003e\nDo not return matching subpatterns at all, yielding the single\natom match as the return value of the function when matching\nsuccessfully instead of the {match, list()} return. Specifying\nan empty list gives the same behavior. \u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eThe value list is a list of indexes for the subpatterns to return,\nwhere index 0 is for all of the pattern, and 1 is for the first\nexplicit capturing subpattern in the regular expression,\nand so forth. When using named captured subpatterns (see below)\nin the regular expression, one can use \u003ccode\u003eatom()\u003c/code\u003e's or \u003ccode\u003estring()\u003c/code\u003e's\nto specify the subpatterns to be returned. This deserves an example,\nconsider the following regular expression::\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\".*(abcd).*\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ematched against the string \u003ccode\u003e\"ABCabcdABC\"\u003c/code\u003e, capturing only the\n\u003ccode\u003e\"abcd\"\u003c/code\u003e part (the first explicit subpattern):\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:run(\"ABCabcdABC\",\".*(abcd).*\",[{capture,[1]}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe call will yield the following result:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{match,[{3,4}]}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eas the first explicitly captured subpattern is \u003ccode\u003e\"(abcd)\"\u003c/code\u003e,\nmatching \u003ccode\u003e\"abcd\"\u003c/code\u003e in the subject, at (zero-based) position 3,\nof length 4.\u003c/p\u003e\n\n\u003cp\u003eNow consider the same regular expression, but with the subpattern\nexplicitly named \u003ccode\u003e'FOO'\u003c/code\u003e:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\".*(?\u0026lt;FOO\u0026gt;abcd).*\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWith this expression, we could still give the index of the subpattern\nwith the following call::\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:run(\"ABCabcdABC\",\".*(?\u0026lt;FOO\u0026gt;abcd).*\",[{capture,[1]}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003egiving the same result as before. But as the subpattern is named,\nwe can also give its name in the value list::\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:run(\"ABCabcdABC\",\".*(?\u0026lt;FOO\u0026gt;abcd).*\",[{capture,['FOO']}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhich would yield the same result as the earlier examples, namely:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{match,[{3,4}]}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe values list might specify indexes or names not present in the\nregular expression, in which case the return values vary depending\non the type. If the type is \u003ccode\u003eindex\u003c/code\u003e, the tuple \u003ccode\u003e{-1,0}\u003c/code\u003e is returned\nfor values having no corresponding subpattern in the regexp, but for\nthe other types (binary and list), the values are the empty binary\nor list respectively.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eType\u003c/code\u003e \u003cbr /\u003e\nOptionally specifies how captured substrings are to be returned.\nIf omitted, the default of index is used. The Type can be one of\nthe following:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eindex\u003c/code\u003e \u003cbr /\u003e\nReturn captured substrings as pairs of byte indexes into\nthe subject string and length of the matching string in\nthe subject (as if the subject string was flattened with\niolist\u003cem\u003eto\u003c/em\u003ebinary prior to matching). This is the default.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003elist\u003c/code\u003e \u003cbr /\u003e\nReturn matching substrings as lists of characters\n(Erlang \u003ccode\u003estring()\u003c/code\u003e's).\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003ebinary\u003c/code\u003e \u003cbr /\u003e\nReturn matching substrings as binaries.\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eIn general, subpatterns that got assigned no value in the match\nare returned as the tuple \u003ccode\u003e{-1,0}\u003c/code\u003e when type is \u003ccode\u003eindex\u003c/code\u003e.\nUnasigned subpatterns are returned as the empty binary or list\nrespectively for other return types. Consider the regular expression:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\".*((?\u0026lt;FOO\u0026gt;abdd)|a(..d)).*\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThere are three explicitly capturing subpatterns, where the opening\nparenthesis position determines the order in the result,\nhence \u003ccode\u003e\"((?\u0026lt;FOO\u0026gt;abdd)|a(..d))\"\u003c/code\u003e is subpattern index 1,\n\u003ccode\u003e\"(?\u0026lt;FOO\u0026gt;abdd)\"\u003c/code\u003e is subpattern index 2 and \u003ccode\u003e\"(..d)\"\u003c/code\u003e\nis subpattern index 3. When matched against the following string:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\"ABCabcdABC\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ethe subpattern at index 2 won't match, as \u003ccode\u003e\"abdd\"\u003c/code\u003e is not present\nin the string, but the complete pattern matches (due to the alternative\n\u003ccode\u003e\"a(..d)\"\u003c/code\u003e. The subpattern at index 2 is therefore unassigned and\nthe default return value will be:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{match,[{0,10},{3,4},{-1,0},{4,3}]}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eSetting the capture Type to binary would give the following:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e{match,[\u0026lt;\u0026lt;\"ABCabcdABC\"\u0026gt;\u0026gt;,\u0026lt;\u0026lt;\"abcd\"\u0026gt;\u0026gt;,\u0026lt;\u0026lt;\u0026gt;\u0026gt;,\u0026lt;\u0026lt;\"bcd\"\u0026gt;\u0026gt;]}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhere the empty binary (\u003ccode\u003e\u0026lt;\u0026lt;\u0026gt;\u0026gt;\u003c/code\u003e) represents the unassigned subpattern.\nIn the binary case, some information about the matching is therefore lost,\nthe \u003ccode\u003e\u0026lt;\u0026lt;\u0026gt;\u0026gt;\u003c/code\u003e might just as well be an empty string captured.\u003c/p\u003e\n\n\u003cp\u003eIf differentiation between empty matches and non existing subpatterns\nis necessary, use the type index and do the conversion to\nthe final type in Erlang code.\u003c/p\u003e\n\n\u003cp\u003eWhen the option global is given, the capture specification affects each\nmatch separately, so that:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:run(\"cacb\",\"c(a|b)\",[global,{capture,[1],list}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003egives the result:\u003c/p\u003e\n\n\u003cp\u003e\u003cp\u003e\u003ccode\u003e{match,[[\"a\"],[\"b\"]]}\u003c/code\u003e\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\nThe options solely affecting the compilation step are described in\nthe \u003ccode\u003ere:compile/2\u003c/code\u003e function.\u003c/p\u003e\n\n\u003ch5\u003ereplace(Subject, RE, Replacement) -\u003e iodata() | {error, ErrSpec}\u003c/h5\u003e\n\n\u003cp\u003eTypes:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eSubject = iodata()\nRE = mp() | iodata()\nReplacement = iodata()\nErrSpec = {ErrString, Position}\nErrString = string()\nPosition = int()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe same as replace(Subject, RE, Replacement,[]).\u003c/p\u003e\n\n\u003ch5\u003ereplace(Subject, RE, Replacement, Options) -\u003e iodata() | binary() | list() | {error, ErrSpec}\u003c/h5\u003e\n\n\u003cp\u003eTypes:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eSubject = iodata()\nRE = mp() | iodata()\nReplacement = iodata()\nOptions = [ Option ]\nOption = anchored | global | notbol | noteol | notempty |\n         {offset, int()} | {newline, NLSpec} |\n         {return, ReturnType} | CompileOpt\nReturnType = iodata | list | binary\nCompileOpt = see compile/2 above\nNLSpec = cr | crlf | lf | anycrlf\nErrSpec = {ErrString, Position}\nErrString = string()\nPosition = int()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eReplaces the matched part of the Subject string with\nthe content of Replacement.\u003c/p\u003e\n\n\u003cp\u003eOptions are given as to the re:run/3 function except that the \u003ccode\u003ecapture\u003c/code\u003e\noption of re:run/3 is not allowed. Instead a \u003ccode\u003e{return, ReturnType}\u003c/code\u003e\nis present. The default return type is \u003ccode\u003eiodata\u003c/code\u003e , constructed in a way\nto minimize copying. The iodata result can be used directly in many\nI/O-operations. If a flat list() is desired, specify \u003ccode\u003e{return, list}\u003c/code\u003e\nand if a binary is preferred, specify \u003ccode\u003e{return, binary}\u003c/code\u003e.\u003c/p\u003e\n\n\u003cp\u003eThe replacement string can contain the special character \u003ccode\u003e\u0026amp;\u003c/code\u003e,\nwhich inserts the whole matching expression in the result,\nand the special sequence \u003ccode\u003e\\N\u003c/code\u003e (where N is an integer \u003e 0),\nresulting in the subexpression number N will be inserted in the result.\nIf no subexpression with that number is generated by the regular expression,\nnothing is inserted.\u003c/p\u003e\n\n\u003cp\u003eTo insert an \u003ccode\u003e\u0026amp;\u003c/code\u003e or \u003ccode\u003e\\\u003c/code\u003e in the result, precede it with a \u003ccode\u003e\\\u003c/code\u003e.\nNote that Erlang already gives a special meaning to \u003ccode\u003e\\\u003c/code\u003e in literal strings,\nwhy a single \u003ccode\u003e\\\u003c/code\u003e has to be written as \u003ccode\u003e\"\\\\\"\u003c/code\u003e and therefore\na double \u003ccode\u003e\\\u003c/code\u003e as \u003ccode\u003e\"\\\\\\\\\"\u003c/code\u003e. Example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:replace(\"abcd\",\"c\",\"[\u0026amp;]\",[{return,list}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003egives:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\"ab[c]d\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhile:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:replace(\"abcd\",\"c\",\"[\\\\\u0026amp;]\",[{return,list}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003egives:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e\"ab[\u0026amp;]d\"\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe \u003ccode\u003e{error, ErrSpec}\u003c/code\u003e return value can only arise from compilation,\ni.e. when a non precompiled malformed RE is given.\u003c/p\u003e\n\n\u003ch5\u003esplit(Subject,RE) -\u003e SplitList | {error, ErrSpec}\u003c/h5\u003e\n\n\u003cp\u003eTypes:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eSubject = iodata()\nRE = mp() | iodata()\nSplitList = [ iodata() ]\nErrSpec = {ErrString, Position}\nErrString = string()\nPosition = int()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe same as \u003ccode\u003esplit(Subject, RE, [])\u003c/code\u003e.\u003c/p\u003e\n\n\u003ch5\u003esplit(Subject,RE,Options) -\u003e SplitList | {error, ErrSpec}\u003c/h5\u003e\n\n\u003cp\u003eTypes:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eSubject = iodata()\nRE = mp() | iodata()\nOptions = [ Option ]\nOption = anchored | global | notbol | noteol | notempty |\n         {offset, int()} | {newline, NLSpec} | {return, ReturnType} |\n         {parts, NumParts} | group | CompileOpt\nNumParts = int() | infinity\nReturnType = iodata | list | binary\nCompileOpt = see compile/2 above\nNLSpec = cr | crlf | lf | anycrlf\nSplitList = [ RetData ] | [ GroupedRetData ]\nGroupedRetData = [ RetData ]\nRetData = iodata() | binary() | list()\nErrSpec = {ErrString, Position}\nErrString = string()\nPosition = int()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThis function splits the input into parts by finding tokens according to\nthe regular expression supplied.\u003c/p\u003e\n\n\u003cp\u003eThe splitting is done basically by running a global regexp match and dividing\nthe initial string wherever a match occurs. The matching part of the string\nis removed from the output.\u003c/p\u003e\n\n\u003cp\u003eThe result is given as a list of \"strings\", the preferred datatype given in\nthe return option (default \u003ccode\u003eiodata\u003c/code\u003e).\u003c/p\u003e\n\n\u003cp\u003eIf subexpressions are given in the regular expression, the matching\nsubexpressions are returned in the resulting list as well. An example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:split(\"Erlang\",\"[ln]\",[{return,list}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewill yield the result:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[\"Er\",\"a\",\"g\"]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewhile:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:split(\"Erlang\",\"([ln])\",[{return,list}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewill yield:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[\"Er\",\"l\",\"a\",\"n\",\"g\"]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe text matching the subexpression (marked by the parantheses in the regexp)\nis inserted in the result list where it was found. In effect this means that\nconcatenating the result of a split where the whole regexp is\na single subexpression (as in the example above) will always\nresult in the original string.\u003c/p\u003e\n\n\u003cp\u003eAs there is no matching subexpression for the last part in the example\n(the \u003ccode\u003e\"g\"\u003c/code\u003e), there is nothing inserted after that. To make the group of\nstrings and the parts matching the subexpressions more obvious, one might use\nthe group option, which groups together the part of the subject string with\nthe parts matching the subexpressions when the string was split:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:split(\"Erlang\",\"([ln])\",[{return,list},group]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003egives:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[[\"Er\",\"l\"],[\"a\",\"n\"],[\"g\"]]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eHere the regular expression matched first the \u003ccode\u003e\"l\"\u003c/code\u003e, causing \u003ccode\u003e\"Er\"\u003c/code\u003e to be\nthe first part in the result. When the regular expression matched,\nthe (only) subexpression was bound to the \u003ccode\u003e\"l\"\u003c/code\u003e, why the \u003ccode\u003e\"l\"\u003c/code\u003e is inserted in\nthe group together with \u003ccode\u003e\"Er\"\u003c/code\u003e. The next match is of the \u003ccode\u003e\"n\"\u003c/code\u003e, making \u003ccode\u003e\"a\"\u003c/code\u003e\nthe next part to be returned. As the subexpression is bound to\nthe substring \u003ccode\u003e\"n\"\u003c/code\u003e in this case, the \u003ccode\u003e\"n\"\u003c/code\u003e is inserted into this group.\nThe last group consists of the rest of the string, as no more matches are found.\u003c/p\u003e\n\n\u003cp\u003eAll empty strings are per default removed from the end of the result list,\nthe semantics beeing that we split the string in as many parts as possible\nuntil we reach the end of the string. In effect this means that all empty\nstrings are stripped from the result list (or all empty groups if the group\noption is given). The \u003ccode\u003eparts\u003c/code\u003e option can be used to change this behaviour.\nLet's look at an example:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:split(\"Erlang\",\"[lg]\",[{return,list}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eThe result will be::\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[\"Er\",\"an\"]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eas the matching of the \"g\" in the end effectively makes the matching reach\nthe end of the string. If we however say we want more parts:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:split(\"Erlang\",\"[lg]\",[{return,list},{parts,3}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWe will get the last part as well, even though there is only an empty string\nafter the last match (matching the \u003ccode\u003e\"g\"\u003c/code\u003e):\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e[\"Er\",\"an\",[]]\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eMore than three parts are not possible with this indata, why:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ere:split(\"Erlang\",\"[lg]\",[{return,list},{parts,4}]).\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003ewill give the same result. To specify that as many results as possible\nare to be returned, including any empty results at end, you can specify\ninfinity as the number of parts to return. Specifying 0 as the number of\nparts gives the default behaviour of returning all parts except empty\nparts at the end.\u003c/p\u003e\n\n\u003cp\u003eIf subexpressions are captured, empty subexpression matches at the end\nare also stripped from the result if \u003ccode\u003e{parts, N}\u003c/code\u003e is not specified.\nIf you are familiar with Perl, the default behaviour corresponds exactly\nto the Perl default, the \u003ccode\u003e{parts, N}\u003c/code\u003e where \u003ccode\u003eN\u003c/code\u003e is a positive integer\ncorresponds exactly to the Perl behaviour with a positive numerical\nthird parameter and the {parts, infinity} behaviour corresponds to that\nwhen the Perl routine is given a negative integer as the third parameter.\u003c/p\u003e\n\n\u003cp\u003eSummary of options not previously described for the \u003ccode\u003ere:run/3\u003c/code\u003e function:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003e{return, ReturnType}\u003c/code\u003e \u003cbr /\u003e\nSpecifies how the parts of the original string are presented in\nthe result list. The possible types are:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003eiodata\u003c/code\u003e \u003cbr /\u003e\nThe variant of iodata() that gives the least copying of data with\nthe current implementation (often a binary, but don't depend on it).\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003ebinary\u003c/code\u003e \u003cbr /\u003e\nAll parts returned as binaries. \u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003elist\u003c/code\u003e \u003cbr /\u003e\nAll parts returned as lists of characters (\"strings\").\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003egroup\u003c/code\u003e \u003cbr /\u003e\nGroups together the part of the string with the parts of the string\nmatching the subexpressions of the regexp.\u003c/p\u003e\n\n\u003cp\u003eThe return value from the function will in this case be a \u003ccode\u003elist()\u003c/code\u003e\nof \u003ccode\u003elist()\u003c/code\u003e's. Each sublist begins with the string picked out of\nthe subject string, followed by the parts matching each of\nthe subexpressions in order of occurence in the regular expression.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003e\u003ccode\u003e{parts, N}\u003c/code\u003e \u003cbr /\u003e\nSpecifies the number of parts the subject string is to be split into.\u003c/p\u003e\n\n\u003cp\u003eThe number of parts should be 0 for the default behaviour\n\"as many as there are, skipping empty parts at the end\", a positive\ninteger for a specific maximum on the number of parts and infinity for\nthe maximum number of parts possible, regardless of if the parts are\nempty strings at the end.\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003ch3\u003eSupported string representations\u003c/h3\u003e\n\n\u003cp\u003eAs can be viewed in the manual excerpt, I suggest allowing both the\nregular expressions and the subject strings to be provided as\n\u003ccode\u003eiodata()\u003c/code\u003e, which means either binaries, lists or a mix of binaries\nand deep lists. When Unicode is not involved, this basically means a\nimplicit \u003ccode\u003eiolist_to_binary()\u003c/code\u003e when supplying data to the re module.\u003c/p\u003e\n\n\u003ch3\u003eFurther extensions\u003c/h3\u003e\n\n\u003cp\u003eThe following extensions are not yet implemented in the prototype, but\nshould be included in a final release:\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003e\u003cp\u003eUnicode support. Unicode strings should be represented as suggested\nin \u003ca href=\"/eeps/eep-0010\" title=\"EEP 10\"\u003eEEP 10\u003c/a\u003e, which means either UTF-8 in binaries, lists of Unicode\ncharacters as integers, or a mix thereof. If the regular expression\nwas compiled for Unicode or a \u003ccode\u003eunicode\u003c/code\u003e option is supplied when\ncompiling and running in one go, the data is expected to be in one\nof the supported Unicode formats, otherwise a \u003ccode\u003ebadarg\u003c/code\u003e exception\nwill be thrown.\u003c/p\u003e\u003c/li\u003e\n\u003cli\u003e\u003cp\u003eMatch predicates to make it easy to use regular expressions in\nlogical Erlang expressions.\u003c/p\u003e\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eOf these, Unicode support is the far most important, and also the one\nthat can not be implemented efficiently purely in Erlang code.\u003c/p\u003e\n\n\u003ch2\u003ePrototype implementation\u003c/h2\u003e\n\n\u003cp\u003eA prototype implementation using the PCRE library is present along\nwith a reference manual page in the R12B-4 distribution. This\nimplementation does not yet fully support Unicode, as \u003ca href=\"/eeps/eep-0010\" title=\"EEP 10\"\u003eEEP 10\u003c/a\u003e is not\naccepted at the time of writing. The prototype implementation also \nlacks the \"split\" function, which was implemented after the R12B-4 release. \u003c/p\u003e\n\n\u003cp\u003eIn terms of performance, fairly simple regular expressions matches are\nwith this prototype up to 75 times faster than with the current regexp\nmodule. The bookkeeping to allow for interruptions of the regular\nexpression execution costs between 1 and 2% of the performance when no\nout scheduling is needed. In worst cases a 5% performance loss can be\nnoted compared to an untouched library, but then actual restarting is\ninvolved, so the numbers are not fully comparable.\u003c/p\u003e\n\n\u003cp\u003eCompiling PCRE to use the C stack for recursive calls and avoid\nrestarting is expected to give the best results in terms of execution\nspeed. The difference in benchmarks to the fully interruptable version\nis however only in the range of 1 to 3% when no restarting occurs and\nstill no more than 6% when restarting actually occurs.\u003c/p\u003e\n\n\u003cp\u003eThe conclusion is that the extra cost imposed on the PCRE library to\nallow an integration into the Erlang emulator without using\nasynchronous threads is in an absolute worst scenario no more than 6%\ncompared to a theoretical maximum.\u003c/p\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0011"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

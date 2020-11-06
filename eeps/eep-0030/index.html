@@ -1,0 +1,179 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Richard A. O'Keefe &lt;ok(at)cs(dot)otago(dot)ac(dot)nz&gt;
+Status: Final/R13A/R14A Proposal is implemented in OTP release R13A and R14A 
+Type: Standards Track
+Erlang-Version: R12B-4
+Created: 10-Jul-2008
+Post-History:
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 30: <a href="eep-0030.md" title="EEP Source"> Maximum and Minimum</a></h2>
+
+<h1>Abstract</h1>
+
+<p>Add maximum and minimum core functions.</p>
+
+<h1>Specification</h1>
+
+<p>Currently the Erlang language has no built-in support for
+the maximum and minimum operations.  So we add new functions</p>
+
+<p><code>erlang:min(E1, E2)</code>  with the same effects and value as</p>
+
+<pre><code>(T1 = E1, T2 = E2, if T1 &gt; T2 -&gt; T2 ; true -&gt; T1 end)
+</code></pre>
+
+<p><code>erlang:max(E1, E2)</code>  with the same effects and value as</p>
+
+<pre><code>(T1 = E1, T2 = E2, if T1 &gt; T2 -&gt; T1 ; true -&gt; T2 end)
+</code></pre>
+
+<p>except that we expect them to be implemented using single VM
+instructions, and we expect HiPE to use conditional moves on
+machines that have them.</p>
+
+<p>The <code>erlang:</code> module prefix on <code>max/2</code> (respectively <code>min/2</code>) can
+be omitted if and only if there is no locally defind <code>max/2</code>
+(respectively <code>min/2</code>).</p>
+
+<h1>Motivation</h1>
+
+<p>Maximum and minimum are extremely useful operations.
+The fact that there is no standard way to express them in Erlang
+has had the predictable result:  there are definitions of <code>max/2</code>
+in <code>tool_utils</code>, <code>tv_pg_gridfcns</code>, <code>tv_pb</code>, <code>tv_comm_func</code>,
+<code>ssh_connection_handler</code>, <code>bssh_connection_handler</code>, <code>ssh_cli</code>,
+<code>hipe_arm</code>, <code>hipe_schedule</code>, <code>hipe_ultra_prio</code>, <code>hipe_ppc_frame</code>,
+<code>?HIPE_X86_FRAME</code> (presumably one each for 32- and 64-bit PCs),
+<code>hipe_sparc_frame</code>, <code>erl_recomment</code>, <code>erl_syntax_lib</code>, <code>appmon_info</code>,
+oh, the list goes on and on.  There are dozens of copies.
+There are nearly as many copies of <code>min/2</code>.  And that's leaving
+aside possible copies with different names.</p>
+
+<p>Not only are the operations useful, they can be implemented
+more efficiently by the compiler than by the programmer.
+If <code>X &lt; Y</code> can be a VM instruction, so can <code>min</code> and <code>max</code>.
+Here's a first draft implementation:</p>
+
+<pre><code>OpCase(i_minimum): {
+    r(0) = CMP_GT(tmp_arg1, tmp_arg2)) ? tmp_arg1 : tmp_arg2;
+    Next(1);
+}
+OpCase(i_maximum): {
+    r(0) = CMP_GT(tmp_arg1, tmp_arg2)) ? tmp_arg2 : tmp_arg1;
+    Next(1);
+}
+</code></pre>
+
+<p>Beware: untested code!  Amongst other things, I don't know all the
+places that need to be updated, or how, when new instructions are
+added.  These instructions are intended to be preceded by an
+<code>i_fetch</code> instruction the way &lt; and its other friends are.</p>
+
+<p>This is much cheaper than an Erlang function call, and it's much
+easier for HiPE to recognise when a maximum or minimum of two
+floating point numbers is involved and can be turned into a
+compare and a conditional move.</p>
+
+<p>The most important thing is the barrier to thought that is
+removed.  When I'm writing Fortran, I know that max and min have
+been there for decades, and I use those operations freely.
+When I'm writing C, I know that those operations are not there,
+and that there are problems with the conventional macros, so
+I avoid them.  As an experiment, I added max() and min() functions
+to the version of AWK that I maintain.  It was easy, and the
+result is that I now have a lot of AWK code that can't be run by
+anything else, because the operations are so handy.  Erlang has
+no <em>documented</em> maximum or minimum functions other than those in
+the <code>lists</code> module, and writing <code>lists:max([X,Y])</code> is sufficiently
+painful to deter all but the most determined.</p>
+
+<h1>Rationale</h1>
+
+<p>Function or operator?</p>
+
+<p>I believe that there are excellent reasons to use the standard
+<code>/\</code> and <code>\/</code> symbols from <a href="http://mathworld.wolfram.com/Lattice.html" title="Lattice Algebra">lattice</a> theory.  However, discussion in
+the EEPs mailing list showed that the community was divided
+into</p>
+
+<ul>
+<li>people who were familiar with the operators</li>
+<li>people who insisted that they were only Boolean operators</li>
+<li>people who didn't get them at all because they weren't C.</li>
+</ul>
+
+<p>The ready availability of the operations as a standard part of
+the language is much more important than what they are called,
+so the second draft of this EEP switched to built in functions
+in order to increase acceptance.</p>
+
+<p>The argument which finally settled it for me was the
+internationalisation one:  Japanese programmers may be using
+keyboards where <code>\</code> means or screens where <code>\</code> displays as Yen,
+so <code>/\</code> and <code>\/</code> just won't work for them.</p>
+
+<p>We cannot use <code>max</code> and <code>min</code> as operators because the compiler
+will not let you use a symbol as both an operator and a function
+name, and there are lots and lots of uses of <code>max</code> and <code>min</code> as
+function names.  That's precisely the problem we're trying to
+address here.  So they have to be function names.</p>
+
+<p>There is no great difficulty in adding new functions to the
+<code>erlang:</code> module.</p>
+
+<p>I don't want to write the <code>erlang:</code> prefix here.  There is
+nothing new in making the <code>erlang:</code> prefix for some functions
+optional either.</p>
+
+<p>What we want is for existing modules with their own definitions
+of <code>max/2</code> and/or <code>min/2</code> to remain legal, and then to be upgraded
+simply by removing the redundant definitions.</p>
+
+<p>Imagine that you want to find the bounding box for a set
+of 2D points.  (This is adapted from code in Wings3D.)</p>
+
+<pre><code>bounding_box([{X0,Y0}|Pts]) -&gt;
+    bounding_box(Pts, X0,X0, Y0,Y0).
+
+bounding_box([{X,Y}|Pts], Xlo,Xhi, Ylo,Yhi) -&gt;
+    if X &lt; Xlo -&gt; Xlo1 = X,   Xhi1 = Xhi
+     ; X &gt; Xhi -&gt; Xlo1 = Xlo, Xhi1 = X
+     ; true    -&gt; Xlo1 = Xlo, Xhi1 = Xhi
+    end,
+    if Y &lt; Ylo -&gt; Ylo1 = Y,   Yhi1 = Yhi
+     ; Y &gt; Yhi -&gt; Ylo1 = Ylo, Yhi1 = Y
+     ; true    -&gt; Ylo1 = Ylo, Yhi1 = Yhi
+    end,
+    bounding_box(Pts, Xlo1,Xhi1, Ylo1,Yhi1);
+bounding_box([], Xlo,Xhi, Ylo,Yhi) -&gt;
+    {{Xlo,Ylo}, {Xhi,Yhi}}.
+</code></pre>
+
+<p>With maximum and minimum operators, this becomes</p>
+
+<pre><code>bounding_box([{X,Y}|Pts], Xlo,Xhi, Ylo,Yhi) -&gt;
+    bounding_box(Pts, min(X,Xlo), max(X,Xhi),
+              min(Y,Ylo), max(Y,Yhi));
+bounding_box([], Xlo,Xhi, Ylo,Yhi) -&gt;
+    {{Xlo,Ylo}, {Xhi,Yhi}}.
+</code></pre>
+
+<h1>Backwards Compatibility</h1>
+
+<p>No issues.  Where a module already has <code>max/2</code> or <code>min/2</code>,
+the <code>erlang:</code> prefix is required to get the new function.</p>
+
+<h1>Reference Implementation</h1>
+
+<p>I don't understand BEAM or the compiler well enough to
+provide one, but the instruction definitions above are
+offered as evidence that it should not be hard for those
+who do.  If this EEP is accepted I will be happy to write
+the documentation for these operators.</p>
+
+<h1>Copyright</h1>
+
+<p>This document has been placed in the public domain.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0030","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Richard A. O'Keefe \u0026lt;ok(at)cs(dot)otago(dot)ac(dot)nz\u0026gt;\nStatus: Final/R13A/R14A Proposal is implemented in OTP release R13A and R14A \nType: Standards Track\nErlang-Version: R12B-4\nCreated: 10-Jul-2008\nPost-History:\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 30: \u003ca href=\"eep-0030.md\" title=\"EEP Source\"\u003e Maximum and Minimum\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eAdd maximum and minimum core functions.\u003c/p\u003e\n\n\u003ch1\u003eSpecification\u003c/h1\u003e\n\n\u003cp\u003eCurrently the Erlang language has no built-in support for\nthe maximum and minimum operations.  So we add new functions\u003c/p\u003e\n\n\u003cp\u003e\u003ccode\u003eerlang:min(E1, E2)\u003c/code\u003e  with the same effects and value as\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e(T1 = E1, T2 = E2, if T1 \u0026gt; T2 -\u0026gt; T2 ; true -\u0026gt; T1 end)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003e\u003ccode\u003eerlang:max(E1, E2)\u003c/code\u003e  with the same effects and value as\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003e(T1 = E1, T2 = E2, if T1 \u0026gt; T2 -\u0026gt; T1 ; true -\u0026gt; T2 end)\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eexcept that we expect them to be implemented using single VM\ninstructions, and we expect HiPE to use conditional moves on\nmachines that have them.\u003c/p\u003e\n\n\u003cp\u003eThe \u003ccode\u003eerlang:\u003c/code\u003e module prefix on \u003ccode\u003emax/2\u003c/code\u003e (respectively \u003ccode\u003emin/2\u003c/code\u003e) can\nbe omitted if and only if there is no locally defind \u003ccode\u003emax/2\u003c/code\u003e\n(respectively \u003ccode\u003emin/2\u003c/code\u003e).\u003c/p\u003e\n\n\u003ch1\u003eMotivation\u003c/h1\u003e\n\n\u003cp\u003eMaximum and minimum are extremely useful operations.\nThe fact that there is no standard way to express them in Erlang\nhas had the predictable result:  there are definitions of \u003ccode\u003emax/2\u003c/code\u003e\nin \u003ccode\u003etool_utils\u003c/code\u003e, \u003ccode\u003etv_pg_gridfcns\u003c/code\u003e, \u003ccode\u003etv_pb\u003c/code\u003e, \u003ccode\u003etv_comm_func\u003c/code\u003e,\n\u003ccode\u003essh_connection_handler\u003c/code\u003e, \u003ccode\u003ebssh_connection_handler\u003c/code\u003e, \u003ccode\u003essh_cli\u003c/code\u003e,\n\u003ccode\u003ehipe_arm\u003c/code\u003e, \u003ccode\u003ehipe_schedule\u003c/code\u003e, \u003ccode\u003ehipe_ultra_prio\u003c/code\u003e, \u003ccode\u003ehipe_ppc_frame\u003c/code\u003e,\n\u003ccode\u003e?HIPE_X86_FRAME\u003c/code\u003e (presumably one each for 32- and 64-bit PCs),\n\u003ccode\u003ehipe_sparc_frame\u003c/code\u003e, \u003ccode\u003eerl_recomment\u003c/code\u003e, \u003ccode\u003eerl_syntax_lib\u003c/code\u003e, \u003ccode\u003eappmon_info\u003c/code\u003e,\noh, the list goes on and on.  There are dozens of copies.\nThere are nearly as many copies of \u003ccode\u003emin/2\u003c/code\u003e.  And that's leaving\naside possible copies with different names.\u003c/p\u003e\n\n\u003cp\u003eNot only are the operations useful, they can be implemented\nmore efficiently by the compiler than by the programmer.\nIf \u003ccode\u003eX \u0026lt; Y\u003c/code\u003e can be a VM instruction, so can \u003ccode\u003emin\u003c/code\u003e and \u003ccode\u003emax\u003c/code\u003e.\nHere's a first draft implementation:\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003eOpCase(i_minimum): {\n    r(0) = CMP_GT(tmp_arg1, tmp_arg2)) ? tmp_arg1 : tmp_arg2;\n    Next(1);\n}\nOpCase(i_maximum): {\n    r(0) = CMP_GT(tmp_arg1, tmp_arg2)) ? tmp_arg2 : tmp_arg1;\n    Next(1);\n}\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eBeware: untested code!  Amongst other things, I don't know all the\nplaces that need to be updated, or how, when new instructions are\nadded.  These instructions are intended to be preceded by an\n\u003ccode\u003ei_fetch\u003c/code\u003e instruction the way \u0026lt; and its other friends are.\u003c/p\u003e\n\n\u003cp\u003eThis is much cheaper than an Erlang function call, and it's much\neasier for HiPE to recognise when a maximum or minimum of two\nfloating point numbers is involved and can be turned into a\ncompare and a conditional move.\u003c/p\u003e\n\n\u003cp\u003eThe most important thing is the barrier to thought that is\nremoved.  When I'm writing Fortran, I know that max and min have\nbeen there for decades, and I use those operations freely.\nWhen I'm writing C, I know that those operations are not there,\nand that there are problems with the conventional macros, so\nI avoid them.  As an experiment, I added max() and min() functions\nto the version of AWK that I maintain.  It was easy, and the\nresult is that I now have a lot of AWK code that can't be run by\nanything else, because the operations are so handy.  Erlang has\nno \u003cem\u003edocumented\u003c/em\u003e maximum or minimum functions other than those in\nthe \u003ccode\u003elists\u003c/code\u003e module, and writing \u003ccode\u003elists:max([X,Y])\u003c/code\u003e is sufficiently\npainful to deter all but the most determined.\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003cp\u003eFunction or operator?\u003c/p\u003e\n\n\u003cp\u003eI believe that there are excellent reasons to use the standard\n\u003ccode\u003e/\\\u003c/code\u003e and \u003ccode\u003e\\/\u003c/code\u003e symbols from \u003ca href=\"http://mathworld.wolfram.com/Lattice.html\" title=\"Lattice Algebra\"\u003elattice\u003c/a\u003e theory.  However, discussion in\nthe EEPs mailing list showed that the community was divided\ninto\u003c/p\u003e\n\n\u003cul\u003e\n\u003cli\u003epeople who were familiar with the operators\u003c/li\u003e\n\u003cli\u003epeople who insisted that they were only Boolean operators\u003c/li\u003e\n\u003cli\u003epeople who didn't get them at all because they weren't C.\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003cp\u003eThe ready availability of the operations as a standard part of\nthe language is much more important than what they are called,\nso the second draft of this EEP switched to built in functions\nin order to increase acceptance.\u003c/p\u003e\n\n\u003cp\u003eThe argument which finally settled it for me was the\ninternationalisation one:  Japanese programmers may be using\nkeyboards where \u003ccode\u003e\\\u003c/code\u003e means or screens where \u003ccode\u003e\\\u003c/code\u003e displays as Yen,\nso \u003ccode\u003e/\\\u003c/code\u003e and \u003ccode\u003e\\/\u003c/code\u003e just won't work for them.\u003c/p\u003e\n\n\u003cp\u003eWe cannot use \u003ccode\u003emax\u003c/code\u003e and \u003ccode\u003emin\u003c/code\u003e as operators because the compiler\nwill not let you use a symbol as both an operator and a function\nname, and there are lots and lots of uses of \u003ccode\u003emax\u003c/code\u003e and \u003ccode\u003emin\u003c/code\u003e as\nfunction names.  That's precisely the problem we're trying to\naddress here.  So they have to be function names.\u003c/p\u003e\n\n\u003cp\u003eThere is no great difficulty in adding new functions to the\n\u003ccode\u003eerlang:\u003c/code\u003e module.\u003c/p\u003e\n\n\u003cp\u003eI don't want to write the \u003ccode\u003eerlang:\u003c/code\u003e prefix here.  There is\nnothing new in making the \u003ccode\u003eerlang:\u003c/code\u003e prefix for some functions\noptional either.\u003c/p\u003e\n\n\u003cp\u003eWhat we want is for existing modules with their own definitions\nof \u003ccode\u003emax/2\u003c/code\u003e and/or \u003ccode\u003emin/2\u003c/code\u003e to remain legal, and then to be upgraded\nsimply by removing the redundant definitions.\u003c/p\u003e\n\n\u003cp\u003eImagine that you want to find the bounding box for a set\nof 2D points.  (This is adapted from code in Wings3D.)\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebounding_box([{X0,Y0}|Pts]) -\u0026gt;\n    bounding_box(Pts, X0,X0, Y0,Y0).\n\nbounding_box([{X,Y}|Pts], Xlo,Xhi, Ylo,Yhi) -\u0026gt;\n    if X \u0026lt; Xlo -\u0026gt; Xlo1 = X,   Xhi1 = Xhi\n     ; X \u0026gt; Xhi -\u0026gt; Xlo1 = Xlo, Xhi1 = X\n     ; true    -\u0026gt; Xlo1 = Xlo, Xhi1 = Xhi\n    end,\n    if Y \u0026lt; Ylo -\u0026gt; Ylo1 = Y,   Yhi1 = Yhi\n     ; Y \u0026gt; Yhi -\u0026gt; Ylo1 = Ylo, Yhi1 = Y\n     ; true    -\u0026gt; Ylo1 = Ylo, Yhi1 = Yhi\n    end,\n    bounding_box(Pts, Xlo1,Xhi1, Ylo1,Yhi1);\nbounding_box([], Xlo,Xhi, Ylo,Yhi) -\u0026gt;\n    {{Xlo,Ylo}, {Xhi,Yhi}}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eWith maximum and minimum operators, this becomes\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003ebounding_box([{X,Y}|Pts], Xlo,Xhi, Ylo,Yhi) -\u0026gt;\n    bounding_box(Pts, min(X,Xlo), max(X,Xhi),\n              min(Y,Ylo), max(Y,Yhi));\nbounding_box([], Xlo,Xhi, Ylo,Yhi) -\u0026gt;\n    {{Xlo,Ylo}, {Xhi,Yhi}}.\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003eNo issues.  Where a module already has \u003ccode\u003emax/2\u003c/code\u003e or \u003ccode\u003emin/2\u003c/code\u003e,\nthe \u003ccode\u003eerlang:\u003c/code\u003e prefix is required to get the new function.\u003c/p\u003e\n\n\u003ch1\u003eReference Implementation\u003c/h1\u003e\n\n\u003cp\u003eI don't understand BEAM or the compiler well enough to\nprovide one, but the instruction definitions above are\noffered as evidence that it should not be hard for those\nwho do.  If this EEP is accepted I will be happy to write\nthe documentation for these operators.\u003c/p\u003e\n\n\u003ch1\u003eCopyright\u003c/h1\u003e\n\n\u003cp\u003eThis document has been placed in the public domain.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0030"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

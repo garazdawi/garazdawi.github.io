@@ -1,0 +1,66 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Erlang Programming Language</title><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><meta name="description" content="Erlang Programming Language"/><meta name="keywords" content="erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="alternate" type="application/rss+xml" title="Overall RSS 2.0 Feed" href="/rss"/><link rel="alternate" type="application/rss+xml" title="News RSS 2.0 Feed" href="/rss/news"/><link rel="alternate" type="application/rss+xml" title="Article RSS 2.0 Feed" href="/rss/articles"/><link rel="alternate" type="application/rss+xml" title="Events RSS 2.0 Feed" href="/rss/event"/><link rel="alternate" type="application/rss+xml" title="Downloads RSS 2.0 Feed" href="/rss/download"/><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><link rel="preload" href="/_next/static/css/f91c265ba4ec340e076d.css" as="style"/><link rel="stylesheet" href="/_next/static/css/f91c265ba4ec340e076d.css" data-n-g=""/><noscript data-n-css="true"></noscript><link rel="preload" href="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" as="script"/><link rel="preload" href="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" as="script"/><link rel="preload" href="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" as="script"/><link rel="preload" href="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" as="script"/><link rel="preload" href="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" as="script"/><link rel="preload" href="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" as="script"/></head><body><div id="__next"><div class="navbar" style="background-color:#FFF;margin-bottom:0px"><div class="container"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse" style="position:absolute;right:5px;margin-bottom:0px"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a class="navbar-brand" href="/"><img src="/img/erlang.png" width="60"/></a><div class="nav-collapse collapse navbar-responsive-collapse" style="padding:20px"><ul class="nav navbar-nav"><li><a class="menu-headlines" href="/downloads/"> DOWNLOADS </a></li><li><a class="menu-headlines" href="/docs/"> DOCUMENTATION </a></li><li><a class="menu-headlines" href="/community/"> COMMUNITY </a></li><li><a class="menu-headlines" href="/news/"> NEWS </a></li><li><a class="menu-headlines" href="/eeps/"> EEPS </a></li><li><a class="menu-headlines" href="/blog/"> BLOG </a></li><li><a class="menu-headlines" href="/about/"> ABOUT </a></li></ul></div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="static_div"><pre><code>Author: Björn Gustavsson &lt;bjorn(at)erlang(dot)org&gt;
+Status: Final/R12B-0 Proposal is implemented in OTP release R12B-0
+Type: Standards Track
+Created: 10-Aug-2007
+Erlang-Version: R12B-0
+Post-History:
+</code></pre>
+
+<hr />
+
+<h2><a href="/eeps/eep-0000" title="EEP Index">EEP</a> 6: <a href="eep-0006.md" title="EEP Source"> New BIFs for tuple and binary sizes</a></h2>
+
+<h1>Abstract</h1>
+
+<p>This EEP describes the two new guards BIFs <code>tuple_size/1</code>  and <code>byte_size/1</code>
+as a prefered alternative to the  <code>size/1</code> BIF.</p>
+
+<h1>Specifications</h1>
+
+<pre><code>byte_size/1::bitstring() -&gt; integer()
+</code></pre>
+
+<p>Returns the number of bytes needed to store the entire <em>bitstring</em>
+(see <a href="eep-0004.md" title="EEP 4">EEP 4</a>). This BIF will return the same value as
+<code>(bit_size(Bin)+7) div 8</code> (that is, the number of bytes will be
+rounded up if number of bits is not evenly divisible by 8).
+This BIF is allowed in guards.</p>
+
+<pre><code>tuple_size/1::tuple() -&gt; integer()
+</code></pre>
+
+<p>Returns the size of a tuple. This BIF will fail if passed anything
+that is not a tuple. This BIF is allowed in guards.</p>
+
+<h1>Rationale</h1>
+
+<p>The <code>size/1</code> BIF accepts either a binary or a tuple, and returns
+either the size of binary in bytes or the size of the tuple.</p>
+
+<p>Because <code>size/1</code> accepts two different types, it is difficult to
+optimize uses of it, both in the compiler and in the run-time system.
+Adding the two new BIF will faciliate optimization, and will also
+help Dialyzer.</p>
+
+<p>It could be argued that <code>byte_size/1</code> should only work for
+binaries (bitstrings whose size in bits is disivible by 8) to catch
+the bug that the code cannot handle general bitstrings and still does not
+use an <code>is_binary/1</code> guard test. In my opinion, if the programmer
+must round up the result from <code>bit_size/1</code> to a whole number of bytes,
+he or she is more likely to get <em>that</em> wrong: The "obvious" expressions
+<code>bit_size(B) / 8 + 1</code> or <code>bit_size(B) div 8 + 1</code> are both wrong,
+and the correct expression <code>(bit_size(B)+7) div 8</code> is not immediately
+obvious.</p>
+
+<h1>Implementation</h1>
+
+<p>The implementation is trivial.</p>
+
+<h1>Backwards Compatibility</h1>
+
+<p>Code containing local functions named <code>tuple_size/1</code> or <code>byte_size/1</code>
+need to be changed.</p>
+
+<p>The compiler will issue a warning that <code>size/1</code> is deprecated
+and will be removed in R14B for code that uses <code>size/1</code>.</p>
+</div></div></div><div class="container"><div class="row"><div class="col-lg-12"><div class="divider"><p></p></div></div><div class="col-lg-12 text-center"><div class="col-lg-4"><a title="DOWNLOAD" href="/download.html"><img src="/img/download.png"/></a></div><div class="col-lg-4"><a href="http://www.github.com/erlang/otp/"><img src="/img/GitHub-Mark-32px.png"/></a></div><div class="col-lg-4"><a href="http://www.twitter.com/erlang_org/"><img src="/img/twitter.png" width="32"/></a></div></div><div class="col-lg-12"><div class="divider"><p></p></div></div></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"index":{"id":"0006","content":"\u003cpre\u003e\u003ccode\u003eAuthor: Björn Gustavsson \u0026lt;bjorn(at)erlang(dot)org\u0026gt;\nStatus: Final/R12B-0 Proposal is implemented in OTP release R12B-0\nType: Standards Track\nCreated: 10-Aug-2007\nErlang-Version: R12B-0\nPost-History:\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003chr /\u003e\n\n\u003ch2\u003e\u003ca href=\"/eeps/eep-0000\" title=\"EEP Index\"\u003eEEP\u003c/a\u003e 6: \u003ca href=\"eep-0006.md\" title=\"EEP Source\"\u003e New BIFs for tuple and binary sizes\u003c/a\u003e\u003c/h2\u003e\n\n\u003ch1\u003eAbstract\u003c/h1\u003e\n\n\u003cp\u003eThis EEP describes the two new guards BIFs \u003ccode\u003etuple_size/1\u003c/code\u003e  and \u003ccode\u003ebyte_size/1\u003c/code\u003e\nas a prefered alternative to the  \u003ccode\u003esize/1\u003c/code\u003e BIF.\u003c/p\u003e\n\n\u003ch1\u003eSpecifications\u003c/h1\u003e\n\n\u003cpre\u003e\u003ccode\u003ebyte_size/1::bitstring() -\u0026gt; integer()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eReturns the number of bytes needed to store the entire \u003cem\u003ebitstring\u003c/em\u003e\n(see \u003ca href=\"eep-0004.md\" title=\"EEP 4\"\u003eEEP 4\u003c/a\u003e). This BIF will return the same value as\n\u003ccode\u003e(bit_size(Bin)+7) div 8\u003c/code\u003e (that is, the number of bytes will be\nrounded up if number of bits is not evenly divisible by 8).\nThis BIF is allowed in guards.\u003c/p\u003e\n\n\u003cpre\u003e\u003ccode\u003etuple_size/1::tuple() -\u0026gt; integer()\n\u003c/code\u003e\u003c/pre\u003e\n\n\u003cp\u003eReturns the size of a tuple. This BIF will fail if passed anything\nthat is not a tuple. This BIF is allowed in guards.\u003c/p\u003e\n\n\u003ch1\u003eRationale\u003c/h1\u003e\n\n\u003cp\u003eThe \u003ccode\u003esize/1\u003c/code\u003e BIF accepts either a binary or a tuple, and returns\neither the size of binary in bytes or the size of the tuple.\u003c/p\u003e\n\n\u003cp\u003eBecause \u003ccode\u003esize/1\u003c/code\u003e accepts two different types, it is difficult to\noptimize uses of it, both in the compiler and in the run-time system.\nAdding the two new BIF will faciliate optimization, and will also\nhelp Dialyzer.\u003c/p\u003e\n\n\u003cp\u003eIt could be argued that \u003ccode\u003ebyte_size/1\u003c/code\u003e should only work for\nbinaries (bitstrings whose size in bits is disivible by 8) to catch\nthe bug that the code cannot handle general bitstrings and still does not\nuse an \u003ccode\u003eis_binary/1\u003c/code\u003e guard test. In my opinion, if the programmer\nmust round up the result from \u003ccode\u003ebit_size/1\u003c/code\u003e to a whole number of bytes,\nhe or she is more likely to get \u003cem\u003ethat\u003c/em\u003e wrong: The \"obvious\" expressions\n\u003ccode\u003ebit_size(B) / 8 + 1\u003c/code\u003e or \u003ccode\u003ebit_size(B) div 8 + 1\u003c/code\u003e are both wrong,\nand the correct expression \u003ccode\u003e(bit_size(B)+7) div 8\u003c/code\u003e is not immediately\nobvious.\u003c/p\u003e\n\n\u003ch1\u003eImplementation\u003c/h1\u003e\n\n\u003cp\u003eThe implementation is trivial.\u003c/p\u003e\n\n\u003ch1\u003eBackwards Compatibility\u003c/h1\u003e\n\n\u003cp\u003eCode containing local functions named \u003ccode\u003etuple_size/1\u003c/code\u003e or \u003ccode\u003ebyte_size/1\u003c/code\u003e\nneed to be changed.\u003c/p\u003e\n\n\u003cp\u003eThe compiler will issue a warning that \u003ccode\u003esize/1\u003c/code\u003e is deprecated\nand will be removed in R14B for code that uses \u003ccode\u003esize/1\u003c/code\u003e.\u003c/p\u003e\n"}},"__N_SSG":true},"page":"/eeps/[eep]","query":{"eep":"eep-0006"},"buildId":"7cVY434Wa3Wl232pkfXk2","nextExport":false,"isFallback":false,"gsp":true,"head":[["meta",{"charSet":"utf-8"}],["title",{"children":"Erlang Programming Language"}],["meta",{"httpEquiv":"Content-Type","content":"text/html;charset=utf-8"}],["meta",{"name":"description","content":"Erlang Programming Language"}],["meta",{"name":"keywords","content":"erlang, functional, programming, fault-tolerant, distributed, multi-platform, portable, software, multi-core, smp, concurrency"}],["meta",{"name":"viewport","content":"width=device-width, initial-scale=1.0"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Overall RSS 2.0 Feed","href":"/rss"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"News RSS 2.0 Feed","href":"/rss/news"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Article RSS 2.0 Feed","href":"/rss/articles"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Events RSS 2.0 Feed","href":"/rss/event"}],["link",{"rel":"alternate","type":"application/rss+xml","title":"Downloads RSS 2.0 Feed","href":"/rss/download"}],["script",{"src":"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"}],["script",{"src":"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","integrity":"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa","crossOrigin":"anonymous"}]]}</script><script nomodule="" src="/_next/static/chunks/polyfills-8bebc7aacc0076174a73.js"></script><script src="/_next/static/chunks/main-a9a86200c2afaf3f233a.js" async=""></script><script src="/_next/static/chunks/webpack-e067438c4cf4ef2ef178.js" async=""></script><script src="/_next/static/chunks/framework.9707fddd9ae5927c17c3.js" async=""></script><script src="/_next/static/chunks/commons.8b4ad2366e12f882e3d5.js" async=""></script><script src="/_next/static/chunks/pages/_app-79f3144d8877c67ce98b.js" async=""></script><script src="/_next/static/chunks/87b308f4a72b1b263da2fe072492c20d1199252a.8368050723e578161621.js" async=""></script><script src="/_next/static/chunks/pages/eeps/%5Beep%5D-bde5f12f7c4b26eeb23e.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_buildManifest.js" async=""></script><script src="/_next/static/7cVY434Wa3Wl232pkfXk2/_ssgManifest.js" async=""></script></body></html>

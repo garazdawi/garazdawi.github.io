@@ -64,7 +64,7 @@ export default function Home({ news, mailinglist }: HomeProps) {
                             <div className="divider"><p /></div>
                             <div style={{ 'paddingLeft': '20px' }}>
                                 <p>Erlang is a programming language used to build massively scalable soft real-time systems with requirements on high availability. Some of its uses are in telecoms, banking, e-commerce, computer telephony and instant messaging. Erlang's runtime system has built-in support for concurrency, distribution and fault tolerance.</p>
-                                <p style={{ textAlign: "right" }}><a className="btn btn-default" href="http://erlangcentral.org/getting-started-with-erlang/">Erlang quickstart</a></p>
+                                <p style={{ textAlign: "right" }}><a className="btn btn-default" href="https://erlang.org/doc/getting_started/users_guide.html">Erlang quickstart</a></p>
                             </div>
                             <h4>What is OTP?</h4>
                             <div className="divider"><p /></div>

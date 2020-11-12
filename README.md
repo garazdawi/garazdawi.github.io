@@ -38,7 +38,6 @@ to build and run do `make docker_run`.
 
 This this not a complete migration yet. This still needs to be done:
 * RSS feeds (news, releases, blog)
-* Github actions auto-deploy
 * Better downloads integrated with versions tree
 * Review HTML and CSS styling
   * use sass

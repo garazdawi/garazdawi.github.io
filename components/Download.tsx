@@ -48,7 +48,7 @@ export default function Download({ release, releases }: DownloadProps) {
                                 {currentRelease.assets.filter((asset) => { return !asset.name.match(/bundle/); }).map((asset) => {
                                     return (
                                         <p>
-                                            <Link href={{ pathname: asset.url }}>
+                                            <Link href={{ pathname: asset.browser_download_url }}>
                                                 <a>{asset.name} file</a>
                                             </Link>
                                         &nbsp;({asset.size} bytes)

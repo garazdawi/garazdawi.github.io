@@ -138,7 +138,29 @@ export default function Home({ news, mailinglist }: HomeProps) {
 
 import type { GetStaticProps } from 'next'
 import { getAllNews } from '../lib/news'
+import axios from 'axios';
+import { parse } from 'node-html-parser';
+import { resolveHref } from 'next/dist/next-server/lib/router/router'
 
 export const getStaticProps: GetStaticProps = async (context) => {
+    const data = (await axios.get("http://erlang.org/pipermail/erlang-questions/")).data as string;
+    /* <A href="2020-November/date.html">[ Date ]</a> */
+    const links = data.match(/<A href="(.*date\.html)"/g)?.map((href) => { return href.match(/<A href="(.*date\.html)"/)?.[1] }) as string[];
+    let mails = [];
+
+    for (const link of links) {
+        const linkdata = (await axios.get("http://erlang.org/pipermail/erlang-questions/" + link)).data as string;
+        console.log(linkdata);
+        break;
+    }
+    // const parsed = parse(info.data, { lowerCaseTagName: true });
+    // console.log(info.data.slice(0, 1024));
+    // console.log(parsed.querySelector('table tr').childNodes[3].toString());
+    // const rows = parsed.querySelector('table').childNodes;
+    // for (let i = 1; i < rows.length; i++) {
+    //     const row = rows[i];
+    //     console.log(row);
+    //     break;
+    // }
     return { props: { news: getAllNews().slice(0, 3), mailinglist: [] } }
 }

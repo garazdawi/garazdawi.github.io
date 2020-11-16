@@ -1,5 +1,7 @@
 import { Octokit } from "@octokit/rest";
-import type { ReposListReleasesResponseData } from '@octokit/types'
+import type { ReposListReleasesResponseData, PullsListResponseData } from '@octokit/types'
+
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
 let releases: ReposListReleasesResponseData | undefined = undefined;
 
@@ -9,9 +11,6 @@ export async function getAllReleases() {
             console.warn(`Running without github authentication, 
 consider setting GITHUB_TOKEN in order for the API to not throttle you.`)
         }
-        const octokit = new Octokit({
-            auth: process.env.GITHUB_TOKEN
-        });
         releases = await octokit.paginate(octokit.repos.listReleases,
             { owner: "erlang", repo: "otp" });
         releases.sort((a, b) => {
@@ -40,4 +39,19 @@ export async function getRelease(tag: string) {
     return releases.find((release) => {
         return release.tag_name == tag;
     });
+}
+
+let prs: PullsListResponseData | undefined = undefined;
+
+export async function getPulls() {
+    if (!prs) {
+        if (!process.env.GITHUB_TOKEN) {
+            console.warn(`Running without github authentication, 
+consider setting GITHUB_TOKEN in order for the API to not throttle you.`)
+        }
+
+        prs = await octokit.paginate(octokit.pulls.list,
+            { owner: "erlang", repo: "otp" });
+    }
+    return prs;
 }

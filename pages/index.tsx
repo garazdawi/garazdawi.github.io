@@ -1,18 +1,22 @@
 import Base from '../components/Base'
 import Link from 'next/link'
 import { formatNewsDate, NewsItem } from '../lib/news'
+import { PullsListResponseData } from '@octokit/types'
 
-interface MailinglistProp {
+interface MailinglistPost {
     url: string;
     title: string;
+    author: string;
 }
 
 interface HomeProps {
-    news: [NewsItem];
-    mailinglist: [MailinglistProp];
+    news: NewsItem[];
+    mailinglist: MailinglistPost[];
+    prs: PullsListResponseData
 }
 
-export default function Home({ news, mailinglist }: HomeProps) {
+export default function Home({ news, mailinglist, prs }: HomeProps) {
+    console.log(prs);
     return (
         <Base>
             <div className="col-lg-12 download-div">
@@ -84,7 +88,7 @@ export default function Home({ news, mailinglist }: HomeProps) {
                         <div className="inside-cols">
                             <ul className="mailing">
                                 {
-                                    mailinglist.map((ml) => {
+                                    mailinglist.slice(0,4).map((ml) => {
                                         return (
                                             <li><Link href={ml.url}><a target="_blank">{ml.title}</a></Link></li>
                                         )
@@ -94,6 +98,24 @@ export default function Home({ news, mailinglist }: HomeProps) {
                             <br />
                             <p>
                                 <a href="/mailman/listinfo/erlang-questions">Listinfo &amp; subscription...</a>
+                            </p>
+                        </div>
+                    </div>
+                    <div className="col-lg-6">
+                        <h3 className="sub-headlines">LATEST PULL REQUESTS</h3>
+                        <div className="inside-cols">
+                            <ul className="pullrequests">
+                                {
+                                    prs.slice(0,4).map((pr) => {
+                                        return (
+                                            <li><Link href={pr.html_url}><a target="_blank">{pr.title}</a></Link></li>
+                                        )
+                                    })
+                                }
+                            </ul>
+                            <br />
+                            <p>
+                                <a href="https://github.com/erlang/otp/pulls">View all PRs</a>
                             </p>
                         </div>
                     </div>
@@ -141,26 +163,30 @@ import { getAllNews } from '../lib/news'
 import axios from 'axios';
 import { parse } from 'node-html-parser';
 import { resolveHref } from 'next/dist/next-server/lib/router/router'
+import { getPulls } from '../lib/github'
 
 export const getStaticProps: GetStaticProps = async (context) => {
     const data = (await axios.get("http://erlang.org/pipermail/erlang-questions/")).data as string;
-    /* <A href="2020-November/date.html">[ Date ]</a> */
-    const links = data.match(/<A href="(.*date\.html)"/g)?.map((href) => { return href.match(/<A href="(.*date\.html)"/)?.[1] }) as string[];
-    let mails = [];
+//    const index = [`<A href="2020-November/date.html">[ Date ]</a>`];
+    const months = data.match(/<A href="(.*date\.html)"/g)?.map((href) => { return href.match(/<A href="(.*)\/date\.html"/)?.[1] }) as string[];
+    let mails: MailinglistPost[] = [];
 
-    for (const link of links) {
-        const linkdata = (await axios.get("http://erlang.org/pipermail/erlang-questions/" + link)).data as string;
-        console.log(linkdata);
-        break;
+    for (const month_link of months) {
+        const linkdata = (await axios.get("http://erlang.org/pipermail/erlang-questions/" + month_link + "/date.html")).data as string;
+        for (const link of linkdata.match(/<LI>.*?<\/I>/gs)!) {
+            // <LI><A HREF="100105.html">Virtual BEAM GMT meetup today @ 6pm GMT
+            // </A><A NAME="100105">&nbsp;</A>
+            // <I>Francesco Cesarini
+            // </I>
+            const match = link.match(/<A HREF="([^.]+.html)">(.*)/)!;
+            mails.push({
+                url: "http://erlang.org/pipermail/erlang-questions/" + month_link + "/" + match[1],
+                title: match[2],
+                author: link.match(/<I>(.*)/)?.[1]!
+            });
+        }
+        if (mails.length > 3)
+            break;
     }
-    // const parsed = parse(info.data, { lowerCaseTagName: true });
-    // console.log(info.data.slice(0, 1024));
-    // console.log(parsed.querySelector('table tr').childNodes[3].toString());
-    // const rows = parsed.querySelector('table').childNodes;
-    // for (let i = 1; i < rows.length; i++) {
-    //     const row = rows[i];
-    //     console.log(row);
-    //     break;
-    // }
-    return { props: { news: getAllNews().slice(0, 3), mailinglist: [] } }
+    return { props: { news: getAllNews().slice(0, 3), mailinglist: mails, prs: await getPulls() } }
 }

@@ -11,6 +11,19 @@
     padding-left: 29px;
 }
 
+.pullrequests {
+    list-style-type: none;
+    padding: 0px;
+    margin: 0px;
+}
+
+.pullrequests li {
+    background-image: url(/img/bubble.png);
+    background-repeat: no-repeat;
+    background-position: 0px 2px;
+    padding-left: 29px;
+}
+
 .book-pics {
     height: 120px;
 }

@@ -152,6 +152,24 @@ tree.
 [{a,100},{b,2},{c,10}]
 ```
 
+# `from_list`
+*since OTP @OTP-20061@* 
+
+```erlang
+-spec from_list(List) -> Tree when List :: [{Key, Value}], Tree :: tree(Key, Value).
+```
+
+Returns a tree of the key-value tuples in `List`,
+where `List` can be unordered and contain duplicate keys.
+
+## Examples
+
+```erlang
+1> Unordered = [{x, 1}, {y, 2}, {a, 3}, {x, 4}, {y, 5}, {b, 6}].
+2> gb_trees:to_list(gb_trees:from_list(Unordered)).
+[{a,3},{b,6},{x,4},{y,5}]
+```
+
 # `from_orddict`
 
 ```erlang

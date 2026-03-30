@@ -10,9 +10,9 @@
 
     <title>Problem Example — Erlang System Documentation v29.0-rc2</title>
 
-    <link rel="stylesheet" href="dist/html-erlang-VZHFAARF.css" />
+    <link rel="stylesheet" href="dist/html-erlang-EYOUDG57.css" />
 
-    <script defer src="dist/sidebar_items-5D4661C6.js"></script>
+    <script defer src="dist/sidebar_items-23FEBC37.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 <style>.dark img { background-color: white; }</style>
@@ -116,17 +116,17 @@ Erlang System Documentation
 code, solving a complex problem, in your Erlang program. Suppose for example,
 that you have the following C functions that you would like to call from Erlang:</p><pre><code class="makeup c" translate="no"><span class="cm">/* complex.c */</span><span class="w">
 
-</span><span class="kt">int</span><span class="w"> </span><span class="nf">foo</span><span class="p" data-group-id="6255126674-1">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p" data-group-id="6255126674-1">)</span><span class="w"> </span><span class="p" data-group-id="6255126674-2">{</span><span class="w">
+</span><span class="kt">int</span><span class="w"> </span><span class="nf">foo</span><span class="p" data-group-id="4262301106-1">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p" data-group-id="4262301106-1">)</span><span class="w"> </span><span class="p" data-group-id="4262301106-2">{</span><span class="w">
   </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w">
-</span><span class="p" data-group-id="6255126674-2">}</span><span class="w">
+</span><span class="p" data-group-id="4262301106-2">}</span><span class="w">
 
-</span><span class="kt">int</span><span class="w"> </span><span class="nf">bar</span><span class="p" data-group-id="6255126674-3">(</span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="p" data-group-id="6255126674-3">)</span><span class="w"> </span><span class="p" data-group-id="6255126674-4">{</span><span class="w">
+</span><span class="kt">int</span><span class="w"> </span><span class="nf">bar</span><span class="p" data-group-id="4262301106-3">(</span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="p" data-group-id="4262301106-3">)</span><span class="w"> </span><span class="p" data-group-id="4262301106-4">{</span><span class="w">
   </span><span class="k">return</span><span class="w"> </span><span class="n">y</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span><span class="w">
-</span><span class="p" data-group-id="6255126674-4">}</span></code></pre><p>The functions are deliberately kept as simple as possible, for readability
+</span><span class="p" data-group-id="4262301106-4">}</span></code></pre><p>The functions are deliberately kept as simple as possible, for readability
 reasons.</p><p>From an Erlang perspective, it is preferable to be able to call <code class="inline">foo</code> and <code class="inline">bar</code>
 without having to bother about that they are C functions:</p><pre><code class="makeup erlang" translate="no"><span class="c1">% Erlang code</span><span class="w">
 </span><span class="p">.</span><span class="p">.</span><span class="p">.</span><span class="w">
-</span><span class="n">Res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">complex</span><span class="p">:</span><span class="nf">foo</span><span class="p" data-group-id="1047633688-1">(</span><span class="n">X</span><span class="p" data-group-id="1047633688-1">)</span><span class="p">,</span><span class="w">
+</span><span class="n">Res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">complex</span><span class="p">:</span><span class="nf">foo</span><span class="p" data-group-id="7052253336-1">(</span><span class="n">X</span><span class="p" data-group-id="7052253336-1">)</span><span class="p">,</span><span class="w">
 </span><span class="p">.</span><span class="p">.</span><span class="p">.</span></code></pre><p>Here, the communication with C is hidden in the implementation of <code class="inline">complex.erl</code>.
 In the following sections, it is shown how this module can be implemented using
 the different interoperability mechanisms.</p>

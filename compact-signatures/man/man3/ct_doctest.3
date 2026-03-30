@@ -467,6 +467,9 @@ should not be tested
 \fB            fun((unicode:unicode_binary()) ->\fR
 \fB                    [unicode:unicode_binary()] | {error, term()})} |\fR
 \fB           {skipped_blocks, non_neg_integer() | false} |\fR
+\fB           {missing_tests, [{atom(), arity()}]} |\fR
+\fB           {skip_tests,\fR
+\fB            [moduledoc | {function | type | callback, atom(), arity()}]} |\fR
 \fB           {verbose, boolean()}].\fR
 
 .br
@@ -480,12 +483,28 @@ Use this option to plug in an external documentation parser. The parser callback
 \fIfun/1\fR and return a list of Erlang code block binaries. The code blocks are then checked to determine whether they should be run as doctests. If no parser is provided, a built-in markdown parser will be used.
 
 .RE
+
 skipped_blocks
 .RS 2
-Sets the exact number of Erlang code blocks that are allowed to be skipped because no runnable shell prompts were found. It defaults to 
-\fIfalse\fR.
+Sets the exact number of Erlang code blocks that are allowed to be skipped because no runnable shell prompts were found. It does not count blocks in any function listed in 
+\fImissing_tests\fR. It defaults to \fIfalse\fR.
 
 .RE
+
+missing_tests
+.RS 2
+A list of 
+\fI{Function, Arity}\fR pairs that are expected to have documentation but no doctests. When this option is set, \fIct_doctest\fR will fail if any documented function lacks doctests and is not in this list (i.e., a new function was added without doctests), and also fail if a function in this list now has doctests (i.e., the list is stale and should be updated). Defaults to not checking.
+
+.RE
+
+skip_tests
+.RS 2
+A list of doc entries whose doctests should be skipped. Each entry is either 
+\fImoduledoc\fR or a \fI{Kind, Name, Arity}\fR tuple where \fIKind\fR is \fIfunction\fR, \fItype\fR, or \fIcallback\fR. For example, \fI[moduledoc, {function, foo, 1}]\fR skips the moduledoc and the \fIfoo/1\fR function.
+
+.RE
+
 verbose
 .RS 2
 Print detailed information while running doctests, including each block run and skipped block details.
@@ -498,7 +517,9 @@ Print detailed information while running doctests, including each block run and 
 .SH FUNCTIONS
 .LP
 .B
-\fBfile(file:filename(), Bindings :: [{atom(), term()}], options()) ->\fR
+\fBfile(File :: file:filename(),\fR
+\fB           Bindings :: [{atom(), term()}],\fR
+\fB           Options :: options()) ->\fR
 \fB              ok | {comment, string()} | {error, term()} | no_return().\fR
 
 .br
@@ -521,7 +542,7 @@ See \fIoptions/0\fR for available options.
 
 .RE
 .B
-\fBmodule(module(), Bindings, options()) ->\fR
+\fBmodule(Module :: module(), Bindings, Options :: options()) ->\fR
 \fB                ok | {comment, string()} | {error, term()} | no_return()\fR
 \fB                when\fR
 \fB                    KFA ::\fR

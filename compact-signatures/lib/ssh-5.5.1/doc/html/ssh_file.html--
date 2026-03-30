@@ -914,6 +914,8 @@ supported by <code class="inline">ssh_file</code>.</p><p><strong>Option</strong>
 
             <pre translate="no">Result = Decoded | {error, <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()}</pre>
 
+            <pre translate="no">Attrs = {Key :: <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>(), Value :: <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()}</pre>
+
             <pre translate="no">Decoded = Decoded_ssh2_pubkey | Decoded_public | Decoded_openssh | Decoded_rfc4716 |
           Decoded_openssh_key_v1 | Decoded_known_hosts | Decoded_auth_keys</pre>
 
@@ -930,8 +932,6 @@ supported by <code class="inline">ssh_file</code>.</p><p><strong>Option</strong>
             <pre translate="no">Decoded_known_hosts = [{<a href="../../../../lib/public_key/doc/html/public_key.html#t:public_key/0">public_key:public_key</a>(), [{comment, <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()} | {hostnames, [<a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()]}]}]</pre>
 
             <pre translate="no">Decoded_auth_keys = [{<a href="../../../../lib/public_key/doc/html/public_key.html#t:public_key/0">public_key:public_key</a>(), [{comment, <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()} | {options, [<a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()]}]}]</pre>
-
-            <pre translate="no">Attrs = {Key :: <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>(), Value :: <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()}</pre>
 
         </div>
 

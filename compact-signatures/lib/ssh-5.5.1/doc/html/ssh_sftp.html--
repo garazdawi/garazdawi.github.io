@@ -2124,9 +2124,9 @@ directory contents.</p>
 
             <pre translate="no">Result = {ok, Data} | eof | Error</pre>
 
-            <pre translate="no">Data = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:binary/0">binary</a>()</pre>
-
             <pre translate="no">Error = {error, <a href="#t:reason/0">reason</a>()}</pre>
+
+            <pre translate="no">Data = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:binary/0">binary</a>()</pre>
 
         </div>
 
@@ -2256,9 +2256,9 @@ directory contents.</p>
 
             <pre translate="no">Result = {ok, Data} | eof | Error</pre>
 
-            <pre translate="no">Data = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:binary/0">binary</a>()</pre>
-
             <pre translate="no">Error = {error, <a href="#t:reason/0">reason</a>()}</pre>
+
+            <pre translate="no">Data = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:binary/0">binary</a>()</pre>
 
         </div>
 
@@ -2321,9 +2321,9 @@ If no bytes are read, <code class="inline">eof</code> is returned.</p>
 
             <pre translate="no">Timeout = <a href="../../../../lib/../erts/doc/html/erlang.html#t:timeout/0">timeout</a>()</pre>
 
-            <pre translate="no">Data = <a href="../../../../lib/../erts/doc/html/erlang.html#t:binary/0">binary</a>()</pre>
-
             <pre translate="no">Error = {error, <a href="#t:reason/0">reason</a>()}</pre>
+
+            <pre translate="no">Data = <a href="../../../../lib/../erts/doc/html/erlang.html#t:binary/0">binary</a>()</pre>
 
         </div>
 

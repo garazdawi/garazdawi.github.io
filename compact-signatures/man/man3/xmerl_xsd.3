@@ -42,57 +42,36 @@ Options that allow to customize the behaviour of the validation.
 .PP
 Possible options are :
 
-.PP
-<dl> <dt><code>{tab2file,boolean()}</code></dt>
+{tab2file,boolean()}
+.RS 2
+Enables saving of abstract structure on file for debugging purpose.
 
-.IP
-.nf
- <dd>Enables saving of abstract structure on file for debugging
-    purpose.</dd>
 
-.fi
+.RE
+{xsdbase,filename()}
+.RS 2
+XSD Base directory.
 
-.PP
-<dt><code>{xsdbase,filename()}</code></dt>
 
-.IP
-.nf
- <dd>XSD Base directory.</dd>
+.RE
+{fetch_fun,FetchFun}
+.RS 2
+Call back function to fetch an external resource.
 
-.fi
 
-.PP
-<dt><code>{fetch_fun,FetchFun}</code></dt>
+.RE
+{fetch_path,PathList}
+.RS 2
+PathList is a list of directories to search when fetching files. If the file in question is not in the fetch_path, the URI will be used as a file name.
 
-.IP
-.nf
- <dd>Call back function to fetch an external resource.</dd>
 
-.fi
+.RE
+{state,State}
+.RS 2
+It is possible by this option to provide a state with process information from an earlier validation.
 
-.PP
-<dt><code>{fetch_path,PathList}</code></dt>
 
-.IP
-.nf
- <dd>PathList is a list of directories to search when fetching files.
-     If the file in question is not in the fetch_path, the URI will
-     be used as a file name.</dd>
-
-.fi
-
-.PP
-<dt><code>{state,State}</code></dt>
-
-.IP
-.nf
- <dd>It is possible by this option to provide a state with process
-     information from an earlier validation.</dd>
-
-.fi
-
-.PP
-</dl>
+.RE
 
 
 .RE

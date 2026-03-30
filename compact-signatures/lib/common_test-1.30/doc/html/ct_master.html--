@@ -474,7 +474,7 @@ not using the <code class="inline">Common Test</code> CSS style sheet.</p>
 
 
 <p>Gets a reference to the <code class="inline">Common Test</code> master event manager. The reference can be
-used to, for example, add a user-specific event handler while tests are running.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="nc">gen_event</span><span class="p">:</span><span class="nf">add_handler</span><span class="p" data-group-id="9300036475-1">(</span><span class="nc">ct_master</span><span class="p">:</span><span class="nf">get_event_mgr_ref</span><span class="p" data-group-id="9300036475-2">(</span><span class="p" data-group-id="9300036475-2">)</span><span class="p">,</span><span class="w"> </span><span class="ss">my_ev_h</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9300036475-3">[</span><span class="p" data-group-id="9300036475-3">]</span><span class="p" data-group-id="9300036475-1">)</span></code></pre>
+used to, for example, add a user-specific event handler while tests are running.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="nc">gen_event</span><span class="p">:</span><span class="nf">add_handler</span><span class="p" data-group-id="0212520809-1">(</span><span class="nc">ct_master</span><span class="p">:</span><span class="nf">get_event_mgr_ref</span><span class="p" data-group-id="0212520809-2">(</span><span class="p" data-group-id="0212520809-2">)</span><span class="p">,</span><span class="w"> </span><span class="ss">my_ev_h</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0212520809-3">[</span><span class="p" data-group-id="0212520809-3">]</span><span class="p" data-group-id="0212520809-1">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="progress/0">
@@ -739,7 +739,29 @@ test.</p>
         <div class="specs">
           <h4 class="specs-title">Types</h4>
 
-            <pre translate="no">Conns = all | [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()]</pre>
+            <pre translate="no">EventHandlers = EH | [EH]</pre>
+
+            <pre translate="no">CTHInitArgs = <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()</pre>
+
+            <pre translate="no">LogOpt = no_nl | no_src</pre>
+
+            <pre translate="no">Groups = GroupNameOrPath | [GroupNameOrPath]</pre>
+
+            <pre translate="no">CSSFile = YYMoMoDDHHMMSS = HHMMSS = LogDir = DecryptKey = CoverSpecFile = DecryptFile = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+            <pre translate="no">Category = CallbackMod = CTHModule = CTHsOrder = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
+
+            <pre translate="no">LogOpts = [LogOpt]</pre>
+
+            <pre translate="no">CreatePrivDir = auto_per_run | auto_per_tc | manual_per_tc</pre>
+
+            <pre translate="no">ForceStop = skip_rest | <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>()</pre>
+
+            <pre translate="no">InclDirs = TestSpecs = TestDirs = CfgFiles = CfgStrings = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()] | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+            <pre translate="no">GroupNameOrPath = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | all</pre>
+
+            <pre translate="no">CTHs = [CTHModule | {CTHModule, CTHInitArgs}]</pre>
 
             <pre translate="no">OptTuples = {dir, TestDirs} |
           {suite, Suites} |
@@ -780,57 +802,35 @@ test.</p>
           {enable_builtin_hooks, <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>()} |
           {release_shell, <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>()}</pre>
 
-            <pre translate="no">CfgStrings = InclDirs = TestDirs = CfgFiles = TestSpecs = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()] | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
-
-            <pre translate="no">M = VLevel = N = <a href="../../../../lib/../erts/doc/html/erlang.html#t:integer/0">integer</a>()</pre>
-
-            <pre translate="no">LogOpt = no_nl | no_src</pre>
-
-            <pre translate="no">GroupNameOrPath = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | all</pre>
-
-            <pre translate="no">CTHs = [CTHModule | {CTHModule, CTHInitArgs}]</pre>
-
-            <pre translate="no">CTHModule = Category = CallbackMod = CTHsOrder = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">CSSFile = DecryptFile = YYMoMoDDHHMMSS = HHMMSS = CoverSpecFile = LogDir = DecryptKey = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
-
-            <pre translate="no">DurTime = HHMMSS</pre>
-
-            <pre translate="no">ForceStop = skip_rest | <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>()</pre>
-
             <pre translate="no">InitArgs = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()]</pre>
 
-            <pre translate="no">Suites = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()] | [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">Label = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">CTHInitArgs = <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()</pre>
-
-            <pre translate="no">LogOpts = [LogOpt]</pre>
-
-            <pre translate="no">UserConfig = [{CallbackMod, CfgStrings}] | {CallbackMod, CfgStrings}</pre>
-
-            <pre translate="no">CreatePrivDir = auto_per_run | auto_per_tc | manual_per_tc</pre>
-
-            <pre translate="no">StepOpt = config | keep_inactive</pre>
-
-            <pre translate="no">KeepSpec = all | <a href="../../../../lib/../erts/doc/html/erlang.html#t:pos_integer/0">pos_integer</a>()</pre>
-
-            <pre translate="no">StepOpts = [StepOpt]</pre>
-
-            <pre translate="no">Groups = GroupNameOrPath | [GroupNameOrPath]</pre>
-
-            <pre translate="no">EH = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | {<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>(), InitArgs} | {[<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()], InitArgs}</pre>
-
-            <pre translate="no">EventHandlers = EH | [EH]</pre>
-
-            <pre translate="no">Cases = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">DecryptKeyOrFile = {key, DecryptKey} | {file, DecryptFile}</pre>
+            <pre translate="no">VLevel = M = N = <a href="../../../../lib/../erts/doc/html/erlang.html#t:integer/0">integer</a>()</pre>
 
             <pre translate="no">StopTime = YYMoMoDDHHMMSS | HHMMSS</pre>
 
+            <pre translate="no">DecryptKeyOrFile = {key, DecryptKey} | {file, DecryptFile}</pre>
+
+            <pre translate="no">DurTime = HHMMSS</pre>
+
+            <pre translate="no">StepOpts = [StepOpt]</pre>
+
+            <pre translate="no">UserConfig = [{CallbackMod, CfgStrings}] | {CallbackMod, CfgStrings}</pre>
+
+            <pre translate="no">Conns = all | [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()]</pre>
+
+            <pre translate="no">Suites = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()] | [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
+
+            <pre translate="no">KeepSpec = all | <a href="../../../../lib/../erts/doc/html/erlang.html#t:pos_integer/0">pos_integer</a>()</pre>
+
+            <pre translate="no">EH = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | {<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>(), InitArgs} | {[<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()], InitArgs}</pre>
+
+            <pre translate="no">Label = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
+
+            <pre translate="no">StepOpt = config | keep_inactive</pre>
+
             <pre translate="no">VLevels = VLevel | [{Category, VLevel}]</pre>
+
+            <pre translate="no">Cases = [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
         </div>
 

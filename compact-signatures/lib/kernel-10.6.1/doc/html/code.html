@@ -171,11 +171,11 @@ structure for an application. If you, for example, create an archive of
 <code class="inline">mnesia-4.4.7</code>, the archive file must be named <code class="inline">mnesia-4.4.7.ez</code> and it must
 contain a top directory named <code class="inline">mnesia-4.4.7</code>. If the version part of the name is
 omitted, it must also be omitted in the archive. That is, a <code class="inline">mnesia.ez</code> archive
-must contain a <code class="inline">mnesia</code> top directory.</p><p>An archive file for an application can, for example, be created like this:</p><pre><code class="makeup erlang" translate="no"><span class="nc">zip</span><span class="p">:</span><span class="nf">create</span><span class="p" data-group-id="2661754224-1">(</span><span class="s">&quot;mnesia-4.4.7.ez&quot;</span><span class="p">,</span><span class="w">
-	</span><span class="p" data-group-id="2661754224-2">[</span><span class="s">&quot;mnesia-4.4.7&quot;</span><span class="p" data-group-id="2661754224-2">]</span><span class="p">,</span><span class="w">
-	</span><span class="p" data-group-id="2661754224-3">[</span><span class="p" data-group-id="2661754224-4">{</span><span class="ss">cwd</span><span class="p">,</span><span class="w"> </span><span class="nc">code</span><span class="p">:</span><span class="nf">lib_dir</span><span class="p" data-group-id="2661754224-5">(</span><span class="p" data-group-id="2661754224-5">)</span><span class="p" data-group-id="2661754224-4">}</span><span class="p">,</span><span class="w">
-	 </span><span class="p" data-group-id="2661754224-6">{</span><span class="ss">compress</span><span class="p">,</span><span class="w"> </span><span class="ss">all</span><span class="p" data-group-id="2661754224-6">}</span><span class="p">,</span><span class="w">
-	 </span><span class="p" data-group-id="2661754224-7">{</span><span class="ss">uncompress</span><span class="p">,</span><span class="p" data-group-id="2661754224-8">[</span><span class="s">&quot;.beam&quot;</span><span class="p">,</span><span class="s">&quot;.app&quot;</span><span class="p" data-group-id="2661754224-8">]</span><span class="p" data-group-id="2661754224-7">}</span><span class="p" data-group-id="2661754224-3">]</span><span class="p" data-group-id="2661754224-1">)</span><span class="p">.</span></code></pre><p>Any file in the archive can be compressed, but to speed up the access of
+must contain a <code class="inline">mnesia</code> top directory.</p><p>An archive file for an application can, for example, be created like this:</p><pre><code class="makeup erlang" translate="no"><span class="nc">zip</span><span class="p">:</span><span class="nf">create</span><span class="p" data-group-id="1476385724-1">(</span><span class="s">&quot;mnesia-4.4.7.ez&quot;</span><span class="p">,</span><span class="w">
+	</span><span class="p" data-group-id="1476385724-2">[</span><span class="s">&quot;mnesia-4.4.7&quot;</span><span class="p" data-group-id="1476385724-2">]</span><span class="p">,</span><span class="w">
+	</span><span class="p" data-group-id="1476385724-3">[</span><span class="p" data-group-id="1476385724-4">{</span><span class="ss">cwd</span><span class="p">,</span><span class="w"> </span><span class="nc">code</span><span class="p">:</span><span class="nf">lib_dir</span><span class="p" data-group-id="1476385724-5">(</span><span class="p" data-group-id="1476385724-5">)</span><span class="p" data-group-id="1476385724-4">}</span><span class="p">,</span><span class="w">
+	 </span><span class="p" data-group-id="1476385724-6">{</span><span class="ss">compress</span><span class="p">,</span><span class="w"> </span><span class="ss">all</span><span class="p" data-group-id="1476385724-6">}</span><span class="p">,</span><span class="w">
+	 </span><span class="p" data-group-id="1476385724-7">{</span><span class="ss">uncompress</span><span class="p">,</span><span class="p" data-group-id="1476385724-8">[</span><span class="s">&quot;.beam&quot;</span><span class="p">,</span><span class="s">&quot;.app&quot;</span><span class="p" data-group-id="1476385724-8">]</span><span class="p" data-group-id="1476385724-7">}</span><span class="p" data-group-id="1476385724-3">]</span><span class="p" data-group-id="1476385724-1">)</span><span class="p">.</span></code></pre><p>Any file in the archive can be compressed, but to speed up the access of
 frequently read files, it can be a good idea to store <code class="inline">beam</code> and <code class="inline">app</code> files
 uncompressed in the archive.</p><p>Normally the top directory of an application is located in library directory
 <code class="inline">$OTPROOT/lib</code> or in a directory referred to by environment variable <code class="inline">ERL_LIBS</code>.
@@ -2282,10 +2282,10 @@ if called. <code class="inline">Filename</code> is normally the absolute filenam
 
             <pre translate="no">Module = <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>()</pre>
 
+            <pre translate="no">Filename = <a href="file.html#t:filename/0">file:filename</a>()</pre>
+
             <pre translate="no">What = badfile | nofile | on_load_not_allowed | duplicated | not_purged | sticky_directory |
           pending_on_load</pre>
-
-            <pre translate="no">Filename = <a href="file.html#t:filename/0">file:filename</a>()</pre>
 
             <pre translate="no">Binary = <a href="../../../../erts-16.3/doc/html/erlang.html#t:binary/0">binary</a>()</pre>
 
@@ -2300,10 +2300,10 @@ the object code is not the expected module name.</p></li><li><p><strong><code cl
 the code already exists.</p></li><li><p><strong><code class="inline">sticky_directory</code></strong> - The object code resides in a sticky directory.</p></li><li><p><strong><code class="inline">pending_on_load</code></strong> - A previously loaded module contains an <code class="inline">-on_load</code>
 function that never finished.</p></li></ul><p>If it is important to minimize the time that an application is inactive while
 changing code, use <a href="#prepare_loading/1"><code class="inline">prepare_loading/1</code></a> and <a href="#finish_loading/1"><code class="inline">finish_loading/1</code></a> instead of
-<a href="#atomic_load/1"><code class="inline">atomic_load/1</code></a>. Here is an example:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="1863309212-1">{</span><span class="ss">ok</span><span class="p">,</span><span class="n">Prepared</span><span class="p" data-group-id="1863309212-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">code</span><span class="p">:</span><span class="nf">prepare_loading</span><span class="p" data-group-id="1863309212-2">(</span><span class="n">Modules</span><span class="p" data-group-id="1863309212-2">)</span><span class="p">,</span><span class="w">
+<a href="#atomic_load/1"><code class="inline">atomic_load/1</code></a>. Here is an example:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="5955698427-1">{</span><span class="ss">ok</span><span class="p">,</span><span class="n">Prepared</span><span class="p" data-group-id="5955698427-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">code</span><span class="p">:</span><span class="nf">prepare_loading</span><span class="p" data-group-id="5955698427-2">(</span><span class="n">Modules</span><span class="p" data-group-id="5955698427-2">)</span><span class="p">,</span><span class="w">
 </span><span class="c1">%% Put the application into an inactive state or do any</span><span class="w">
 </span><span class="c1">%% other preparation needed before changing the code.</span><span class="w">
-</span><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">code</span><span class="p">:</span><span class="nf">finish_loading</span><span class="p" data-group-id="1863309212-3">(</span><span class="n">Prepared</span><span class="p" data-group-id="1863309212-3">)</span><span class="p">,</span><span class="w">
+</span><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">code</span><span class="p">:</span><span class="nf">finish_loading</span><span class="p" data-group-id="5955698427-3">(</span><span class="n">Prepared</span><span class="p" data-group-id="5955698427-3">)</span><span class="p">,</span><span class="w">
 </span><span class="c1">%% Resume the application.</span></code></pre>
   </section>
 </section>
@@ -2484,9 +2484,9 @@ the code path with <code class="inline">code:set_path(code:get_path())</code>.</
 
             <pre translate="no">Result = <a href="../../../../erts-16.3/doc/html/erlang.html#t:boolean/0">boolean</a>() | {error, What}</pre>
 
-            <pre translate="no">Name = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
             <pre translate="no">What = bad_name</pre>
+
+            <pre translate="no">Name = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
             <pre translate="no">Dir = <a href="file.html#t:filename/0">file:filename</a>()</pre>
 
@@ -2767,9 +2767,9 @@ function that never finished.</p></li></ul>
 
             <pre translate="no">Function = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
-            <pre translate="no">Line = Counter = <a href="../../../../erts-16.3/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>()</pre>
-
             <pre translate="no">Arity = <a href="../../../../erts-16.3/doc/html/erlang.html#t:arity/0">arity</a>()</pre>
+
+            <pre translate="no">Line = Counter = <a href="../../../../erts-16.3/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>()</pre>
 
             <pre translate="no">Entity = {Function, Arity} | Line | CoverId</pre>
 
@@ -3067,8 +3067,8 @@ in embedded mode, the code must be loaded with <a href="#load_binary/3"><code cl
 code for the module. This is useful if code is to be loaded on a
 remote node in a distributed system. For example, loading module
 <code class="inline">Module</code> on a node <code class="inline">Node</code> is done as follows:</p><pre><code class="makeup erlang" translate="no"><span class="p">.</span><span class="p">.</span><span class="p">.</span><span class="w">
-</span><span class="p" data-group-id="1637722220-1">{</span><span class="p">_</span><span class="n">Module</span><span class="p">,</span><span class="w"> </span><span class="n">Binary</span><span class="p">,</span><span class="w"> </span><span class="n">Filename</span><span class="p" data-group-id="1637722220-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">code</span><span class="p">:</span><span class="nf">get_object_code</span><span class="p" data-group-id="1637722220-2">(</span><span class="n">Module</span><span class="p" data-group-id="1637722220-2">)</span><span class="p">,</span><span class="w">
-</span><span class="nc">erpc</span><span class="p">:</span><span class="nf">call</span><span class="p" data-group-id="1637722220-3">(</span><span class="n">Node</span><span class="p">,</span><span class="w"> </span><span class="ss">code</span><span class="p">,</span><span class="w"> </span><span class="ss">load_binary</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1637722220-4">[</span><span class="n">Module</span><span class="p">,</span><span class="w"> </span><span class="n">Filename</span><span class="p">,</span><span class="w"> </span><span class="n">Binary</span><span class="p" data-group-id="1637722220-4">]</span><span class="p" data-group-id="1637722220-3">)</span><span class="p">,</span><span class="w">
+</span><span class="p" data-group-id="6118142794-1">{</span><span class="p">_</span><span class="n">Module</span><span class="p">,</span><span class="w"> </span><span class="n">Binary</span><span class="p">,</span><span class="w"> </span><span class="n">Filename</span><span class="p" data-group-id="6118142794-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">code</span><span class="p">:</span><span class="nf">get_object_code</span><span class="p" data-group-id="6118142794-2">(</span><span class="n">Module</span><span class="p" data-group-id="6118142794-2">)</span><span class="p">,</span><span class="w">
+</span><span class="nc">erpc</span><span class="p">:</span><span class="nf">call</span><span class="p" data-group-id="6118142794-3">(</span><span class="n">Node</span><span class="p">,</span><span class="w"> </span><span class="ss">code</span><span class="p">,</span><span class="w"> </span><span class="ss">load_binary</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6118142794-4">[</span><span class="n">Module</span><span class="p">,</span><span class="w"> </span><span class="n">Filename</span><span class="p">,</span><span class="w"> </span><span class="n">Binary</span><span class="p" data-group-id="6118142794-4">]</span><span class="p" data-group-id="6118142794-3">)</span><span class="p">,</span><span class="w">
 </span><span class="p">.</span><span class="p">.</span><span class="p">.</span></code></pre>
   </section>
 </section>
@@ -3219,7 +3219,7 @@ sticky directory (in other words: an attempt to reload the module will fail), or
 
 
 <p>Returns the library directory, <code class="inline">$OTPROOT/lib</code>, where <code class="inline">$OTPROOT</code> is the root
-directory of Erlang/OTP.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">code</span><span class="p">:</span><span class="nf">lib_dir</span><span class="p" data-group-id="6433677987-1">(</span><span class="p" data-group-id="6433677987-1">)</span><span class="p">.</span><span class="w">
+directory of Erlang/OTP.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">code</span><span class="p">:</span><span class="nf">lib_dir</span><span class="p" data-group-id="2951328994-1">(</span><span class="p" data-group-id="2951328994-1">)</span><span class="p">.</span><span class="w">
 </span><span class="s">&quot;/usr/local/otp/lib&quot;</span></code></pre>
   </section>
 </section>
@@ -3269,7 +3269,7 @@ stripped away before the path is returned. For example, if directory
 <code class="inline">/usr/local/otp/lib/mnesia-4.2.2/ebin</code> is returned. This means that the library
 directory for an application is the same, regardless if the application resides
 in an archive or not.</p><section role="note" class="admonition info"><h4 class="admonition-title info">Warning</h4><p>Archives are experimental. In a future release, they can be removed or
-their behavior can change.</p></section><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">&gt; </span><span class="nc">code</span><span class="p">:</span><span class="nf">lib_dir</span><span class="p" data-group-id="0954049521-1">(</span><span class="ss">mnesia</span><span class="p" data-group-id="0954049521-1">)</span><span class="p">.</span><span class="w">
+their behavior can change.</p></section><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">&gt; </span><span class="nc">code</span><span class="p">:</span><span class="nf">lib_dir</span><span class="p" data-group-id="0793689721-1">(</span><span class="ss">mnesia</span><span class="p" data-group-id="0793689721-1">)</span><span class="p">.</span><span class="w">
 </span><span class="s">&quot;/usr/local/otp/lib/mnesia-4.23&quot;</span></code></pre><p>Returns <code class="inline">{error, bad_name}</code> if <code class="inline">Name</code> is not the name of an application under
 <code class="inline">$OTPROOT/lib</code> or on a directory referred to through environment variable
 <code class="inline">ERL_LIBS</code>. Fails with an exception if <code class="inline">Name</code> has the wrong type.</p><section role="note" class="admonition warning"><h4 class="admonition-title warning">Warning</h4><p>For backward compatibility, <code class="inline">Name</code> is also allowed to be a string. That will
@@ -3325,7 +3325,7 @@ application, but when applications at least partly reside in an archive, the
 situation is different. Some of the subdirectories can reside as regular
 directories while others reside in an archive file. It is not checked whether
 this directory exists.</p><p>Instead of using this function, use <a href="#lib_dir/1"><code class="inline">code:lib_dir/1</code></a>
-and <a href="../../../../lib/stdlib-7.3/doc/html/filename.html#join/2"><code class="inline">filename:join/2</code></a>.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">filename</span><span class="p">:</span><span class="nf">join</span><span class="p" data-group-id="7653288696-1">(</span><span class="nc">code</span><span class="p">:</span><span class="nf">lib_dir</span><span class="p" data-group-id="7653288696-2">(</span><span class="ss">megaco</span><span class="p" data-group-id="7653288696-2">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;priv&quot;</span><span class="p" data-group-id="7653288696-1">)</span><span class="p">.</span><span class="w">
+and <a href="../../../../lib/stdlib-7.3/doc/html/filename.html#join/2"><code class="inline">filename:join/2</code></a>.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">filename</span><span class="p">:</span><span class="nf">join</span><span class="p" data-group-id="6501774665-1">(</span><span class="nc">code</span><span class="p">:</span><span class="nf">lib_dir</span><span class="p" data-group-id="6501774665-2">(</span><span class="ss">megaco</span><span class="p" data-group-id="6501774665-2">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;priv&quot;</span><span class="p" data-group-id="6501774665-1">)</span><span class="p">.</span><span class="w">
 </span><span class="s">&quot;/usr/local/otp/lib/megaco-3.9.1.1/priv&quot;</span></code></pre><p>Fails with an exception if <code class="inline">Name</code> or <code class="inline">SubDir</code> has the wrong type.</p>
   </section>
 </section>
@@ -3661,9 +3661,9 @@ reported as <code class="inline">loaded</code> or <code class="inline">not_loade
 
             <pre translate="no">Module = <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>()</pre>
 
-            <pre translate="no">What = badfile | nofile | on_load_not_allowed | duplicated</pre>
-
             <pre translate="no">Filename = <a href="file.html#t:filename/0">file:filename</a>()</pre>
+
+            <pre translate="no">What = badfile | nofile | on_load_not_allowed | duplicated</pre>
 
             <pre translate="no">Binary = <a href="../../../../erts-16.3/doc/html/erlang.html#t:binary/0">binary</a>()</pre>
 
@@ -3888,7 +3888,7 @@ or lines are set to <code class="inline">false</code>.</p><p>If the coverage mod
 
 
 <p>Returns the root directory of Erlang/OTP, which is the directory where it is
-installed.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">code</span><span class="p">:</span><span class="nf">root_dir</span><span class="p" data-group-id="3769014211-1">(</span><span class="p" data-group-id="3769014211-1">)</span><span class="p">.</span><span class="w">
+installed.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">code</span><span class="p">:</span><span class="nf">root_dir</span><span class="p" data-group-id="7999535186-1">(</span><span class="p" data-group-id="7999535186-1">)</span><span class="p">.</span><span class="w">
 </span><span class="s">&quot;/usr/local/otp&quot;</span></code></pre>
   </section>
 </section>

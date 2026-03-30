@@ -73,32 +73,18 @@ is raised.
         called as binary:at(<<5,19,72,33>>,4)
 ```
 
+# `bin_to_list(Subject) ≡ bin_to_list(Subject, {0, byte_size(Subject)})`
+*since OTP R14B* 
+# `bin_to_list(Subject, Pos, Len) ≡ bin_to_list(Subject, {Pos, Len})`
+*since OTP R14B* 
 # `bin_to_list`
 *since OTP R14B* 
 
 ```erlang
 -spec bin_to_list(Subject) -> [byte()] when Subject :: binary().
-```
-
-Converts `Subject` to a list of [`byte()`](`t:byte/0`)s, each
-representing the value of one byte.
-
-## Examples
-
-```erlang
-1> binary:bin_to_list(<<"erlang",0>>).
-[101,114,108,97,110,103,0]
-```
-
-# `bin_to_list(Subject, PosLen) ≡ bin_to_list(Subject, Pos, Len)`
-*since OTP R14B* 
-# `bin_to_list`
-*since OTP R14B* 
-
-```erlang
--spec bin_to_list(Subject, PosLen) -> [byte()] when Subject :: binary(), PosLen :: part().
 -spec bin_to_list(Subject, Pos, Len) -> [byte()]
                      when Subject :: binary(), Pos :: non_neg_integer(), Len :: integer().
+-spec bin_to_list(Subject, PosLen) -> [byte()] when Subject :: binary(), PosLen :: part().
 ```
 
 Converts part of `Subject` to a list of `t:byte/0`s, each representing
@@ -109,10 +95,14 @@ the value of one byte.
 ## Examples
 
 ```erlang
-1> binary:bin_to_list(<<"erlang">>, 1, 3).
+1> binary:bin_to_list(<<"erlang",0>>).
+[101,114,108,97,110,103,0]
+2> binary:bin_to_list(<<"erlang">>, 1, 3).
+"rla"
+3> binary:bin_to_list(<<"erlang">>, {1, 3}).
 "rla"
 %% or [114,108,97] in list notation.
-2> binary:bin_to_list(<<"erlang">>, 5, 3).
+4> binary:bin_to_list(<<"erlang">>, 5, 3).
 ** exception error: bad argument
      in function  binary:bin_to_list/3
         called as binary:bin_to_list(<<"erlang">>,5,3)

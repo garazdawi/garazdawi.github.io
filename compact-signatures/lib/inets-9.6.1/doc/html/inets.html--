@@ -585,11 +585,11 @@ Info will contain Reason term.</p>
 
             <pre translate="no">Result = {ok, <a href="../../../../lib/../erts/doc/html/erlang.html#t:pid/0">pid</a>()} | {error, <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()}</pre>
 
-            <pre translate="no">Value = Property = <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()</pre>
+            <pre translate="no">ConfPropList = [{Property, Value}]</pre>
 
             <pre translate="no">ConfFile = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
 
-            <pre translate="no">ConfPropList = [{Property, Value}]</pre>
+            <pre translate="no">Property = Value = <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()</pre>
 
         </div>
 

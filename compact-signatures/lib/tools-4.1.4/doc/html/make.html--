@@ -126,8 +126,8 @@ named <code class="inline">Emakefile</code>. If present <code class="inline">Ema
 the first match is used. For example, the following <code class="inline">Emakefile</code> means that
 <code class="inline">file1</code> should be compiled with the options <code class="inline">[debug_info,{i,&quot;../foo&quot;}]</code>, while
 all other files in the current directory should be compiled with only the
-<code class="inline">debug_info</code> flag.</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="7705223829-1">{</span><span class="ss">&#39;file1&#39;</span><span class="p">,</span><span class="p" data-group-id="7705223829-2">[</span><span class="ss">debug_info</span><span class="p">,</span><span class="p" data-group-id="7705223829-3">{</span><span class="ss">i</span><span class="p">,</span><span class="s">&quot;../foo&quot;</span><span class="p" data-group-id="7705223829-3">}</span><span class="p" data-group-id="7705223829-2">]</span><span class="p" data-group-id="7705223829-1">}</span><span class="p">.</span><span class="w">
-</span><span class="p" data-group-id="7705223829-4">{</span><span class="ss">&#39;*&#39;</span><span class="p">,</span><span class="p" data-group-id="7705223829-5">[</span><span class="ss">debug_info</span><span class="p" data-group-id="7705223829-5">]</span><span class="p" data-group-id="7705223829-4">}</span><span class="p">.</span></code></pre><h3 id="module-see-also" class="section-heading"><a href="#module-see-also" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">See Also</span></h3><p><a href="../../../../lib/compiler/doc/html/compile.html">The Compiler Application</a></p>
+<code class="inline">debug_info</code> flag.</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="7516439848-1">{</span><span class="ss">&#39;file1&#39;</span><span class="p">,</span><span class="p" data-group-id="7516439848-2">[</span><span class="ss">debug_info</span><span class="p">,</span><span class="p" data-group-id="7516439848-3">{</span><span class="ss">i</span><span class="p">,</span><span class="s">&quot;../foo&quot;</span><span class="p" data-group-id="7516439848-3">}</span><span class="p" data-group-id="7516439848-2">]</span><span class="p" data-group-id="7516439848-1">}</span><span class="p">.</span><span class="w">
+</span><span class="p" data-group-id="7516439848-4">{</span><span class="ss">&#39;*&#39;</span><span class="p">,</span><span class="p" data-group-id="7516439848-5">[</span><span class="ss">debug_info</span><span class="p" data-group-id="7516439848-5">]</span><span class="p" data-group-id="7516439848-4">}</span><span class="p">.</span></code></pre><h3 id="module-see-also" class="section-heading"><a href="#module-see-also" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">See Also</span></h3><p><a href="../../../../lib/compiler/doc/html/compile.html">The Compiler Application</a></p>
     </section>
 
 </div>
@@ -242,11 +242,11 @@ specified <code class="inline">ModFiles</code>, which is a list of module or fil
 
             <pre translate="no">Option = noexec | load | netload | {emake, Emake} | <a href="../../../../lib/compiler/doc/html/compile.html#t:option/0">compile:option</a>()</pre>
 
-            <pre translate="no">Modules = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()]</pre>
-
             <pre translate="no">Emake = [EmakeElement]</pre>
 
             <pre translate="no">EmakeElement = Modules | {Modules, [<a href="../../../../lib/compiler/doc/html/compile.html#t:option/0">compile:option</a>()]}</pre>
+
+            <pre translate="no">Modules = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | [<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>()]</pre>
 
         </div>
 

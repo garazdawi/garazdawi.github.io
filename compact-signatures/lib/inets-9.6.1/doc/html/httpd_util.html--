@@ -1020,7 +1020,7 @@ regarded as <code class="inline">PathInfo</code></p>
         <div class="specs">
           <h4 class="specs-title">Types</h4>
 
-            <pre translate="no">URIString = Path = QueryString = PathInfo = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
+            <pre translate="no">URIString = Path = PathInfo = QueryString = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
 
             <pre translate="no">Split = not_a_script | {Path, {PathInfo, QueryString}} | {Path, []}</pre>
 

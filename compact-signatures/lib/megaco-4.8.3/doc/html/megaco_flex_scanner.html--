@@ -431,9 +431,9 @@ loads the linked in driver.</p></div>
 
             <pre translate="no">Result = {ok, PortOrPorts} | {error, Reason}</pre>
 
-            <pre translate="no">Reason = <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()</pre>
-
             <pre translate="no">PortOrPorts = <a href="#t:megaco_ports/0">megaco_ports</a>()</pre>
+
+            <pre translate="no">Reason = <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()</pre>
 
         </div>
 

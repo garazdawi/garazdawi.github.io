@@ -542,9 +542,9 @@ pdu is handed over to the master-agent for primary processing.</p><p>For the pdu
 
             <pre translate="no">Reply = <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>() | NewTargets</pre>
 
-            <pre translate="no">Domain = <a href="#t:transportDomain/0">transportDomain</a>()</pre>
-
             <pre translate="no">Addr = <a href="#t:transportAddressWithPort/0">transportAddressWithPort</a>()</pre>
+
+            <pre translate="no">Domain = <a href="#t:transportDomain/0">transportDomain</a>()</pre>
 
             <pre translate="no">Target = {Domain, Addr}</pre>
 

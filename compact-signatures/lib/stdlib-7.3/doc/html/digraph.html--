@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-erlang-EYOUDG57.css" />
 
-    <script defer src="dist/sidebar_items-485585F4.js"></script>
+    <script defer src="dist/sidebar_items-D91E7496.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 <style>.dark img { background-color: white; }</style>
@@ -1341,9 +1341,9 @@ deleted if the process that created the digraph terminates.</p>
 
             <pre translate="no">Result = {E, V1, V2, Label} | false</pre>
 
-            <pre translate="no">Label = <a href="#t:label/0">label</a>()</pre>
-
             <pre translate="no">V1 = V2 = <a href="#t:vertex/0">vertex</a>()</pre>
+
+            <pre translate="no">Label = <a href="#t:label/0">label</a>()</pre>
 
         </div>
 

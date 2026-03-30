@@ -729,9 +729,9 @@ The options list defines which versions to use.</p><p>It also initializes some S
 
             <pre translate="no">Reason = ACM = <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()</pre>
 
-            <pre translate="no">Ip = <a href="../../../../lib/kernel/doc/html/inet.html#t:ip_address/0">inet:ip_address</a>()</pre>
-
             <pre translate="no">Vsn = 'version-1' | 'version-2'</pre>
+
+            <pre translate="no">Ip = <a href="../../../../lib/kernel/doc/html/inet.html#t:ip_address/0">inet:ip_address</a>()</pre>
 
             <pre translate="no">ReqId = <a href="snmpm.html#t:request_id/0">snmpm:request_id</a>()</pre>
 

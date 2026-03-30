@@ -186,6 +186,27 @@ Inserts \fIKey\fR with value \fIValue\fR into \fITree1\fR if not present, or upd
 
 .RE
 .B
+\fBfrom_list(List) -> Tree\fR
+\fB                   when List :: [{Key, Value}], Tree :: tree(Key, Value).\fR
+
+.br
+.RS
+.PP
+Returns a tree of the key-value tuples in \fIList\fR, where \fIList\fR can be unordered and contain duplicate keys.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Unordered = [{x, 1}, {y, 2}, {a, 3}, {x, 4}, {y, 5}, {b, 6}].
+2> gb_trees:to_list(gb_trees:from_list(Unordered)).
+[{a,3},{b,6},{x,4},{y,5}]
+
+.fi
+
+
+.RE
+.B
 \fBfrom_orddict(List) -> Tree\fR
 \fB                      when\fR
 \fB                          List :: [{Key, Value}],\fR

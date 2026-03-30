@@ -274,7 +274,7 @@ term, which is stored in the <code class="inline">File.boot</code> file.</p></di
 
             <pre translate="no">Module = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
-            <pre translate="no">Error = Descr = Warnings = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
+            <pre translate="no">Warnings = Error = Descr = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
 
             <pre translate="no">Opt = {path, [Dir]} | restart_emulator | silent | noexec | {outdir, Dir} | warnings_as_errors</pre>
 
@@ -361,7 +361,7 @@ calling <code class="inline">Module:format_warning(Warnings)</code> or <code cla
 
             <pre translate="no">Module = App = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
-            <pre translate="no">Error = Warnings = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
+            <pre translate="no">Warnings = Error = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
 
             <pre translate="no">Opt = src_tests |
           {path, [Dir]} |
@@ -480,8 +480,6 @@ file during boot is <em>not</em> included.</p>
           {ok, Module :: <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>(), Warnings :: <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()} |
           {error, Module :: <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>(), Error :: <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()}</pre>
 
-            <pre translate="no">Dir = <a href="../../../../lib/kernel-10.6.1/doc/html/file.html#t:filename_all/0">file:filename_all</a>()</pre>
-
             <pre translate="no">Opt = {dirs, [IncDir]} |
           {path, [Dir]} |
           {variables, [Var]} |
@@ -494,9 +492,11 @@ file during boot is <em>not</em> included.</p>
           no_warn_sasl | warnings_as_errors |
           {extra_files, ExtraFiles}</pre>
 
-            <pre translate="no">App = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
+            <pre translate="no">Dir = <a href="../../../../lib/kernel-10.6.1/doc/html/file.html#t:filename_all/0">file:filename_all</a>()</pre>
 
             <pre translate="no">Var = {VarName, PreFix}</pre>
+
+            <pre translate="no">App = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
             <pre translate="no">IncDir = src | include | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 

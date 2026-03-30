@@ -294,6 +294,8 @@ should not be tested
 -type options() ::
           [{parser, fun((unicode:unicode_binary()) -> [unicode:unicode_binary()] | {error, term()})} |
            {skipped_blocks, non_neg_integer() | false} |
+           {missing_tests, [{atom(), arity()}]} |
+           {skip_tests, [moduledoc | {function | type | callback, atom(), arity()}]} |
            {verbose, boolean()}].
 ```
 
@@ -303,8 +305,23 @@ Options for doctest execution.
   parser callback must be a `fun/1` and return a list of Erlang code block binaries.
   The code blocks are then checked to determine whether they should be run as doctests.
   If no parser is provided, a built-in markdown parser will be used.
+
 * `skipped_blocks` - Sets the exact number of Erlang code blocks that are allowed
-  to be skipped because no runnable shell prompts were found. It defaults to `false`.
+  to be skipped because no runnable shell prompts were found. It does not count blocks
+  in any function listed in `missing_tests`. It defaults to `false`.
+
+* `missing_tests` - A list of `{Function, Arity}` pairs that are expected to have
+  documentation but no doctests. When this option is set, `ct_doctest` will fail
+  if any documented function lacks doctests and is not in this list (i.e., a new
+  function was added without doctests), and also fail if a function in this list
+  now has doctests (i.e., the list is stale and should be updated). Defaults to
+  not checking.
+
+* `skip_tests` - A list of doc entries whose doctests should be skipped. Each entry
+  is either `moduledoc` or a `{Kind, Name, Arity}` tuple where `Kind` is
+  `function`, `type`, or `callback`. For example,
+  `[moduledoc, {function, foo, 1}]` skips the moduledoc and the `foo/1` function.
+
 * `verbose` - Print detailed information while running doctests, including each
   block run and skipped block details.
 
@@ -318,7 +335,7 @@ Options for doctest execution.
 ```erlang
 -spec file(file:filename()) -> ok | {error, term()} | no_return().
 -spec file(file:filename(), options()) -> ok | {comment, string()} | {error, term()} | no_return().
--spec file(file:filename(), Bindings :: [{atom(), term()}], options()) ->
+-spec file(File :: file:filename(), Bindings :: [{atom(), term()}], Options :: options()) ->
               ok | {comment, string()} | {error, term()} | no_return().
 ```
 
@@ -343,7 +360,8 @@ See `t:options/0` for available options.
 
 ```erlang
 -spec module(module(), options()) -> ok | {comment, string()} | {error, term()} | no_return().
--spec module(module(), Bindings, options()) -> ok | {comment, string()} | {error, term()} | no_return()
+-spec module(Module :: module(), Bindings, Options :: options()) ->
+                ok | {comment, string()} | {error, term()} | no_return()
                 when
                     KFA :: {Kind :: function | type | callback, atom(), arity()},
                     Bindings :: [{KFA | moduledoc, erl_eval:binding_struct()}].

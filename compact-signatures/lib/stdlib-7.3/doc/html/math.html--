@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="dist/html-erlang-EYOUDG57.css" />
 
-    <script defer src="dist/sidebar_items-485585F4.js"></script>
+    <script defer src="dist/sidebar_items-D91E7496.js"></script>
     <script defer src="docs_config.js"></script>
     <script defer src="dist/html-Y2MUTVIN.js"></script>
 <style>.dark img { background-color: white; }</style>
@@ -466,7 +466,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p></div>
 
 
 
-<p>Returns the arc cosine of <code class="inline">X</code> in radians.</p><h2 id="acos/1-examples" class="section-heading"><a href="#acos/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">acos</span><span class="p" data-group-id="0780367658-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="0780367658-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the arc cosine of <code class="inline">X</code> in radians.</p><h2 id="acos/1-examples" class="section-heading"><a href="#acos/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">acos</span><span class="p" data-group-id="2942076208-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="2942076208-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -499,7 +499,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p></div>
 
 
 
-<p>Returns the inverse hyperbolic cosine of <code class="inline">X</code>.</p><h2 id="acosh/1-examples" class="section-heading"><a href="#acosh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">acosh</span><span class="p" data-group-id="5637377004-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="5637377004-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the inverse hyperbolic cosine of <code class="inline">X</code>.</p><h2 id="acosh/1-examples" class="section-heading"><a href="#acosh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">acosh</span><span class="p" data-group-id="1973862528-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="1973862528-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -532,7 +532,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p></div>
 
 
 
-<p>Returns the arc cosine of <code class="inline">X</code> in radians.</p><h2 id="asin/1-examples" class="section-heading"><a href="#asin/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">asin</span><span class="p" data-group-id="0601491763-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="0601491763-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the arc cosine of <code class="inline">X</code> in radians.</p><h2 id="asin/1-examples" class="section-heading"><a href="#asin/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">asin</span><span class="p" data-group-id="5505589080-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="5505589080-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -565,7 +565,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p></div>
 
 
 
-<p>Returns the inverse hyperbolic sine of <code class="inline">X</code>.</p><h2 id="asinh/1-examples" class="section-heading"><a href="#asinh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">asinh</span><span class="p" data-group-id="7445199338-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="7445199338-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the inverse hyperbolic sine of <code class="inline">X</code>.</p><h2 id="asinh/1-examples" class="section-heading"><a href="#asinh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">asinh</span><span class="p" data-group-id="0976957167-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="0976957167-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -606,7 +606,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p></div>
 
 
 <p>Returns the arc tangent of <code class="inline">Y</code>/<code class="inline">X</code> in radians, using the signs of both
-arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-examples" class="section-heading"><a href="#atan2/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">atan2</span><span class="p" data-group-id="1809628805-1">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">10.0</span><span class="p" data-group-id="1809628805-1">)</span><span class="p">.</span><span class="w">
+arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-examples" class="section-heading"><a href="#atan2/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">atan2</span><span class="p" data-group-id="7221020887-1">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">10.0</span><span class="p" data-group-id="7221020887-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">3.141592653589793</span></code></pre>
   </section>
 </section>
@@ -639,7 +639,7 @@ arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-exam
 
 
 
-<p>Returns the arc tangent of <code class="inline">X</code> in radians.</p><h2 id="atan/1-examples" class="section-heading"><a href="#atan/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">atan</span><span class="p" data-group-id="5341765355-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="5341765355-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the arc tangent of <code class="inline">X</code> in radians.</p><h2 id="atan/1-examples" class="section-heading"><a href="#atan/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">atan</span><span class="p" data-group-id="9259593615-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="9259593615-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -672,7 +672,7 @@ arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-exam
 
 
 
-<p>Returns the inverse hyperbolic tangent of <code class="inline">X</code>.</p><h2 id="atanh/1-examples" class="section-heading"><a href="#atanh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">atanh</span><span class="p" data-group-id="9171195844-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="9171195844-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the inverse hyperbolic tangent of <code class="inline">X</code>.</p><h2 id="atanh/1-examples" class="section-heading"><a href="#atanh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">atanh</span><span class="p" data-group-id="2925750099-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="2925750099-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -707,11 +707,11 @@ arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-exam
 
 
 
-<p>Returns the ceiling of <code class="inline">X</code>.</p><h2 id="ceil/1-examples" class="section-heading"><a href="#ceil/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">ceil</span><span class="p" data-group-id="7488175291-1">(</span><span class="mf">7.5</span><span class="p" data-group-id="7488175291-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the ceiling of <code class="inline">X</code>.</p><h2 id="ceil/1-examples" class="section-heading"><a href="#ceil/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">ceil</span><span class="p" data-group-id="8092851214-1">(</span><span class="mf">7.5</span><span class="p" data-group-id="8092851214-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">8.0</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">ceil</span><span class="p" data-group-id="7488175291-2">(</span><span class="o">-</span><span class="mf">5.5</span><span class="p" data-group-id="7488175291-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">ceil</span><span class="p" data-group-id="8092851214-2">(</span><span class="o">-</span><span class="mf">5.5</span><span class="p" data-group-id="8092851214-2">)</span><span class="p">.</span><span class="w">
 </span><span class="o">-</span><span class="mf">5.0</span><span class="w">
-</span><span class="gp unselectable">3&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">ceil</span><span class="p" data-group-id="7488175291-3">(</span><span class="mf">1.0</span><span class="p" data-group-id="7488175291-3">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">3&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">ceil</span><span class="p" data-group-id="8092851214-3">(</span><span class="mf">1.0</span><span class="p" data-group-id="8092851214-3">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span></code></pre>
   </section>
 </section>
@@ -744,7 +744,7 @@ arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-exam
 
 
 
-<p>Returns the cosine of <code class="inline">X</code> in radians.</p><h2 id="cos/1-examples" class="section-heading"><a href="#cos/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">cos</span><span class="p" data-group-id="9736572564-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="9736572564-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the cosine of <code class="inline">X</code> in radians.</p><h2 id="cos/1-examples" class="section-heading"><a href="#cos/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">cos</span><span class="p" data-group-id="1346680225-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="1346680225-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span></code></pre>
   </section>
 </section>
@@ -777,7 +777,7 @@ arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-exam
 
 
 
-<p>Returns the hyperbolic cosine of <code class="inline">X</code>.</p><h2 id="cosh/1-examples" class="section-heading"><a href="#cosh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">cosh</span><span class="p" data-group-id="6983950837-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="6983950837-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the hyperbolic cosine of <code class="inline">X</code>.</p><h2 id="cosh/1-examples" class="section-heading"><a href="#cosh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">cosh</span><span class="p" data-group-id="6502445679-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="6502445679-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span></code></pre>
   </section>
 </section>
@@ -810,9 +810,9 @@ arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-exam
 
 
 
-<p>Returns the error function of <code class="inline">X</code>.</p><p>See <a rel="nofollow" href="https://en.wikipedia.org/wiki/Error_function">Error function</a> (Wikipedia).</p><h2 id="erf/1-examples" class="section-heading"><a href="#erf/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">erf</span><span class="p" data-group-id="9930105348-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="9930105348-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the error function of <code class="inline">X</code>.</p><p>See <a rel="nofollow" href="https://en.wikipedia.org/wiki/Error_function">Error function</a> (Wikipedia).</p><h2 id="erf/1-examples" class="section-heading"><a href="#erf/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">erf</span><span class="p" data-group-id="1096847379-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="1096847379-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">erf</span><span class="p" data-group-id="9930105348-2">(</span><span class="mf">10.0</span><span class="p" data-group-id="9930105348-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">erf</span><span class="p" data-group-id="1096847379-2">(</span><span class="mf">10.0</span><span class="p" data-group-id="1096847379-2">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span></code></pre>
   </section>
 </section>
@@ -846,7 +846,7 @@ arguments to determine the quadrant of the return value.</p><h2 id="atan2/2-exam
 
 
 <p>Returns <code class="inline">1.0</code> - <a href="#erf/1"><code class="inline">erf(X)</code></a>, computed using methods
-that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc/1-examples" class="section-heading"><a href="#erfc/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">erfc</span><span class="p" data-group-id="7898693057-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="7898693057-1">)</span><span class="p">.</span><span class="w">
+that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc/1-examples" class="section-heading"><a href="#erfc/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">erfc</span><span class="p" data-group-id="4292574534-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="4292574534-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span></code></pre>
   </section>
 </section>
@@ -879,9 +879,9 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns <em>e</em> raised to the power of <code class="inline">X</code>.</p><h2 id="exp/1-examples" class="section-heading"><a href="#exp/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">exp</span><span class="p" data-group-id="5765268557-1">(</span><span class="mi">0</span><span class="p" data-group-id="5765268557-1">)</span><span class="p">.</span><span class="w">
+<p>Returns <em>e</em> raised to the power of <code class="inline">X</code>.</p><h2 id="exp/1-examples" class="section-heading"><a href="#exp/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">exp</span><span class="p" data-group-id="0484675439-1">(</span><span class="mi">0</span><span class="p" data-group-id="0484675439-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nf">trunc</span><span class="p" data-group-id="5765268557-2">(</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">math</span><span class="p">:</span><span class="nf">exp</span><span class="p" data-group-id="5765268557-3">(</span><span class="mi">1</span><span class="p" data-group-id="5765268557-3">)</span><span class="p" data-group-id="5765268557-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nf">trunc</span><span class="p" data-group-id="0484675439-2">(</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">math</span><span class="p">:</span><span class="nf">exp</span><span class="p" data-group-id="0484675439-3">(</span><span class="mi">1</span><span class="p" data-group-id="0484675439-3">)</span><span class="p" data-group-id="0484675439-2">)</span><span class="p">.</span><span class="w">
 </span><span class="mi">271</span></code></pre>
   </section>
 </section>
@@ -916,11 +916,11 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the floor of <code class="inline">X</code>.</p><h2 id="floor/1-examples" class="section-heading"><a href="#floor/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">floor</span><span class="p" data-group-id="1862394518-1">(</span><span class="mf">9.1</span><span class="p" data-group-id="1862394518-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the floor of <code class="inline">X</code>.</p><h2 id="floor/1-examples" class="section-heading"><a href="#floor/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">floor</span><span class="p" data-group-id="4075005784-1">(</span><span class="mf">9.1</span><span class="p" data-group-id="4075005784-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">9.0</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">floor</span><span class="p" data-group-id="1862394518-2">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p" data-group-id="1862394518-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">floor</span><span class="p" data-group-id="4075005784-2">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p" data-group-id="4075005784-2">)</span><span class="p">.</span><span class="w">
 </span><span class="o">-</span><span class="mf">2.0</span><span class="w">
-</span><span class="gp unselectable">3&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">floor</span><span class="p" data-group-id="1862394518-3">(</span><span class="mf">1.0</span><span class="p" data-group-id="1862394518-3">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">3&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">floor</span><span class="p" data-group-id="4075005784-3">(</span><span class="mf">1.0</span><span class="p" data-group-id="4075005784-3">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span></code></pre>
   </section>
 </section>
@@ -962,7 +962,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
         </div>
 
 
-<p>Returns the floating point remainder <code class="inline">X</code> divided by <code class="inline">Y</code>.</p><h2 id="fmod/2-examples" class="section-heading"><a href="#fmod/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">fmod</span><span class="p" data-group-id="3536387380-1">(</span><span class="mf">10.5</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p" data-group-id="3536387380-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the floating point remainder <code class="inline">X</code> divided by <code class="inline">Y</code>.</p><h2 id="fmod/2-examples" class="section-heading"><a href="#fmod/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">fmod</span><span class="p" data-group-id="0496072920-1">(</span><span class="mf">10.5</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p" data-group-id="0496072920-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">2.5</span></code></pre>
   </section>
 </section>
@@ -997,11 +997,11 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns logarithm of <code class="inline">X</code> to base 2.</p><h2 id="log2/1-examples" class="section-heading"><a href="#log2/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log2</span><span class="p" data-group-id="0862070628-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="0862070628-1">)</span><span class="p">.</span><span class="w">
+<p>Returns logarithm of <code class="inline">X</code> to base 2.</p><h2 id="log2/1-examples" class="section-heading"><a href="#log2/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log2</span><span class="p" data-group-id="9930674304-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="9930674304-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log2</span><span class="p" data-group-id="0862070628-2">(</span><span class="mf">2.0</span><span class="p" data-group-id="0862070628-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log2</span><span class="p" data-group-id="9930674304-2">(</span><span class="mf">2.0</span><span class="p" data-group-id="9930674304-2">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span><span class="w">
-</span><span class="gp unselectable">3&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log2</span><span class="p" data-group-id="0862070628-3">(</span><span class="mi">64</span><span class="p" data-group-id="0862070628-3">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">3&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log2</span><span class="p" data-group-id="9930674304-3">(</span><span class="mi">64</span><span class="p" data-group-id="9930674304-3">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">6.0</span></code></pre>
   </section>
 </section>
@@ -1034,11 +1034,11 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns logarithm of <code class="inline">X</code> to base 10.</p><h2 id="log10/1-examples" class="section-heading"><a href="#log10/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log10</span><span class="p" data-group-id="8612310410-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="8612310410-1">)</span><span class="p">.</span><span class="w">
+<p>Returns logarithm of <code class="inline">X</code> to base 10.</p><h2 id="log10/1-examples" class="section-heading"><a href="#log10/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log10</span><span class="p" data-group-id="0001848885-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="0001848885-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log10</span><span class="p" data-group-id="8612310410-2">(</span><span class="mf">10.0</span><span class="p" data-group-id="8612310410-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log10</span><span class="p" data-group-id="0001848885-2">(</span><span class="mf">10.0</span><span class="p" data-group-id="0001848885-2">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span><span class="w">
-</span><span class="gp unselectable">3&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log10</span><span class="p" data-group-id="8612310410-3">(</span><span class="mi">100</span><span class="p" data-group-id="8612310410-3">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">3&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log10</span><span class="p" data-group-id="0001848885-3">(</span><span class="mi">100</span><span class="p" data-group-id="0001848885-3">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">2.0</span></code></pre>
   </section>
 </section>
@@ -1071,9 +1071,9 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the natural logarithm of <code class="inline">X</code>.</p><h2 id="log/1-examples" class="section-heading"><a href="#log/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log</span><span class="p" data-group-id="9129809431-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="9129809431-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the natural logarithm of <code class="inline">X</code>.</p><h2 id="log/1-examples" class="section-heading"><a href="#log/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log</span><span class="p" data-group-id="9429807083-1">(</span><span class="mf">1.0</span><span class="p" data-group-id="9429807083-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log</span><span class="p" data-group-id="9129809431-2">(</span><span class="mf">2.718281828459045</span><span class="p" data-group-id="9129809431-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">log</span><span class="p" data-group-id="9429807083-2">(</span><span class="mf">2.718281828459045</span><span class="p" data-group-id="9429807083-2">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.0</span></code></pre>
   </section>
 </section>
@@ -1106,7 +1106,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the ratio of the circumference of a circle to its diameter.</p><h2 id="pi/0-examples" class="section-heading"><a href="#pi/0-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">pi</span><span class="p" data-group-id="6893579234-1">(</span><span class="p" data-group-id="6893579234-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the ratio of the circumference of a circle to its diameter.</p><h2 id="pi/0-examples" class="section-heading"><a href="#pi/0-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">pi</span><span class="p" data-group-id="2444362395-1">(</span><span class="p" data-group-id="2444362395-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">3.141592653589793</span></code></pre>
   </section>
 </section>
@@ -1146,9 +1146,9 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
         </div>
 
 
-<p>Raise <code class="inline">X</code> to the power <code class="inline">N</code>.</p><h2 id="pow/2-examples" class="section-heading"><a href="#pow/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">pow</span><span class="p" data-group-id="2706364220-1">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p" data-group-id="2706364220-1">)</span><span class="p">.</span><span class="w">
+<p>Raise <code class="inline">X</code> to the power <code class="inline">N</code>.</p><h2 id="pow/2-examples" class="section-heading"><a href="#pow/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">pow</span><span class="p" data-group-id="0454061921-1">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p" data-group-id="0454061921-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">64.0</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">pow</span><span class="p" data-group-id="2706364220-2">(</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p" data-group-id="2706364220-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">pow</span><span class="p" data-group-id="0454061921-2">(</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p" data-group-id="0454061921-2">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1000.0</span></code></pre>
   </section>
 </section>
@@ -1181,7 +1181,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the sine of <code class="inline">X</code> in radians.</p><h2 id="sin/1-examples" class="section-heading"><a href="#sin/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">sin</span><span class="p" data-group-id="1519573671-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="1519573671-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the sine of <code class="inline">X</code> in radians.</p><h2 id="sin/1-examples" class="section-heading"><a href="#sin/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">sin</span><span class="p" data-group-id="7581046071-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="7581046071-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -1214,7 +1214,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the hyperbolic sine of <code class="inline">X</code>.</p><h2 id="sinh/1-examples" class="section-heading"><a href="#sinh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">sinh</span><span class="p" data-group-id="3361117170-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="3361117170-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the hyperbolic sine of <code class="inline">X</code>.</p><h2 id="sinh/1-examples" class="section-heading"><a href="#sinh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">sinh</span><span class="p" data-group-id="4664209184-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="4664209184-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -1247,9 +1247,9 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the non-negative square root of <code class="inline">X</code>.</p><h2 id="sqrt/1-examples" class="section-heading"><a href="#sqrt/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">sqrt</span><span class="p" data-group-id="3952074124-1">(</span><span class="mi">2</span><span class="p" data-group-id="3952074124-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the non-negative square root of <code class="inline">X</code>.</p><h2 id="sqrt/1-examples" class="section-heading"><a href="#sqrt/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">sqrt</span><span class="p" data-group-id="0552109097-1">(</span><span class="mi">2</span><span class="p" data-group-id="0552109097-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">1.4142135623730951</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">sqrt</span><span class="p" data-group-id="3952074124-2">(</span><span class="mf">100.0</span><span class="p" data-group-id="3952074124-2">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">sqrt</span><span class="p" data-group-id="0552109097-2">(</span><span class="mf">100.0</span><span class="p" data-group-id="0552109097-2">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">10.0</span></code></pre>
   </section>
 </section>
@@ -1282,7 +1282,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the tangent of <code class="inline">X</code> in radians.</p><h2 id="tan/1-examples" class="section-heading"><a href="#tan/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">tan</span><span class="p" data-group-id="5070095892-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="5070095892-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the tangent of <code class="inline">X</code> in radians.</p><h2 id="tan/1-examples" class="section-heading"><a href="#tan/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">tan</span><span class="p" data-group-id="7997138730-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="7997138730-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -1315,7 +1315,7 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the hyperbolic tangent of <code class="inline">X</code>.</p><h2 id="tanh/1-examples" class="section-heading"><a href="#tanh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">tan</span><span class="p" data-group-id="5353477344-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="5353477344-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the hyperbolic tangent of <code class="inline">X</code>.</p><h2 id="tanh/1-examples" class="section-heading"><a href="#tanh/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">tan</span><span class="p" data-group-id="6061167634-1">(</span><span class="mf">0.0</span><span class="p" data-group-id="6061167634-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">0.0</span></code></pre>
   </section>
 </section>
@@ -1350,9 +1350,9 @@ that avoid cancellation for large <code class="inline">X</code>.</p><h2 id="erfc
 
 
 
-<p>Returns the ratio of the circumference of a circle to its radius.</p><p>This constant is equivalent to a full turn when described in radians.</p><h2 id="tau/0-examples" class="section-heading"><a href="#tau/0-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">tau</span><span class="p" data-group-id="7278273834-1">(</span><span class="p" data-group-id="7278273834-1">)</span><span class="p">.</span><span class="w">
+<p>Returns the ratio of the circumference of a circle to its radius.</p><p>This constant is equivalent to a full turn when described in radians.</p><h2 id="tau/0-examples" class="section-heading"><a href="#tau/0-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Examples</span></h2><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">1&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">tau</span><span class="p" data-group-id="9689270283-1">(</span><span class="p" data-group-id="9689270283-1">)</span><span class="p">.</span><span class="w">
 </span><span class="mf">6.283185307179586</span><span class="w">
-</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">tau</span><span class="p" data-group-id="7278273834-2">(</span><span class="p" data-group-id="7278273834-2">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">math</span><span class="p">:</span><span class="nf">pi</span><span class="p" data-group-id="7278273834-3">(</span><span class="p" data-group-id="7278273834-3">)</span><span class="p">.</span><span class="w">
+</span><span class="gp unselectable">2&gt; </span><span class="nc">math</span><span class="p">:</span><span class="nf">tau</span><span class="p" data-group-id="9689270283-2">(</span><span class="p" data-group-id="9689270283-2">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">math</span><span class="p">:</span><span class="nf">pi</span><span class="p" data-group-id="9689270283-3">(</span><span class="p" data-group-id="9689270283-3">)</span><span class="p">.</span><span class="w">
 </span><span class="ss">true</span></code></pre>
   </section>
 </section>

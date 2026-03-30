@@ -378,7 +378,7 @@ For the tag commands to work it requires that you have generated a tag file. See
 .sp -1
 .IP \(bu 2.3
 .\}.PP
-\fI\fIM-.\fR\fR (\fIfind-tag\fR) - Find a function definition. The default value is the function name under the point.
+\fI\fIM-.\fR\fR (\fIxref-find-definitions\fR) - Find a function definition. The default value is the function name under the point.
 
 .RE
 
@@ -391,7 +391,7 @@ For the tag commands to work it requires that you have generated a tag file. See
 .sp -1
 .IP \(bu 2.3
 .\}.PP
-Find Tag (\fIerlang-find-tag\fR) - Like the Elisp-function \fIfind-tag'. Capable of retrieving Erlang modules. Tags can be given of the forms \fRtag', \fImodule:', \fRmodule:tag'.
+\fI\fIM-?\fR\fR (\fIxref-find-references\fR) - Find all references to the function under the point.
 
 .RE
 
@@ -404,33 +404,7 @@ Find Tag (\fIerlang-find-tag\fR) - Like the Elisp-function \fIfind-tag'. Capable
 .sp -1
 .IP \(bu 2.3
 .\}.PP
-\fI\fIM-+\fR\fR (\fIerlang-find-next-tag\fR) - Find the next occurrence of tag.
-
-.RE
-
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}.PP
-\fI\fIM-TAB\fR\fR (\fIerlang-complete-tag\fR) - Perform completion on the tag entered in a tag search. Completes to the set of names listed in the current tags table.
-
-.RE
-
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}.PP
-Tags aprops (\fItags-apropos\fR) - Display list of all tags in tags table REGEXP matches.
+Tags apropos (\fItags-apropos\fR) - Display list of all tags in tags table REGEXP matches.
 
 .RE
 

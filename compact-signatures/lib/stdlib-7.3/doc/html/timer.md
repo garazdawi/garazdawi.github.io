@@ -238,7 +238,7 @@ finished or not.
 > started in intervals of 1ms, which would result in 1,000,000 processes running
 > at the same time, far more than a node started with default settings allows
 > (see the
-> [System Limits section in the Effiency Guide](`e:system:system_limits.md`)).
+> [System Limits section in the Efficiency Guide](`e:system:system_limits.md`)).
 
 # `apply_repeatedly`
 *since OTP 27.0* 
@@ -468,11 +468,15 @@ for this.
 *since OTP R14B* 
 
 ```erlang
--spec tc(Fun) -> {Time, Value} when Fun :: function(), Time :: integer(), Value :: term().
+-spec tc(Fun) -> {Time, Value} when Fun :: fun(() -> term()), Time :: integer(), Value :: term().
 -spec tc(Fun, Arguments) -> {Time, Value}
-            when Fun :: function(), Arguments :: [term()], Time :: integer(), Value :: term();
+            when Fun :: fun((...) -> term()), Arguments :: [term()], Time :: integer(), Value :: term();
         (Fun, TimeUnit) -> {Time, Value}
-            when Fun :: function(), TimeUnit :: erlang:time_unit(), Time :: integer(), Value :: term().
+            when
+                Fun :: fun(() -> term()),
+                TimeUnit :: erlang:time_unit(),
+                Time :: integer(),
+                Value :: term().
 ```
 
 Measures the execution time of `Fun`.
@@ -493,7 +497,7 @@ Measures the execution time of `Fun` in `TimeUnit` if called as `tc(Fun, TimeUni
                 Value :: term();
         (Fun, Arguments, TimeUnit) -> {Time, Value}
             when
-                Fun :: function(),
+                Fun :: fun((...) -> term()),
                 Arguments :: [term()],
                 TimeUnit :: erlang:time_unit(),
                 Time :: integer(),

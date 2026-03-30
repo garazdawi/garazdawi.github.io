@@ -2158,28 +2158,28 @@ list of values (used as arguments to <a href="../../../../lib/stdlib-7.3/doc/htm
 
             <pre translate="no">ValueOrElement = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>() | Default</pre>
 
+            <pre translate="no">KeyOrName = <a href="#t:key_or_name/0">key_or_name</a>()</pre>
+
             <pre translate="no">Opt = element | all</pre>
 
             <pre translate="no">SubKey = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">KeyOrName = <a href="#t:key_or_name/0">key_or_name</a>()</pre>
 
         </div>
 
 
 <p>Reads configuration data values.</p><p>Returns the matching values or configuration elements, given a configuration
 variable key or its associated name (if one has been specified with
-<a href="#require/2"><code class="inline">ct:require/2</code></a> or a <code class="inline">require</code> statement).</p><p><em>Example:</em></p><p>Given the following configuration file:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="7600172518-1">{</span><span class="ss">unix</span><span class="p">,</span><span class="p" data-group-id="7600172518-2">[</span><span class="p" data-group-id="7600172518-3">{</span><span class="ss">telnet</span><span class="p">,</span><span class="n">IpAddr</span><span class="p" data-group-id="7600172518-3">}</span><span class="p">,</span><span class="w">
-       </span><span class="p" data-group-id="7600172518-4">{</span><span class="ss">user</span><span class="p">,</span><span class="p" data-group-id="7600172518-5">[</span><span class="p" data-group-id="7600172518-6">{</span><span class="ss">username</span><span class="p">,</span><span class="n">Username</span><span class="p" data-group-id="7600172518-6">}</span><span class="p">,</span><span class="w">
-              </span><span class="p" data-group-id="7600172518-7">{</span><span class="ss">password</span><span class="p">,</span><span class="n">Password</span><span class="p" data-group-id="7600172518-7">}</span><span class="p" data-group-id="7600172518-5">]</span><span class="p" data-group-id="7600172518-4">}</span><span class="p" data-group-id="7600172518-2">]</span><span class="p" data-group-id="7600172518-1">}</span><span class="p">.</span></code></pre><p>Then:</p><pre><code class="makeup erlang" translate="no"><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="5028528935-1">(</span><span class="ss">unix</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="5028528935-1">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p" data-group-id="5028528935-2">[</span><span class="p" data-group-id="5028528935-3">{</span><span class="ss">telnet</span><span class="p">,</span><span class="n">IpAddr</span><span class="p" data-group-id="5028528935-3">}</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="5028528935-4">{</span><span class="ss">user</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5028528935-5">[</span><span class="p" data-group-id="5028528935-6">{</span><span class="ss">username</span><span class="p">,</span><span class="n">Username</span><span class="p" data-group-id="5028528935-6">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5028528935-7">{</span><span class="ss">password</span><span class="p">,</span><span class="n">Password</span><span class="p" data-group-id="5028528935-7">}</span><span class="p" data-group-id="5028528935-5">]</span><span class="p" data-group-id="5028528935-4">}</span><span class="p" data-group-id="5028528935-2">]</span><span class="w">
-</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="5028528935-8">(</span><span class="p" data-group-id="5028528935-9">{</span><span class="ss">unix</span><span class="p">,</span><span class="ss">telnet</span><span class="p" data-group-id="5028528935-9">}</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="5028528935-8">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">IpAddr</span><span class="w">
-</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="5028528935-10">(</span><span class="p" data-group-id="5028528935-11">{</span><span class="ss">unix</span><span class="p">,</span><span class="ss">user</span><span class="p">,</span><span class="ss">username</span><span class="p" data-group-id="5028528935-11">}</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="5028528935-10">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">Username</span><span class="w">
-</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="5028528935-12">(</span><span class="p" data-group-id="5028528935-13">{</span><span class="ss">unix</span><span class="p">,</span><span class="ss">ftp</span><span class="p" data-group-id="5028528935-13">}</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="5028528935-12">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">Default</span><span class="w">
-</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="5028528935-14">(</span><span class="ss">unknownkey</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="5028528935-14">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">Default</span></code></pre><p>If a configuration variable key has been associated with a name (by
+<a href="#require/2"><code class="inline">ct:require/2</code></a> or a <code class="inline">require</code> statement).</p><p><em>Example:</em></p><p>Given the following configuration file:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="4949309581-1">{</span><span class="ss">unix</span><span class="p">,</span><span class="p" data-group-id="4949309581-2">[</span><span class="p" data-group-id="4949309581-3">{</span><span class="ss">telnet</span><span class="p">,</span><span class="n">IpAddr</span><span class="p" data-group-id="4949309581-3">}</span><span class="p">,</span><span class="w">
+       </span><span class="p" data-group-id="4949309581-4">{</span><span class="ss">user</span><span class="p">,</span><span class="p" data-group-id="4949309581-5">[</span><span class="p" data-group-id="4949309581-6">{</span><span class="ss">username</span><span class="p">,</span><span class="n">Username</span><span class="p" data-group-id="4949309581-6">}</span><span class="p">,</span><span class="w">
+              </span><span class="p" data-group-id="4949309581-7">{</span><span class="ss">password</span><span class="p">,</span><span class="n">Password</span><span class="p" data-group-id="4949309581-7">}</span><span class="p" data-group-id="4949309581-5">]</span><span class="p" data-group-id="4949309581-4">}</span><span class="p" data-group-id="4949309581-2">]</span><span class="p" data-group-id="4949309581-1">}</span><span class="p">.</span></code></pre><p>Then:</p><pre><code class="makeup erlang" translate="no"><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="7113254779-1">(</span><span class="ss">unix</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="7113254779-1">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p" data-group-id="7113254779-2">[</span><span class="p" data-group-id="7113254779-3">{</span><span class="ss">telnet</span><span class="p">,</span><span class="n">IpAddr</span><span class="p" data-group-id="7113254779-3">}</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="7113254779-4">{</span><span class="ss">user</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7113254779-5">[</span><span class="p" data-group-id="7113254779-6">{</span><span class="ss">username</span><span class="p">,</span><span class="n">Username</span><span class="p" data-group-id="7113254779-6">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7113254779-7">{</span><span class="ss">password</span><span class="p">,</span><span class="n">Password</span><span class="p" data-group-id="7113254779-7">}</span><span class="p" data-group-id="7113254779-5">]</span><span class="p" data-group-id="7113254779-4">}</span><span class="p" data-group-id="7113254779-2">]</span><span class="w">
+</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="7113254779-8">(</span><span class="p" data-group-id="7113254779-9">{</span><span class="ss">unix</span><span class="p">,</span><span class="ss">telnet</span><span class="p" data-group-id="7113254779-9">}</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="7113254779-8">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">IpAddr</span><span class="w">
+</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="7113254779-10">(</span><span class="p" data-group-id="7113254779-11">{</span><span class="ss">unix</span><span class="p">,</span><span class="ss">user</span><span class="p">,</span><span class="ss">username</span><span class="p" data-group-id="7113254779-11">}</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="7113254779-10">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">Username</span><span class="w">
+</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="7113254779-12">(</span><span class="p" data-group-id="7113254779-13">{</span><span class="ss">unix</span><span class="p">,</span><span class="ss">ftp</span><span class="p" data-group-id="7113254779-13">}</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="7113254779-12">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">Default</span><span class="w">
+</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="7113254779-14">(</span><span class="ss">unknownkey</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="7113254779-14">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">Default</span></code></pre><p>If a configuration variable key has been associated with a name (by
 <a href="#require/2"><code class="inline">ct:require/2</code></a> or a <code class="inline">require</code> statement), the name can be used
-instead of the key to read the value:</p><pre><code class="makeup erlang" translate="no"><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="9873052355-1">(</span><span class="ss">myuser</span><span class="p">,</span><span class="p" data-group-id="9873052355-2">{</span><span class="ss">unix</span><span class="p">,</span><span class="ss">user</span><span class="p" data-group-id="9873052355-2">}</span><span class="p" data-group-id="9873052355-1">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="ss">ok</span><span class="p">.</span><span class="w">
-</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="9873052355-3">(</span><span class="ss">myuser</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="9873052355-3">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p" data-group-id="9873052355-4">[</span><span class="p" data-group-id="9873052355-5">{</span><span class="ss">username</span><span class="p">,</span><span class="n">Username</span><span class="p" data-group-id="9873052355-5">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9873052355-6">{</span><span class="ss">password</span><span class="p">,</span><span class="n">Password</span><span class="p" data-group-id="9873052355-6">}</span><span class="p" data-group-id="9873052355-4">]</span></code></pre><p>If a configuration variable is defined in multiple files, use option <code class="inline">all</code> to
+instead of the key to read the value:</p><pre><code class="makeup erlang" translate="no"><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="2496379984-1">(</span><span class="ss">myuser</span><span class="p">,</span><span class="p" data-group-id="2496379984-2">{</span><span class="ss">unix</span><span class="p">,</span><span class="ss">user</span><span class="p" data-group-id="2496379984-2">}</span><span class="p" data-group-id="2496379984-1">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="ss">ok</span><span class="p">.</span><span class="w">
+</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_config</span><span class="p" data-group-id="2496379984-3">(</span><span class="ss">myuser</span><span class="p">,</span><span class="n">Default</span><span class="p" data-group-id="2496379984-3">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p" data-group-id="2496379984-4">[</span><span class="p" data-group-id="2496379984-5">{</span><span class="ss">username</span><span class="p">,</span><span class="n">Username</span><span class="p" data-group-id="2496379984-5">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2496379984-6">{</span><span class="ss">password</span><span class="p">,</span><span class="n">Password</span><span class="p" data-group-id="2496379984-6">}</span><span class="p" data-group-id="2496379984-4">]</span></code></pre><p>If a configuration variable is defined in multiple files, use option <code class="inline">all</code> to
 access all possible values. The values are returned in a list. The order of the
 elements corresponds to the order that the configuration files were specified at
 startup.</p><p>If configuration elements (key-value tuples) are to be returned as result
@@ -2228,7 +2228,7 @@ form <code class="inline">{Required,Value}</code>.</p><p>See also <a href="#get_
 
 
 <p>Gets a reference to the <code class="inline">Common Test</code> event manager. The reference can be used
-to, for example, add a user-specific event handler while tests are running.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="nc">gen_event</span><span class="p">:</span><span class="nf">add_handler</span><span class="p" data-group-id="5959525254-1">(</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_event_mgr_ref</span><span class="p" data-group-id="5959525254-2">(</span><span class="p" data-group-id="5959525254-2">)</span><span class="p">,</span><span class="w"> </span><span class="ss">my_ev_h</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5959525254-3">[</span><span class="p" data-group-id="5959525254-3">]</span><span class="p" data-group-id="5959525254-1">)</span></code></pre>
+to, for example, add a user-specific event handler while tests are running.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="nc">gen_event</span><span class="p">:</span><span class="nf">add_handler</span><span class="p" data-group-id="9849926484-1">(</span><span class="nc">ct</span><span class="p">:</span><span class="nf">get_event_mgr_ref</span><span class="p" data-group-id="9849926484-2">(</span><span class="p" data-group-id="9849926484-2">)</span><span class="p">,</span><span class="w"> </span><span class="ss">my_ev_h</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9849926484-3">[</span><span class="p" data-group-id="9849926484-3">]</span><span class="p" data-group-id="9849926484-1">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get_progname/0">
@@ -2301,8 +2301,6 @@ could not be found, the string <code class="inline">&quot;no_prog_name&quot;</co
 
             <pre translate="no">Reason = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
 
-            <pre translate="no">Skipped = {UserSkipped, AutoSkipped}</pre>
-
             <pre translate="no">Suite = TestCase = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
             <pre translate="no">Failed = UserSkipped = AutoSkipped = Successful = Total = <a href="../../../../erts-16.3/doc/html/erlang.html#t:integer/0">integer</a>()</pre>
@@ -2316,6 +2314,8 @@ could not be found, the string <code class="inline">&quot;no_prog_name&quot;</co
           {total, Total}</pre>
 
             <pre translate="no">TestCaseInfo = {Suite, TestCase} | [{Suite, TestCase}]</pre>
+
+            <pre translate="no">Skipped = {UserSkipped, AutoSkipped}</pre>
 
         </div>
 
@@ -2406,9 +2406,9 @@ cases so far.</p>
 
             <pre translate="no">Value = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()]</pre>
 
-            <pre translate="no">Tag = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
             <pre translate="no">TestSpecTerms = [{Tag, Value}]</pre>
+
+            <pre translate="no">Tag = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
         </div>
 
@@ -2601,18 +2601,18 @@ See the <a href="write_test_chapter.html#logging">User's Guide</a> for details. 
 
             <pre translate="no">Reason = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
 
-            <pre translate="no">Modules = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()]</pre>
-
             <pre translate="no">Opt = {config, ConfigFiles} | {event_handler, Modules} | {decrypt, KeyOrFile}</pre>
 
             <pre translate="no">ConfigFiles = [ConfigFile]</pre>
+
+            <pre translate="no">Modules = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()]</pre>
 
             <pre translate="no">KeyOrFile = {key, Key} | {file, KeyFile}</pre>
 
         </div>
 
 
-<p>Installs configuration files and event handlers.</p><p>Run this function once before the first test.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="nf">install</span><span class="p" data-group-id="2426257923-1">(</span><span class="p" data-group-id="2426257923-2">[</span><span class="p" data-group-id="2426257923-3">{</span><span class="ss">config</span><span class="p">,</span><span class="p" data-group-id="2426257923-4">[</span><span class="s">&quot;config_node.ctc&quot;</span><span class="p">,</span><span class="s">&quot;config_user.ctc&quot;</span><span class="p" data-group-id="2426257923-4">]</span><span class="p" data-group-id="2426257923-3">}</span><span class="p" data-group-id="2426257923-2">]</span><span class="p" data-group-id="2426257923-1">)</span></code></pre><p>This function is automatically run by program <code class="inline">ct_run</code>.</p>
+<p>Installs configuration files and event handlers.</p><p>Run this function once before the first test.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="nf">install</span><span class="p" data-group-id="5390009197-1">(</span><span class="p" data-group-id="5390009197-2">[</span><span class="p" data-group-id="5390009197-3">{</span><span class="ss">config</span><span class="p">,</span><span class="p" data-group-id="5390009197-4">[</span><span class="s">&quot;config_node.ctc&quot;</span><span class="p">,</span><span class="s">&quot;config_user.ctc&quot;</span><span class="p" data-group-id="5390009197-4">]</span><span class="p" data-group-id="5390009197-3">}</span><span class="p" data-group-id="5390009197-2">]</span><span class="p" data-group-id="5390009197-1">)</span></code></pre><p>This function is automatically run by program <code class="inline">ct_run</code>.</p>
   </section>
 </section>
 <section class="detail" id="listenv/1">
@@ -3237,9 +3237,9 @@ the User's Guide.</p>
 
             <pre translate="no">Reason = ValueOrElement = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
 
-            <pre translate="no">SubKey = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
             <pre translate="no">KeyOrName = <a href="#t:key_or_name/0">key_or_name</a>()</pre>
+
+            <pre translate="no">SubKey = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
         </div>
 
@@ -3397,7 +3397,7 @@ with specified callback module and configuration string.</p>
 
 <p>Checks if the required configuration is available. Arbitrarily deep tuples can
 be specified as <code class="inline">Required</code>. Only the last element of the tuple can be a list of
-<code class="inline">SubKey</code>s.</p><p><em>Example 1.</em> Require the variable <code class="inline">myvar</code>:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="9666420693-1">(</span><span class="ss">myvar</span><span class="p" data-group-id="9666420693-1">)</span><span class="p">.</span></code></pre><p>In this case the configuration file must at least contain:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="1544979121-1">{</span><span class="ss">myvar</span><span class="p">,</span><span class="n">Value</span><span class="p" data-group-id="1544979121-1">}</span><span class="p">.</span></code></pre><p><em>Example 2.</em> Require key <code class="inline">myvar</code> with subkeys <code class="inline">sub1</code> and <code class="inline">sub2</code>:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="1588029305-1">(</span><span class="p" data-group-id="1588029305-2">{</span><span class="ss">myvar</span><span class="p">,</span><span class="p" data-group-id="1588029305-3">[</span><span class="ss">sub1</span><span class="p">,</span><span class="ss">sub2</span><span class="p" data-group-id="1588029305-3">]</span><span class="p" data-group-id="1588029305-2">}</span><span class="p" data-group-id="1588029305-1">)</span><span class="p">.</span></code></pre><p>In this case the configuration file must at least contain:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="7864403104-1">{</span><span class="ss">myvar</span><span class="p">,</span><span class="p" data-group-id="7864403104-2">[</span><span class="p" data-group-id="7864403104-3">{</span><span class="ss">sub1</span><span class="p">,</span><span class="n">Value</span><span class="p" data-group-id="7864403104-3">}</span><span class="p">,</span><span class="p" data-group-id="7864403104-4">{</span><span class="ss">sub2</span><span class="p">,</span><span class="n">Value</span><span class="p" data-group-id="7864403104-4">}</span><span class="p" data-group-id="7864403104-2">]</span><span class="p" data-group-id="7864403104-1">}</span><span class="p">.</span></code></pre><p><em>Example 3.</em> Require key <code class="inline">myvar</code> with subkey <code class="inline">sub1</code> with <code class="inline">subsub1</code>:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="6860683482-1">(</span><span class="p" data-group-id="6860683482-2">{</span><span class="ss">myvar</span><span class="p">,</span><span class="ss">sub1</span><span class="p">,</span><span class="ss">sub2</span><span class="p" data-group-id="6860683482-2">}</span><span class="p" data-group-id="6860683482-1">)</span><span class="p">.</span></code></pre><p>In this case the configuration file must at least contain:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="1637745992-1">{</span><span class="ss">myvar</span><span class="p">,</span><span class="p" data-group-id="1637745992-2">[</span><span class="p" data-group-id="1637745992-3">{</span><span class="ss">sub1</span><span class="p">,</span><span class="p" data-group-id="1637745992-4">[</span><span class="p" data-group-id="1637745992-5">{</span><span class="ss">sub2</span><span class="p">,</span><span class="n">Value</span><span class="p" data-group-id="1637745992-5">}</span><span class="p" data-group-id="1637745992-4">]</span><span class="p" data-group-id="1637745992-3">}</span><span class="p" data-group-id="1637745992-2">]</span><span class="p" data-group-id="1637745992-1">}</span><span class="p">.</span></code></pre><p>See also <a href="#get_config/1"><code class="inline">ct:get_config/1</code></a>,
+<code class="inline">SubKey</code>s.</p><p><em>Example 1.</em> Require the variable <code class="inline">myvar</code>:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="6909342320-1">(</span><span class="ss">myvar</span><span class="p" data-group-id="6909342320-1">)</span><span class="p">.</span></code></pre><p>In this case the configuration file must at least contain:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="2815068115-1">{</span><span class="ss">myvar</span><span class="p">,</span><span class="n">Value</span><span class="p" data-group-id="2815068115-1">}</span><span class="p">.</span></code></pre><p><em>Example 2.</em> Require key <code class="inline">myvar</code> with subkeys <code class="inline">sub1</code> and <code class="inline">sub2</code>:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="5207364482-1">(</span><span class="p" data-group-id="5207364482-2">{</span><span class="ss">myvar</span><span class="p">,</span><span class="p" data-group-id="5207364482-3">[</span><span class="ss">sub1</span><span class="p">,</span><span class="ss">sub2</span><span class="p" data-group-id="5207364482-3">]</span><span class="p" data-group-id="5207364482-2">}</span><span class="p" data-group-id="5207364482-1">)</span><span class="p">.</span></code></pre><p>In this case the configuration file must at least contain:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="8305319971-1">{</span><span class="ss">myvar</span><span class="p">,</span><span class="p" data-group-id="8305319971-2">[</span><span class="p" data-group-id="8305319971-3">{</span><span class="ss">sub1</span><span class="p">,</span><span class="n">Value</span><span class="p" data-group-id="8305319971-3">}</span><span class="p">,</span><span class="p" data-group-id="8305319971-4">{</span><span class="ss">sub2</span><span class="p">,</span><span class="n">Value</span><span class="p" data-group-id="8305319971-4">}</span><span class="p" data-group-id="8305319971-2">]</span><span class="p" data-group-id="8305319971-1">}</span><span class="p">.</span></code></pre><p><em>Example 3.</em> Require key <code class="inline">myvar</code> with subkey <code class="inline">sub1</code> with <code class="inline">subsub1</code>:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="8089156736-1">(</span><span class="p" data-group-id="8089156736-2">{</span><span class="ss">myvar</span><span class="p">,</span><span class="ss">sub1</span><span class="p">,</span><span class="ss">sub2</span><span class="p" data-group-id="8089156736-2">}</span><span class="p" data-group-id="8089156736-1">)</span><span class="p">.</span></code></pre><p>In this case the configuration file must at least contain:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="3902901192-1">{</span><span class="ss">myvar</span><span class="p">,</span><span class="p" data-group-id="3902901192-2">[</span><span class="p" data-group-id="3902901192-3">{</span><span class="ss">sub1</span><span class="p">,</span><span class="p" data-group-id="3902901192-4">[</span><span class="p" data-group-id="3902901192-5">{</span><span class="ss">sub2</span><span class="p">,</span><span class="n">Value</span><span class="p" data-group-id="3902901192-5">}</span><span class="p" data-group-id="3902901192-4">]</span><span class="p" data-group-id="3902901192-3">}</span><span class="p" data-group-id="3902901192-2">]</span><span class="p" data-group-id="3902901192-1">}</span><span class="p">.</span></code></pre><p>See also <a href="#get_config/1"><code class="inline">ct:get_config/1</code></a>,
 <a href="#get_config/2"><code class="inline">ct:get_config/2</code></a>, <a href="#get_config/3"><code class="inline">ct:get_config/3</code></a>,
 <a href="#require/2"><code class="inline">ct:require/2</code></a>.</p>
   </section>
@@ -3455,8 +3455,8 @@ that a list of <code class="inline">SubKey</code>s cannot be specified.</p><p>If
 that the value of the element can be read with
 <a href="#get_config/1"><code class="inline">ct:get_config/1,2</code></a> provided <code class="inline">Name</code> is used instead of the
 whole <code class="inline">Required</code> term.</p><p><em>Example:</em></p><p>Require one node with a Telnet connection and an FTP connection. Name the node
-<code class="inline">a</code>:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="4551097488-1">(</span><span class="ss">a</span><span class="p">,</span><span class="p" data-group-id="4551097488-2">{</span><span class="ss">machine</span><span class="p">,</span><span class="nb">node</span><span class="p" data-group-id="4551097488-2">}</span><span class="p" data-group-id="4551097488-1">)</span><span class="p">.</span></code></pre><p>All references to this node can then use the node name. For example, a file over
-FTP is fetched like follows:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">ftp_get</span><span class="p" data-group-id="7216092424-1">(</span><span class="ss">a</span><span class="p">,</span><span class="n">RemoteFile</span><span class="p">,</span><span class="n">LocalFile</span><span class="p" data-group-id="7216092424-1">)</span><span class="p">.</span></code></pre><p>For this to work, the configuration file must at least contain:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="3557819054-1">{</span><span class="ss">machine</span><span class="p">,</span><span class="p" data-group-id="3557819054-2">[</span><span class="p" data-group-id="3557819054-3">{</span><span class="nb">node</span><span class="p">,</span><span class="p" data-group-id="3557819054-4">[</span><span class="p" data-group-id="3557819054-5">{</span><span class="ss">telnet</span><span class="p">,</span><span class="n">IpAddr</span><span class="p" data-group-id="3557819054-5">}</span><span class="p">,</span><span class="p" data-group-id="3557819054-6">{</span><span class="ss">ftp</span><span class="p">,</span><span class="n">IpAddr</span><span class="p" data-group-id="3557819054-6">}</span><span class="p" data-group-id="3557819054-4">]</span><span class="p" data-group-id="3557819054-3">}</span><span class="p" data-group-id="3557819054-2">]</span><span class="p" data-group-id="3557819054-1">}</span><span class="p">.</span></code></pre><section role="note" class="admonition info"><h4 class="admonition-title info">Note</h4><p>The behavior of this function changed radically in <code class="inline">Common Test</code> 1.6.2. To
+<code class="inline">a</code>:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="5291934871-1">(</span><span class="ss">a</span><span class="p">,</span><span class="p" data-group-id="5291934871-2">{</span><span class="ss">machine</span><span class="p">,</span><span class="nb">node</span><span class="p" data-group-id="5291934871-2">}</span><span class="p" data-group-id="5291934871-1">)</span><span class="p">.</span></code></pre><p>All references to this node can then use the node name. For example, a file over
+FTP is fetched like follows:</p><pre><code class="makeup erlang" translate="no"><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ct</span><span class="p">:</span><span class="nf">ftp_get</span><span class="p" data-group-id="4417593924-1">(</span><span class="ss">a</span><span class="p">,</span><span class="n">RemoteFile</span><span class="p">,</span><span class="n">LocalFile</span><span class="p" data-group-id="4417593924-1">)</span><span class="p">.</span></code></pre><p>For this to work, the configuration file must at least contain:</p><pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="8297206940-1">{</span><span class="ss">machine</span><span class="p">,</span><span class="p" data-group-id="8297206940-2">[</span><span class="p" data-group-id="8297206940-3">{</span><span class="nb">node</span><span class="p">,</span><span class="p" data-group-id="8297206940-4">[</span><span class="p" data-group-id="8297206940-5">{</span><span class="ss">telnet</span><span class="p">,</span><span class="n">IpAddr</span><span class="p" data-group-id="8297206940-5">}</span><span class="p">,</span><span class="p" data-group-id="8297206940-6">{</span><span class="ss">ftp</span><span class="p">,</span><span class="n">IpAddr</span><span class="p" data-group-id="8297206940-6">}</span><span class="p" data-group-id="8297206940-4">]</span><span class="p" data-group-id="8297206940-3">}</span><span class="p" data-group-id="8297206940-2">]</span><span class="p" data-group-id="8297206940-1">}</span><span class="p">.</span></code></pre><section role="note" class="admonition info"><h4 class="admonition-title info">Note</h4><p>The behavior of this function changed radically in <code class="inline">Common Test</code> 1.6.2. To
 keep some backwards compatibility, it is still possible to do:
 <code class="inline">ct:require(a,{node,[telnet,ftp]}).</code> This associates the name <code class="inline">a</code> with the
 top-level <code class="inline">node</code> entry. For this to work, the configuration file must at least
@@ -3624,7 +3624,31 @@ suites are compiled when the test is run.</p>
 
             <pre translate="no">Result = {Ok, Failed, {UserSkipped, AutoSkipped}} | TestRunnerPid | {error, Reason}</pre>
 
-            <pre translate="no">Conns = all | [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()]</pre>
+            <pre translate="no">EventHandlers = EH | [EH]</pre>
+
+            <pre translate="no">CTHInitArgs = Reason = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
+
+            <pre translate="no">LogOpt = no_nl | no_src</pre>
+
+            <pre translate="no">Groups = GroupNameOrPath | [GroupNameOrPath]</pre>
+
+            <pre translate="no">CSSFile = YYMoMoDDHHMMSS = HHMMSS = LogDir = DecryptKey = CoverSpecFile = DecryptFile = <a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+            <pre translate="no">Category = CallbackMod = CTHModule = CTHsOrder = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
+
+            <pre translate="no">LogOpts = [LogOpt]</pre>
+
+            <pre translate="no">CreatePrivDir = auto_per_run | auto_per_tc | manual_per_tc</pre>
+
+            <pre translate="no">Failed = UserSkipped = VLevel = M = N = AutoSkipped = Ok = <a href="../../../../erts-16.3/doc/html/erlang.html#t:integer/0">integer</a>()</pre>
+
+            <pre translate="no">ForceStop = skip_rest | <a href="../../../../erts-16.3/doc/html/erlang.html#t:boolean/0">boolean</a>()</pre>
+
+            <pre translate="no">InclDirs = TestSpecs = TestDirs = CfgFiles = CfgStrings = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>()] | <a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+            <pre translate="no">GroupNameOrPath = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>() | all</pre>
+
+            <pre translate="no">CTHs = [CTHModule | {CTHModule, CTHInitArgs}]</pre>
 
             <pre translate="no">OptTuples = {dir, TestDirs} |
           {suite, Suites} |
@@ -3665,59 +3689,35 @@ suites are compiled when the test is run.</p>
           {enable_builtin_hooks, <a href="../../../../erts-16.3/doc/html/erlang.html#t:boolean/0">boolean</a>()} |
           {release_shell, <a href="../../../../erts-16.3/doc/html/erlang.html#t:boolean/0">boolean</a>()}</pre>
 
-            <pre translate="no">CfgStrings = InclDirs = TestDirs = CfgFiles = TestSpecs = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>()] | <a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>()</pre>
-
-            <pre translate="no">M = VLevel = N = Ok = AutoSkipped = Failed = UserSkipped = <a href="../../../../erts-16.3/doc/html/erlang.html#t:integer/0">integer</a>()</pre>
-
-            <pre translate="no">LogOpt = no_nl | no_src</pre>
-
-            <pre translate="no">GroupNameOrPath = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>() | all</pre>
-
-            <pre translate="no">CTHs = [CTHModule | {CTHModule, CTHInitArgs}]</pre>
-
-            <pre translate="no">CTHModule = Category = CallbackMod = CTHsOrder = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">CSSFile = DecryptFile = YYMoMoDDHHMMSS = HHMMSS = CoverSpecFile = LogDir = DecryptKey = <a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>()</pre>
-
-            <pre translate="no">DurTime = HHMMSS</pre>
-
-            <pre translate="no">ForceStop = skip_rest | <a href="../../../../erts-16.3/doc/html/erlang.html#t:boolean/0">boolean</a>()</pre>
-
             <pre translate="no">InitArgs = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()]</pre>
-
-            <pre translate="no">Suites = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>()] | [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">Label = <a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">CTHInitArgs = Reason = <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
-
-            <pre translate="no">LogOpts = [LogOpt]</pre>
-
-            <pre translate="no">UserConfig = [{CallbackMod, CfgStrings}] | {CallbackMod, CfgStrings}</pre>
-
-            <pre translate="no">CreatePrivDir = auto_per_run | auto_per_tc | manual_per_tc</pre>
-
-            <pre translate="no">StepOpt = config | keep_inactive</pre>
-
-            <pre translate="no">KeepSpec = all | <a href="../../../../erts-16.3/doc/html/erlang.html#t:pos_integer/0">pos_integer</a>()</pre>
-
-            <pre translate="no">TestRunnerPid = <a href="../../../../erts-16.3/doc/html/erlang.html#t:pid/0">pid</a>()</pre>
-
-            <pre translate="no">StepOpts = [StepOpt]</pre>
-
-            <pre translate="no">Groups = GroupNameOrPath | [GroupNameOrPath]</pre>
-
-            <pre translate="no">EH = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>() | {<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>(), InitArgs} | {[<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()], InitArgs}</pre>
-
-            <pre translate="no">EventHandlers = EH | [EH]</pre>
-
-            <pre translate="no">Cases = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
-            <pre translate="no">DecryptKeyOrFile = {key, DecryptKey} | {file, DecryptFile}</pre>
 
             <pre translate="no">StopTime = YYMoMoDDHHMMSS | HHMMSS</pre>
 
+            <pre translate="no">DecryptKeyOrFile = {key, DecryptKey} | {file, DecryptFile}</pre>
+
+            <pre translate="no">TestRunnerPid = <a href="../../../../erts-16.3/doc/html/erlang.html#t:pid/0">pid</a>()</pre>
+
+            <pre translate="no">DurTime = HHMMSS</pre>
+
+            <pre translate="no">StepOpts = [StepOpt]</pre>
+
+            <pre translate="no">UserConfig = [{CallbackMod, CfgStrings}] | {CallbackMod, CfgStrings}</pre>
+
+            <pre translate="no">Conns = all | [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()]</pre>
+
+            <pre translate="no">Suites = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>()] | [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
+
+            <pre translate="no">KeepSpec = all | <a href="../../../../erts-16.3/doc/html/erlang.html#t:pos_integer/0">pos_integer</a>()</pre>
+
+            <pre translate="no">EH = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>() | {<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>(), InitArgs} | {[<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()], InitArgs}</pre>
+
+            <pre translate="no">Label = <a href="../../../../erts-16.3/doc/html/erlang.html#t:string/0">string</a>() | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
+
+            <pre translate="no">StepOpt = config | keep_inactive</pre>
+
             <pre translate="no">VLevels = VLevel | [{Category, VLevel}]</pre>
+
+            <pre translate="no">Cases = [<a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()] | <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
         </div>
 
@@ -3895,12 +3895,12 @@ up the time automatically if <code class="inline">scale_timetraps</code> is set 
 the Erlang shell. The interactive mode can also be started from the OS command
 line with <code class="inline">ct_run -shell [-config File...]</code>.</p><p>If any functions (for example, Telnet or FTP) using &quot;required configuration
 data&quot; are to be called from the Erlang shell, configuration data must first be
-required with <a href="#require/2"><code class="inline">ct:require/2</code></a>.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">&gt; </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="5336495895-1">(</span><span class="ss">unix_telnet</span><span class="p">,</span><span class="w"> </span><span class="ss">unix</span><span class="p" data-group-id="5336495895-1">)</span><span class="p">.</span><span class="w">
+required with <a href="#require/2"><code class="inline">ct:require/2</code></a>.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">&gt; </span><span class="nc">ct</span><span class="p">:</span><span class="nf">require</span><span class="p" data-group-id="9404293228-1">(</span><span class="ss">unix_telnet</span><span class="p">,</span><span class="w"> </span><span class="ss">unix</span><span class="p" data-group-id="9404293228-1">)</span><span class="p">.</span><span class="w">
 </span><span class="ss">ok</span><span class="w">
-</span><span class="gp unselectable">&gt; </span><span class="nc">ct_telnet</span><span class="p">:</span><span class="nf">open</span><span class="p" data-group-id="5336495895-2">(</span><span class="ss">unix_telnet</span><span class="p" data-group-id="5336495895-2">)</span><span class="p">.</span><span class="w">
-</span><span class="p" data-group-id="5336495895-3">{</span><span class="ss">ok</span><span class="p">,</span><span class="o">&lt;</span><span class="mf">0.105</span><span class="p">.</span><span class="mi">0</span><span class="o">&gt;</span><span class="p" data-group-id="5336495895-3">}</span><span class="w">
-</span><span class="gp unselectable">&gt; </span><span class="nc">ct_telnet</span><span class="p">:</span><span class="nf">cmd</span><span class="p" data-group-id="5336495895-4">(</span><span class="ss">unix_telnet</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ls .&quot;</span><span class="p" data-group-id="5336495895-4">)</span><span class="p">.</span><span class="w">
-</span><span class="p" data-group-id="5336495895-5">{</span><span class="ss">ok</span><span class="p">,</span><span class="p" data-group-id="5336495895-6">[</span><span class="s">&quot;ls&quot;</span><span class="p">,</span><span class="s">&quot;file1  ...&quot;</span><span class="p">,</span><span class="p">.</span><span class="p">.</span><span class="p">.</span><span class="p" data-group-id="5336495895-6">]</span><span class="p" data-group-id="5336495895-5">}</span></code></pre>
+</span><span class="gp unselectable">&gt; </span><span class="nc">ct_telnet</span><span class="p">:</span><span class="nf">open</span><span class="p" data-group-id="9404293228-2">(</span><span class="ss">unix_telnet</span><span class="p" data-group-id="9404293228-2">)</span><span class="p">.</span><span class="w">
+</span><span class="p" data-group-id="9404293228-3">{</span><span class="ss">ok</span><span class="p">,</span><span class="o">&lt;</span><span class="mf">0.105</span><span class="p">.</span><span class="mi">0</span><span class="o">&gt;</span><span class="p" data-group-id="9404293228-3">}</span><span class="w">
+</span><span class="gp unselectable">&gt; </span><span class="nc">ct_telnet</span><span class="p">:</span><span class="nf">cmd</span><span class="p" data-group-id="9404293228-4">(</span><span class="ss">unix_telnet</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ls .&quot;</span><span class="p" data-group-id="9404293228-4">)</span><span class="p">.</span><span class="w">
+</span><span class="p" data-group-id="9404293228-5">{</span><span class="ss">ok</span><span class="p">,</span><span class="p" data-group-id="9404293228-6">[</span><span class="s">&quot;ls&quot;</span><span class="p">,</span><span class="s">&quot;file1  ...&quot;</span><span class="p">,</span><span class="p">.</span><span class="p">.</span><span class="p">.</span><span class="p" data-group-id="9404293228-6">]</span><span class="p" data-group-id="9404293228-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="step/3">
@@ -4143,9 +4143,9 @@ event manager. This can later be caught by any installed event manager.</p><p>Se
 
             <pre translate="no">Time = {hours, Hours} | {minutes, Mins} | {seconds, Secs} | <a href="../../../../erts-16.3/doc/html/erlang.html#t:timeout/0">timeout</a>() | Func</pre>
 
-            <pre translate="no">F = M = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
             <pre translate="no">A = <a href="../../../../erts-16.3/doc/html/erlang.html#t:list/0">list</a>()</pre>
+
+            <pre translate="no">M = F = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
             <pre translate="no">Hours = Mins = Secs = <a href="../../../../erts-16.3/doc/html/erlang.html#t:integer/0">integer</a>()</pre>
 

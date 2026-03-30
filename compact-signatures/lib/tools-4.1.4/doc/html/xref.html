@@ -169,17 +169,17 @@ module. All unknown functions are also undefined functions; there is a
 <a href="xref_chapter.html#venn2">figure</a> in the User's Guide that illustrates
 this relationship.</p><p>The module attribute <code class="inline">ignore_xref</code> can be used to suppress warnings for
 certain modules or functions in your modules. The following forms are
-understood by Xref:</p><pre><code class="makeup erlang" translate="no"><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2041565920-1">(</span><span class="ss">module</span><span class="p" data-group-id="2041565920-1">)</span><span class="p">.</span><span class="w">
-</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2041565920-2">(</span><span class="p" data-group-id="2041565920-3">[</span><span class="ss">module1</span><span class="p">,</span><span class="w"> </span><span class="ss">module2</span><span class="p">,</span><span class="w"> </span><span class="ss">module3</span><span class="p" data-group-id="2041565920-3">]</span><span class="p" data-group-id="2041565920-2">)</span><span class="p">.</span><span class="w">
+understood by Xref:</p><pre><code class="makeup erlang" translate="no"><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2058124264-1">(</span><span class="ss">module</span><span class="p" data-group-id="2058124264-1">)</span><span class="p">.</span><span class="w">
+</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2058124264-2">(</span><span class="p" data-group-id="2058124264-3">[</span><span class="ss">module1</span><span class="p">,</span><span class="w"> </span><span class="ss">module2</span><span class="p">,</span><span class="w"> </span><span class="ss">module3</span><span class="p" data-group-id="2058124264-3">]</span><span class="p" data-group-id="2058124264-2">)</span><span class="p">.</span><span class="w">
 </span><span class="w">
-</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2041565920-4">(</span><span class="ss">function</span><span class="p">/</span><span class="mi">0</span><span class="p" data-group-id="2041565920-4">)</span><span class="p">.</span><span class="w">
-</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2041565920-5">(</span><span class="p" data-group-id="2041565920-6">[</span><span class="ss">function1</span><span class="p">/</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">function2</span><span class="p">/</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">function3</span><span class="p">/</span><span class="mi">2</span><span class="p" data-group-id="2041565920-6">]</span><span class="p" data-group-id="2041565920-5">)</span><span class="p">.</span><span class="w">
-</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2041565920-7">(</span><span class="p" data-group-id="2041565920-8">{</span><span class="ss">function</span><span class="p">,</span><span class="mi">0</span><span class="p" data-group-id="2041565920-8">}</span><span class="p" data-group-id="2041565920-7">)</span><span class="p">.</span><span class="w">
-</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2041565920-9">(</span><span class="p" data-group-id="2041565920-10">[</span><span class="p" data-group-id="2041565920-11">{</span><span class="ss">function1</span><span class="p">,</span><span class="mi">0</span><span class="p" data-group-id="2041565920-11">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2041565920-12">{</span><span class="ss">function2</span><span class="p">,</span><span class="mi">1</span><span class="p" data-group-id="2041565920-12">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2041565920-13">{</span><span class="ss">function3</span><span class="p">,</span><span class="mi">2</span><span class="p" data-group-id="2041565920-13">}</span><span class="p" data-group-id="2041565920-10">]</span><span class="p" data-group-id="2041565920-9">)</span><span class="p">.</span><span class="w">
+</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2058124264-4">(</span><span class="ss">function</span><span class="p">/</span><span class="mi">0</span><span class="p" data-group-id="2058124264-4">)</span><span class="p">.</span><span class="w">
+</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2058124264-5">(</span><span class="p" data-group-id="2058124264-6">[</span><span class="ss">function1</span><span class="p">/</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">function2</span><span class="p">/</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">function3</span><span class="p">/</span><span class="mi">2</span><span class="p" data-group-id="2058124264-6">]</span><span class="p" data-group-id="2058124264-5">)</span><span class="p">.</span><span class="w">
+</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2058124264-7">(</span><span class="p" data-group-id="2058124264-8">{</span><span class="ss">function</span><span class="p">,</span><span class="mi">0</span><span class="p" data-group-id="2058124264-8">}</span><span class="p" data-group-id="2058124264-7">)</span><span class="p">.</span><span class="w">
+</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2058124264-9">(</span><span class="p" data-group-id="2058124264-10">[</span><span class="p" data-group-id="2058124264-11">{</span><span class="ss">function1</span><span class="p">,</span><span class="mi">0</span><span class="p" data-group-id="2058124264-11">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2058124264-12">{</span><span class="ss">function2</span><span class="p">,</span><span class="mi">1</span><span class="p" data-group-id="2058124264-12">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2058124264-13">{</span><span class="ss">function3</span><span class="p">,</span><span class="mi">2</span><span class="p" data-group-id="2058124264-13">}</span><span class="p" data-group-id="2058124264-10">]</span><span class="p" data-group-id="2058124264-9">)</span><span class="p">.</span><span class="w">
 
 </span><span class="c1">%% ignoring calls/references to other modules from the current</span><span class="w">
-</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2041565920-14">(</span><span class="p" data-group-id="2041565920-15">{</span><span class="ss">other_mod1</span><span class="p">,</span><span class="w"> </span><span class="ss">func1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2041565920-15">}</span><span class="p" data-group-id="2041565920-14">)</span><span class="p">.</span><span class="w">
-</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2041565920-16">(</span><span class="p" data-group-id="2041565920-17">[</span><span class="p" data-group-id="2041565920-18">{</span><span class="ss">other_mod1</span><span class="p">,</span><span class="w"> </span><span class="ss">func1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2041565920-18">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2041565920-19">{</span><span class="ss">other_mod2</span><span class="p">,</span><span class="w"> </span><span class="ss">func2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="2041565920-19">}</span><span class="p" data-group-id="2041565920-17">]</span><span class="p" data-group-id="2041565920-16">)</span><span class="p">.</span></code></pre><p>The module attribute tag <code class="inline">deprecated</code> can be used to inform
+</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2058124264-14">(</span><span class="p" data-group-id="2058124264-15">{</span><span class="ss">other_mod1</span><span class="p">,</span><span class="w"> </span><span class="ss">func1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2058124264-15">}</span><span class="p" data-group-id="2058124264-14">)</span><span class="p">.</span><span class="w">
+</span><span class="p">-</span><span class="na">ignore_xref</span><span class="p" data-group-id="2058124264-16">(</span><span class="p" data-group-id="2058124264-17">[</span><span class="p" data-group-id="2058124264-18">{</span><span class="ss">other_mod1</span><span class="p">,</span><span class="w"> </span><span class="ss">func1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2058124264-18">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2058124264-19">{</span><span class="ss">other_mod2</span><span class="p">,</span><span class="w"> </span><span class="ss">func2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="2058124264-19">}</span><span class="p" data-group-id="2058124264-17">]</span><span class="p" data-group-id="2058124264-16">)</span><span class="p">.</span></code></pre><p>The module attribute tag <code class="inline">deprecated</code> can be used to inform
 Xref about <em id="deprecated_function">deprecated functions</em> and optionally when
 functions are planned to be removed. A few examples show the idea:</p><ul><li><p><code class="inline">-deprecated({f,1}).</code> - The exported function <code class="inline">f/1</code> is deprecated.
 Nothing is said whether <code class="inline">f/1</code> will be removed or not.</p></li><li><p><code class="inline">-deprecated({f,1,&quot;Use g/1 instead&quot;}).</code> - As above but with a descriptive
@@ -2889,14 +2889,14 @@ given releases.</p></li></ul>
 
             <pre translate="no">Result = [DebugInfoResult] | [NoDebugInfoResult] | {error, <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>(), Reason}</pre>
 
-            <pre translate="no">DebugInfoResult = {deprecated, [<a href="#t:funcall/0">funcall</a>()]} | {undefined, [<a href="#t:funcall/0">funcall</a>()]} | {unused, [<a href="../../../../erts-16.3/doc/html/erlang.html#t:mfa/0">mfa</a>()]}</pre>
-
-            <pre translate="no">NoDebugInfoResult = {deprecated, [<a href="#t:xmfa/0">xmfa</a>()]} | {undefined, [<a href="#t:xmfa/0">xmfa</a>()]}</pre>
-
             <pre translate="no">Reason = {file_error, <a href="#t:file/0">file</a>(), <a href="#t:file_error/0">file_error</a>()} |
           {invalid_filename, <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()} |
           {unrecognized_file, <a href="#t:file/0">file</a>()} |
           <a href="../../../../lib/stdlib-7.3/doc/html/beam_lib.html#t:chnk_rsn/0">beam_lib:chnk_rsn</a>()</pre>
+
+            <pre translate="no">DebugInfoResult = {deprecated, [<a href="#t:funcall/0">funcall</a>()]} | {undefined, [<a href="#t:funcall/0">funcall</a>()]} | {unused, [<a href="../../../../erts-16.3/doc/html/erlang.html#t:mfa/0">mfa</a>()]}</pre>
+
+            <pre translate="no">NoDebugInfoResult = {deprecated, [<a href="#t:xmfa/0">xmfa</a>()]} | {undefined, [<a href="#t:xmfa/0">xmfa</a>()]}</pre>
 
         </div>
 
@@ -3379,16 +3379,16 @@ calls and unresolved calls:</p><ul><li><code class="inline">&quot;# LC + # XC&qu
 
             <pre translate="no">Result = [DebugInfoResult] | [NoDebugInfoResult] | {error, <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>(), Reason}</pre>
 
-            <pre translate="no">DebugInfoResult = {deprecated, [<a href="#t:funcall/0">funcall</a>()]} | {undefined, [<a href="#t:funcall/0">funcall</a>()]} | {unused, [<a href="../../../../erts-16.3/doc/html/erlang.html#t:mfa/0">mfa</a>()]}</pre>
-
-            <pre translate="no">NoDebugInfoResult = {deprecated, [<a href="#t:xmfa/0">xmfa</a>()]} | {undefined, [<a href="#t:xmfa/0">xmfa</a>()]}</pre>
-
             <pre translate="no">Reason = {cover_compiled, Module :: <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>()} |
           {file_error, <a href="#t:file/0">file</a>(), <a href="#t:file_error/0">file_error</a>()} |
           {interpreted, Module :: <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>()} |
           {invalid_filename, <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()} |
           {no_such_module, Module :: <a href="../../../../erts-16.3/doc/html/erlang.html#t:module/0">module</a>()} |
           <a href="../../../../lib/stdlib-7.3/doc/html/beam_lib.html#t:chnk_rsn/0">beam_lib:chnk_rsn</a>()</pre>
+
+            <pre translate="no">DebugInfoResult = {deprecated, [<a href="#t:funcall/0">funcall</a>()]} | {undefined, [<a href="#t:funcall/0">funcall</a>()]} | {unused, [<a href="../../../../erts-16.3/doc/html/erlang.html#t:mfa/0">mfa</a>()]}</pre>
+
+            <pre translate="no">NoDebugInfoResult = {deprecated, [<a href="#t:xmfa/0">xmfa</a>()]} | {undefined, [<a href="#t:xmfa/0">xmfa</a>()]}</pre>
 
         </div>
 
@@ -3994,9 +3994,9 @@ determined, and the <code class="inline">info</code> functions will return empty
 
             <pre translate="no">Result = {ok, <a href="../../../../erts-16.3/doc/html/erlang.html#t:pid/0">pid</a>()} | {error, {already_started, <a href="../../../../erts-16.3/doc/html/erlang.html#t:pid/0">pid</a>()}}</pre>
 
-            <pre translate="no">Name = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
-
             <pre translate="no">Options = Option | [Option]</pre>
+
+            <pre translate="no">Name = <a href="../../../../erts-16.3/doc/html/erlang.html#t:atom/0">atom</a>()</pre>
 
             <pre translate="no">Option = {xref_mode, <a href="#t:mode/0">mode</a>()} | <a href="../../../../erts-16.3/doc/html/erlang.html#t:term/0">term</a>()</pre>
 

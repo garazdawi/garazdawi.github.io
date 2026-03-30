@@ -870,11 +870,11 @@ in the given line; for example, if it refers to a function head.</li></ul>
 
             <pre translate="no">Fun = {<a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>(), <a href="../../../../lib/../erts/doc/html/erlang.html#t:arity/0">arity</a>()}</pre>
 
-            <pre translate="no">Line = <a href="../../../../lib/../erts/doc/html/erlang.html#t:pos_integer/0">pos_integer</a>()</pre>
+            <pre translate="no">Result = #{Fun => #{Line => <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>()}}</pre>
 
             <pre translate="no">Reason = badkey</pre>
 
-            <pre translate="no">Result = #{Fun => #{Line => <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>()}}</pre>
+            <pre translate="no">Line = <a href="../../../../lib/../erts/doc/html/erlang.html#t:pos_integer/0">pos_integer</a>()</pre>
 
         </div>
 
@@ -928,11 +928,11 @@ represents whether be breakpoint is enabled (<code class="inline">true</code>) o
 
             <pre translate="no">Ret = {ok, Result} | {error, Reason}</pre>
 
-            <pre translate="no">Line = <a href="../../../../lib/../erts/doc/html/erlang.html#t:pos_integer/0">pos_integer</a>()</pre>
+            <pre translate="no">Result = #{Line => <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>()}</pre>
 
             <pre translate="no">Reason = {badkey, <a href="../../../../lib/../erts/doc/html/erlang.html#t:module/0">module</a>() | {FunName, Arity}}</pre>
 
-            <pre translate="no">Result = #{Line => <a href="../../../../lib/../erts/doc/html/erlang.html#t:boolean/0">boolean</a>()}</pre>
+            <pre translate="no">Line = <a href="../../../../lib/../erts/doc/html/erlang.html#t:pos_integer/0">pos_integer</a>()</pre>
 
         </div>
 

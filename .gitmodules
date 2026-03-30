@@ -1,8 +1,0 @@
-[submodule "content/eep"]
-	path = content/eep
-	url = https://github.com/erlang/eep
-	branch = master
-[submodule "content/blog"]
-	path = content/blog
-	url = https://github.com/erlang/erlang.github.io
-	branch = master

@@ -1,0 +1,95 @@
+.TH ssh_sftpd 3 "ssh 5.5.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ssh_sftpd \- Specifies the channel process to handle an SFTP subsystem.
+
+.SH DESCRIPTION
+.PP
+Specifies a channel process to handle an SFTP subsystem.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBsubsystem_spec(Options) -> Spec\fR
+\fB                        when\fR
+\fB                            Options ::\fR
+\fB                                [{cwd, string()} |\fR
+\fB                                 {file_handler,\fR
+\fB                                  CbMod | {CbMod, FileState}} |\fR
+\fB                                 {max_files, integer()} |\fR
+\fB                                 {max_handles, integer()} |\fR
+\fB                                 {max_path, integer()} |\fR
+\fB                                 {root, string()} |\fR
+\fB                                 {sftpd_vsn, integer()}],\fR
+\fB                            Spec :: {Name, {CbMod, Options}},\fR
+\fB                            Name :: string(),\fR
+\fB                            CbMod :: atom(),\fR
+\fB                            FileState :: term().\fR
+
+.br
+.RS
+.PP
+Is to be used together with \fIssh:daemon/[1,2,3]\fR
+
+.PP
+The \fIName\fR is \fI"sftp"\fR and \fICbMod\fR is the name of the Erlang module implementing the subsystem using the \fIssh_server_channel\fR (replaces ssh_daemon_channel) behaviour.
+
+.PP
+Options:
+
+cwd
+.RS 2
+Sets the initial current working directory for the server.
+
+
+.RE
+
+file_handler
+.RS 2
+Determines which module to call for accessing the file server. The default value is 
+\fIssh_sftpd_file\fR, which uses the \fIfile\fR and \fIfilelib\fR APIs to access the standard OTP file server. This option can be used to plug in other file servers.
+
+.RE
+
+max_files
+.RS 2
+The default value is 
+\fI0\fR, which means that there is no upper limit. If supplied, the number of filenames returned to the SFTP client per \fIREADDIR\fR request is limited to at most the given value.
+
+.RE
+
+max_handles
+.RS 2
+The default value is 
+\fI1000\fR. Positive integer value represents the maximum number of file handles allowed for a connection.
+.PP
+(Note: separate limitation might be also enforced by underlying operating system)
+
+
+.RE
+
+max_path
+.RS 2
+The default value is 
+\fI4096\fR. Positive integer value represents the maximum path length which cannot be exceeded in data provided by the SFTP client. (Note: limitations might be also enforced by underlying operating system)
+
+.RE
+
+root
+.RS 2
+Sets the SFTP root directory. Must be an absolute path (e.g., 
+\fI/tmp\fR). Then the user cannot see any files above this root. If, for example, the root directory is set to \fI/tmp\fR, then the user sees this directory as \fI/\fR. If the user then writes \fIcd /etc\fR, the user moves to \fI/tmp/etc\fR.
+.PP
+Note: This provides application-level isolation. For additional security, consider using OS-level chroot or similar mechanisms. See the SFTP Security section in the Hardening guide for deployment recommendations.
+
+
+.RE
+
+sftpd_vsn
+.RS 2
+Sets the SFTP version to use. Defaults to 5. Version 6 is under development and limited.
+
+
+.RE
+
+
+.RE

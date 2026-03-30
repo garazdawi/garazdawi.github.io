@@ -1,0 +1,127 @@
+.TH wxSizeEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSizeEvent \- A size event holds information about size change events of \fIwxWindow\fR.
+
+.SH DESCRIPTION
+.PP
+The EVT_SIZE handler function will be called when the window has been resized.
+
+.PP
+You may wish to use this for frames to resize their child windows as appropriate.
+
+.PP
+Note that the size passed is of the whole window: call \fIwxWindow:getClientSize/1\fR for the area which may be used by the application.
+
+.PP
+When a window is resized, usually only a small part of the window is damaged and you may only need to repaint that area. However, if your drawing depends on the size of the window, you may need to clear the DC explicitly and repaint the whole window. In which case, you may need to call \fIwxWindow:refresh/2\fR to invalidate the entire window.
+
+.PP
+\fIImportant\fR : Sizers (see overview_sizer ) rely on size events to function correctly. Therefore, in a sizer-based layout, do not forget to call Skip on all size events you catch (and don't catch size events at all when you don't need to).
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+{Width,Height}
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSizeEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxSizeEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSize() :: #wxSize{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxSizeEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxSizeEventType() :: size.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetRect(This) ->\fR
+\fB                 {X :: integer(),\fR
+\fB                  Y :: integer(),\fR
+\fB                  W :: integer(),\fR
+\fB                  H :: integer()}\fR
+\fB                 when This :: wxSizeEvent().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                 when This :: wxSizeEvent().\fR
+
+.br
+.RS
+.PP
+Returns the entire size of the window generating the size change event.
+
+.PP
+This is the new total size of the window, i.e. the same size as would be returned by \fIwxWindow:getSize/1\fR if it were called now. Use \fIwxWindow:getClientSize/1\fR if you catch this event in a top level window such as \fIwxFrame\fR to find the size available for the window contents.
+
+
+.RE

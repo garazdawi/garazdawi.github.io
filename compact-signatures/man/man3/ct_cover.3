@@ -1,0 +1,59 @@
+.TH ct_cover 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_cover \- \fICommon Test\fR framework code coverage support module.
+
+.SH DESCRIPTION
+.PP
+This module exports help functions for performing code coverage analysis.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_nodes(Nodes) -> {ok, StartedNodes} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Nodes :: node() | [node()],\fR
+\fB                       StartedNodes :: [node()],\fR
+\fB                       Reason :: cover_not_running | term().\fR
+
+.br
+.RS
+.PP
+Adds nodes to current cover test. Notice that this only works if cover support is active.
+
+.PP
+To have effect, this function is to be called from \fIinit_per_suite/1\fR (see \fIct_suite\fR) before any tests are performed.
+
+
+.RE
+.B
+\fBcross_cover_analyse(Level, Tests) -> ok\fR
+\fB                             when\fR
+\fB                                 Level :: overview | details,\fR
+\fB                                 Tests ::\fR
+\fB                                     [{Tag :: atom(),\fR
+\fB                                       Dir :: file:name_all()}].\fR
+
+.br
+.RS
+.PP
+Accumulates cover results over multiple tests. See section Cross Cover Analysis in the User's Guide.
+
+
+.RE
+.B
+\fBremove_nodes(Nodes) -> ok | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Nodes :: node() | [node()],\fR
+\fB                          Reason ::\fR
+\fB                              cover_not_running | not_main_node | term().\fR
+
+.br
+.RS
+.PP
+Removes nodes from the current cover test.
+
+.PP
+Call this function to stop cover test on nodes previously added with \fIct_cover:add_nodes/1\fR. Results on the remote node are transferred to the \fICommon Test\fR node.
+
+
+.RE

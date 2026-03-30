@@ -1,0 +1,364 @@
+.TH wxSpinCtrl 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSpinCtrl \- \fIwxSpinCtrl\fR combines \fIwxTextCtrl\fR and \fIwxSpinButton\fR in one control.
+
+.SH DESCRIPTION
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_ARROW_KEYS: The user can use arrow keys to change the value.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_WRAP: The value wraps at the minimum and maximum.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTE_PROCESS_ENTER: Indicates that the control should generate \fIwxEVT_TEXT_ENTER\fR events. Using this style will prevent the user from using the Enter key for dialog navigation (e.g. activating the default button in the dialog) under MSW.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxALIGN_LEFT: Same as wxTE_LEFT for \fIwxTextCtrl\fR: the text is left aligned (this is the default).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxALIGN_CENTRE_HORIZONTAL: Same as wxTE_CENTRE for \fIwxTextCtrl\fR: the text is centered.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxALIGN_RIGHT: Same as wxTE_RIGHT for \fIwxTextCtrl\fR: the text is right aligned.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSpinButton\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSpinCtrl
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_spinctrl_updated\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSpinCtrl() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxSpinCtrl(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option ::\fR
+\fB                        {id, integer()} |\fR
+\fB                        {value, unicode:chardata()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {min, integer()} |\fR
+\fB                        {max, integer()} |\fR
+\fB                        {initial, integer()}.\fR
+
+.br
+.RS
+.PP
+Creation function called by the spin control constructor.
+
+.PP
+See \fInew/2\fR for details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxSpinCtrl()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetMax(This) -> integer() when This :: wxSpinCtrl().\fR
+
+.br
+.RS
+.PP
+Gets maximal allowable value.
+
+
+.RE
+.B
+\fBgetMin(This) -> integer() when This :: wxSpinCtrl().\fR
+
+.br
+.RS
+.PP
+Gets minimal allowable value.
+
+
+.RE
+.B
+\fBgetValue(This) -> integer() when This :: wxSpinCtrl().\fR
+
+.br
+.RS
+.PP
+Gets the value of the spin control.
+
+
+.RE
+.B
+\fBnew() -> wxSpinCtrl().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxSpinCtrl()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {id, integer()} |\fR
+\fB                     {value, unicode:chardata()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {min, integer()} |\fR
+\fB                     {max, integer()} |\fR
+\fB                     {initial, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a spin control.
+
+.PP
+If \fIvalue\fR is non-empty, it will be shown in the text entry part of the control and if it has numeric value, the initial numeric value of the control, as returned by \fIgetValue/1\fR will also be determined by it instead of by \fIinitial\fR. Hence, it only makes sense to specify \fIinitial\fR if \fIvalue\fR is an empty string or is not convertible to a number, otherwise \fIinitial\fR is simply ignored and the number specified by \fIvalue\fR is used.
+
+.PP
+See: \fIcreate/3\fR
+
+
+.RE
+.B
+\fBsetRange(This, MinVal, MaxVal) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxSpinCtrl(),\fR
+\fB                      MinVal :: integer(),\fR
+\fB                      MaxVal :: integer().\fR
+
+.br
+.RS
+.PP
+Sets range of allowable values.
+
+.PP
+Notice that calling this method may change the value of the control if it's not inside the new valid range, e.g. it will become \fIminVal\fR if it is less than it now. However no \fIwxEVT_SPINCTRL\fR event is generated, even if it the value does change.
+
+.PP
+Note: Setting a range including negative values is silently ignored if current base is set to 16.
+
+
+.RE
+.B
+\fBsetSelection(This, From, To) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxSpinCtrl(),\fR
+\fB                          From :: integer(),\fR
+\fB                          To :: integer().\fR
+
+.br
+.RS
+.PP
+Select the text in the text part of the control between positions \fIfrom\fR (inclusive) and \fIto\fR (exclusive).
+
+.PP
+This is similar to \fIwxTextCtrl:setSelection/3\fR.
+
+.PP
+Note: this is currently only implemented for Windows and generic versions of the control.
+
+
+.RE
+.B
+\fBsetValue(This, Value) -> ok\fR
+\fB                  when This :: wxSpinCtrl(), Value :: integer();\fR
+\fB              (This, Text) -> ok\fR
+\fB                  when This :: wxSpinCtrl(), Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the value of the spin control.
+
+.PP
+It is recommended to use the overload taking an integer value instead.
+
+.PP
+Notice that, unlike \fIwxTextCtrl:setValue/2\fR, but like most of the other setter methods in wxWidgets, calling this method does not generate any events as events are only generated for the user actions.
+
+
+.RE

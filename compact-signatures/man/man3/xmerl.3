@@ -1,0 +1,562 @@
+.TH xmerl 3 "xmerl 2.1.9" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+xmerl \- Functions for exporting XML data to an external format.
+
+.SH DESCRIPTION
+.SH DATA TYPES
+.LP
+.B
+\fBcallback() :: module() | [module()].\fR
+
+.br
+.RS
+.PP
+A callback module or a list of inherited callback modules.
+
+
+.RE
+.B
+\fBelement() ::\fR
+\fB          xmlText() | xmlElement() | xmlPI() | xmlComment() | xmlDecl().\fR
+
+.br
+.RS
+.PP
+Normal, well-formed, XML content element.
+
+
+.RE
+.B
+\fBsimple_attribute() ::\fR
+\fB          xmlAttribute() |\fR
+\fB          {fun((_) -> _), term()} |\fR
+\fB          {Key :: atom(), Value :: term()}.\fR
+
+.br
+.RS
+.PP
+"Simple-form" XML attribute.
+
+
+.RE
+.B
+\fBsimple_element() ::\fR
+\fB          {Tag :: atom(),\fR
+\fB           Attributes ::\fR
+\fB               [{Name :: atom(), Value :: iolist() | atom() | integer()}],\fR
+\fB           Content :: [simple_element()]} |\fR
+\fB          {Tag :: atom(), Content :: [simple_element()]} |\fR
+\fB          (Tag :: atom() | (IOString :: iolist() | element())).\fR
+
+.br
+.RS
+.PP
+"Simple-form" XML content element.
+
+
+.RE
+.B
+\fBxmlAttribute() :: #xmlAttribute{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlAttribute{}\fR.
+
+
+.RE
+.B
+\fBxmlComment() :: #xmlComment{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlComment{}\fR.
+
+
+.RE
+.B
+\fBxmlDecl() :: #xmlDecl{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlDecl{}\fR.
+
+
+.RE
+.B
+\fBxmlDocument() :: #xmlDocument{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlDocument{}\fR.
+
+
+.RE
+.B
+\fBxmlElement() :: #xmlElement{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlElement{}\fR.
+
+
+.RE
+.B
+\fBxmlNamespace() :: #xmlNamespace{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlNamespace{}\fR.
+
+
+.RE
+.B
+\fBxmlNsNode() :: #xmlNsNode{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlNsNode{}\fR.
+
+
+.RE
+.B
+\fBxmlPI() :: #xmlPI{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlPI{}\fR.
+
+
+.RE
+.B
+\fBxmlText() :: #xmlText{}.\fR
+
+.br
+.RS
+.PP
+Record \fI#xmlText{}\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcallbacks(Module :: module()) -> [module()].\fR
+
+.br
+.RS
+.PP
+Find the list of inherited callback modules for a given module.
+
+
+.RE
+.B
+\fBexport(Content, Callback, RootAttributes) ->\fR
+\fB                ExportedFormat :: term()\fR
+\fB                when\fR
+\fB                    Content :: [Element],\fR
+\fB                    Element :: element(),\fR
+\fB                    Callback :: callback(),\fR
+\fB                    RootAttributes :: [simple_attribute()].\fR
+
+.br
+.RS
+.PP
+Export XML content.
+
+.PP
+Exports normal, well-formed XML content, using the specified callback module.
+
+.PP
+\fIElement\fR is any of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlText{}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlElement{}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlPI{}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlComment{}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlDecl{}\fR
+
+.RE
+
+.PP
+(See \fIxmerl.hrl\fR for the record definitions.) Text in \fI#xmlText{}\fR elements can be deep lists of characters and/or binaries.
+
+.PP
+\fIRootAttributes\fR is a list of \fI#xmlAttribute{}\fR attributes for the \fI#root#\fR element, which implicitly becomes the parent of the given \fIContent\fR. The tag-handler function for \fI#root#\fR is thus called with the complete exported data of \fIContent\fR. Root attributes can be used to specify e.g. encoding or other metadata of an XML or HTML document.
+
+.PP
+The \fICallback\fR module should contain hook functions for all tags present in the data structure. A hook function must have the following format:
+
+.IP
+.nf
+    Tag(Data, Attributes, Parents, E)
+
+.fi
+
+.PP
+where \fIE\fR is the corresponding \fI#xmlElement{}\fR, \fIData\fR is the already-exported contents of \fIE\fR and \fIAttributes\fR is the list of \fI#xmlAttribute{}\fR records of \fIE\fR. Finally, \fIParents\fR is the list of parent nodes of \fIE\fR, on the form \fI[{ParentTag::atom(), ParentPosition::integer()}]\fR.
+
+.PP
+The hook function should return either the data to be exported, or a tuple \fI{'#xml-alias#', NewTag::atom()}\fR, or a tuple \fI{'#xml-redefine#', Content}\fR, where \fIContent\fR is a content list (which can be on simple-form; see \fIexport_simple/2\fR for details).
+
+.PP
+A callback module can inherit definitions from other callback modules, through the required function \fI'#xml-interitance#'() -> [ModuleName::atom()]\fR.
+
+.PP
+\fISee also:\fR \fIexport/2\fR, \fIexport_simple/3\fR.
+
+
+.RE
+.B
+\fBexport_content(Content, Callbacks) -> _\fR
+\fB                        when\fR
+\fB                            Content :: [element()],\fR
+\fB                            Callbacks :: [module()].\fR
+
+.br
+.RS
+.PP
+Export normal XML content directly, without further context.
+
+
+.RE
+.B
+\fBexport_element(Element, Callback) -> _\fR
+\fB                        when\fR
+\fB                            Element :: element(), Callback :: callback().\fR
+
+.br
+.RS
+.PP
+Exports a normal XML element directly, without further context.
+
+
+.RE
+.B
+\fBexport_element(Element, Callback, CallbackState) -> ExportedFormat\fR
+\fB                        when\fR
+\fB                            Element :: element(),\fR
+\fB                            Callback :: callback(),\fR
+\fB                            CallbackState :: term(),\fR
+\fB                            ExportedFormat :: term().\fR
+
+.br
+.RS
+.PP
+For on-the-fly exporting during parsing (SAX style) of the XML document.
+
+
+.RE
+.B
+\fBexport_simple(Content, Callback, RootAttributes) ->\fR
+\fB                       ExportedFormat :: term()\fR
+\fB                       when\fR
+\fB                           Content :: [Element],\fR
+\fB                           Element :: simple_element(),\fR
+\fB                           Callback :: callback(),\fR
+\fB                           RootAttributes :: [simple_attribute()].\fR
+
+.br
+.RS
+.PP
+Export "simple-form" XML content.
+
+.PP
+Exports "simple-form" XML content, using the specified callback-module.
+
+.PP
+\fIElement\fR is any of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{Tag, Attributes, Content}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{Tag, Content}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fITag\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIIOString\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlText{}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlElement{}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlPI{}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlComment{}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#xmlDecl{}\fR
+
+.RE
+
+.PP
+where
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fITag = atom()\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIAttributes = [{Name, Value}]\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIName = atom()\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIValue = IOString | atom() | integer()\fR
+
+.RE
+
+.PP
+Normal-form XML elements can thus be included in the simple-form representation. Note that content lists must be flat. An \fIIOString\fR is a (possibly deep) list of characters and/or binaries.
+
+.PP
+\fIRootAttributes\fR is a list of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIXmlAttributes = #xmlAttribute{}\fR
+
+.RE
+
+.PP
+See \fIexport/3\fR for details on the callback module and the root attributes. The XML-data is always converted to normal form before being passed to the callback module.
+
+.PP
+\fISee also:\fR \fIexport/3\fR, \fIexport_simple/2\fR.
+
+
+.RE
+.B
+\fBexport_simple_content(Content, Callback) -> _\fR
+\fB                               when\fR
+\fB                                   Content :: [simple_element()],\fR
+\fB                                   Callback :: callback().\fR
+
+.br
+.RS
+.PP
+Exports simple XML content directly, without further context.
+
+
+.RE
+.B
+\fBexport_simple_element(Element, Callback) -> _\fR
+\fB                               when\fR
+\fB                                   Element :: simple_element(),\fR
+\fB                                   Callback :: callback().\fR
+
+.br
+.RS
+.PP
+Export a simple XML element directly, without further context.
+
+
+.RE

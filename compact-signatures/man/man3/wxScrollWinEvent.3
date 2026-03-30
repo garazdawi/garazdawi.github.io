@@ -1,0 +1,115 @@
+.TH wxScrollWinEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxScrollWinEvent \- A scroll event holds information about events sent from scrolling windows.
+
+.SH DESCRIPTION
+.PP
+Note that you can use the EVT_SCROLLWIN* macros for intercepting scroll window events from the receiving window.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxScrollEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxScrollWinEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxScrollWinEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxScrollWin() :: #wxScrollWin{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxScrollWinEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxScrollWinEventType() ::\fR
+\fB          scrollwin_top | scrollwin_bottom | scrollwin_lineup |\fR
+\fB          scrollwin_linedown | scrollwin_pageup | scrollwin_pagedown |\fR
+\fB          scrollwin_thumbtrack | scrollwin_thumbrelease.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetOrientation(This) -> integer() when This :: wxScrollWinEvent().\fR
+
+.br
+.RS
+.PP
+Returns wxHORIZONTAL or wxVERTICAL, depending on the orientation of the scrollbar.
+
+
+.RE
+.B
+\fBgetPosition(This) -> integer() when This :: wxScrollWinEvent().\fR
+
+.br
+.RS
+.PP
+Returns the position of the scrollbar for the thumb track and release events.
+
+.PP
+Note that this field can't be used for the other events, you need to query the window itself for the current position in that case.
+
+
+.RE

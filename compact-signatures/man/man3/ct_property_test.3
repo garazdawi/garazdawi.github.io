@@ -1,0 +1,541 @@
+.TH ct_property_test 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_property_test \- Support in Common Test for running property-based tests.
+
+.SH DESCRIPTION
+.PP
+This module helps running property-based tests in the \fICommon Test\fR framework. One (or more) of the property testing tools
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+QuickCheck,
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+PropEr or
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Triq
+
+.RE
+
+.PP
+is assumed to be installed.
+
+.PP
+The idea with this module is to have a \fICommon Test\fR test suite calling a property testing tool with special property test suites as defined by that tool. The tests are collected in the \fItest\fR directory of the application. The \fItest\fR directory has a subdirectory \fIproperty_test\fR, where everything needed for the property tests are collected. The usual Erlang application directory structure is assumed.
+
+.PP
+A typical \fICommon Test\fR test suite using \fIct_property_test\fR is organized as follows:
+
+.IP
+.nf
+-module(my_prop_test_SUITE).
+-compile(export_all).
+
+-include_lib("common_test/include/ct.hrl").
+
+all() -> [prop_ftp_case].
+
+init_per_suite(Config) ->
+    ct_property_test:init_per_suite(Config).
+
+%%%---- test case
+prop_ftp_case(Config) ->
+    ct_property_test:quickcheck(
+      ftp_simple_client_server:prop_ftp(),
+      Config
+     ).
+
+.fi
+
+.PP
+and the the property test module (in this example \fIftp_simple_client_server.erl\fR) as almost a usual property testing module (More examples are in the User's Guide):
+
+.IP
+.nf
+-module(ftp_simple_client_server).
+-export([prop_ftp/0...]).
+
+-include_lib("common_test/include/ct_property_test.hrl").
+
+prop_ftp() ->
+    ?FORALL( ....
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBarguments() :: [term()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcommand() :: set_command() | init_command().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcommand_list() :: [command()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdynamic_state() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfunction_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhistory() :: [term()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBinit_command() :: {init, symbolic_state()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBparallel_testcase() :: {command_list(), [command_list()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBset_command() :: {set, symbolic_var(), symbolic_call()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstatem_result() :: ok | term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsymbolic_call() :: {call, module(), function_name(), arguments()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsymbolic_state() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsymbolic_var() :: {var, pos_integer()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcmnd_names(Cs) -> Result\fR
+\fB                    when\fR
+\fB                        Cs :: command_list() | parallel_testcase(),\fR
+\fB                        Result :: [function_name()].\fR
+
+.br
+.RS
+.PP
+Returns a list of commands (function calls) generated in the \fICmnd\fR sequence, without Module, Arguments and other details.
+
+.PP
+For more information see: \fIpresent_result/5\fR.
+
+
+.RE
+.B
+\fBinit_per_suite(Config) -> Config | {skip, Reason} | {fail, Reason}\fR
+\fB                        when\fR
+\fB                            Config :: proplists:proplist(),\fR
+\fB                            Reason :: string().\fR
+
+.br
+.RS
+.PP
+Initializes and extends \fIConfig\fR for property based testing.
+
+.PP
+This function investigates if support is available for either QuickCheck, PropEr or Triq and compiles the properties with the first tool found. It is supposed to be called in the \fIinit_per_suite/1\fR function in a CommonTest test suite.
+
+.PP
+Which tools to check for, and in which order could be set with the option \fI{prop_tools, list(eqc|proper|triq)}\fR in the CommonTest configuration \fIConfig\fR. The default value is \fI[eqc, proper, triq]\fR with \fIeqc\fR being the first one searched for.
+
+.PP
+If no support is found for any tool, this function returns \fI{skip, Explanation}\fR.
+
+.PP
+In case of other errors, this function returns \fI{fail, Explanation}\fR.
+
+.PP
+If support is found, the option \fI{property_test_tool,ToolModule}\fR with the selected tool main module name (\fIeqc\fR, \fIproper\fR or \fItriq\fR) is added to the list \fIConfig\fR which then is returned.
+
+.PP
+The property tests are assumed to be in a subdirectory named \fIproperty_test\fR. All found Erlang files in that directory are compiled with one of the macros \fI'EQC'\fR, \fI'PROPER'\fR or \fI'TRIQ'\fR set, depending on which tool that is first found. This could make parts of the Erlang property tests code to be included or excluded with the macro directives \fI-ifdef(Macro).\fR or \fI-ifndef(Macro).\fR.
+
+.PP
+The file(s) in the \fIproperty_test\fR subdirectory could, or should, include the ct_property_test include file:
+
+.IP
+.nf
+-include_lib("common_test/include/ct_property_test.hrl").
+
+.fi
+
+.PP
+This included file will:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Include the correct tool's include file
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Set the macro \fI'MOD_eqc'\fR to the correct module name for the selected tool. That is, the macro \fI'MOD_eqc'\fR is set to either \fIeqc\fR, \fIproper\fR or \fItriq\fR.
+
+.RE
+
+
+.RE
+.B
+\fBnum_calls(Cs) -> Result\fR
+\fB                   when\fR
+\fB                       Cs :: command_list() | parallel_testcase(),\fR
+\fB                       Result :: [non_neg_integer()].\fR
+
+.br
+.RS
+.PP
+Returns number of command calls in a test case.
+
+.PP
+For more information see: \fIpresent_result/5\fR.
+
+
+.RE
+.B
+\fBpresent_result(Module, Cmds, Triple, Config, Options0) ->\fR
+\fB                        boolean()\fR
+\fB                        when\fR
+\fB                            Module :: module(),\fR
+\fB                            Cmds :: command_list() | parallel_testcase(),\fR
+\fB                            Triple :: {H, Sf, Result},\fR
+\fB                            H :: history(),\fR
+\fB                            Sf :: dynamic_state(),\fR
+\fB                            Result :: statem_result(),\fR
+\fB                            Config :: proplists:proplist(),\fR
+\fB                            Options0 :: proplists:proplist().\fR
+
+.br
+.RS
+.PP
+Presents the result of \fIstateful (statem) property testing\fR using the aggregate function in PropEr, QuickCheck or other similar property testing tool.
+
+.PP
+It is assumed to be called inside the property called by \fIquickcheck/2\fR:
+
+.IP
+.nf
+...
+RunResult = run_parallel_commands(?MODULE, Cmds),
+ct_property_test:present_result(?MODULE, Cmds, RunResult, Config)
+...
+
+.fi
+
+.PP
+See the User's Guide for an example of the usage and of the default printout.
+
+.PP
+The \fIStatisticsSpec\fR is a list of the tuples:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{Title::string(), CollectFun::fun/1}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{Title::string(), FrequencyFun::/0, CollectFun::fun/1}\fR
+
+.RE
+
+.PP
+Each tuple will produce one table in the order of their places in the list.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fITitle\fR will be the title of one result table
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fICollectFun\fR is called with one argument: the \fICmds\fR. It should return a list of the values to be counted. The following pre-defined functions exist:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIct_property_test:cmnd_names/1\fR returns a list of commands (function calls) generated in the \fICmnd\fR sequence, without Module, Arguments and other details.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIct_property_test:num_calls/1\fR returns a list of the length of commands lists
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIct_property_test:sequential_parallel/1\fR returns a list with information about sequential and parallel parts from \fITool:parallel_commands/1,2\fR
+
+.RE
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFrequencyFun/0\fR returns a fun/1 which is supposed to take a list of items as input, and return an iolist which will be printed as the table. Per default, the number of each item is counted and the percentage is printed for each. The list [a,b,a,a,c] could for example return
+
+.IP
+.nf
+["a 60%\\n","b 20%\\n","c 20%\\n"]
+
+.fi
+
+.PP
+which will be printed by the \fIprint_fun\fR. The default \fIprint_fun\fR will print it as:
+
+.IP
+.nf
+a 60%
+b 20%
+c 20%
+
+.fi
+
+.RE
+
+.PP
+The default \fIStatisticsSpec\fR is:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For sequential commands:
+
+.IP
+.nf
+[{"Function calls", fun cmnd_names/1},
+ {"Length of command sequences", fun print_frequency_ranges/0,
+                                                  fun num_calls/1}]
+
+.fi
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For parallel commands:
+
+.IP
+.nf
+[{"Distribution sequential/parallel", fun sequential_parallel/1},
+ {"Function calls", fun cmnd_names/1},
+ {"Length of command sequences", fun print_frequency_ranges/0,
+                                                  fun num_calls/1}]
+
+.fi
+
+.RE
+
+
+.RE
+.B
+\fBquickcheck(Property, Config) -> true | {fail, Reason}\fR
+\fB                    when\fR
+\fB                        Property :: term(),\fR
+\fB                        Config :: proplists:proplist(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Calls the selected tool's function for running the \fIProperty\fR. It is usually and by historical reasons called quickcheck, and that is why that name is used in this module (\fIct_property_test\fR).
+
+.PP
+The result is returned in a form suitable for \fICommon Test\fR test suites.
+
+.PP
+This function is intended to be called in test cases in test suites.
+
+
+.RE
+.B
+\fBsequential_parallel(Cs) -> Result\fR
+\fB                             when\fR
+\fB                                 Cs ::\fR
+\fB                                     command_list() |\fR
+\fB                                     parallel_testcase(),\fR
+\fB                                 Result :: [atom()].\fR
+
+.br
+.RS
+.PP
+Returns a list with information about sequential and parallel parts.
+
+.PP
+For more information see: \fIpresent_result/5\fR.
+
+
+.RE

@@ -1,0 +1,348 @@
+.TH rb 3 "sasl 4.3.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+rb \- The Report Browser Tool
+
+.SH DESCRIPTION
+.PP
+The Report Browser (RB) tool is used to browse and format error reports written by the error logger handler \fIlog_mf_h\fR in STDLIB.
+
+.SH DATA TYPES
+.LP
+.B
+\fBfilter() ::\fR
+\fB          {Key :: term(), Value :: term()} |\fR
+\fB          {Key :: term(), Value :: term(), no} |\fR
+\fB          {Key :: term(), RegExp :: regexp(), re} |\fR
+\fB          {Key :: term(), RegExp :: regexp(), re, no}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {start_log, FileName :: string() | atom() | pid()} |\fR
+\fB          {max, MaxNoOfReports :: integer() | all} |\fR
+\fB          {report_dir, DirString :: string()} |\fR
+\fB          {type, ReportType :: type() | [type()] | all} |\fR
+\fB          {abort_on_error, boolean()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBregexp() ::\fR
+\fB          string() |\fR
+\fB          {string(), Options :: [re:options()]} |\fR
+\fB          re:mp() |\fR
+\fB          {re:mp(), Options :: [re:compile_options()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtype() ::\fR
+\fB          error | error_report | info_msg | info_report | warning_msg |\fR
+\fB          warning_report | crash_report | supervisor_report | progress |\fR
+\fB          all.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBfilter(Filters, Dates) -> term()\fR
+\fB                when\fR
+\fB                    Filters :: [filter()],\fR
+\fB                    Dates ::\fR
+\fB                        {DateFrom, DateTo} |\fR
+\fB                        {DateFrom, from} |\fR
+\fB                        {DateTo, to},\fR
+\fB                    DateFrom :: calendar:datetime(),\fR
+\fB                    DateTo :: calendar:datetime().\fR
+
+.br
+.RS
+.PP
+Displays the reports that match the provided filters.
+
+.PP
+When a filter includes the \fIno\fR atom, it excludes the reports that match that filter.
+
+.PP
+The reports are matched using the \fIproplists\fR module in STDLIB. The report must be a proplist to be matched against any of the filters.
+
+.PP
+If the filter has the form \fI{Key, RegExp, re}\fR, the report must contain an element with key equal to \fIKey\fR and the value must match the regular expression \fIRegExp\fR.
+
+.PP
+If parameter \fIDates\fR is specified, the reports are filtered according to the date when they occurred. If \fIDates\fR has the form \fI{DateFrom, from}\fR, reports that occurred after \fIDateFrom\fR are displayed.
+
+.PP
+If \fIDates\fR has the form \fI{DateTo, to}\fR, reports that occurred before \fIDateTo\fR are displayed.
+
+.PP
+If two \fIDates\fR are specified, reports that occurred between those dates are returned.
+
+.PP
+To filter only by dates, specify the empty list as the \fIFilters\fR parameter.
+
+.PP
+For details about parameter \fIRegExp\fR, see \fIrb:grep/1\fR.
+
+.PP
+For details about data type \fImp()\fR, see \fIre:mp/0\fR.
+
+.PP
+For details about data type \fIdatetime()\fR, see \fIcalendar:datetime/0\fR.
+
+
+.RE
+.B
+\fBgrep(RegExp :: regexp()) -> term().\fR
+
+.br
+.RS
+.PP
+All reports matching the regular expression \fIRegExp\fR are displayed. \fIRegExp\fR can be any of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+string containing the regular expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+tuple with the string and the options for compilation
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+compiled regular expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+compiled regular expression and the options for running it
+
+.RE
+
+.PP
+For a definition of valid regular expressions and options, see the \fIre\fR module in STDLIB and in particular function \fIre:run/3\fR.
+
+.PP
+For details about data type \fImp()\fR, see \fIre:mp/0\fR.
+
+
+.RE
+.B
+\fBhelp() -> term().\fR
+
+.br
+.RS
+.PP
+Displays online help information.
+
+
+.RE
+.B
+\fBlist(Type :: type()) -> term().\fR
+
+.br
+.RS
+.PP
+Lists all reports loaded in \fIrb_server\fR. Each report is given a unique number that can be used as a reference to the report in function \fIshow/1\fR.
+
+.PP
+If no \fIType\fR is specified, all reports are listed.
+
+
+.RE
+.B
+\fBlog_list(Type :: type()) -> term().\fR
+
+.br
+.RS
+.PP
+Same as functions \fIlist/0\fR or \fIlist/1\fR, but the result is printed to a log file, if set; otherwise to \fIstandard_io\fR.
+
+.PP
+If no \fIType\fR is specified, all reports are listed.
+
+
+.RE
+.B
+\fBrescan(Options) -> term() when Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Rescans the report directory. \fIOptions\fR is the same as for function \fIstart/1\fR.
+
+
+.RE
+.B
+\fBshow() -> term().\fR
+
+.br
+.RS
+.PP
+All reports are displayed.
+
+
+.RE
+.B
+\fBshow(Report) -> term() when Report :: integer() | type().\fR
+
+.br
+.RS
+.PP
+If argument \fIReport\fR is specified as one of the values of \fItype()\fR, all loaded reports of that type are displayed. If \fIReport\fR is specified as an integer, the report with this reference number is displayed.
+
+
+.RE
+.B
+\fBstart(Options) -> term() when Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Function \fIstart/1\fR starts \fIrb_server\fR with the specified options, whereas function \fIstart/0\fR starts with default options.
+
+.PP
+\fIrb_server\fR must be started before reports can be browsed. When \fIrb_server\fR is started, the files in the specified directory are scanned. The other functions assume that the server has started.
+
+.PP
+\fIOptions:\fR
+
+{start_log, FileName}
+.RS 2
+Starts logging to file, registered name, or 
+\fIio_device\fR. All reports are printed to the specified destination. Default is \fIstandard_io\fR. Option \fI{start_log, standard_error}\fR is not allowed and will be replaced by default \fIstandard_io\fR.
+
+.RE
+
+{max, MaxNoOfReports}
+.RS 2
+Controls how many reports 
+\fIrb_server\fR is to read at startup. This option is useful, as the directory can contain a large amount of reports. If this option is specified, the \fIMaxNoOfReports\fR latest reports are read. Default is \fIall\fR.
+
+.RE
+
+{report_dir, DirString}
+.RS 2
+Defines the directory where the error log files are located. Default is the directory specified by application environment variable 
+\fIerror_logger_mf_dir\fR, see sasl(6).
+
+.RE
+
+{type, ReportType}
+.RS 2
+Controls what kind of reports 
+\fIrb_server\fR is to read at startup. \fIReportType\fR is a supported type, \fIall\fR, or a list of supported types. Default is \fIall\fR.
+
+.RE
+
+{abort_on_error, Bool}
+.RS 2
+Specifies if logging is to be ended if 
+\fIrb\fR encounters an unprintable report. (You can get a report with an incorrect form if function \fIerror_logger\fR, \fIerror_msg\fR, or \fIinfo_msg\fR has been called with an invalid format string)
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIBool\fR is \fItrue\fR, \fIrb\fR stops logging (and prints an error message to \fIstdout\fR) if it encounters a badly formatted report. If logging to file is enabled, an error message is appended to the log file as well.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIBool\fR is \fIfalse\fR (the default value), \fIrb\fR prints an error message to \fIstdout\fR for every bad report it encounters, but the logging process is never ended. All printable reports are written. If logging to file is enabled, \fIrb\fR prints \fI* UNPRINTABLE REPORT *\fR in the log file at the location of an unprintable report.
+
+.RE
+
+
+.RE
+
+
+.RE
+.B
+\fBstart_log(FileName) -> term()\fR
+\fB                   when FileName :: string() | atom() | pid().\fR
+
+.br
+.RS
+.PP
+Redirects all report output from the RB tool to the specified file, registered name, or \fIio_device\fR.
+
+
+.RE
+.B
+\fBstop() -> term().\fR
+
+.br
+.RS
+.PP
+Stops \fIrb_server\fR.
+
+
+.RE
+.B
+\fBstop_log() -> term().\fR
+
+.br
+.RS
+.PP
+Closes the log file. The output from the RB tool is directed to \fIstandard_io\fR.
+
+
+.RE

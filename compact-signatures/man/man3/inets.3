@@ -1,0 +1,147 @@
+.TH inets 3 "inets 9.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+inets \- The Inets services API.
+
+.SH DESCRIPTION
+.PP
+This module provides the most basic API to the clients and servers that are part of the \fIInets\fR application, such as start and stop.
+
+.PP
+\fBData types\fR
+
+.PP
+Type definitions that are used more than once in this module:
+
+.PP
+\fIservice() = httpc | httpd\fR
+
+.PP
+\fIproperty() = atom()\fR
+
+.PP
+\fBSee also\fR
+
+.PP
+\fIhttpc\fR, \fIhttpd\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBinets_service() :: httpd | httpc.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBservice_info() ::\fR
+\fB          {inets_service(),\fR
+\fB           pid(),\fR
+\fB           [{profile, atom()}] | no_such_service | service_not_available}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBservice_names() -> [inets_service()].\fR
+
+.br
+.RS
+.PP
+Returns a list of available service names.
+
+
+.RE
+.B
+\fBservices() ->\fR
+\fB                  [{inets_service(), pid()}] |\fR
+\fB                  {error, inets_not_started}.\fR
+
+.br
+.RS
+.PP
+Returns a list of currently running services.
+
+.PP
+\fBNOTE: \fRServices started as \fIstand_alone\fR are not listed.
+
+
+
+.RE
+.B
+\fBservices_info() -> [service_info()] | {error, inets_not_started}.\fR
+
+.br
+.RS
+.PP
+Returns a list of currently running services where each service is described by an \fI[{Option, Value}]\fR list. The information in the list is specific for each service and each service has probably its own info function that gives more details about the service. If specific service info returns \fI{error, Reason}\fR, Info will contain Reason term.
+
+
+.RE
+.B
+\fBstart(Type) -> ok | {error, Reason}\fR
+\fB               when Type :: application:restart_type(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Starts the \fIInets\fR application. Default type is \fItemporary\fR. See also \fIapplication\fR.
+
+
+.RE
+.B
+\fBstart(Service, ServiceConfig, How) -> Result\fR
+\fB               when\fR
+\fB                   Service :: inets_service(),\fR
+\fB                   ServiceConfig :: ConfPropList | ConfFile,\fR
+\fB                   How :: inets | stand_alone,\fR
+\fB                   ConfPropList :: [{Property, Value}],\fR
+\fB                   ConfFile :: string(),\fR
+\fB                   Property :: term(),\fR
+\fB                   Value :: term(),\fR
+\fB                   Result :: {ok, pid()} | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Dynamically starts an \fIInets\fR service after the \fIInets\fR application has been started.
+
+.PP
+\fBNOTE: \fRDynamically started services are not handled by application takeover and failover behavior when \fIInets\fR is run as a distributed application. Nor are they automatically restarted when the \fIInets\fR application is restarted. As long as the \fIInets\fR application is operational, they are supervised and can be soft code upgraded. A service started as \fIstand_alone\fR, that is, the service is not started as part of the \fIInets\fR application, lose all OTP application benefits, such as soft upgrade. The \fIstand_alone\fR-service is linked to the process that started it. Usually some supervision functionality is still in place and in some sense the calling process becomes the top supervisor.
+
+.PP
+\fBWarning \fR
+
+.PP
+The stand_alone option is considered deprecated.
+
+
+
+.RE
+.B
+\fBstop() -> ok.\fR
+
+.br
+.RS
+.PP
+Stops the \fIInets\fR application. See also \fIapplication\fR.
+
+
+.RE
+.B
+\fBstop(Service, Reference) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Service :: inets_service() | stand_alone,\fR
+\fB                  Reference :: pid() | term(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Stops a started service of the \fIInets\fR application or takes down a \fIstand_alone\fR-service gracefully. When option \fIstand_alone\fR is used in start, only the pid is a valid argument to stop.
+
+
+.RE

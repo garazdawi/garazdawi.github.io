@@ -1,0 +1,1296 @@
+.TH gen_fsm 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+gen_fsm \- Deprecated and replaced by \fIgen_statem\fR in OTP 20.
+
+.SH DESCRIPTION
+.SS "Migration to gen_statem"
+
+.PP
+Here follows a simple example of turning a gen_fsm into a \fIgen_statem\fR. The example comes from the previous User's Guide for \fIgen_fsm\fR
+
+.IP
+.nf
+-module(code_lock).
+-define(NAME, code_lock).
+%-define(BEFORE_REWRITE, true).
+
+-ifdef(BEFORE_REWRITE).
+-behaviour(gen_fsm).
+-else.
+-behaviour(gen_statem).
+-endif.
+
+-export([start_link/1, button/1, stop/0]).
+
+-ifdef(BEFORE_REWRITE).
+-export([init/1, locked/2, open/2, handle_sync_event/4, handle_event/3,
+     handle_info/3, terminate/3, code_change/4]).
+-else.
+-export([init/1, callback_mode/0, locked/3, open/3,
+     terminate/3, code_change/4]).
+%% Add callback__mode/0
+%% Change arity of the state functions
+%% Remove handle_info/3
+-endif.
+
+-ifdef(BEFORE_REWRITE).
+start_link(Code) ->
+    gen_fsm:start_link({local, ?NAME}, ?MODULE, Code, []).
+-else.
+start_link(Code) ->
+    gen_statem:start_link({local,?NAME}, ?MODULE, Code, []).
+-endif.
+
+-ifdef(BEFORE_REWRITE).
+button(Digit) ->
+    gen_fsm:send_event(?NAME, {button, Digit}).
+-else.
+button(Digit) ->
+    gen_statem:cast(?NAME, {button,Digit}).
+    %% send_event is asynchronous and becomes a cast
+-endif.
+
+-ifdef(BEFORE_REWRITE).
+stop() ->
+    gen_fsm:sync_send_all_state_event(?NAME, stop).
+-else.
+stop() ->
+    gen_statem:call(?NAME, stop).
+    %% sync_send is synchronous and becomes call
+    %% all_state is handled by callback code in gen_statem
+-endif.
+
+init(Code) ->
+    do_lock(),
+    Data = #{code => Code, remaining => Code},
+    {ok, locked, Data}.
+
+-ifdef(BEFORE_REWRITE).
+-else.
+callback_mode() ->
+    state_functions.
+%% state_functions mode is the mode most similar to
+%% gen_fsm. There is also handle_event mode which is
+%% a fairly different concept.
+-endif.
+
+-ifdef(BEFORE_REWRITE).
+locked({button, Digit}, Data0) ->
+    case analyze_lock(Digit, Data0) of
+    {open = StateName, Data} ->
+        {next_state, StateName, Data, 10000};
+    {StateName, Data} ->
+        {next_state, StateName, Data}
+    end.
+-else.
+locked(cast, {button,Digit}, Data0) ->
+    case analyze_lock(Digit, Data0) of
+    {open = StateName, Data} ->
+        {next_state, StateName, Data, 10000};
+    {StateName, Data} ->
+        {next_state, StateName, Data}
+    end;
+locked({call, From}, Msg, Data) ->
+    handle_call(From, Msg, Data);
+locked({info, Msg}, StateName, Data) ->
+    handle_info(Msg, StateName, Data).
+%% Arity differs
+%% All state events are dispatched to handle_call and handle_info help
+%% functions. If you want to handle a call or cast event specifically
+%% for this state you would add a special clause for it above.
+-endif.
+
+-ifdef(BEFORE_REWRITE).
+open(timeout, State) ->
+     do_lock(),
+    {next_state, locked, State};
+open({button,_}, Data) ->
+    {next_state, locked, Data}.
+-else.
+open(timeout, _, Data) ->
+    do_lock(),
+    {next_state, locked, Data};
+open(cast, {button,_}, Data) ->
+    {next_state, locked, Data};
+open({call, From}, Msg, Data) ->
+    handle_call(From, Msg, Data);
+open(info, Msg, Data) ->
+    handle_info(Msg, open, Data).
+%% Arity differs
+%% All state events are dispatched to handle_call and handle_info help
+%% functions. If you want to handle a call or cast event specifically
+%% for this state you would add a special clause for it above.
+-endif.
+
+-ifdef(BEFORE_REWRITE).
+handle_sync_event(stop, _From, _StateName, Data) ->
+    {stop, normal, ok, Data}.
+
+handle_event(Event, StateName, Data) ->
+    {stop, {shutdown, {unexpected, Event, StateName}}, Data}.
+
+handle_info(Info, StateName, Data) ->
+    {stop, {shutdown, {unexpected, Info, StateName}}, StateName, Data}.
+-else.
+-endif.
+
+terminate(_Reason, State, _Data) ->
+    State =/= locked andalso do_lock(),
+    ok.
+code_change(_Vsn, State, Data, _Extra) ->
+    {ok, State, Data}.
+
+%% Internal functions
+-ifdef(BEFORE_REWRITE).
+-else.
+handle_call(From, stop, Data) ->
+     {stop_and_reply, normal,  {reply, From, ok}, Data}.
+
+handle_info(Info, StateName, Data) ->
+    {stop, {shutdown, {unexpected, Info, StateName}}, StateName, Data}.
+%% These are internal functions for handling all state events
+%% and not behaviour callbacks as in gen_fsm
+-endif.
+
+analyze_lock(Digit, #{code := Code, remaining := Remaining} = Data) ->
+     case Remaining of
+         [Digit] ->
+         do_unlock(),
+         {open,  Data#{remaining := Code}};
+         [Digit|Rest] -> % Incomplete
+             {locked, Data#{remaining := Rest}};
+         _Wrong ->
+             {locked, Data#{remaining := Code}}
+     end.
+
+do_lock() ->
+    io:format("Lock~n", []).
+do_unlock() ->
+    io:format("Unlock~n", []).
+
+.fi
+
+.SS "OTP 19 Documentation"
+
+.PP
+\fBModule\fR
+
+.PP
+\fIgen_fsm\fR
+
+.PP
+\fBModule Summary\fR
+
+.PP
+Generic finite state machine behavior.
+
+.PP
+\fBDescription\fR
+
+.PP
+This behavior module provides a finite state machine. A generic finite state machine process (\fIgen_fsm\fR) implemented using this module has a standard set of interface functions and includes functionality for tracing and error reporting. It also fits into an OTP supervision tree.  For more information, see OTP Design Principles.
+
+.PP
+A \fIgen_fsm\fR process assumes all specific parts to be located in a callback module exporting a predefined set of functions. The relationship between the behavior functions and the callback functions is as follows:
+
+.IP
+.nf
+gen_fsm module                    Callback module
+--------------                    ---------------
+gen_fsm:start
+gen_fsm:start_link                -----> Module:init/1
+
+gen_fsm:stop                      -----> Module:terminate/3
+
+gen_fsm:send_event                -----> Module:StateName/2
+
+gen_fsm:send_all_state_event      -----> Module:handle_event/3
+
+gen_fsm:sync_send_event           -----> Module:StateName/3
+
+gen_fsm:sync_send_all_state_event -----> Module:handle_sync_event/4
+
+-                                 -----> Module:handle_info/3
+
+-                                 -----> Module:terminate/3
+
+-                                 -----> Module:code_change/4
+
+.fi
+
+.PP
+If a callback function fails or returns a bad value, the \fIgen_fsm\fR process terminates.
+
+.PP
+A \fIgen_fsm\fR process handles system messages as described in sys(3).  The sys module can be used for debugging a \fIgen_fsm\fR process.
+
+.PP
+Notice that a \fIgen_fsm\fR process does not trap exit signals automatically, this must be explicitly initiated in the callback module.
+
+.PP
+Unless otherwise stated, all functions in this module fail if the specified \fIgen_fsm\fR process does not exist or if bad arguments are specified.
+
+.PP
+The gen_fsm process can go into hibernation (see \fIerlang:hibernate/3\fR) if a callback function specifies \fIhibernate\fR instead of a time-out value. This can be useful if the server is expected to be idle for a long time. However, use this feature with care, as hibernation implies at least two garbage collections (when hibernating and shortly after waking up) and is not something you want to do between each call to a busy state machine.
+
+.PP
+\fBCallback Functions\fR
+
+.PP
+See the Callback Functions section for the functions to be exported from a \fIgen_fsm\fR callback module.
+
+.PP
+\fBState name\fR denotes a state of the state machine.
+
+.PP
+\fBState data\fR denotes the internal state of the Erlang process that implements the state machine.
+
+.SH DATA TYPES
+.LP
+.B
+\fBenter_loop_opt() :: {debug, Dbgs :: [sys:debug_option()]}.\fR
+
+.br
+.RS
+.PP
+Start options for the \fIenter_loop/4,5,6\fR, \fIstart/3,4\fR, and \fIstart_link/3,4\fR functions.
+
+.PP
+See \fIstart_link/4\fR.
+
+
+.RE
+.B
+\fBfrom() :: {To :: pid(), Tag :: term()}.\fR
+
+.br
+.RS
+.PP
+Reply destination. See \fIreply/2\fR
+
+
+.RE
+.B
+\fBfsm_name() ::\fR
+\fB          {local, LocalName :: atom()} |\fR
+\fB          {global, GlobalName :: term()} |\fR
+\fB          {via, RegMod :: module(), ViaName :: term()}.\fR
+
+.br
+.RS
+.PP
+FSM name specification: \fIlocal\fR, \fIglobal\fR, or \fIvia\fR registered.
+
+.PP
+To be used when starting a \fIgen_fsm\fR. See \fIstart_link/4\fR.
+
+
+.RE
+.B
+\fBfsm_ref() ::\fR
+\fB          pid() |\fR
+\fB          (LocalName :: atom()) |\fR
+\fB          {Name :: atom(), Node :: atom()} |\fR
+\fB          {global, GlobalName :: term()} |\fR
+\fB          {via, RegMod :: module(), ViaName :: term()}.\fR
+
+.br
+.RS
+.PP
+FSM reference \fIpid/0\fR or registered \fIfsm_name/0\fR.
+
+.PP
+To be used in for example \fIsend_event/2\fR to specify the server.
+
+
+.RE
+.B
+\fBstart_opt() ::\fR
+\fB          {timeout, Time :: timeout()} |\fR
+\fB          {spawn_opt, [proc_lib:start_spawn_option()]} |\fR
+\fB          enter_loop_opt().\fR
+
+.br
+.RS
+.PP
+Start options for the \fIstart/3,4\fR, and \fIstart_link/3,4\fR functions.
+
+.PP
+See \fIstart_link/4\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcancel_timer(Ref) -> RemainingTime | false\fR
+\fB                      when\fR
+\fB                          Ref :: reference(),\fR
+\fB                          RemainingTime :: non_neg_integer().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:cancel_timer/1 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Cancel an internal timer in a generic FSM.
+
+.PP
+Cancels an internal timer referred by \fIRef\fR in the \fIgen_fsm\fR process that calls this function.
+
+.PP
+\fIRef\fR is a reference returned from \fIsend_event_after/2\fR or \fIstart_timer/2\fR.
+
+.PP
+If the timer has already timed out, but the event not yet been delivered, it is cancelled as if it had not timed out, so there is no false timer event after returning from this function.
+
+.PP
+Returns the remaining time in milliseconds until the timer would have expired if \fIRef\fR referred to an active timer, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBenter_loop(Module, Options, StateName, StateData) -> no_return()\fR
+\fB                    when\fR
+\fB                        Module :: module(),\fR
+\fB                        Options :: [enter_loop_opt()],\fR
+\fB                        StateName :: atom(),\fR
+\fB                        StateData :: term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:enter_loop/4 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Enter the \fIgen_fsm\fR receive loop.
+
+.PP
+Equivalent to \fIenter_loop/6\fR with \fITimeout = infinity\fR but the started server is not registered as for \fIstart_link/3\fR.
+
+
+.RE
+.B
+\fBenter_loop(Module, Options, StateName, StateData, FsmName) ->\fR
+\fB                    no_return()\fR
+\fB                    when\fR
+\fB                        Module :: module(),\fR
+\fB                        Options :: [enter_loop_opt()],\fR
+\fB                        StateName :: atom(),\fR
+\fB                        StateData :: term(),\fR
+\fB                        FsmName :: fsm_name();\fR
+\fB                (Module, Options, StateName, StateData, Timeout) ->\fR
+\fB                    no_return()\fR
+\fB                    when\fR
+\fB                        Module :: module(),\fR
+\fB                        Options :: enter_loop_opt(),\fR
+\fB                        StateName :: atom(),\fR
+\fB                        StateData :: term(),\fR
+\fB                        Timeout :: timeout().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:enter_loop/5 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Enter the \fIgen_fsm\fR receive loop.
+
+.PP
+With argument \fIFsmName\fR equivalent to \fIenter_loop/6\fR with \fITimeout = infinity\fR.
+
+.PP
+With argument \fITimeout\fR equivalent to \fIenter_loop/6\fR but the started server is not registered as for \fIstart_link/3\fR.
+
+
+.RE
+.B
+\fBenter_loop(Module, Options, StateName, StateData, FsmName,\fR
+\fB                 Timeout) ->\fR
+\fB                    no_return()\fR
+\fB                    when\fR
+\fB                        Module :: module(),\fR
+\fB                        Options :: [enter_loop_opt()],\fR
+\fB                        StateName :: atom(),\fR
+\fB                        StateData :: term(),\fR
+\fB                        FsmName :: fsm_name() | pid(),\fR
+\fB                        Timeout :: timeout().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:enter_loop/6 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Enter the \fIgen_fsm\fR receive loop.
+
+.PP
+Makes an existing process into a \fIgen_fsm\fR process.  Does not return, instead the calling process enters the \fIgen_fsm\fR receive loop and becomes a \fIgen_fsm\fR process.  The process must have been started using one of the start functions in \fIproc_lib\fR.  The user is responsible for any initialization of the process, including registering a name for it.
+
+.PP
+This function is useful when a more complex initialization procedure is needed than the \fIgen_fsm\fR behavior provides.
+
+.PP
+\fIModule\fR, \fIOptions\fR, and \fIFsmName\fR have the same meanings as when calling \fIstart[_link]/3,4\fR. However, the process must have been registered according to \fIFsmName\fR before this function is called.
+
+.PP
+\fIStateName\fR, \fIStateData\fR, and \fITimeout\fR have the same meanings as in the return value of \fIModule:init/1\fR. The callback module \fIModule\fR does not need to export an \fIinit/1\fR function.
+
+.PP
+The function fails if the calling process was not started by a \fIproc_lib\fR start function, or if it is not registered according to \fIFsmName\fR.
+
+
+.RE
+.B
+\fBreply(Caller, Reply) -> Result\fR
+\fB               when Caller :: from(), Reply :: term(), Result :: term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:reply/2 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Send a reply to a caller.
+
+.PP
+This function can be used by a \fIgen_fsm\fR process to explicitly send a reply to a client process that called \fIsync_send_event/2,3\fR or \fIsync_send_all_state_event/2,3\fR when the reply cannot be defined in the return value of \fIModule:StateName/3\fR or \fIModule:handle_sync_event/4\fR.
+
+.PP
+\fICaller\fR must be the \fIFrom\fR argument provided to the callback function. \fIReply\fR is any term given back to the client as the return value of \fIsync_send_event/2,3\fR or \fIsync_send_all_state_event/2,3\fR.
+
+.PP
+Return value \fIResult\fR is not further defined, and is always to be ignored.
+
+
+.RE
+.B
+\fBsend_all_state_event(FsmRef, Event) -> ok\fR
+\fB                              when FsmRef :: fsm_ref(), Event :: term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:send_all_state_event/2 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Send an event asynchronously to a generic FSM.
+
+.PP
+Sends an event asynchronously to the \fIFsmRef\fR of the \fIgen_fsm\fR process and returns \fIok\fR immediately.  The \fIgen_fsm\fR process calls \fIModule:handle_event/3\fR to handle the event.
+
+.PP
+For a description of the arguments, see \fIsend_event/2\fR.
+
+.PP
+The difference between \fIsend_event/2\fR and \fIsend_all_state_event/2\fR is which callback function is used to handle the event. This function is useful when sending events that are handled the same way in every state, as only one \fIhandle_event\fR clause is needed to handle the event instead of one clause in each state name function.
+
+
+.RE
+.B
+\fBsend_event(FsmRef, Event) -> ok\fR
+\fB                    when FsmRef :: fsm_ref(), Event :: term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:send_event/2 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Send an event asynchronously to a generic FSM.
+
+.PP
+Sends \fIEvent\fR to the \fIFsmRef\fR of the \fIgen_fsm\fR process and returns \fIok\fR immediately.  The \fIgen_fsm\fR process calls \fIModule:StateName/2\fR to handle the event, where \fIStateName\fR is the name of the current state of the \fIgen_fsm\fR process.
+
+.PP
+\fIFsmRef\fR can be any of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIpid/0\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIName\fR, if the \fIgen_fsm\fR process is locally registered
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{Name, Node}\fR, if the \fIgen_fsm\fR process is locally registered at another node
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{global, GlobalName}\fR, if the \fIgen_fsm\fR process is globally registered
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{via, Module, ViaName}\fR, if the \fIgen_fsm\fR process is registered through an alternative process registry
+
+.RE
+
+.PP
+\fIEvent\fR is any term that is passed as one of the arguments to \fIModule:StateName/2\fR.
+
+
+.RE
+.B
+\fBsend_event_after(Time, Event) -> Ref\fR
+\fB                          when\fR
+\fB                              Time :: non_neg_integer(),\fR
+\fB                              Event :: term(),\fR
+\fB                              Ref :: reference().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:send_event_after/2 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Send a delayed event internally in a generic FSM.
+
+.PP
+Sends a delayed event internally in the \fIgen_fsm\fR process that calls this function after \fITime\fR milliseconds. Returns immediately a reference that can be used to cancel the delayed send using \fIcancel_timer/1\fR.
+
+.PP
+The \fIgen_fsm\fR process calls \fIModule:StateName/2\fR to handle the event, where \fI'StateName'\fR is the name of the current state of the \fIgen_fsm\fR process at the time the delayed event is delivered.
+
+.PP
+\fIEvent\fR is any term that is passed as one of the arguments to \fIModule:StateName/2\fR.
+
+
+.RE
+.B
+\fBstart(Module, Args, Options) -> Result\fR
+\fB               when\fR
+\fB                   Module :: module(),\fR
+\fB                   Args :: term(),\fR
+\fB                   Options :: [start_opt()],\fR
+\fB                   Result :: {ok, Pid} | ignore | {error, Reason},\fR
+\fB                   Pid :: pid(),\fR
+\fB                   Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:start/3 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Create a standalone \fIgen_fsm\fR process, not registered.
+
+.PP
+Equivalent to \fIstart(Name, Mod, Args, Options)\fR without registering a \fIName\fR.
+
+.PP
+For a description of arguments and return values, see \fIstart_link/3,4\fR.
+
+
+.RE
+.B
+\fBstart(FsmName, Module, Args, Options) -> Result\fR
+\fB               when\fR
+\fB                   FsmName :: fsm_name(),\fR
+\fB                   Module :: module(),\fR
+\fB                   Args :: term(),\fR
+\fB                   Options :: [start_opt()],\fR
+\fB                   Result :: {ok, Pid} | ignore | {error, Reason},\fR
+\fB                   Pid :: pid(),\fR
+\fB                   Reason :: {already_started, Pid} | term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:start/4 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Create a standalone \fIgen_fsm\fR process.
+
+.PP
+The created process is not part of a supervision tree and thus has no supervisor.
+
+.PP
+For a description of arguments and return values, see \fIstart_link/3,4\fR.
+
+
+.RE
+.B
+\fBstart_link(Module, Args, Options) -> Result\fR
+\fB                    when\fR
+\fB                        Module :: module(),\fR
+\fB                        Args :: term(),\fR
+\fB                        Options :: [start_opt()],\fR
+\fB                        Result :: {ok, Pid} | ignore | {error, Reason},\fR
+\fB                        Pid :: pid(),\fR
+\fB                        Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:start_link/3 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Create a \fIgen_fsm\fR process in a supervision tree, not registered.
+
+.PP
+Equivalent to \fIstart_link(Name, Mod, Args, Options)\fR without registering a \fIName\fR.
+
+
+.RE
+.B
+\fBstart_link(FsmName, Module, Args, Options) -> Result\fR
+\fB                    when\fR
+\fB                        FsmName :: fsm_name(),\fR
+\fB                        Module :: module(),\fR
+\fB                        Args :: term(),\fR
+\fB                        Options :: [start_opt()],\fR
+\fB                        Result :: {ok, Pid} | ignore | {error, Reason},\fR
+\fB                        Pid :: pid(),\fR
+\fB                        Reason :: {already_started, Pid} | term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:start_link/4 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Create a \fIgen_fsm\fR process in a supervision tree.
+
+.PP
+The process is created as part of a supervision tree.  The function is to be called, directly or indirectly, by the supervisor. For example, it ensures that the \fIgen_fsm\fR process is linked to the supervisor.
+
+.PP
+The \fIgen_fsm\fR process calls \fIModule:init/1\fR to initialize. To ensure a synchronized startup procedure, \fIstart_link/3,4\fR does not return until \fIModule:init/1\fR has returned.
+
+.PP
+
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fB\fIFsmName = {local, Name}\fR\fR, the \fIgen_fsm\fR process is registered locally as \fIName\fR using \fIregister/2\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fB\fIFsmName = {global, GlobalName}\fR\fR, the \fIgen_fsm\fR process is registered globally as \fIGlobalName\fR using \fIglobal:register_name/2\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fB\fIFsmName = {via, Module, ViaName}\fR\fR, the \fIgen_fsm\fR process registers with the registry represented by \fIModule\fR.  The \fIModule\fR callback is to export the functions \fIregister_name/2\fR, \fIunregister_name/1\fR, \fIwhereis_name/1\fR, and \fIsend/2\fR, which are to behave like the corresponding functions in \fIglobal\fR. Thus, \fI{via, global, GlobalName}\fR is a valid reference.
+
+.RE
+
+.PP
+\fIModule\fR is the name of the callback module.
+
+.PP
+\fIArgs\fR is any term that is passed as the argument to \fIModule:init/1\fR.
+
+.PP
+
+
+.PP
+If option \fB\fI{timeout, Time}\fR\fR is present, the \fIgen_fsm\fR process is allowed to spend \fITime\fR milliseconds initializing or it terminates and the start function returns \fI{error, timeout}\fR.
+
+.PP
+If option \fB\fI{debug, Dbgs}\fR\fR is present, the corresponding \fIsys\fR function is called for each item in \fIDbgs\fR; see \fIsys(3)\fR.
+
+.PP
+If option \fB\fI{spawn_opt, SOpts}\fR\fR is present, \fISOpts\fR is passed as option list to the \fIspawn_opt\fR BIF that is used to spawn the \fIgen_fsm\fR process; see \fIspawn_opt/2\fR.
+
+.PP
+\fBNOTE: \fRUsing spawn option \fImonitor\fR is not allowed, it causes the function to fail with reason \fIbadarg\fR.
+
+
+.PP
+If the \fIgen_fsm\fR process is successfully created and initialized, the function returns \fI{ok, Pid}\fR, where \fIPid\fR is the pid of the \fIgen_fsm\fR process.  If a process with the specified \fIFsmName\fR exists already, the function returns \fI{error, {already_started, Pid}}\fR, where \fIPid\fR is the pid of that process.
+
+.PP
+If \fIModule:init/1\fR fails with \fIReason\fR, the function returns \fI{error, Reason}\fR.  If \fIModule:init/1\fR returns \fI{stop, Reason}\fR or \fIignore\fR, the process is terminated and the function returns \fI{error, Reason}\fR or \fIignore\fR, respectively.
+
+
+.RE
+.B
+\fBstart_timer(Time, Msg) -> Ref\fR
+\fB                     when\fR
+\fB                         Time :: non_neg_integer(),\fR
+\fB                         Msg :: term(),\fR
+\fB                         Ref :: reference().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:start_timer/2 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Send a time-out event internally in a generic FSM.
+
+.PP
+Sends a time-out event internally in the \fIgen_fsm process\fR that calls this function after \fITime\fR milliseconds. Returns immediately a reference that can be used to cancel the timer using \fIcancel_timer/1\fR.
+
+.PP
+The \fIgen_fsm\fR process calls \fIModule:StateName/2\fR to handle the event, where \fI'StateName'\fR is the name of the current state of the \fIgen_fsm\fR process at the time the time-out message is delivered.
+
+.PP
+\fIMsg\fR is any term that is passed in the time-out message, \fI{timeout, Ref, Msg}\fR, as one of the arguments to \fIModule:StateName/2\fR.
+
+
+.RE
+.B
+\fBstop(FsmRef, Reason, Timeout) -> ok\fR
+\fB              when\fR
+\fB                  FsmRef :: fsm_ref(),\fR
+\fB                  Reason :: term(),\fR
+\fB                  Timeout :: timeout().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:stop/3 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Synchronously stop a generic FSM.
+
+.PP
+Orders a generic finite state machine to exit with the specified \fIReason\fR and waits for it to terminate.  The \fIgen_fsm\fR process calls \fIModule:terminate/3\fR before exiting.
+
+.PP
+The function returns \fIok\fR if the generic finite state machine terminates with the expected reason.  Any other reason than \fInormal\fR, \fIshutdown\fR, or \fI{shutdown, Term}\fR causes an error report to be issued using \fIerror_logger:format/2\fR.
+
+.PP
+\fITimeout\fR is an integer greater than zero that specifies how many milliseconds to wait for the generic FSM to terminate, or the atom \fIinfinity\fR to wait indefinitely. If the generic finite state machine has not terminated within the specified time, a \fItimeout\fR exception is raised.
+
+.PP
+If the process does not exist, a \fInoproc\fR exception is raised.
+
+
+.RE
+.B
+\fBsync_send_all_state_event(FsmRef, Event, Timeout) -> Reply\fR
+\fB                                   when\fR
+\fB                                       FsmRef :: fsm_ref(),\fR
+\fB                                       Event :: term(),\fR
+\fB                                       Timeout :: timeout(),\fR
+\fB                                       Reply :: term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:sync_send_all_state_event/3 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Send an event synchronously to a generic FSM.
+
+.PP
+Sends an event to the \fIFsmRef\fR of the \fIgen_fsm\fR process and waits until a reply arrives or a time-out occurs.  The \fIgen_fsm\fR process calls \fIModule:handle_sync_event/4\fR to handle the event.
+
+.PP
+For a description of \fIFsmRef\fR and \fIEvent\fR, see \fIsend_event/2\fR. For a description of \fITimeout\fR and \fIReply\fR, see \fIsync_send_event/3\fR.
+
+.PP
+For a discussion about the difference between \fIsync_send_event\fR and \fIsync_send_all_state_event\fR, see \fIsend_all_state_event/2\fR.
+
+
+.RE
+.B
+\fBsync_send_event(FsmRef, Event, Timeout) -> Reply\fR
+\fB                         when\fR
+\fB                             FsmRef :: fsm_ref(),\fR
+\fB                             Event :: term(),\fR
+\fB                             Timeout :: timeout(),\fR
+\fB                             Reply :: term().\fR
+
+.RS
+.LP
+Deprecated: gen_fsm:sync_send_event/3 is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Send an event synchronously to a generic FSM.
+
+.PP
+Sends an event to the \fIFsmRef\fR of the \fIgen_fsm\fR process and waits until a reply arrives or a time-out occurs. The \fIgen_fsm\fR process calls \fIModule:StateName/3\fR to handle the event, where \fI'StateName'\fR is the name of the current state of the \fIgen_fsm\fR process.
+
+.PP
+For a description of \fIFsmRef\fR and \fIEvent\fR, see \fIsend_event/2\fR.
+
+.PP
+\fITimeout\fR is an integer greater than zero that specifies how many milliseconds to wait for a reply, or the atom \fIinfinity\fR to wait indefinitely.  If no reply is received within the specified time, the function call fails.
+
+.PP
+Return value \fIReply\fR is defined in the return value of \fIModule:StateName/3\fR
+
+.PP
+\fBNOTE: \fRThe ancient behavior of sometimes consuming the server exit message if the server died during the call while linked to the client was removed in Erlang 5.6/OTP R12B.
+
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fB'StateName'(Event, StateData)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:'StateName'(_,_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Handle an asynchronous event.
+
+.PP
+There is to be one instance of this function for each possible \fIstate name\fR. Whenever a \fIgen_fsm\fR process receives an event sent using \fIsend_event/2\fR, the instance of this function with the same name as the current \fIstate name\fR \fIStateName\fR is called to handle the event. It is also called if a time-out occurs.
+
+.PP
+\fIEvent\fR is either the atom \fItimeout\fR, if a time-out has occurred, or the \fIEvent\fR argument provided to \fIsend_event/2\fR.
+
+.PP
+\fIStateData\fR is the \fIstate data\fR of the \fIgen_fsm\fR process.
+
+.PP
+If the function returns \fI{next_state, NextStateName, NewStateData}\fR, \fI{next_state, NextStateName, NewStateData, Timeout}\fR, or \fI{next_state, NextStateName, NewStateData, hibernate}\fR, the \fIgen_fsm\fR process continues executing with the current \fIstate name\fR set to \fINextStateName\fR and with the possibly updated \fIstate data\fR \fINewStateData\fR.  For a description of \fITimeout\fR and \fIhibernate\fR, see \fIModule:init/1\fR.
+
+.PP
+If the function returns \fI{stop ,Reason, NewStateData}\fR, the \fIgen_fsm\fR process calls \fIModule:terminate(Reason, StateName, NewStateData)\fR and terminates.
+
+
+.RE
+.B
+\fB'StateName'(Event, From, StateData)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:'StateName'(_,_,_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Handle a synchronous event.
+
+.PP
+There is to be one instance of this function for each possible \fIstate name\fR. Whenever a \fIgen_fsm\fR process receives an event sent using \fIsync_send_event/2,3\fR, the instance of this function with the same name as the current \fIstate name\fR \fIStateName\fR is called to handle the event.
+
+.PP
+\fIEvent\fR is the \fIEvent\fR argument provided to \fIsync_send_event/2,3\fR.
+
+.PP
+\fIFrom\fR is a tuple \fI{Pid, Tag}\fR where \fIPid\fR is the \fIpid/0\fR of the process that called \fIsync_send_event/2,3\fR, \fITag\fR is a unique tag.
+
+.PP
+\fIStateData\fR is the \fIstate data\fR of the \fIgen_fsm\fR process.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fI{reply, Reply, NextStateName, NewStateData}\fR, \fI{reply, Reply, NextStateName, NewStateData, Timeout}\fR, or \fI{reply, Reply, NextStateName, NewStateData, hibernate}\fR is returned, \fIReply\fR is given back to \fIFrom\fR as the return value of \fIsync_send_event/2,3\fR. The \fIgen_fsm\fR process then continues executing with the current \fIstate name\fR set to \fINextStateName\fR and with the possibly updated \fIstate data\fR \fINewStateData\fR. For a description of \fITimeout\fR and \fIhibernate\fR, see \fIModule:init/1\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fI{next_state, NextStateName, NewStateData}\fR, \fI{next_state, NextStateName, NewStateData, Timeout}\fR, or \fI{next_state, NextStateName, NewStateData, hibernate}\fR is returned, the \fIgen_fsm\fR process continues executing in \fINextStateName\fR with \fINewStateData\fR.  Any reply to \fIFrom\fR must be specified explicitly using \fIreply/2\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the function returns \fI{stop, Reason, Reply, NewStateData}\fR, \fIReply\fR is given back to \fIFrom\fR.  If the function returns {stop, Reason, NewStateData}, any reply to \fIFrom\fR must be specified explicitly using \fIreply/2\fR.  The \fIgen_fsm\fR process then calls \fIModule:terminate(Reason, StateName, NewStateData)\fR and terminates.
+
+.RE
+
+
+.RE
+.B
+\fBcode_change(OldVsn, StateName, StateData, Extra)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:code_change(_,_,_,_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Update the internal \fIstate data\fR during upgrade/downgrade.
+
+.PP
+This function is called by a \fIgen_fsm\fR process when it is to update its internal \fIstate data\fR during a release upgrade/downgrade, that is, when instruction \fI{update, Module, Change, ...}\fR, where \fIChange = {advanced, Extra}\fR, is given in the appup file; see Release Handling Instructions in OTP Design Principles.
+
+.PP
+For an upgrade, \fIOldVsn\fR is \fIVsn\fR, and for a downgrade, \fIOldVsn\fR is \fI{down, Vsn}\fR. \fIVsn\fR is defined by the vsn attribute(s) of the old version of the callback module \fIModule\fR.  If no such attribute is defined, the version is the checksum of the Beam file.
+
+.PP
+\fIStateName\fR is the current \fIstate name\fR and \fIStateData\fR the internal \fIstate data\fR of the \fIgen_fsm\fR process.
+
+.PP
+\fIExtra\fR is passed "as is" from the \fI{advanced, Extra}\fR part of the update instruction.
+
+.PP
+The function is to return the new current \fIstate name\fR and updated internal data.
+
+
+.RE
+.B
+\fBformat_status/2\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:format_status(_,_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Optional function for providing a term describing the current \fIgen_fsm\fR process status.
+
+.PP
+The second argument is \fI[PDict, StateData]\fR, that is, a list with the 2 elements, in that order.
+
+.PP
+\fBNOTE: \fRThis callback is optional, so callback modules need not export it. The \fIgen_fsm\fR module provides a default implementation of this function that returns the callback module \fIstate data\fR.
+
+
+.PP
+This function is called by a \fIgen_fsm\fR process in the following situations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+One of \fIsys:get_status/1,2\fR is invoked to get the \fIgen_fsm\fR status. \fIOpt\fR is set to the atom \fInormal\fR for this case.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIgen_fsm\fR process terminates abnormally and logs an error. \fIOpt\fR is set to the atom terminate for this case.
+
+.RE
+
+.PP
+This function is useful for changing the form and appearance of the \fIgen_fsm\fR status for these cases.  A callback module wishing to change the \fIsys:get_status/1,2\fR return value as well as how its status appears in termination error logs, exports an instance of \fIformat_status/2\fR that returns a term describing the current status of the \fIgen_fsm\fR process.
+
+.PP
+\fIPDict\fR is the current value of the process dictionary of the \fIgen_fsm\fR process.
+
+.PP
+\fIStateData\fR is the internal \fIstate data\fR of the \fIgen_fsm\fR process.
+
+.PP
+The function is to return \fIStatus\fR, a term that change the details of the current state and status of the \fIgen_fsm\fR process. There are no restrictions of the form \fIStatus\fR can take, but for the \fIsys:get_status/1,2\fR case (when \fIOpt\fR is \fInormal\fR), the recommended form for the \fIStatus\fR value is \fI[{data, [{"StateData", Term}]}]\fR, where \fITerm\fR provides relevant details of the \fIgen_fsm\fR \fIstate data\fR. Following this recommendation is not required, but it makes the callback module status consistent with the rest of the \fIsys:get_status/1,2\fR return value.
+
+.PP
+One use for this function is to return compact alternative \fIstate data\fR representations to avoid that large state terms are printed in log files.
+
+
+.RE
+.B
+\fBhandle_event(Event, StateName, StateData)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:handle_event(_,_,_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Handle an asynchronous event.
+
+.PP
+Whenever a \fIgen_fsm\fR process receives an event sent using \fIsend_all_state_event/2\fR, this function is called to handle the event.
+
+.PP
+\fIStateName\fR is the current \fIstate name\fR of the \fIgen_fsm\fR process.
+
+.PP
+For a description of the other arguments and possible return values, see \fIModule:StateName/2\fR.
+
+
+.RE
+.B
+\fBhandle_info(Info, StateName, StateData)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:handle_info(_,_,_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Handle an incoming message
+
+.PP
+This function is called by a \fIgen_fsm\fR process when it receives any other message than a synchronous or asynchronous event (or a system message).
+
+.PP
+\fIInfo\fR is the received message.
+
+.PP
+For a description of the other arguments and possible return values, see \fIModule:StateName/2\fR.
+
+
+.RE
+.B
+\fBhandle_sync_event(Event, From, StateName, StateData)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:handle_sync_event(_,_,_,_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Handle a synchronous event.
+
+.PP
+Whenever a \fIgen_fsm\fR process receives an event sent using \fIsync_send_all_state_event/2,3\fR, this function is called to handle the event.
+
+.PP
+\fIStateName\fR is the current \fIstate name\fR of the \fIgen_fsm\fR process.
+
+.PP
+For a description of the other arguments and possible return values, see \fIModule:StateName/3\fR.
+
+
+.RE
+.B
+\fBinit(Args)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:init(_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Initialize process and internal \fIstate name\fR and \fIstate data\fR.
+
+.PP
+Whenever a \fIgen_fsm\fR process is started using \fIstart/3,4\fR or \fIstart_link/3,4\fR, this function is called by the new process to initialize.
+
+.PP
+\fIArgs\fR is the \fIArgs\fR argument provided to the start function.
+
+.PP
+If initialization is successful, the function is to return {ok, StateName, StateData}, {ok, StateName, StateData, Timeout}, or {ok, StateName, StateData, hibernate}, where \fIStateName\fR is the initial \fIstate name\fR and \fIStateData\fR the initial \fIstate data\fR of the \fIgen_fsm\fR process.
+
+.PP
+If an \fIinteger/0\fR time-out value is provided, a time-out occurs unless an event or a message is received within \fITimeout\fR milliseconds. A time-out is represented by the atom \fItimeout\fR and is to be handled by the \fIModule:StateName/2\fR callback functions. The atom \fIinfinity\fR can be used to wait indefinitely, this is the default value.
+
+.PP
+If \fIhibernate\fR is specified instead of a time-out value, the process goes into hibernation when waiting for the next message to arrive (by calling \fIproc_lib:hibernate/3\fR).
+
+.PP
+If the initialization fails, the function returns \fI{stop, Reason}\fR, where \fIReason\fR is any term, or \fIignore\fR.
+
+
+.RE
+.B
+\fBterminate(Reason, StateName, StateData)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_fsm:terminate(_,_,_) is deprecated; use the 'gen_statem' module instead
+.RE
+
+.br
+.RS
+.PP
+Clean up before termination.
+
+.PP
+This function is called by a \fIgen_fsm\fR process when it is about to terminate.  It is to be the opposite of \fIModule:init/1\fR and do any necessary cleaning up. When it returns, the \fIgen_fsm\fR process terminates with \fIReason\fR. The return value is ignored.
+
+.PP
+\fIReason\fR is a term denoting the stop reason, \fIStateName\fR is the current \fIstate name\fR, and \fIStateData\fR is the \fIstate data\fR of the \fIgen_fsm\fR process.
+
+.PP
+\fIReason\fR depends on why the \fIgen_fsm\fR process is terminating. If it is because another callback function has returned a stop tuple \fI{stop, ...}\fR, \fIReason\fR has the value specified in that tuple. If it is because of a failure, \fIReason\fR is the error reason.
+
+.PP
+If the \fIgen_fsm\fR process is part of a supervision tree and is ordered by its supervisor to terminate, this function is called with \fIReason = shutdown\fR if the following conditions apply:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The gen_fsm process has been set to trap exit signals.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The shutdown strategy as defined in the child specification of the supervisor is an integer time-out value, not brutal_kill.
+
+.RE
+
+.PP
+Even if the gen_fsm process is \fBnot\fR part of a supervision tree, this function is called if it receives an \fI'EXIT'\fR message from its parent. \fIReason\fR is the same as in the \fI'EXIT'\fR message.
+
+.PP
+Otherwise, the gen_fsm process terminates immediately.
+
+.PP
+Notice that for any other reason than \fInormal\fR, \fIshutdown\fR, or \fI{shutdown, Term}\fR the \fIgen_fsm\fR process is assumed to terminate because of an error and an error report is issued using \fIerror_logger:format/2\fR.
+
+
+.RE

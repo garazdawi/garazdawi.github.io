@@ -1,0 +1,383 @@
+.TH global_group 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+global_group \- Grouping nodes to global name registration groups.
+
+.SH DESCRIPTION
+.PP
+This module makes it possible to partition the nodes of a system into \fIglobal groups\fR. Each global group has its own global namespace, see \fIglobal\fR.
+
+.PP
+The main advantage of dividing systems into global groups is that the background load decreases while the number of nodes to be updated is reduced when manipulating globally registered names.
+
+.PP
+The Kernel configuration parameter \fIglobal_groups\fR defines the global groups:
+
+.IP
+.nf
+{global_groups, [GroupTuple :: group_tuple()]}
+
+.fi
+
+.PP
+For the processes and nodes to run smoothly using the global group functionality, the following criteria must be met:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An instance of the global group server, \fIglobal_group\fR, must be running on each node. The processes are automatically started and synchronized when a node is started.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+All involved nodes must agree on the global group definition, otherwise the behavior of the system is undefined.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIAll\fR nodes in the system must belong to exactly one global group.
+
+.RE
+
+.PP
+In the following descriptions, a \fIgroup node\fR is a node belonging to the same global group as the local node.
+
+.SS "Notes"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In the situation where a node has lost its connections to other nodes in its global group, but has connections to nodes in other global groups, a request from another global group can produce an incorrect or misleading result. For example, the isolated node can have inaccurate information about registered names in its global group.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Function \fIsend/2,3\fR is not secure.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Distribution of applications is highly dependent of the global group definitions. It is not recommended that an application is distributed over many global groups, as the registered names can be moved to another global group at failover/takeover. Nothing prevents this to be done, but the application code must then handle the situation.
+
+.RE
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIglobal\fR, \fIerl\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBgroup_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgroup_tuple() ::\fR
+\fB          {GroupName :: group_name(), [node()]} |\fR
+\fB          {GroupName :: group_name(),\fR
+\fB           PublishType :: publish_type(),\fR
+\fB           [node()]}.\fR
+
+.br
+.RS
+.PP
+A \fIGroupTuple\fR without \fIPublishType\fR is the same as a \fIGroupTuple\fR with \fIPublishType\fR equal to \fInormal\fR.
+
+
+.RE
+.B
+\fBinfo_item() ::\fR
+\fB          {state, State :: sync_state()} |\fR
+\fB          {own_group_name, GroupName :: group_name()} |\fR
+\fB          {own_group_nodes, Nodes :: [node()]} |\fR
+\fB          {synched_nodes, Nodes :: [node()]} |\fR
+\fB          {sync_error, Nodes :: [node()]} |\fR
+\fB          {no_contact, Nodes :: [node()]} |\fR
+\fB          {other_groups, Groups :: [group_tuple()]} |\fR
+\fB          {monitoring, Pids :: [pid()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBname() :: atom().\fR
+
+.br
+.RS
+.PP
+A registered name.
+
+
+.RE
+.B
+\fBpublish_type() :: hidden | normal.\fR
+
+.br
+.RS
+.PP
+A node started with command-line flag \fI-hidden\fR (see \fIerl\fR) is said to be a \fIhidden\fR node. A hidden node establishes hidden connections to nodes not part of the same global group, but normal (visible) connections to nodes part of the same global group.
+
+.PP
+A global group defined with \fIPublishType\fR equal to \fIhidden\fR is said to be a hidden global group. All nodes in a hidden global group are hidden nodes, whether they are started with command-line flag \fI-hidden\fR or not.
+
+
+.RE
+.B
+\fBsync_state() :: no_conf | synced.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwhere() :: {node, node()} | {group, group_name()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBglobal_groups() -> {GroupName, GroupNames} | undefined\fR
+\fB                       when\fR
+\fB                           GroupName :: group_name(),\fR
+\fB                           GroupNames :: [GroupName].\fR
+
+.br
+.RS
+.PP
+Returns a tuple containing the name of the global group that the local node belongs to, and the list of all other known group names.
+
+.PP
+Returns \fIundefined\fR if no global groups are defined.
+
+
+.RE
+.B
+\fBinfo() -> [info_item()].\fR
+
+.br
+.RS
+.PP
+Returns a list containing information about the global groups. Each list element is a tuple. The order of the tuples is undefined.
+
+{state, State}
+.RS 2
+If the local node is part of a global group, 
+\fIState\fR is equal to \fIsynced\fR. If no global groups are defined, \fIState\fR is equal to \fIno_conf\fR.
+
+.RE
+
+{own_group_name, GroupName}
+.RS 2
+The name (atom) of the group that the local node belongs to.
+
+
+.RE
+
+{own_group_nodes, Nodes}
+.RS 2
+A list of node names (atoms), the group nodes.
+
+
+.RE
+
+{synced_nodes, Nodes}
+.RS 2
+A list of node names, the group nodes currently synchronized with the local node.
+
+
+.RE
+
+{sync_error, Nodes}
+.RS 2
+A list of node names, the group nodes with which the local node has failed to synchronize.
+
+
+.RE
+
+{no_contact, Nodes}
+.RS 2
+A list of node names, the group nodes to which there are currently no connections.
+
+
+.RE
+
+{other_groups, Groups}
+.RS 2
+
+\fIGroups\fR is a list of tuples \fI{GroupName, Nodes}\fR, specifying the name and nodes of the other global groups.
+
+.RE
+
+{monitoring, Pids}
+.RS 2
+A list of pids, specifying the processes that have subscribed to 
+\fInodeup\fR and \fInodedown\fR messages.
+
+.RE
+
+
+.RE
+.B
+\fBmonitor_nodes(Flag) -> ok when Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Alter the calling process' subscription of node status change messages.
+
+.PP
+If \fIFlag\fR is equal to \fItrue\fR the calling process starts subscribing to node status change messages. If equal to \fIfalse\fR it stops subscribing.
+
+.PP
+A process that has subscribed receives the messages \fI{nodeup, Node}\fR and \fI{nodedown, Node}\fR when a group node connects or disconnects, respectively.
+
+
+.RE
+.B
+\fBown_nodes() -> Nodes when Nodes :: [Node :: node()].\fR
+
+.br
+.RS
+.PP
+Returns the names of all group nodes, regardless of their current status.
+
+
+.RE
+.B
+\fBregistered_names(Where) -> Names\fR
+\fB                          when\fR
+\fB                              Where :: where(),\fR
+\fB                              Names :: [Name :: name()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all names that are globally registered on the specified node or in the specified global group.
+
+
+.RE
+.B
+\fBsend(Name, Msg) -> pid() | {badarg, {Name, Msg}}\fR
+\fB              when Name :: name(), Msg :: term().\fR
+
+.br
+.RS
+.PP
+Sends \fIMsg\fR to the pid represented by the globally registered name \fIName\fR.
+
+.PP
+\fIsend/2\fR searches for \fIName\fR any any global group. The global groups are searched in the order that they appear in the value of configuration parameter \fIglobal_groups\fR.
+
+.PP
+If \fIName\fR is found, message \fIMsg\fR is sent to the corresponding pid. The pid is also the return value of the function. If the name is not found, the function returns \fI{badarg, {Name, Msg}}\fR.
+
+
+.RE
+.B
+\fBsend(Where, Name, Msg) -> pid() | {badarg, {Name, Msg}}\fR
+\fB              when Where :: where(), Name :: name(), Msg :: term().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIsend(Name, Msg)\fR except that he search is limited to the node or global group specified by \fIWhere\fR.
+
+
+.RE
+.B
+\fBsync() -> ok.\fR
+
+.br
+.RS
+.PP
+Synchronizes the group nodes, that is, the global name servers on the group nodes. Also checks the names globally registered in the current global group and unregisters them on any known node not part of the group.
+
+.PP
+If synchronization is not possible, an error report is sent to the error logger (see also \fIerror_logger\fR.
+
+.PP
+Returns \fI{error, {'invalid global_groups definition', Bad}}\fR if configuration parameter \fIglobal_groups\fR has an invalid value \fIBad\fR.
+
+
+.RE
+.B
+\fBwhereis_name(Name) -> pid() | undefined when Name :: name().\fR
+
+.br
+.RS
+.PP
+Searched for \fIName\fR in any global group.
+
+.PP
+The global groups are searched in the order that they appear in the value of configuration parameter \fIglobal_groups\fR.
+
+.PP
+If \fIName\fR is found, the corresponding pid is returned. If the name is not found, the function returns \fIundefined\fR.
+
+
+.RE
+.B
+\fBwhereis_name(Where, Name) -> pid() | undefined\fR
+\fB                      when Where :: where(), Name :: name().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIwhereis_name(Name)\fR except that he search is limited to the node or global group specified by \fIWhere\fR.
+
+
+.RE

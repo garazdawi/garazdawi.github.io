@@ -1,0 +1,462 @@
+.TH et_collector 3 "et 1.7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+et_collector \- Collect trace events and provide a backing storage appropriate for iteration
+
+.SH DESCRIPTION
+.PP
+Interface module for the Event Trace (ET) application
+
+.SH DATA TYPES
+.LP
+.B
+\fBactor() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcollector_fun() :: trace_filter_fun() | event_filter_fun().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdbg_match_spec() :: [tuple()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdbg_trace_parameters() ::\fR
+\fB          file:filename() | integer() | {string(), integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdbg_trace_type() :: ip | file | follow_file.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBets_match_object_pattern() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBevent() :: #event{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBevent_filter_fun() ::\fR
+\fB          fun((Event :: event()) -> boolean() | {true, event()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBevent_ts() :: #event_ts{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlevel() :: 0..100.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {parent_pid, pid() | undefined} |\fR
+\fB          {event_order, trace_ts | event_ts} |\fR
+\fB          {dict_insert, {filter, all}, collector_fun()} |\fR
+\fB          {dict_insert,\fR
+\fB           {filter, EventFilterName :: atom()},\fR
+\fB           event_filter_fun()} |\fR
+\fB          {dict_insert, {subscriber, pid()}, Val :: term()} |\fR
+\fB          {dict_insert, Key :: term(), Val :: term()} |\fR
+\fB          {dict_delete, Key :: term()} |\fR
+\fB          {trace_client,\fR
+\fB           {event_file, file:filename()} |\fR
+\fB           {dbg_trace_type(), dbg_trace_parameters()}} |\fR
+\fB          {trace_global, boolean()} |\fR
+\fB          {trace_pattern,\fR
+\fB           {module() | undefined, Level :: level() | dbg_match_spec()} |\fR
+\fB           undefined} |\fR
+\fB          {trace_port, integer()} |\fR
+\fB          {trace_max_queue, integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtable_handle() :: #table_handle{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_filter_fun() ::\fR
+\fB          fun((TraceData :: tuple()) -> boolean() | {true, event()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_ts() :: #trace_ts{}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBchange_pattern(CollectorPid, RawPattern) ->\fR
+\fB                        {old_pattern, TracePattern}\fR
+\fB                        when\fR
+\fB                            CollectorPid :: pid(),\fR
+\fB                            RawPattern ::\fR
+\fB                                {module(), min | max | level()},\fR
+\fB                            TracePattern ::\fR
+\fB                                [{[term()] | '_' | atom(),\fR
+\fB                                  [term()],\fR
+\fB                                  [term()]}].\fR
+
+.br
+.RS
+.PP
+Change active trace pattern globally on all trace nodes.
+
+
+.RE
+.B
+\fBclear_table(Handle) -> ok\fR
+\fB                     when\fR
+\fB                         Handle :: CollectorPid | table_handle(),\fR
+\fB                         CollectorPid :: pid().\fR
+
+.br
+.RS
+.PP
+Clear the event table.
+
+
+.RE
+.B
+\fBdict_delete(CollectorPid :: pid(), Key :: term()) -> ok.\fR
+
+.br
+.RS
+.PP
+Delete a dictionary entry and send a {et, {dict_delete, Key}} tuple to all registered subscribers.
+
+.PP
+If the deleted entry is a registered subscriber, it will imply that the subscriber process gets is unregistered as subscriber as well as it gets it final message.
+
+
+.RE
+.B
+\fBdict_insert(CollectorPid, What, Value) -> ok\fR
+\fB                     when\fR
+\fB                         CollectorPid :: pid(),\fR
+\fB                         What ::\fR
+\fB                             {filter, atom()} |\fR
+\fB                             {subscriber, pid()} |\fR
+\fB                             Key,\fR
+\fB                         Key :: term(),\fR
+\fB                         Value :: collector_fun() | term().\fR
+
+.br
+.RS
+.PP
+Insert a dictionary entry and send a \fI{et, {dict_insert, Key, Val}}\fR tuple to all registered subscribers.
+
+.PP
+If the entry is a new subscriber, it will imply that the new subscriber process first will get one message for each already stored dictionary entry, before it and all old subscribers will get this particular entry. The collector process links to and then supervises the subscriber process. If the subscriber process dies it will imply that it gets unregistered as with a normal dict_delete/2.
+
+
+.RE
+.B
+\fBdict_lookup(CollectorPid :: pid(), Key :: term()) ->\fR
+\fB                     [Val :: term()].\fR
+
+.br
+.RS
+.PP
+Lookup a dictionary entry and return zero or one value.
+
+
+.RE
+.B
+\fBdict_match(CollectorPid :: pid(), {KeyPattern, ValPattern}) ->\fR
+\fB                    [Match]\fR
+\fB                    when\fR
+\fB                        KeyPattern :: ets_match_object_pattern(),\fR
+\fB                        ValPattern :: ets_match_object_pattern(),\fR
+\fB                        Match :: {Key :: term(), Val :: term()}.\fR
+
+.br
+.RS
+.PP
+Match some dictionary entries
+
+
+.RE
+.B
+\fBget_global_pid() -> CollectorPid :: pid().\fR
+
+.br
+.RS
+.PP
+Return a the identity of the globally registered collector if there is any.
+
+
+.RE
+.B
+\fBiterate(Handle, Prev, Limit, Fun, Acc) -> NewAcc\fR
+\fB                 when\fR
+\fB                     Handle :: CollectorPid | table_handle(),\fR
+\fB                     CollectorPid :: pid(),\fR
+\fB                     Prev :: first | last | term(),\fR
+\fB                     Limit :: Done | Forward | Backward,\fR
+\fB                     Done :: 0,\fR
+\fB                     Forward :: pos_integer() | infinity,\fR
+\fB                     Backward :: neg_integer() | '-infinity',\fR
+\fB                     Fun :: fun((event(), Acc) -> NewAcc) | undefined,\fR
+\fB                     Acc :: term(),\fR
+\fB                     NewAcc :: term().\fR
+
+.br
+.RS
+.PP
+Iterate over the currently stored events.
+
+.PP
+Iterates over the currently stored events and applies a function for each event. The iteration may be performed forwards or backwards and may be limited to a maximum number of events (abs(Limit)).
+
+
+.RE
+.B
+\fBmake_key(Handle, Stuff) -> Key\fR
+\fB                  when\fR
+\fB                      Handle :: table_handle() | trace_ts | event_ts,\fR
+\fB                      Stuff :: event() | Key,\fR
+\fB                      Key :: event_ts() | trace_ts().\fR
+
+.br
+.RS
+.PP
+Make a key out of an event record or an old key.
+
+
+.RE
+.B
+\fBmulticast(CollectorPid :: pid(), Msg :: term()) -> ok.\fR
+
+.br
+.RS
+.PP
+Sends a message to all registered subscribers.
+
+
+.RE
+.B
+\fBreport_event(Handle, DetailLevel, From, To, Label, Contents) ->\fR
+\fB                      {ok, Continuation}\fR
+\fB                      when\fR
+\fB                          Handle ::\fR
+\fB                              CollectorPid :: pid() | table_handle(),\fR
+\fB                          DetailLevel :: level(),\fR
+\fB                          From :: actor(),\fR
+\fB                          To :: actor(),\fR
+\fB                          Label :: term(),\fR
+\fB                          Contents ::\fR
+\fB                              [{Key :: term(), Value :: term()}] |\fR
+\fB                              term(),\fR
+\fB                          Continuation :: table_handle().\fR
+
+.br
+.RS
+.PP
+Report an event to the collector.
+
+.PP
+All events are filtered thru the collector filter, which optionally may transform or discard the event. The first call should use the pid of the collector process as report handle, while subsequent calls should use the table handle.
+
+
+.RE
+.B
+\fBsave_event_file(CollectorPid, FileName, [Option]) ->\fR
+\fB                         ok | {error, term()}\fR
+\fB                         when\fR
+\fB                             CollectorPid :: pid(),\fR
+\fB                             FileName :: file:filename(),\fR
+\fB                             Option ::\fR
+\fB                                 existing | write | append | keep |\fR
+\fB                                 clear.\fR
+
+.br
+.RS
+.PP
+Save the events to a file.
+
+.PP
+By default the currently stored events (existing) are written to a brand new file (write) and the events are kept (keep) after they have been written to the file.
+
+.PP
+Instead of keeping the events after writing them to file, it is possible to remove all stored events after they have successfully written to file (clear).
+
+.PP
+The options defaults to existing, write and keep.
+
+
+.RE
+.B
+\fBstart_link(Options) -> {ok, Pid :: pid()} | {error, term()}\fR
+\fB                    when Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Start a collector process.
+
+.PP
+The collector collects trace events and keeps them ordered by their timestamp. The timestamp may either reflect the time when the actual trace data was generated (trace_ts) or when the trace data was transformed into an event record (event_ts). If the time stamp is missing in the trace data (missing timestamp option to erlang:trace/4) the trace_ts will be set to the event_ts.
+
+.PP
+Events are reported to the collector directly with the report function or indirectly via one or more trace clients. All reported events are first filtered thru the collector filter before they are stored by the collector. By replacing the default collector filter with a customized dito it is possible to allow any trace data as input. The collector filter is a dictionary entry with the predefined key {filter, collector} and the value is a fun of arity 1. See et_selector:make_event/1 for interface details, such as which erlang:trace/1 tuples that are accepted.
+
+.PP
+The collector has a built-in dictionary service. Any term may be stored as value in the dictionary and bound to a unique key. When new values are inserted with an existing key, the new values will overwrite the existing ones. Processes may subscribe on dictionary updates by using {subscriber, pid()} as dictionary key. All dictionary updates will be propagated to the subscriber processes matching the pattern {{subscriber, '_'}, '_'} where the first '_' is interpreted as a pid().
+
+.PP
+In global trace mode, the collector will automatically start tracing on all connected Erlang nodes. When a node connects, a port tracer will be started on that node and a corresponding trace client on the collector node.
+
+.PP
+Default values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+parent_pid - self().
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+event_order - trace_ts.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+trace_global - false.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+trace_pattern - undefined.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+trace_port - 4711.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+trace_max_queue - 50.
+
+.RE
+
+
+.RE
+.B
+\fBstart_trace_client(CollectorPid, Type, Parameter) ->\fR
+\fB                            file_loaded | {trace_client_pid, pid()}\fR
+\fB                            when\fR
+\fB                                CollectorPid :: pid(),\fR
+\fB                                Type :: event_file | dbg_trace_type(),\fR
+\fB                                Parameter :: dbg_trace_parameters().\fR
+
+.br
+.RS
+.PP
+Load raw Erlang trace from a file, port or process.
+
+
+.RE
+.B
+\fBstop(pid()) -> ok.\fR
+
+.br
+.RS
+.PP
+Stop a collector process.
+
+
+.RE

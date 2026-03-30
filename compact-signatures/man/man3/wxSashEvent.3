@@ -1,0 +1,147 @@
+.TH wxSashEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSashEvent \- A sash event is sent when the sash of a \fIwxSashWindow\fR has been dragged by the user.
+
+.SH DESCRIPTION
+.PP
+Remark: When a sash belonging to a sash window is dragged by the user, and then released, this event is sent to the window, where it may be processed by an event table entry in a derived class, a plug-in event handler or an ancestor class. Note that the \fIwxSashWindow\fR doesn't change the window's size itself. It relies on the application's event handler to do that. This is because the application may have to handle other consequences of the resize, or it may wish to veto it altogether. The event handler should look at the drag rectangle: see \fIgetDragRect/1\fR to see what the new size of the window would be if the resize were to be applied. It should also call \fIgetDragStatus/1\fR to see whether the drag was OK or out of the current allowed range.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSashWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSashEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxSashEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSash() :: #wxSash{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxSashEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxSashEventType() :: sash_dragged.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetDragRect(This) ->\fR
+\fB                     {X :: integer(),\fR
+\fB                      Y :: integer(),\fR
+\fB                      W :: integer(),\fR
+\fB                      H :: integer()}\fR
+\fB                     when This :: wxSashEvent().\fR
+
+.br
+.RS
+.PP
+Returns the rectangle representing the new size the window would be if the resize was applied.
+
+.PP
+It is up to the application to set the window size if required.
+
+
+.RE
+.B
+\fBgetDragStatus(This) -> wx:wx_enum() when This :: wxSashEvent().\fR
+
+.br
+.RS
+.PP
+Returns the status of the sash: one of wxSASH_STATUS_OK, wxSASH_STATUS_OUT_OF_RANGE.
+
+.PP
+If the drag caused the notional bounding box of the window to flip over, for example, the drag will be out of rage.
+
+
+.RE
+.B
+\fBgetEdge(This) -> wx:wx_enum() when This :: wxSashEvent().\fR
+
+.br
+.RS
+.PP
+Returns the dragged edge.
+
+.PP
+The return value is one of wxSASH_TOP, wxSASH_RIGHT, wxSASH_BOTTOM, wxSASH_LEFT.
+
+
+.RE

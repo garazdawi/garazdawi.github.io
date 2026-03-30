@@ -1,0 +1,651 @@
+.TH rpc 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+rpc \- Remote Procedure Call services.
+
+.SH DESCRIPTION
+.PP
+This module contains services similar to Remote Procedure Calls. It also contains broadcast facilities and parallel evaluators. A remote procedure call is a method to call a function on a remote node and collect the answer. It is used for collecting information on a remote node, or for running a function with some specific side effects on the remote node.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+\fIrpc:call/4\fR and related functions make it difficult to distinguish
+
+.RS 4
+.PP
+between successful results, raised exceptions, and other errors. This behavior cannot be changed for compatibility reasons. The \fIerpc\fR module was introduced in Erlang/OTP 23 to provide an API that allows clear distinction between these different outcomes. The \fIerpc\fR module offers the core subset of the functionality provided by the \fIrpc\fR module. It also features a more scalable and higher-performance implementation compared to the original \fIrpc\fR module. Since the introduction of \fIerpc\fR, the \fIrpc\fR module has been updated to use \fIerpc\fR internally for most of its core functionality. As a result, the \fIrpc\fR module does not fall short in scalability or performance compared to \fIerpc\fR.
+
+.RE
+
+.PP
+\fBNOTE: \fRFor some important information about distributed signals, see the Blocking Signaling Over Distribution section in the \fIProcesses\fR chapter of the \fIErlang Reference Manual\fR. Blocking signaling can, for example, cause timeouts in \fIrpc\fR to be significantly delayed.
+
+
+.SH DATA TYPES
+.LP
+.B
+\fB-opaque key() \fR
+
+.br
+.RS
+.PP
+Opaque value returned by \fIasync_call/4\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBabcast(Name, Msg) -> abcast when Name :: atom(), Msg :: term().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIabcast([node()|nodes()], Name, Msg)\fR.
+
+
+.RE
+.B
+\fBabcast(Nodes, Name, Msg) -> abcast\fR
+\fB                when Nodes :: [node()], Name :: atom(), Msg :: term().\fR
+
+.br
+.RS
+.PP
+Broadcasts the message \fIMsg\fR asynchronously to the registered process \fIName\fR on the specified nodes.
+
+
+.RE
+.B
+\fBasync_call(Node, Module, Function, Args) -> Key\fR
+\fB                    when\fR
+\fB                        Node :: node(),\fR
+\fB                        Module :: module(),\fR
+\fB                        Function :: atom(),\fR
+\fB                        Args :: [term()],\fR
+\fB                        Key :: key().\fR
+
+.br
+.RS
+.PP
+Implements \fIcall streams with promises\fR, a type of RPC that does not suspend the caller until the result is finished. Instead, a key is returned, which can be used later to collect the value. The key can be viewed as a promise to deliver the answer.
+
+.PP
+In this case, the key \fIKey\fR is returned, which can be used in a subsequent call to \fIyield/1\fR or \fInb_yield/1,2\fR to retrieve the value of evaluating \fIapply(Module, Function, Args)\fR on node \fINode\fR.
+
+.PP
+\fBNOTE: \fRIf you want the ability to distinguish between results, you may want to consider using the \fIerpc:send_request()\fR function from the \fIerpc\fR module instead. This also gives you the ability retrieve the results in other useful ways.
+
+
+.PP
+\fBNOTE: \fR\fIyield/1\fR and \fInb_yield/1,2\fR must be called by the same process from which this function was made otherwise they will never yield correctly.
+
+
+.PP
+\fBNOTE: \fRYou cannot make \fIany\fR assumptions about the process that will perform the \fIapply()\fR. It may be an \fIrpc\fR server, another server, or a freshly spawned process.
+
+
+
+.RE
+.B
+\fBblock_call(Node, Module, Function, Args) -> Res | {badrpc, Reason}\fR
+\fB                    when\fR
+\fB                        Node :: node(),\fR
+\fB                        Module :: module(),\fR
+\fB                        Function :: atom(),\fR
+\fB                        Args :: [term()],\fR
+\fB                        Res :: term(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+The same as calling \fIrpc:block_call(Node, Module, Function, Args, infinity)\fR.
+
+
+.RE
+.B
+\fBblock_call(Node, Module, Function, Args, Timeout) ->\fR
+\fB                    Res | {badrpc, Reason}\fR
+\fB                    when\fR
+\fB                        Node :: node(),\fR
+\fB                        Module :: module(),\fR
+\fB                        Function :: atom(),\fR
+\fB                        Args :: [term()],\fR
+\fB                        Res :: term(),\fR
+\fB                        Reason :: term(),\fR
+\fB                        Timeout :: 0..4294967295 | infinity.\fR
+
+.br
+.RS
+.PP
+The same as calling \fIrpc:call(Node, Module, Function, Args, Timeout)\fR with the exception that it also blocks other \fIrpc:block_call/5\fR operations from executing concurrently on the node \fINode\fR.
+
+.PP
+\fBWARNING: \fRNote that it also blocks other operations than just \fIrpc:block_call/5\fR operations, so use it with care.
+
+
+
+.RE
+.B
+\fBcall(Node, Module, Function, Args) -> Res | {badrpc, Reason}\fR
+\fB              when\fR
+\fB                  Node :: node(),\fR
+\fB                  Module :: module(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: [term()],\fR
+\fB                  Res :: term(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on node \fINode\fR and returns the corresponding value \fIRes\fR, or \fI{badrpc, Reason}\fR if the call fails. The same as calling \fIrpc:call(Node, Module, Function, Args, infinity)\fR.
+
+
+.RE
+.B
+\fBcall(Node, Module, Function, Args, Timeout) ->\fR
+\fB              Res | {badrpc, Reason}\fR
+\fB              when\fR
+\fB                  Node :: node(),\fR
+\fB                  Module :: module(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: [term()],\fR
+\fB                  Res :: term(),\fR
+\fB                  Reason :: term(),\fR
+\fB                  Timeout :: 0..4294967295 | infinity.\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on node \fINode\fR and returns the corresponding value \fIRes\fR, or \fI{badrpc, Reason}\fR if the call fails. \fITimeout\fR is a time-out value in milliseconds. If the call times out, \fIReason\fR is \fItimeout\fR.
+
+.PP
+If the reply arrives after the call times out, no message contaminates the caller's message queue.
+
+.PP
+\fBNOTE: \fRIf you want the ability to distinguish between results, you may want to consider using the \fIerpc:call()\fR function from the \fIerpc\fR module instead.
+
+
+.PP
+\fBNOTE: \fRHere follows the details of what exactly is returned. \fI{badrpc, Reason}\fR will be returned in the following circumstances:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The called function fails with an \fIexit\fR exception.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The called function fails with an \fIerror\fR exception.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The called function returns a term that matches \fI{'EXIT', _}\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The called function \fIthrows\fR a term that matches \fI{'EXIT', _}\fR. \fIRes\fR is returned in the following circumstances:
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The called function returns normally with a term that does \fBnot\fR match \fI{'EXIT',_}\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The called function \fIthrow\fRs a term that does \fBnot\fR match \fI{'EXIT',_}\fR.
+
+.RE
+
+
+.PP
+\fBNOTE: \fRYou cannot make \fIany\fR assumptions about the process that will perform the \fIapply()\fR. It may be the calling process itself, an \fIrpc\fR server, another server, or a freshly spawned process.
+
+
+
+.RE
+.B
+\fBcast(Node, Module, Function, Args) -> true\fR
+\fB              when\fR
+\fB                  Node :: node(),\fR
+\fB                  Module :: module(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: [term()].\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on node \fINode\fR. No response is delivered and the calling process is not suspended until the evaluation is complete, as is the case with \fIcall/4,5\fR.
+
+.PP
+\fBNOTE: \fRYou cannot make \fIany\fR assumptions about the process that will perform the \fIapply()\fR. It may be an \fIrpc\fR server, another server, or a freshly spawned process.
+
+
+
+.RE
+.B
+\fBeval_everywhere(Module, Function, Args) -> abcast\fR
+\fB                         when\fR
+\fB                             Module :: module(),\fR
+\fB                             Function :: atom(),\fR
+\fB                             Args :: [term()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIeval_everywhere([node()|nodes()], Module, Function, Args)\fR.
+
+
+.RE
+.B
+\fBeval_everywhere(Nodes, Module, Function, Args) -> abcast\fR
+\fB                         when\fR
+\fB                             Nodes :: [node()],\fR
+\fB                             Module :: module(),\fR
+\fB                             Function :: atom(),\fR
+\fB                             Args :: [term()].\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on the specified nodes. No answers are collected.
+
+
+.RE
+.B
+\fBmulti_server_call(Name, Msg) -> {Replies, BadNodes}\fR
+\fB                           when\fR
+\fB                               Name :: atom(),\fR
+\fB                               Msg :: term(),\fR
+\fB                               Replies :: [Reply :: term()],\fR
+\fB                               BadNodes :: [node()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fImulti_server_call([node()|nodes()], Name, Msg)\fR.
+
+
+.RE
+.B
+\fBmulti_server_call(Nodes, Name, Msg) -> {Replies, BadNodes}\fR
+\fB                           when\fR
+\fB                               Nodes :: [node()],\fR
+\fB                               Name :: atom(),\fR
+\fB                               Msg :: term(),\fR
+\fB                               Replies :: [Reply :: term()],\fR
+\fB                               BadNodes :: [node()].\fR
+
+.br
+.RS
+.PP
+Can be used when interacting with servers called \fIName\fR on the specified nodes. It is assumed that the servers receive messages in the format \fI{From, Msg}\fR and reply using \fIFrom ! {Name, Node, Reply}\fR, where \fINode\fR is the name of the node where the server is located. The function returns \fI{Replies, BadNodes}\fR, where \fIReplies\fR is a list of all \fIReply\fR values, and \fIBadNodes\fR is one of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+list of the nodes that do not exist
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+list of the nodes where the server does not exist
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+list of the nodes where the server terminated before sending any reply.
+
+.RE
+
+
+.RE
+.B
+\fBmulticall(Module, Function, Args) -> {ResL, BadNodes}\fR
+\fB                   when\fR
+\fB                       Module :: module(),\fR
+\fB                       Function :: atom(),\fR
+\fB                       Args :: [term()],\fR
+\fB                       ResL ::\fR
+\fB                           [Res :: term() | {badrpc, Reason :: term()}],\fR
+\fB                       BadNodes :: [node()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fImulticall([node()|nodes()], Module, Function, Args, infinity)\fR.
+
+
+.RE
+.B
+\fBmulticall(Nodes, Module, Function, Args) -> {ResL, BadNodes}\fR
+\fB                   when\fR
+\fB                       Nodes :: [node()],\fR
+\fB                       Module :: module(),\fR
+\fB                       Function :: atom(),\fR
+\fB                       Args :: [term()],\fR
+\fB                       ResL ::\fR
+\fB                           [Res :: term() | {badrpc, Reason :: term()}],\fR
+\fB                       BadNodes :: [node()];\fR
+\fB               (Module, Function, Args, Timeout) -> {ResL, BadNodes}\fR
+\fB                   when\fR
+\fB                       Module :: module(),\fR
+\fB                       Function :: atom(),\fR
+\fB                       Args :: [term()],\fR
+\fB                       Timeout :: 0..4294967295 | infinity,\fR
+\fB                       ResL ::\fR
+\fB                           [Res :: term() | {badrpc, Reason :: term()}],\fR
+\fB                       BadNodes :: [node()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fImulticall(Nodes, Module, Function, Args, infinity)\fR.
+
+.PP
+Equivalent to \fImulticall([node()|nodes()], Module, Function, Args, Timeout)\fR.
+
+
+.RE
+.B
+\fBmulticall(Nodes, Module, Function, Args, Timeout) ->\fR
+\fB                   {ResL, BadNodes}\fR
+\fB                   when\fR
+\fB                       Nodes :: [node()],\fR
+\fB                       Module :: module(),\fR
+\fB                       Function :: atom(),\fR
+\fB                       Args :: [term()],\fR
+\fB                       Timeout :: 0..4294967295 | infinity,\fR
+\fB                       ResL ::\fR
+\fB                           [Res :: term() | {badrpc, Reason :: term()}],\fR
+\fB                       BadNodes :: [node()].\fR
+
+.br
+.RS
+.PP
+In contrast to an RPC, a multicall is an RPC that is sent concurrently from one client to multiple servers. This is useful for collecting information from a set of nodes, or for calling a function on a set of nodes to achieve some side effects. It is semantically the same as iteratively making a series of RPCs on all the nodes, but the multicall is faster, as all the requests are sent at the same time and are collected one by one as they come back.
+
+.PP
+The function evaluates \fIapply(Module, Function, Args)\fR on the specified nodes and collects the answers. It returns \fI{ResL, BadNodes}\fR, where \fIBadNodes\fR is a list of the nodes that do not exist, and \fIResL\fR is a list of the return values, or \fI{badrpc, Reason}\fR for failing calls. \fITimeout\fR is a time (integer) in milliseconds, or \fIinfinity\fR.
+
+.PP
+The following example is useful when new object code is to be loaded on all nodes in the network, and indicates some side effects that RPCs can produce:
+
+.IP
+.nf
+%% Find object code for module Mod
+{Mod, Bin, File} = code:get_object_code(Mod),
+
+%% and load it on all nodes including this one
+{ResL, _} = rpc:multicall(code, load_binary, [Mod, File, Bin]),
+
+%% and then maybe check the ResL list.
+
+.fi
+
+.PP
+\fBNOTE: \fRIf you want the ability to distinguish between results, you may want to consider using the \fIerpc:multicall()\fR function from the \fIerpc\fR module instead.
+
+
+.PP
+\fBNOTE: \fRYou cannot make \fIany\fR assumptions about the process that will perform the \fIapply()\fR. It may be the calling process itself, an \fIrpc\fR server, another server, or a freshly spawned process.
+
+
+
+.RE
+.B
+\fBnb_yield(Key) -> {value, Val} | timeout\fR
+\fB                  when\fR
+\fB                      Key :: key(),\fR
+\fB                      Val ::\fR
+\fB                          (Res :: term()) | {badrpc, Reason :: term()}.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fInb_yield(Key, 0)\fR.
+
+
+.RE
+.B
+\fBnb_yield(Key, Timeout) -> {value, Val} | timeout\fR
+\fB                  when\fR
+\fB                      Key :: key(),\fR
+\fB                      Timeout :: 0..4294967295 | infinity,\fR
+\fB                      Val ::\fR
+\fB                          (Res :: term()) | {badrpc, Reason :: term()}.\fR
+
+.br
+.RS
+.PP
+Non-blocking version of \fIyield/1\fR. It returns the tuple \fI{value, Val}\fR when the computation is finished, or \fItimeout\fR when \fITimeout\fR milliseconds has elapsed.
+
+.PP
+See the note in \fIcall/4\fR for more details of Val.
+
+.PP
+\fBNOTE: \fRThis function must be called by the same process from which \fIasync_call/4\fR was made otherwise it will only return \fItimeout\fR.
+
+
+
+.RE
+.B
+\fBparallel_eval(FuncCalls) -> ResL\fR
+\fB                       when\fR
+\fB                           FuncCalls :: [{Module, Function, Args}],\fR
+\fB                           Module :: module(),\fR
+\fB                           Function :: atom(),\fR
+\fB                           Args :: [term()],\fR
+\fB                           ResL :: [term()].\fR
+
+.br
+.RS
+.PP
+Evaluates, for every tuple in \fIFuncCalls\fR, \fIapply(Module, Function, Args)\fR on some node in the network. Returns the list of return values, in the same order as in \fIFuncCalls\fR.
+
+
+.RE
+.B
+\fBpinfo(Pid) -> [{Item, Info}] | undefined\fR
+\fB               when Pid :: pid(), Item :: atom(), Info :: term().\fR
+
+.br
+.RS
+.PP
+Location transparent version of the BIF \fIerlang:process_info/1\fR in ERTS.
+
+
+.RE
+.B
+\fBpinfo(Pid, Item) -> {Item, Info} | undefined | []\fR
+\fB               when Pid :: pid(), Item :: atom(), Info :: term();\fR
+\fB           (Pid, ItemList) -> [{Item, Info}] | undefined | []\fR
+\fB               when\fR
+\fB                   Pid :: pid(),\fR
+\fB                   Item :: atom(),\fR
+\fB                   ItemList :: [Item],\fR
+\fB                   Info :: term().\fR
+
+.br
+.RS
+.PP
+Location transparent version of the BIF \fIerlang:process_info/2\fR in ERTS.
+
+
+.RE
+.B
+\fBpmap(FuncSpec, ExtraArgs, List1) -> List2\fR
+\fB              when\fR
+\fB                  FuncSpec :: {Module, Function},\fR
+\fB                  Module :: module(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  ExtraArgs :: [term()],\fR
+\fB                  List1 :: [Elem :: term()],\fR
+\fB                  List2 :: [term()].\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, [Elem|ExtraArgs])\fR for every element \fIElem\fR in \fIList1\fR, in parallel. Returns the list of return values, in the same order as in \fIList1\fR.
+
+
+.RE
+.B
+\fBsbcast(Name, Msg) -> {GoodNodes, BadNodes}\fR
+\fB                when\fR
+\fB                    Name :: atom(),\fR
+\fB                    Msg :: term(),\fR
+\fB                    GoodNodes :: [node()],\fR
+\fB                    BadNodes :: [node()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIsbcast([node()|nodes()], Name, Msg)\fR.
+
+
+.RE
+.B
+\fBsbcast(Nodes, Name, Msg) -> {GoodNodes, BadNodes}\fR
+\fB                when\fR
+\fB                    Name :: atom(),\fR
+\fB                    Msg :: term(),\fR
+\fB                    Nodes :: [node()],\fR
+\fB                    GoodNodes :: [node()],\fR
+\fB                    BadNodes :: [node()].\fR
+
+.br
+.RS
+.PP
+Broadcasts the message \fIMsg\fR synchronously to the registered process \fIName\fR on the specified nodes.
+
+.PP
+Returns \fI{GoodNodes, BadNodes}\fR, where \fIGoodNodes\fR is the list of nodes that have \fIName\fR as a registered process.
+
+.PP
+The function is synchronous in the sense that it is known that all servers have received the message when the call returns. It is not possible to know that the servers have processed the message.
+
+.PP
+Any further messages sent to the servers, after this function has returned, are received by all servers after this message.
+
+
+.RE
+.B
+\fBserver_call(Node, Name, ReplyWrapper, Msg) ->\fR
+\fB                     Reply | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Node :: node(),\fR
+\fB                         Name :: atom(),\fR
+\fB                         ReplyWrapper :: term(),\fR
+\fB                         Msg :: term(),\fR
+\fB                         Reply :: term(),\fR
+\fB                         Reason :: nodedown.\fR
+
+.br
+.RS
+.PP
+Can be used when interacting with a server called \fIName\fR on node \fINode\fR. It is assumed that the server receives messages in the format \fI{From, Msg}\fR and replies using \fIFrom ! {ReplyWrapper, Node, Reply}\fR. This function makes such a server call and ensures that the entire call is packed into an atomic transaction, which either succeeds or fails. It never hangs, unless the server itself hangs.
+
+.PP
+The function returns the answer \fIReply\fR as produced by the server \fIName\fR, or \fI{error, Reason}\fR.
+
+
+.RE
+.B
+\fByield(Key) -> Res | {badrpc, Reason}\fR
+\fB               when Key :: key(), Res :: term(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns the promised answer from a previous \fIasync_call/4\fR. If the answer is available, it is returned immediately. Otherwise, the calling process is suspended until the answer arrives from \fINode\fR.
+
+.PP
+\fBNOTE: \fRThis function must be called by the same process from which \fIasync_call/4\fR was made otherwise it will never return.
+
+
+.PP
+See the note in \fIcall/4\fR for more details of the return value.
+
+
+.RE

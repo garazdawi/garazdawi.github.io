@@ -1,0 +1,150 @@
+.TH net_adm 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+net_adm \- Various Erlang net administration routines.
+
+.SH DESCRIPTION
+.PP
+This module contains various network utility functions.
+
+.SS "Files"
+
+.PP
+File \fI.hosts.erlang\fR consists of a number of host names written as Erlang terms. It is looked for in the current work directory, the user's home directory, and \fI$OTPROOT\fR (the root directory of Erlang/OTP), in that order.
+
+.PP
+The format of file \fI.hosts.erlang\fR must be one host name per line. The host names must be within quotes.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+'super.eua.ericsson.se'.
+'renat.eua.ericsson.se'.
+'grouse.eua.ericsson.se'.
+'gauffin1.eua.ericsson.se'.
+^ (new line)
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBverbosity() :: silent | verbose.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdns_hostname(Host) -> {ok, Name} | {error, Host}\fR
+\fB                      when Host :: atom() | string(), Name :: string().\fR
+
+.br
+.RS
+.PP
+Returns the official name of \fIHost\fR, or \fI{error, Host}\fR if no such name is found. See also \fIinet\fR.
+
+
+.RE
+.B
+\fBhost_file() -> Hosts | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Hosts :: [Host :: atom()],\fR
+\fB                       Reason ::\fR
+\fB                           file:posix() |\fR
+\fB                           badarg | terminated | system_limit |\fR
+\fB                           {Line :: integer(),\fR
+\fB                            Mod :: module(),\fR
+\fB                            Term :: term()}.\fR
+
+.br
+.RS
+.PP
+Reads file \fI.hosts.erlang\fR, see section Files. Returns the hosts in this file as a list. Returns \fI{error, Reason}\fR if the file cannot be read or the Erlang terms on the file cannot be interpreted.
+
+
+.RE
+.B
+\fBlocalhost() -> Name when Name :: string().\fR
+
+.br
+.RS
+.PP
+Returns the name of the local host. If Erlang was started with command-line flag \fI-name\fR, \fIName\fR is the fully qualified name.
+
+
+.RE
+.B
+\fBnames(Host) -> {ok, [{Name, Port}]} | {error, Reason}\fR
+\fB               when\fR
+\fB                   Host :: atom() | string() | inet:ip_address(),\fR
+\fB                   Name :: string(),\fR
+\fB                   Port :: non_neg_integer(),\fR
+\fB                   Reason :: address | file:posix().\fR
+
+.br
+.RS
+.PP
+Returns the names and associated port numbers of the Erlang nodes that \fIepmd\fR registered at the specified host.
+
+.PP
+Similar to \fIepmd -names\fR, see \fIerts:epmd\fR.
+
+.PP
+Returns \fI{error, address}\fR if \fIepmd\fR is not operational.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+(arne@dunn)1> net_adm:names().
+{ok,[{"arne",40262}]}
+
+.fi
+
+
+.RE
+.B
+\fBping(Node) -> pong | pang when Node :: atom().\fR
+
+.br
+.RS
+.PP
+Sets up a connection to \fINode\fR. Returns \fIpong\fR if it is successful, otherwise \fIpang\fR.
+
+
+.RE
+.B
+\fBworld(Arg) -> [node()] when Arg :: verbosity().\fR
+
+.br
+.RS
+.PP
+Calls \fInames(Host)\fR for all hosts that are specified in the Erlang host file \fI.hosts.erlang\fR, collects the replies, and then evaluates \fIping(Node)\fR on all those nodes. Returns the list of all nodes that are successfully pinged.
+
+.PP
+If \fIArg == verbose\fR, the function writes information about which nodes it is pinging to \fIstdout\fR.
+
+.PP
+This function can be useful when a node is started, and the names of the other network nodes are not initially known.
+
+.PP
+Returns \fI{error, Reason}\fR if \fIhost_file/0\fR returns \fI{error, Reason}\fR.
+
+
+.RE
+.B
+\fBworld_list(Hosts, Arg) -> [node()]\fR
+\fB                    when Hosts :: [atom()], Arg :: verbosity().\fR
+
+.br
+.RS
+.PP
+Same as \fIworld/0,1\fR, but the hosts are specified as argument instead of being read from \fI.hosts.erlang\fR.
+
+
+.RE

@@ -1,0 +1,158 @@
+.TH wxClientDC 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxClientDC \- \fIwxClientDC\fR is primarily useful for obtaining information about the window from outside EVT_PAINT() handler.
+
+.SH DESCRIPTION
+.PP
+Typical use of this class is to obtain the extent of some text string in order to allocate enough size for a window, e.g.
+
+.PP
+Note: While \fIwxClientDC\fR may also be used for drawing on the client area of a window from outside an EVT_PAINT() handler in some ports, this does \fInot\fR work on all platforms (neither wxOSX nor wxGTK with GTK 3 Wayland backend support this, so drawing using \fIwxClientDC\fR simply doesn't have any effect there) and the only portable way of drawing is via \fIwxPaintDC\fR. To redraw a small part of the window, use \fIwxWindow:refreshRect/3\fR to invalidate just this part and check \fIwxWindow:getUpdateRegion/1\fR in the paint event handler to redraw this part only.
+
+.PP
+\fIwxClientDC\fR objects should normally be constructed as temporary stack objects, i.e. don't store a \fIwxClientDC\fR object.
+
+.PP
+A \fIwxClientDC\fR object is initialized to use the same font and colours as the window it is associated with.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMemoryDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPaintDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindowDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxScreenDC\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindowDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxClientDC
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxClientDC() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxClientDC()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew(Window) -> wxClientDC() when Window :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Pass a pointer to the window on which you wish to paint.
+
+
+.RE

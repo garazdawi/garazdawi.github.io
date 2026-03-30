@@ -1,0 +1,103 @@
+.TH wxWindowCreateEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxWindowCreateEvent \- This event is sent just after the actual window associated with a \fIwxWindow\fR object has been created.
+
+.SH DESCRIPTION
+.PP
+Since it is derived from \fIwxCommandEvent\fR, the event propagates up the window hierarchy.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindowDestroyEvent\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxWindowCreateEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxWindowCreateEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxWindowCreate() :: #wxWindowCreate{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxWindowCreateEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxWindowCreateEventType() :: create.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP

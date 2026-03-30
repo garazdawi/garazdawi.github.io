@@ -1,0 +1,357 @@
+.TH wxMiniFrame 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMiniFrame \- A miniframe is a frame with a small title bar.
+
+.SH DESCRIPTION
+.PP
+It is suitable for floating toolbars that must not take up too much screen area.
+
+.PP
+An example of mini frame can be seen in the page_samples_dialogs using the "Mini frame" command of the "Generic dialogs" submenu.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICONIZE: Display the frame iconized (minimized) (Windows only).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCAPTION: Puts a caption on the frame.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMINIMIZE: Identical to wxICONIZE.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMINIMIZE_BOX: Displays a minimize box on the frame (Windows and Motif only).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMAXIMIZE: Displays the frame maximized (Windows only).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMAXIMIZE_BOX: Displays a maximize box on the frame (Windows and Motif only).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCLOSE_BOX: Displays a close box on the frame.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTAY_ON_TOP: Stay on top of other windows (Windows only).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSYSTEM_MENU: Displays a system menu (Windows and Motif only).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxRESIZE_BORDER: Displays a resizable border around the window.
+
+.RE
+
+.PP
+Remark: This class has miniframe functionality under Windows and GTK, i.e. the presence of mini frame will not be noted in the task bar and focus behaviour is different. On other platforms, it behaves like a normal frame.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMDIParentFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMDIChildFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMiniFrame
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMiniFrame() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Title, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxMiniFrame(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Title :: unicode:chardata(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Used in two-step frame construction.
+
+.PP
+See \fInew/4\fR for further details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxMiniFrame()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew() -> wxMiniFrame().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Title, [Option]) -> wxMiniFrame()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Title :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating the window.
+
+.PP
+Remark: The frame behaves like a normal frame on non-Windows platforms.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE

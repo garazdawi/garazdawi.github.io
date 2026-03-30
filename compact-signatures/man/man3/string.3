@@ -1,0 +1,1295 @@
+.TH string 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+string \- String processing functions.
+
+.SH DESCRIPTION
+.PP
+This module provides functions for string processing.
+
+.PP
+A string in this module is represented by \fIunicode:chardata/0\fR, that is, a list of codepoints, binaries with UTF-8-encoded codepoints (\fIUTF-8 binaries\fR), or a mix of the two.
+
+.IP
+.nf
+"abcd"               is a valid string
+<<"abcd">>           is a valid string
+["abcd"]             is a valid string
+<<"abc..åäö"/utf8>>  is a valid string
+<<"abc..åäö">>       is NOT a valid string,
+                     but a binary with Latin-1-encoded codepoints
+[<<"abc">>, "..åäö"] is a valid string
+[atom]               is NOT a valid string
+
+.fi
+
+.PP
+This module operates on grapheme clusters. A \fIgrapheme cluster\fR is a user-perceived character, which can be represented by several codepoints.
+
+.IP
+.nf
+"å"  [229] or [97, 778]
+"e̊"  [101, 778]
+
+.fi
+
+.PP
+The string length of "ß↑e̊" is 3, even though it is represented by the codepoints \fI[223,8593,101,778]\fR or the UTF-8 binary \fI<<195,159,226,134,145,101,204,138>>\fR.
+
+.PP
+Grapheme clusters for codepoints of class \fIprepend\fR and non-modern (or decomposed) Hangul is not handled for performance reasons in \fIfind/3\fR, \fIreplace/3\fR, \fIsplit/2\fR, \fIsplit/3\fR and \fItrim/3\fR.
+
+.PP
+Splitting and appending strings is to be done on grapheme clusters borders. There is no verification that the results of appending strings are valid or normalized.
+
+.PP
+Most of the functions expect all input to be normalized to one form, see for example \fIunicode:characters_to_nfc_list/1\fR.
+
+.PP
+Language or locale specific handling of input is not considered in any function.
+
+.PP
+The functions can crash for non-valid input strings. For example, the functions expect UTF-8 binaries but not all functions verify that all binaries are encoded correctly.
+
+.PP
+Unless otherwise specified the return value type is the same as the input type. That is, binary input returns binary output, list input returns a list output, and mixed input can return a mixed output.
+
+.IP
+.nf
+1> string:trim("  sarah  ").
+"sarah"
+2> string:trim(<<"  sarah  ">>).
+<<"sarah">>
+3> string:lexemes("foo bar", " ").
+["foo","bar"]
+4> string:lexemes(<<"foo bar">>, " ").
+[<<"foo">>,<<"bar">>]
+
+.fi
+
+.PP
+This module has been reworked in Erlang/OTP 20 to handle \fIunicode:chardata/0\fR and operate on grapheme clusters. The \fIold functions\fR that only work on Latin-1 lists as input are still available but should not be used, they will be deprecated in a future release.
+
+.SS "Overlapping Functions"
+
+.PP
+Some of the general string functions can seem to overlap each other. The reason is that this string package is the combination of two earlier packages and all functions of both packages have been retained.
+
+.SH DATA TYPES
+.LP
+.B
+\fBdirection() :: leading | trailing.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgrapheme_cluster() :: char() | [char()].\fR
+
+.br
+.RS
+.PP
+A user-perceived character, consisting of one or more codepoints.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcasefold(String :: unicode:chardata()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Converts \fIString\fR to a case-agnostic comparable string. Function \fIcasefold/1\fR is preferred over \fIlowercase/1\fR when two strings are to be compared for equality. See also \fIequal/4\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:casefold("Ω and ẞ SHARP S").
+"ω and ss sharp s"
+
+.fi
+
+
+.RE
+.B
+\fBcentre(String, Number, Character) -> Centered\fR
+\fB                when\fR
+\fB                    String :: string(),\fR
+\fB                    Centered :: string(),\fR
+\fB                    Number :: non_neg_integer(),\fR
+\fB                    Character :: char().\fR
+
+.br
+.RS
+.PP
+Returns a string, where \fIString\fR is centered in the string and surrounded by blanks or \fICharacter\fR. The resulting string has length \fINumber\fR.
+
+.PP
+This function is obsolete. Use \fIpad/3\fR.
+
+
+.RE
+.B
+\fBchars(Character, Number, Tail) -> String\fR
+\fB               when\fR
+\fB                   Character :: char(),\fR
+\fB                   Number :: non_neg_integer(),\fR
+\fB                   Tail :: string(),\fR
+\fB                   String :: string().\fR
+
+.br
+.RS
+.PP
+Returns a string consisting of \fINumber\fR characters \fICharacter\fR. Optionally, the string can end with string \fITail\fR.
+
+.PP
+This function is obsolete. Use \fIlists:duplicate/2\fR.
+
+
+.RE
+.B
+\fBchomp(String :: unicode:chardata()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Returns a string where any trailing \fI\\n\fR or \fI\\r\\n\fR have been removed from \fIString\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+182> string:chomp(<<"\\nHello\\n\\n">>).
+<<"\\nHello">>
+183> string:chomp("\\nHello\\r\\r\\n").
+"\\nHello\\r"
+
+.fi
+
+
+.RE
+.B
+\fBchr(String, Character) -> Index\fR
+\fB             when\fR
+\fB                 String :: string(),\fR
+\fB                 Character :: char(),\fR
+\fB                 Index :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the index of the first occurrence of \fICharacter\fR in \fIString\fR. Returns \fI0\fR if \fICharacter\fR does not occur.
+
+.PP
+This function is obsolete. Use \fIfind/2\fR.
+
+
+.RE
+.B
+\fBconcat(String1, String2) -> String3\fR
+\fB                when\fR
+\fB                    String1 :: string(),\fR
+\fB                    String2 :: string(),\fR
+\fB                    String3 :: string().\fR
+
+.br
+.RS
+.PP
+Concatenates \fIString1\fR and \fIString2\fR to form a new string \fIString3\fR, which is returned.
+
+.PP
+This function is obsolete. Use \fI[String1, String2]\fR as \fIData\fR argument, and call \fIunicode:characters_to_list/2\fR or \fIunicode:characters_to_binary/2\fR to flatten the output.
+
+
+.RE
+.B
+\fBcopies(String, Number) -> Copies\fR
+\fB                when\fR
+\fB                    String :: string(),\fR
+\fB                    Copies :: string(),\fR
+\fB                    Number :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns a string containing \fIString\fR repeated \fINumber\fR times.
+
+.PP
+This function is obsolete. Use \fIlists:duplicate/2\fR.
+
+
+.RE
+.B
+\fBcspan(String, Chars) -> Length\fR
+\fB               when\fR
+\fB                   String :: string(),\fR
+\fB                   Chars :: string(),\fR
+\fB                   Length :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the length of the maximum initial segment of \fIString\fR, which consists entirely of characters not from \fIChars\fR.
+
+.PP
+This function is obsolete. Use \fItake/3\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:cspan("\\t    abcdef", " \\t").
+0
+
+.fi
+
+
+.RE
+.B
+\fBequal(A, B, IgnoreCase, Norm) -> boolean()\fR
+\fB               when\fR
+\fB                   A :: unicode:chardata(),\fR
+\fB                   B :: unicode:chardata(),\fR
+\fB                   IgnoreCase :: boolean(),\fR
+\fB                   Norm :: none | nfc | nfd | nfkc | nfkd.\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIA\fR and \fIB\fR are equal, otherwise \fIfalse\fR.
+
+.PP
+If \fIIgnoreCase\fR is \fItrue\fR the function does \fIcasefold\fRing on the fly before the equality test.
+
+.PP
+If \fINorm\fR is not \fInone\fR the function applies normalization on the fly before the equality test. There are four available normalization forms: \fInfc\fR, \fInfd\fR, \fInfkc\fR, and \fInfkd\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:equal("åäö", <<"åäö"/utf8>>).
+true
+2> string:equal("åäö", unicode:characters_to_nfd_binary("åäö")).
+false
+3> string:equal("åäö", unicode:characters_to_nfd_binary("ÅÄÖ"), true, nfc).
+true
+
+.fi
+
+
+.RE
+.B
+\fBfind(String, SearchPattern, Dir) -> unicode:chardata() | nomatch\fR
+\fB              when\fR
+\fB                  String :: unicode:chardata(),\fR
+\fB                  SearchPattern :: unicode:chardata(),\fR
+\fB                  Dir :: direction().\fR
+
+.br
+.RS
+.PP
+Removes anything before \fISearchPattern\fR in \fIString\fR and returns the remainder of the string or \fInomatch\fR if \fISearchPattern\fR is not found. \fIDir\fR, which can be \fIleading\fR or \fItrailing\fR, indicates from which direction characters are to be searched.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:find("ab..cd..ef", ".").
+"..cd..ef"
+2> string:find(<<"ab..cd..ef">>, "..", trailing).
+<<"..ef">>
+3> string:find(<<"ab..cd..ef">>, "x", leading).
+nomatch
+4> string:find("ab..cd..ef", "x", trailing).
+nomatch
+
+.fi
+
+
+.RE
+.B
+\fBis_empty(String :: unicode:chardata()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIString\fR is the empty string, otherwise \fIfalse\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:is_empty("foo").
+false
+2> string:is_empty(["",<<>>]).
+true
+
+.fi
+
+
+.RE
+.B
+\fBjaro_similarity(String1, String2) -> Similarity\fR
+\fB                         when\fR
+\fB                             String1 :: unicode:chardata(),\fR
+\fB                             String2 :: unicode:chardata(),\fR
+\fB                             Similarity :: float().\fR
+
+.br
+.RS
+.PP
+Returns a float between \fI+0.0\fR and \fI1.0\fR representing the Jaro similarity between the given strings. Strings with a higher similarity will score closer to \fI1.0\fR, with \fI+0.0\fR meaning no similarity and \fI1.0\fR meaning an exact match.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:jaro_similarity("ditto", "ditto").
+1.0
+2> string:jaro_similarity("foo", "bar").
++0.0
+3> string:jaro_similarity("michelle", "michael").
+0.8690476190476191
+4> string:jaro_similarity(<<"Édouard"/utf8>>, <<"Claude">>).
+0.5317460317460317
+
+.fi
+
+.PP
+The Jaro distance between two strings can be calculated with \fIJaroDistance = 1.0 - JaroSimilarity\fR.
+
+
+.RE
+.B
+\fBjoin(StringList, Separator) -> String\fR
+\fB              when\fR
+\fB                  StringList :: [string()],\fR
+\fB                  Separator :: string(),\fR
+\fB                  String :: string().\fR
+
+.br
+.RS
+.PP
+Returns a string with the elements of \fIStringList\fR separated by the string in \fISeparator\fR.
+
+.PP
+This function is obsolete. Use \fIlists:join/2\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> join(["one", "two", "three"], ", ").
+"one, two, three"
+
+.fi
+
+
+.RE
+.B
+\fBleft(String, Number, Character) -> Left\fR
+\fB              when\fR
+\fB                  String :: string(),\fR
+\fB                  Left :: string(),\fR
+\fB                  Number :: non_neg_integer(),\fR
+\fB                  Character :: char().\fR
+
+.br
+.RS
+.PP
+Returns \fIString\fR with the length adjusted in accordance with \fINumber\fR. The left margin is fixed. If \fIlength(String)\fR < \fINumber\fR, then \fIString\fR is padded with blanks or \fICharacter\fRs.
+
+.PP
+This function is obsolete. Use \fIpad/2\fR or \fIpad/3\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:left("Hello",10,$.).
+"Hello....."
+
+.fi
+
+
+.RE
+.B
+\fBlen(String) -> Length\fR
+\fB             when String :: string(), Length :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of characters in \fIString\fR.
+
+.PP
+This function is obsolete. Use \fIlength/1\fR.
+
+
+.RE
+.B
+\fBlength(String :: unicode:chardata()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of grapheme clusters in \fIString\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:length("ß↑e̊").
+3
+2> string:length(<<195,159,226,134,145,101,204,138>>).
+3
+
+.fi
+
+
+.RE
+.B
+\fBlexemes(String :: unicode:chardata(),\fR
+\fB              SeparatorList :: [grapheme_cluster()]) ->\fR
+\fB                 [unicode:chardata()].\fR
+
+.br
+.RS
+.PP
+Returns a list of lexemes in \fIString\fR, separated by the grapheme clusters in \fISeparatorList\fR.
+
+.PP
+Notice that, as shown in this example, two or more adjacent separator graphemes clusters in \fIString\fR are treated as one. That is, there are no empty strings in the resulting list of lexemes. See also \fIsplit/3\fR which returns empty strings.
+
+.PP
+Notice that \fI[$\\r,$\\n]\fR is one grapheme cluster.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:lexemes("abc de̊fxxghix jkl\\r\\nfoo", "x e" ++ [[$\\r,$\\n]]).
+["abc","de̊f","ghi","jkl","foo"]
+2> string:lexemes(<<"abc de̊fxxghix jkl\\r\\nfoo"/utf8>>, "x e" ++ [$\\r,$\\n]).
+[<<"abc">>,<<"de̊f"/utf8>>,<<"ghi">>,<<"jkl\\r\\nfoo">>]
+
+.fi
+
+
+.RE
+.B
+\fBlowercase(String :: unicode:chardata()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Converts \fIString\fR to lowercase.
+
+.PP
+Notice that function \fIcasefold/1\fR should be used when converting a string to be tested for equality.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+2> string:lowercase(string:uppercase("Michał")).
+"michał"
+
+.fi
+
+
+.RE
+.B
+\fBnext_codepoint(String :: unicode:chardata()) ->\fR
+\fB                        maybe_improper_list(char(), unicode:chardata()) |\fR
+\fB                        {error, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Returns the first codepoint in \fIString\fR and the rest of \fIString\fR in the tail. Returns an empty list if \fIString\fR is empty or an \fI{error, String}\fR tuple if the next byte is invalid.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:next_codepoint(unicode:characters_to_binary("e̊fg")).
+[101|<<"̊fg"/utf8>>]
+
+.fi
+
+
+.RE
+.B
+\fBnext_grapheme(String :: unicode:chardata()) ->\fR
+\fB                       maybe_improper_list(grapheme_cluster(),\fR
+\fB                                           unicode:chardata()) |\fR
+\fB                       {error, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Returns the first grapheme cluster in \fIString\fR and the rest of \fIString\fR in the tail. Returns an empty list if \fIString\fR is empty or an \fI{error, String}\fR tuple if the next byte is invalid.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:next_grapheme(unicode:characters_to_binary("e̊fg")).
+["e̊"|<<"fg">>]
+
+.fi
+
+
+.RE
+.B
+\fBnth_lexeme(String, N, SeparatorList) -> unicode:chardata()\fR
+\fB                    when\fR
+\fB                        String :: unicode:chardata(),\fR
+\fB                        N :: non_neg_integer(),\fR
+\fB                        SeparatorList :: [grapheme_cluster()].\fR
+
+.br
+.RS
+.PP
+Returns lexeme number \fIN\fR in \fIString\fR, where lexemes are separated by the grapheme clusters in \fISeparatorList\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:nth_lexeme("abc.de̊f.ghiejkl", 3, ".e").
+"ghi"
+
+.fi
+
+
+.RE
+.B
+\fBpad(String, Length, Dir, Char) -> unicode:charlist()\fR
+\fB             when\fR
+\fB                 String :: unicode:chardata(),\fR
+\fB                 Length :: integer(),\fR
+\fB                 Dir :: direction() | both,\fR
+\fB                 Char :: grapheme_cluster().\fR
+
+.br
+.RS
+.PP
+Pads \fIString\fR to \fILength\fR with grapheme cluster \fIChar\fR. \fIDir\fR, which can be \fIleading\fR, \fItrailing\fR, or \fIboth\fR, indicates where the padding should be added.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:pad(<<"He̊llö"/utf8>>, 8).
+[<<72,101,204,138,108,108,195,182>>,32,32,32]
+2> io:format("'~ts'~n",[string:pad("He̊llö", 8, leading)]).
+'   He̊llö'
+3> io:format("'~ts'~n",[string:pad("He̊llö", 8, both)]).
+' He̊llö  '
+
+.fi
+
+
+.RE
+.B
+\fBprefix(String :: unicode:chardata(), Prefix :: unicode:chardata()) ->\fR
+\fB                nomatch | unicode:chardata().\fR
+
+.br
+.RS
+.PP
+If \fIPrefix\fR is the prefix of \fIString\fR, removes it and returns the remainder of \fIString\fR, otherwise returns \fInomatch\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:prefix(<<"prefix of string">>, "pre").
+<<"fix of string">>
+2> string:prefix("pre", "prefix").
+nomatch
+
+.fi
+
+
+.RE
+.B
+\fBrchr(String, Character) -> Index\fR
+\fB              when\fR
+\fB                  String :: string(),\fR
+\fB                  Character :: char(),\fR
+\fB                  Index :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the index of the last occurrence of \fICharacter\fR in \fIString\fR. Returns \fI0\fR if \fICharacter\fR does not occur.
+
+.PP
+This function is obsolete. Use \fIfind/3\fR.
+
+
+.RE
+.B
+\fBreplace(String, SearchPattern, Replacement, Where) ->\fR
+\fB                 [unicode:chardata()]\fR
+\fB                 when\fR
+\fB                     String :: unicode:chardata(),\fR
+\fB                     SearchPattern :: unicode:chardata(),\fR
+\fB                     Replacement :: unicode:chardata(),\fR
+\fB                     Where :: direction() | all.\fR
+
+.br
+.RS
+.PP
+Replaces \fISearchPattern\fR in \fIString\fR with \fIReplacement\fR. \fIWhere\fR, indicates whether the \fIleading\fR, the \fItrailing\fR or \fIall\fR encounters of \fISearchPattern\fR are to be replaced.
+
+.PP
+Can be implemented as:
+
+.IP
+.nf
+lists:join(Replacement, split(String, SearchPattern, Where)).
+
+.fi
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:replace(<<"ab..cd..ef">>, "..", "*").
+[<<"ab">>,"*",<<"cd..ef">>]
+2> string:replace(<<"ab..cd..ef">>, "..", "*", all).
+[<<"ab">>,"*",<<"cd">>,"*",<<"ef">>]
+
+.fi
+
+
+.RE
+.B
+\fBreverse(String :: unicode:chardata()) -> [grapheme_cluster()].\fR
+
+.br
+.RS
+.PP
+Returns the reverse list of the grapheme clusters in \fIString\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> Reverse = string:reverse(unicode:characters_to_nfd_binary("ÅÄÖ")).
+[[79,776],[65,776],[65,778]]
+2> io:format("~ts~n",[Reverse]).
+ÖÄÅ
+
+.fi
+
+
+.RE
+.B
+\fBright(String, Number, Character) -> Right\fR
+\fB               when\fR
+\fB                   String :: string(),\fR
+\fB                   Right :: string(),\fR
+\fB                   Number :: non_neg_integer(),\fR
+\fB                   Character :: char().\fR
+
+.br
+.RS
+.PP
+Returns \fIString\fR with the length adjusted in accordance with \fINumber\fR. The right margin is fixed. If the length of \fI(String)\fR < \fINumber\fR, then \fIString\fR is padded with blanks or \fICharacter\fRs.
+
+.PP
+This function is obsolete. Use \fIpad/3\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:right("Hello", 10, $.).
+".....Hello"
+
+.fi
+
+
+.RE
+.B
+\fBrstr(String, SubString) -> Index\fR
+\fB              when\fR
+\fB                  String :: string(),\fR
+\fB                  SubString :: string(),\fR
+\fB                  Index :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the position where the last occurrence of \fISubString\fR begins in \fIString\fR. Returns \fI0\fR if \fISubString\fR does not exist in \fIString\fR.
+
+.PP
+This function is obsolete. Use \fIfind/3\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:rstr(" Hello Hello World World ", "Hello World").
+8
+
+.fi
+
+
+.RE
+.B
+\fBslice(String, Start, Length) -> Slice\fR
+\fB               when\fR
+\fB                   String :: unicode:chardata(),\fR
+\fB                   Start :: non_neg_integer(),\fR
+\fB                   Length :: infinity | non_neg_integer(),\fR
+\fB                   Slice :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Returns a substring of \fIString\fR of at most \fILength\fR grapheme clusters, starting at position \fIStart\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:slice(<<"He̊llö Wörld"/utf8>>, 4).
+<<"ö Wörld"/utf8>>
+2> string:slice(["He̊llö ", <<"Wörld"/utf8>>], 4,4).
+"ö Wö"
+3> string:slice(["He̊llö ", <<"Wörld"/utf8>>], 4,50).
+"ö Wörld"
+
+.fi
+
+
+.RE
+.B
+\fBspan(String, Chars) -> Length\fR
+\fB              when\fR
+\fB                  String :: string(),\fR
+\fB                  Chars :: string(),\fR
+\fB                  Length :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the length of the maximum initial segment of \fIString\fR, which consists entirely of characters from \fIChars\fR.
+
+.PP
+This function is obsolete. Use \fItake/2\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:span("\\t    abcdef", " \\t").
+5
+
+.fi
+
+
+.RE
+.B
+\fBsplit(String, SearchPattern, Where) -> [unicode:chardata()]\fR
+\fB               when\fR
+\fB                   String :: unicode:chardata(),\fR
+\fB                   SearchPattern :: unicode:chardata(),\fR
+\fB                   Where :: direction() | all.\fR
+
+.br
+.RS
+.PP
+Splits \fIString\fR where \fISearchPattern\fR is encountered and return the remaining parts. \fIWhere\fR, default \fIleading\fR, indicates whether the \fIleading\fR, the \fItrailing\fR or \fIall\fR encounters of \fISearchPattern\fR will split \fIString\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+0> string:split("ab..bc..cd", "..").
+["ab","bc..cd"]
+1> string:split(<<"ab..bc..cd">>, "..", trailing).
+[<<"ab..bc">>,<<"cd">>]
+2> string:split(<<"ab..bc....cd">>, "..", all).
+[<<"ab">>,<<"bc">>,<<>>,<<"cd">>]
+
+.fi
+
+
+.RE
+.B
+\fBstr(String, SubString) -> Index\fR
+\fB             when\fR
+\fB                 String :: string(),\fR
+\fB                 SubString :: string(),\fR
+\fB                 Index :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the position where the first occurrence of \fISubString\fR begins in \fIString\fR. Returns \fI0\fR if \fISubString\fR does not exist in \fIString\fR.
+
+.PP
+This function is obsolete. Use \fIfind/2\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:str(" Hello Hello World World ", "Hello World").
+8
+
+.fi
+
+
+.RE
+.B
+\fBstrip(String, Direction, Character) -> Stripped\fR
+\fB               when\fR
+\fB                   String :: string(),\fR
+\fB                   Stripped :: string(),\fR
+\fB                   Direction :: left | right | both,\fR
+\fB                   Character :: char().\fR
+
+.br
+.RS
+.PP
+Returns a string, where leading or trailing, or both, blanks or a number of \fICharacter\fR have been removed.
+
+.PP
+\fIDirection\fR, which can be \fIleft\fR, \fIright\fR, or \fIboth\fR, indicates from which direction blanks are to be removed. \fIstrip/1\fR is equivalent to \fIstrip(String, both)\fR.
+
+.PP
+This function is obsolete. Use \fItrim/3\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:strip("...Hello.....", both, $.).
+"Hello"
+
+.fi
+
+
+.RE
+.B
+\fBsub_string(String, Start, Stop) -> SubString\fR
+\fB                    when\fR
+\fB                        String :: string(),\fR
+\fB                        SubString :: string(),\fR
+\fB                        Start :: pos_integer(),\fR
+\fB                        Stop :: pos_integer().\fR
+
+.br
+.RS
+.PP
+Returns a substring of \fIString\fR, starting at position \fIStart\fR to the end of the string, or to and including position \fIStop\fR.
+
+.PP
+This function is obsolete. Use \fIslice/3\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> sub_string("Hello World", 4, 8).
+"lo Wo"
+
+.fi
+
+
+.RE
+.B
+\fBsub_word(String, Number, Character) -> Word\fR
+\fB                  when\fR
+\fB                      String :: string(),\fR
+\fB                      Word :: string(),\fR
+\fB                      Number :: integer(),\fR
+\fB                      Character :: char().\fR
+
+.br
+.RS
+.PP
+Returns the word in position \fINumber\fR of \fIString\fR. Words are separated by blanks or \fICharacter\fRs.
+
+.PP
+This function is obsolete. Use \fInth_lexeme/3\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:sub_word(" Hello old boy !",3,$o).
+"ld b"
+
+.fi
+
+
+.RE
+.B
+\fBsubstr(String, Start, Length) -> SubString\fR
+\fB                when\fR
+\fB                    String :: string(),\fR
+\fB                    SubString :: string(),\fR
+\fB                    Start :: pos_integer(),\fR
+\fB                    Length :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns a substring of \fIString\fR, starting at position \fIStart\fR, and ending at the end of the string or at length \fILength\fR.
+
+.PP
+This function is obsolete. Use \fIslice/3\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> substr("Hello World", 4, 5).
+"lo Wo"
+
+.fi
+
+
+.RE
+.B
+\fBtake(String, Characters, Complement, Dir) -> {Leading, Trailing}\fR
+\fB              when\fR
+\fB                  String :: unicode:chardata(),\fR
+\fB                  Characters :: [grapheme_cluster()],\fR
+\fB                  Complement :: boolean(),\fR
+\fB                  Dir :: direction(),\fR
+\fB                  Leading :: unicode:chardata(),\fR
+\fB                  Trailing :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Takes characters from \fIString\fR as long as the characters are members of set \fICharacters\fR or the complement of set \fICharacters\fR. \fIDir\fR, which can be \fIleading\fR or \fItrailing\fR, indicates from which direction characters are to be taken.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+5> string:take("abc0z123", lists:seq($a,$z)).
+{"abc","0z123"}
+6> string:take(<<"abc0z123">>, lists:seq($0,$9), true, leading).
+{<<"abc">>,<<"0z123">>}
+7> string:take("abc0z123", lists:seq($0,$9), false, trailing).
+{"abc0z","123"}
+8> string:take(<<"abc0z123">>, lists:seq($a,$z), true, trailing).
+{<<"abc0z">>,<<"123">>}
+
+.fi
+
+
+.RE
+.B
+\fBtitlecase(String :: unicode:chardata()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Converts \fIString\fR to titlecase.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:titlecase("ß is a SHARP s").
+"Ss is a SHARP s"
+
+.fi
+
+
+.RE
+.B
+\fBto_float(String) -> {Float, Rest} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      String :: unicode:chardata(),\fR
+\fB                      Float :: float(),\fR
+\fB                      Rest :: unicode:chardata(),\fR
+\fB                      Reason :: no_float | badarg.\fR
+
+.br
+.RS
+.PP
+Argument \fIString\fR is expected to start with a valid text represented float (the digits are ASCII values). Remaining characters in the string after the float are returned in \fIRest\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> {F1,Fs} = string:to_float("1.0-1.0e-1"),
+1> {F2,[]} = string:to_float(Fs),
+1> F1+F2.
+0.9
+2> string:to_float("3/2=1.5").
+{error,no_float}
+3> string:to_float("-1.5eX").
+{-1.5,"eX"}
+
+.fi
+
+
+.RE
+.B
+\fBto_graphemes(String :: unicode:chardata()) -> [grapheme_cluster()].\fR
+
+.br
+.RS
+.PP
+Converts \fIString\fR to a list of grapheme clusters.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:to_graphemes("ß↑e̊").
+[223,8593,[101,778]]
+2> string:to_graphemes(<<"ß↑e̊"/utf8>>).
+[223,8593,[101,778]]
+
+.fi
+
+
+.RE
+.B
+\fBto_integer(String) -> {Int, Rest} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        String :: unicode:chardata(),\fR
+\fB                        Int :: integer(),\fR
+\fB                        Rest :: unicode:chardata(),\fR
+\fB                        Reason :: no_integer | badarg.\fR
+
+.br
+.RS
+.PP
+Argument \fIString\fR is expected to start with a valid text represented integer (the digits are ASCII values). Remaining characters in the string after the integer are returned in \fIRest\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> {I1,Is} = string:to_integer("33+22"),
+1> {I2,[]} = string:to_integer(Is),
+1> I1-I2.
+11
+2> string:to_integer("0.5").
+{0,".5"}
+3> string:to_integer("x=2").
+{error,no_integer}
+
+.fi
+
+
+.RE
+.B
+\fBto_lower(String) -> Result\fR
+\fB                  when\fR
+\fB                      String :: io_lib:latin1_string(),\fR
+\fB                      Result :: io_lib:latin1_string();\fR
+\fB              (Char) -> CharResult\fR
+\fB                  when Char :: char(), CharResult :: char().\fR
+
+.br
+.RS
+.PP
+The specified string or character is case-converted. Notice that the supported character set is ISO/IEC 8859-1 (also called Latin 1); all values outside this set are unchanged.
+
+.PP
+This function is obsolete use \fIlowercase/1\fR, \fItitlecase/1\fR or \fIcasefold/1\fR.
+
+
+.RE
+.B
+\fBto_upper(String) -> Result\fR
+\fB                  when\fR
+\fB                      String :: io_lib:latin1_string(),\fR
+\fB                      Result :: io_lib:latin1_string();\fR
+\fB              (Char) -> CharResult\fR
+\fB                  when Char :: char(), CharResult :: char().\fR
+
+.br
+.RS
+.PP
+The specified string or character is case-converted. Notice that the supported character set is ISO/IEC 8859-1 (also called Latin 1); all values outside this set are unchanged.
+
+.PP
+This function is obsolete use \fIuppercase/1\fR, \fItitlecase/1\fR or \fIcasefold/1\fR.
+
+
+.RE
+.B
+\fBtokens(String, SeparatorList) -> Tokens\fR
+\fB                when\fR
+\fB                    String :: string(),\fR
+\fB                    SeparatorList :: string(),\fR
+\fB                    Tokens :: [Token :: nonempty_string()].\fR
+
+.br
+.RS
+.PP
+Returns a list of tokens in \fIString\fR, separated by the characters in \fISeparatorList\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> tokens("abc defxxghix jkl", "x ").
+["abc", "def", "ghi", "jkl"]
+
+.fi
+
+.PP
+Notice that, as shown in this example, two or more adjacent separator characters in \fIString\fR are treated as one. That is, there are no empty strings in the resulting list of tokens.
+
+.PP
+This function is obsolete. Use \fIlexemes/2\fR.
+
+
+.RE
+.B
+\fBtrim(String, Dir) -> unicode:chardata()\fR
+\fB              when\fR
+\fB                  String :: unicode:chardata(),\fR
+\fB                  Dir :: direction() | both.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fItrim(String, Dir, Whitespace})\fR where \fIWhitespace\fR is the set of nonbreakable whitespace codepoints, defined as Pattern_White_Space in Unicode Standard Annex #31.
+
+
+.RE
+.B
+\fBtrim(String, Dir, Characters) -> unicode:chardata()\fR
+\fB              when\fR
+\fB                  String :: unicode:chardata(),\fR
+\fB                  Dir :: direction() | both,\fR
+\fB                  Characters :: [grapheme_cluster()].\fR
+
+.br
+.RS
+.PP
+Returns a string, where leading or trailing, or both, \fICharacters\fR have been removed.
+
+.PP
+\fIDir\fR which can be \fIleading\fR, \fItrailing\fR, or \fIboth\fR, indicates from which direction characters are to be removed.
+
+.PP
+Note that \fI[$\\r,$\\n]\fR is one grapheme cluster according to the Unicode Standard.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:trim("\\t  Hello  \\n").
+"Hello"
+2> string:trim(<<"\\t  Hello  \\n">>, leading).
+<<"Hello  \\n">>
+3> string:trim(<<".Hello.\\n">>, trailing, "\\n.").
+<<".Hello">>
+
+.fi
+
+
+.RE
+.B
+\fBuppercase(String :: unicode:chardata()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Converts \fIString\fR to uppercase.
+
+.PP
+See also \fItitlecase/1\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> string:uppercase("Michał").
+"MICHAŁ"
+
+.fi
+
+
+.RE
+.B
+\fBwords(String, Character) -> Count\fR
+\fB               when\fR
+\fB                   String :: string(),\fR
+\fB                   Character :: char(),\fR
+\fB                   Count :: pos_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of words in \fIString\fR, separated by blanks or \fICharacter\fR.
+
+.PP
+This function is obsolete. Use \fIlexemes/2\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> words(" Hello old boy!", $o).
+4
+
+.fi
+
+
+.RE

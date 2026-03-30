@@ -1,0 +1,998 @@
+.TH wxAuiPaneInfo 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxAuiPaneInfo \- \fIwxAuiPaneInfo\fR is part of the wxAUI class framework.
+
+.SH DESCRIPTION
+.PP
+See also overview_aui.
+
+.PP
+\fIwxAuiPaneInfo\fR specifies all the parameters for a pane. These parameters specify where the pane is on the screen, whether it is docked or floating, or hidden. In addition, these parameters specify the pane's docked position, floating position, preferred size, minimum size, caption text among many other parameters.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxAuiManager\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxAuiDockArt\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxAuiPaneInfo
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxAuiPaneInfo() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbestSize(This, Size) -> wxAuiPaneInfo()\fR
+\fB                  when\fR
+\fB                      This :: wxAuiPaneInfo(),\fR
+\fB                      Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+\fIbestSize/3\fR sets the ideal size for the pane.
+
+.PP
+The docking manager will attempt to use this size as much as possible when docking or floating the pane.
+
+
+.RE
+.B
+\fBbestSize(This, X, Y) -> wxAuiPaneInfo()\fR
+\fB                  when\fR
+\fB                      This :: wxAuiPaneInfo(),\fR
+\fB                      X :: integer(),\fR
+\fB                      Y :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbottom(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIbottom/1\fR sets the pane dock position to the bottom side of the frame.
+
+.PP
+This is the same thing as calling Direction(wxAUI_DOCK_BOTTOM).
+
+
+.RE
+.B
+\fBbottomDockable(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                        when\fR
+\fB                            This :: wxAuiPaneInfo(),\fR
+\fB                            Option :: {b, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIbottomDockable/2\fR indicates whether a pane can be docked at the bottom of the frame.
+
+
+.RE
+.B
+\fBcaption(This, C) -> wxAuiPaneInfo()\fR
+\fB                 when This :: wxAuiPaneInfo(), C :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+\fIcaption/2\fR sets the caption of the pane.
+
+
+.RE
+.B
+\fBcaptionVisible(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                        when\fR
+\fB                            This :: wxAuiPaneInfo(),\fR
+\fB                            Option :: {visible, boolean()}.\fR
+
+.br
+.RS
+.PP
+CaptionVisible indicates that a pane caption should be visible.
+
+.PP
+If false, no pane caption is drawn.
+
+
+.RE
+.B
+\fBcentre(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fICenter()\fR (not implemented in wx) sets the pane dock position to the left side of the frame.
+
+.PP
+The centre pane is the space in the middle after all border panes (left, top, right, bottom) are subtracted from the layout. This is the same thing as calling Direction(wxAUI_DOCK_CENTRE).
+
+
+.RE
+.B
+\fBcentrePane(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIcentrePane/1\fR specifies that the pane should adopt the default center pane settings.
+
+.PP
+Centre panes usually do not have caption bars. This function provides an easy way of preparing a pane to be displayed in the center dock position.
+
+
+.RE
+.B
+\fBcloseButton(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                     when\fR
+\fB                         This :: wxAuiPaneInfo(),\fR
+\fB                         Option :: {visible, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIcloseButton/2\fR indicates that a close button should be drawn for the pane.
+
+
+.RE
+.B
+\fBdefaultPane(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIdefaultPane/1\fR specifies that the pane should adopt the default pane settings.
+
+
+.RE
+.B
+\fBdestroy(This :: wxAuiPaneInfo()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBdestroyOnClose(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                        when\fR
+\fB                            This :: wxAuiPaneInfo(),\fR
+\fB                            Option :: {b, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIdestroyOnClose/2\fR indicates whether a pane should be destroyed when it is closed.
+
+.PP
+Normally a pane is simply hidden when the close button is clicked. Setting DestroyOnClose to true will cause the window to be destroyed when the user clicks the pane's close button.
+
+
+.RE
+.B
+\fBdirection(This, Direction) -> wxAuiPaneInfo()\fR
+\fB                   when This :: wxAuiPaneInfo(), Direction :: integer().\fR
+
+.br
+.RS
+.PP
+\fIdirection/2\fR determines the direction of the docked pane.
+
+.PP
+It is functionally the same as calling \fIleft/1\fR, \fIright/1\fR, \fItop/1\fR or \fIbottom/1\fR, except that docking direction may be specified programmatically via the parameter.
+
+
+.RE
+.B
+\fBdock(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIdock/1\fR indicates that a pane should be docked.
+
+.PP
+It is the opposite of \fIfloat/1\fR.
+
+
+.RE
+.B
+\fBdockable(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                  when This :: wxAuiPaneInfo(), Option :: {b, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIdockable/2\fR specifies whether a frame can be docked or not.
+
+.PP
+It is the same as specifying TopDockable(b).BottomDockable(b).LeftDockable(b).RightDockable(b).
+
+
+.RE
+.B
+\fBfixed(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIfixed/1\fR forces a pane to be fixed size so that it cannot be resized.
+
+.PP
+After calling \fIfixed/1\fR, \fIisFixed/1\fR will return true.
+
+
+.RE
+.B
+\fBfloat(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIfloat/1\fR indicates that a pane should be floated.
+
+.PP
+It is the opposite of \fIdock/1\fR.
+
+
+.RE
+.B
+\fBfloatable(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                   when\fR
+\fB                       This :: wxAuiPaneInfo(), Option :: {b, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIfloatable/2\fR sets whether the user will be able to undock a pane and turn it into a floating window.
+
+
+.RE
+.B
+\fBfloatingPosition(This, Pos) -> wxAuiPaneInfo()\fR
+\fB                          when\fR
+\fB                              This :: wxAuiPaneInfo(),\fR
+\fB                              Pos :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+\fIfloatingPosition/3\fR sets the position of the floating pane.
+
+
+.RE
+.B
+\fBfloatingPosition(This, X, Y) -> wxAuiPaneInfo()\fR
+\fB                          when\fR
+\fB                              This :: wxAuiPaneInfo(),\fR
+\fB                              X :: integer(),\fR
+\fB                              Y :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfloatingSize(This, Size) -> wxAuiPaneInfo()\fR
+\fB                      when\fR
+\fB                          This :: wxAuiPaneInfo(),\fR
+\fB                          Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+\fIfloatingSize/3\fR sets the size of the floating pane.
+
+
+.RE
+.B
+\fBfloatingSize(This, X, Y) -> wxAuiPaneInfo()\fR
+\fB                      when\fR
+\fB                          This :: wxAuiPaneInfo(),\fR
+\fB                          X :: integer(),\fR
+\fB                          Y :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetDirection(This) -> integer() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetFloatingPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                             when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetFloatingSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                         when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetFrame(This) -> wxFrame:wxFrame() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetLayer(This) -> integer() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetPosition(This) -> integer() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetRow(This) -> integer() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetWindow(This) -> wxWindow:wxWindow()\fR
+\fB                   when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgripper(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiPaneInfo(),\fR
+\fB                     Option :: {visible, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIgripper/2\fR indicates that a gripper should be drawn for the pane.
+
+
+.RE
+.B
+\fBgripperTop(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                    when\fR
+\fB                        This :: wxAuiPaneInfo(),\fR
+\fB                        Option :: {attop, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIgripperTop/2\fR indicates that a gripper should be drawn at the top of the pane.
+
+
+.RE
+.B
+\fBhasBorder(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhasBorder/1\fR returns true if the pane displays a border.
+
+
+.RE
+.B
+\fBhasCaption(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhasCaption/1\fR returns true if the pane displays a caption.
+
+
+.RE
+.B
+\fBhasCloseButton(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhasCloseButton/1\fR returns true if the pane displays a button to close the pane.
+
+
+.RE
+.B
+\fBhasFlag(This, Flag) -> boolean()\fR
+\fB                 when This :: wxAuiPaneInfo(), Flag :: integer().\fR
+
+.br
+.RS
+.PP
+\fIhasFlag/2\fR returns true if the property specified by flag is active for the pane.
+
+
+.RE
+.B
+\fBhasGripper(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhasGripper/1\fR returns true if the pane displays a gripper.
+
+
+.RE
+.B
+\fBhasGripperTop(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhasGripper/1\fR returns true if the pane displays a gripper at the top.
+
+
+.RE
+.B
+\fBhasMaximizeButton(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhasMaximizeButton/1\fR returns true if the pane displays a button to maximize the pane.
+
+
+.RE
+.B
+\fBhasMinimizeButton(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhasMinimizeButton/1\fR returns true if the pane displays a button to minimize the pane.
+
+
+.RE
+.B
+\fBhasPinButton(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhasPinButton/1\fR returns true if the pane displays a button to float the pane.
+
+
+.RE
+.B
+\fBhide(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIhide/1\fR indicates that a pane should be hidden.
+
+
+.RE
+.B
+\fBisBottomDockable(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisBottomDockable/1\fR returns true if the pane can be docked at the bottom of the managed frame.
+
+
+.RE
+.B
+\fBisDocked(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisDocked/1\fR returns true if the pane is currently docked.
+
+
+.RE
+.B
+\fBisFixed(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisFixed/1\fR returns true if the pane cannot be resized.
+
+
+.RE
+.B
+\fBisFloatable(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisFloatable/1\fR returns true if the pane can be undocked and displayed as a floating window.
+
+
+.RE
+.B
+\fBisFloating(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisFloating/1\fR returns true if the pane is floating.
+
+
+.RE
+.B
+\fBisLeftDockable(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisLeftDockable/1\fR returns true if the pane can be docked on the left of the managed frame.
+
+
+.RE
+.B
+\fBisMovable(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+IsMoveable() returns true if the docked frame can be undocked or moved to another dock position.
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisOk/1\fR returns true if the \fIwxAuiPaneInfo\fR structure is valid.
+
+.PP
+A pane structure is valid if it has an associated window.
+
+
+.RE
+.B
+\fBisResizable(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisResizable/1\fR returns true if the pane can be resized.
+
+
+.RE
+.B
+\fBisRightDockable(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisRightDockable/1\fR returns true if the pane can be docked on the right of the managed frame.
+
+
+.RE
+.B
+\fBisShown(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisShown/1\fR returns true if the pane is currently shown.
+
+
+.RE
+.B
+\fBisToolbar(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisToolbar/1\fR returns true if the pane contains a toolbar.
+
+
+.RE
+.B
+\fBisTopDockable(This) -> boolean() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIisTopDockable/1\fR returns true if the pane can be docked at the top of the managed frame.
+
+
+.RE
+.B
+\fBlayer(This, Layer) -> wxAuiPaneInfo()\fR
+\fB               when This :: wxAuiPaneInfo(), Layer :: integer().\fR
+
+.br
+.RS
+.PP
+\fIlayer/2\fR determines the layer of the docked pane.
+
+.PP
+The dock layer is similar to an onion, the inner-most layer being layer 0. Each shell moving in the outward direction has a higher layer number. This allows for more complex docking layout formation.
+
+
+.RE
+.B
+\fBleft(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIleft/1\fR sets the pane dock position to the left side of the frame.
+
+.PP
+This is the same thing as calling Direction(wxAUI_DOCK_LEFT).
+
+
+.RE
+.B
+\fBleftDockable(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                      when\fR
+\fB                          This :: wxAuiPaneInfo(),\fR
+\fB                          Option :: {b, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIleftDockable/2\fR indicates whether a pane can be docked on the left of the frame.
+
+
+.RE
+.B
+\fBmaxSize(This, Size) -> wxAuiPaneInfo()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiPaneInfo(),\fR
+\fB                     Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+\fImaxSize/3\fR sets the maximum size of the pane.
+
+
+.RE
+.B
+\fBmaxSize(This, X, Y) -> wxAuiPaneInfo()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiPaneInfo(),\fR
+\fB                     X :: integer(),\fR
+\fB                     Y :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmaximizeButton(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                        when\fR
+\fB                            This :: wxAuiPaneInfo(),\fR
+\fB                            Option :: {visible, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fImaximizeButton/2\fR indicates that a maximize button should be drawn for the pane.
+
+
+.RE
+.B
+\fBminSize(This, Size) -> wxAuiPaneInfo()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiPaneInfo(),\fR
+\fB                     Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+\fIminSize/3\fR sets the minimum size of the pane.
+
+.PP
+Please note that this is only partially supported as of this writing.
+
+
+.RE
+.B
+\fBminSize(This, X, Y) -> wxAuiPaneInfo()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiPaneInfo(),\fR
+\fB                     X :: integer(),\fR
+\fB                     Y :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBminimizeButton(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                        when\fR
+\fB                            This :: wxAuiPaneInfo(),\fR
+\fB                            Option :: {visible, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIminimizeButton/2\fR indicates that a minimize button should be drawn for the pane.
+
+
+.RE
+.B
+\fBmovable(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                 when This :: wxAuiPaneInfo(), Option :: {b, boolean()}.\fR
+
+.br
+.RS
+.PP
+Movable indicates whether a frame can be moved.
+
+
+.RE
+.B
+\fBname(This, N) -> wxAuiPaneInfo()\fR
+\fB              when This :: wxAuiPaneInfo(), N :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+\fIname/2\fR sets the name of the pane so it can be referenced in lookup functions.
+
+.PP
+If a name is not specified by the user, a random name is assigned to the pane when it is added to the manager.
+
+
+.RE
+.B
+\fBnew() -> wxAuiPaneInfo().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(C) -> wxAuiPaneInfo() when C :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+Copy constructor.
+
+
+.RE
+.B
+\fBpaneBorder(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                    when\fR
+\fB                        This :: wxAuiPaneInfo(),\fR
+\fB                        Option :: {visible, boolean()}.\fR
+
+.br
+.RS
+.PP
+PaneBorder indicates that a border should be drawn for the pane.
+
+
+.RE
+.B
+\fBpinButton(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                   when\fR
+\fB                       This :: wxAuiPaneInfo(),\fR
+\fB                       Option :: {visible, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIpinButton/2\fR indicates that a pin button should be drawn for the pane.
+
+
+.RE
+.B
+\fBposition(This, Pos) -> wxAuiPaneInfo()\fR
+\fB                  when This :: wxAuiPaneInfo(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+\fIposition/2\fR determines the position of the docked pane.
+
+
+.RE
+.B
+\fBresizable(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                   when\fR
+\fB                       This :: wxAuiPaneInfo(),\fR
+\fB                       Option :: {resizable, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIresizable/2\fR allows a pane to be resized if the parameter is true, and forces it to be a fixed size if the parameter is false.
+
+.PP
+This is simply an antonym for \fIfixed/1\fR.
+
+
+.RE
+.B
+\fBright(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIright/1\fR sets the pane dock position to the right side of the frame.
+
+.PP
+This is the same thing as calling Direction(wxAUI_DOCK_RIGHT).
+
+
+.RE
+.B
+\fBrightDockable(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                       when\fR
+\fB                           This :: wxAuiPaneInfo(),\fR
+\fB                           Option :: {b, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIrightDockable/2\fR indicates whether a pane can be docked on the right of the frame.
+
+
+.RE
+.B
+\fBrow(This, Row) -> wxAuiPaneInfo()\fR
+\fB             when This :: wxAuiPaneInfo(), Row :: integer().\fR
+
+.br
+.RS
+.PP
+\fIrow/2\fR determines the row of the docked pane.
+
+
+.RE
+.B
+\fBsafeSet(This, Source) -> ok\fR
+\fB                 when This :: wxAuiPaneInfo(), Source :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+Write the safe parts of a PaneInfo object "source" into "this".
+
+.PP
+"Safe parts" are all non-UI elements (e.g. all layout determining parameters like the size, position etc.). "Unsafe parts" (pointers to button, frame and window) are not modified by this write operation.
+
+.PP
+Remark: This method is used when loading perspectives.
+
+
+.RE
+.B
+\fBsetFlag(This, Flag, Option_state) -> wxAuiPaneInfo()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiPaneInfo(),\fR
+\fB                     Flag :: integer(),\fR
+\fB                     Option_state :: boolean().\fR
+
+.br
+.RS
+.PP
+\fIsetFlag/3\fR turns the property given by flag on or off with the option_state parameter.
+
+
+.RE
+.B
+\fBshow(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB              when This :: wxAuiPaneInfo(), Option :: {show, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fIshow/2\fR indicates that a pane should be shown.
+
+
+.RE
+.B
+\fBtoolbarPane(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fItoolbarPane/1\fR specifies that the pane should adopt the default toolbar pane settings.
+
+
+.RE
+.B
+\fBtop(This) -> wxAuiPaneInfo() when This :: wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fItop/1\fR sets the pane dock position to the top of the frame.
+
+.PP
+This is the same thing as calling Direction(wxAUI_DOCK_TOP).
+
+
+.RE
+.B
+\fBtopDockable(This, [Option]) -> wxAuiPaneInfo()\fR
+\fB                     when\fR
+\fB                         This :: wxAuiPaneInfo(),\fR
+\fB                         Option :: {b, boolean()}.\fR
+
+.br
+.RS
+.PP
+\fItopDockable/2\fR indicates whether a pane can be docked at the top of the frame.
+
+
+.RE
+.B
+\fBwindow(This, W) -> wxAuiPaneInfo()\fR
+\fB                when This :: wxAuiPaneInfo(), W :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+\fIwindow/2\fR assigns the window pointer that the \fIwxAuiPaneInfo\fR should use.
+
+.PP
+This normally does not need to be specified, as the window pointer is automatically assigned to the \fIwxAuiPaneInfo\fR structure as soon as it is added to the manager.
+
+
+.RE

@@ -1,0 +1,103 @@
+.TH wxBoxSizer 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxBoxSizer \- The basic idea behind a box sizer is that windows will most often be laid out in rather simple basic geometry, typically in a row or a column or several hierarchies of either.
+
+.SH DESCRIPTION
+.PP
+For more information, please see overview_sizer_box.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview sizer
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxBoxSizer
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxBoxSizer() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxBoxSizer()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetOrientation(This) -> integer() when This :: wxBoxSizer().\fR
+
+.br
+.RS
+.PP
+Returns the orientation of the box sizer, either wxVERTICAL or wxHORIZONTAL.
+
+
+.RE
+.B
+\fBnew(Orient) -> wxBoxSizer() when Orient :: integer().\fR
+
+.br
+.RS
+.PP
+Constructor for a \fIwxBoxSizer\fR.
+
+.PP
+\fIorient\fR may be either of wxVERTICAL or wxHORIZONTAL for creating either a column sizer or a row sizer.
+
+
+.RE

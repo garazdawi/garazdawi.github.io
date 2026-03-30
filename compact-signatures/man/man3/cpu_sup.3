@@ -1,0 +1,268 @@
+.TH cpu_sup 3 "os_mon 2.11.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+cpu_sup \- A CPU Load and CPU Utilization Supervisor Process
+
+.SH DESCRIPTION
+.PP
+\fIcpu_sup\fR is a process which supervises the CPU load and CPU utilization. It is part of the OS_Mon application, see os_mon(6). Available for Unix, although CPU utilization values (\fIutil/0,1\fR) are only available for Solaris, Linux, FreeBSD and OpenBSD.
+
+.PP
+The load values are proportional to how long time a runnable Unix process has to spend in the run queue before it is scheduled. Accordingly, higher values mean more system load. The returned value divided by 256 produces the figure displayed by \fIrup\fR and \fItop\fR. What is displayed as 2.00 in \fIrup\fR, is displayed as load up to the second mark in \fIxload\fR.
+
+.PP
+For example, \fIrup\fR displays a load of 128 as 0.50, and 512 as 2.00.
+
+.PP
+If the user wants to view load values as percentage of machine capacity, then this way of measuring presents a problem, because the load values are not restricted to a fixed interval. In this case, the following simple mathematical transformation can produce the load value as a percentage:
+
+.IP
+.nf
+PercentLoad = 100 * (1 - D/(D + Load))
+
+.fi
+
+.PP
+\fID\fR determines which load value should be associated with which percentage. Choosing \fID\fR = 50 means that 128 is 60% load, 256 is 80%, 512 is 90%, and so on.
+
+.PP
+Another way of measuring system load is to divide the number of busy CPU cycles by the total number of CPU cycles. This produces values in the 0-100 range immediately. However, this method hides the fact that a machine can be more or less saturated. CPU utilization is therefore a better name than system load for this measure.
+
+.PP
+A server which receives just enough requests to never become idle will score a CPU utilization of 100%. If the server receives 50% more requests, it will still score 100%. When the system load is calculated with the percentage formula shown previously, the load will increase from 80% to 87%.
+
+.PP
+The \fIavg1/0\fR, \fIavg5/0\fR, and \fIavg15/0\fR functions can be used for retrieving system load values, and the \fIutil/0\fR and \fIutil/1\fR functions can be used for retrieving CPU utilization values.
+
+.PP
+When run on Linux, \fIcpu_sup\fR assumes that the \fI/proc\fR file system is present and accessible by \fIcpu_sup\fR. If it is not, \fIcpu_sup\fR will terminate.
+
+.PP
+\fBSee Also\fR
+
+.PP
+os_mon(3)
+
+.SH DATA TYPES
+.LP
+.B
+\fButil_cpus() :: all | integer() | [integer()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fButil_desc() :: {util_cpus(), util_value(), util_value(), []}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fButil_state() :: user | nice_user | kernel | wait | idle.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fButil_value() :: [{util_state(), number()}] | number().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBavg1() -> SystemLoad :: integer() | {error, any()}.\fR
+
+.br
+.RS
+.PP
+Returns the average system load in the last minute, as described above. 0 represents no load, 256 represents the load reported as 1.00 by \fIrup\fR.
+
+.PP
+Returns 0 if \fIcpu_sup\fR is not available.
+
+
+.RE
+.B
+\fBavg15() -> SystemLoad :: integer() | {error, any()}.\fR
+
+.br
+.RS
+.PP
+Returns the average system load in the last 15 minutes, as described above. 0 represents no load, 256 represents the load reported as 1.00 by \fIrup\fR.
+
+.PP
+Returns 0 if \fIcpu_sup\fR is not available.
+
+
+.RE
+.B
+\fBavg5() -> SystemLoad :: integer() | {error, any()}.\fR
+
+.br
+.RS
+.PP
+Returns the average system load in the last five minutes, as described above. 0 represents no load, 256 represents the load reported as 1.00 by \fIrup\fR.
+
+.PP
+Returns 0 if \fIcpu_sup\fR is not available.
+
+
+.RE
+.B
+\fBnprocs() -> UnixProcesses :: integer() | {error, any()}.\fR
+
+.br
+.RS
+.PP
+Returns the number of UNIX processes running on this machine. This is a crude way of measuring the system load, but it may be of interest in some cases.
+
+.PP
+Returns 0 if \fIcpu_sup\fR is not available.
+
+
+.RE
+.B
+\fButil() -> CpuUtil :: number() | {error, any()}.\fR
+
+.br
+.RS
+.PP
+Returns CPU utilization since the last call to \fIutil/0\fR or \fIutil/1\fR by the calling process.
+
+.PP
+\fBNOTE: \fRThe returned value of the first call to \fIutil/0\fR or \fIutil/1\fR by a process will on most systems be the CPU utilization since system boot, but this is not guaranteed and the value should therefore be regarded as garbage. This also applies to the first call after a restart of \fIcpu_sup\fR.
+
+
+.PP
+The CPU utilization is defined as the sum of the percentage shares of the CPU cycles spent in all busy processor states (see \fIutil/1\fR) in average on all CPUs.
+
+.PP
+Returns 0 if \fIcpu_sup\fR is not available.
+
+
+.RE
+.B
+\fButil([detailed | per_cpu]) ->\fR
+\fB              util_desc() | [util_desc()] | {error, any()}.\fR
+
+.br
+.RS
+.PP
+Returns CPU utilization since the last call to \fIutil/0\fR or \fIutil/1\fR by the calling process, in more detail than \fIutil/0\fR.
+
+.PP
+\fBNOTE: \fRThe returned value of the first call to \fIutil/0\fR or \fIutil/1\fR by a process will on most systems be the CPU utilization since system boot, but this is not guaranteed and the value should therefore be regarded as garbage. This also applies to the first call after a restart of \fIcpu_sup\fR.
+
+
+.PP
+Currently recognized options:
+
+detailed
+.RS 2
+The returned 
+\fIUtilDesc\fR(s) will be even more detailed.
+
+.RE
+
+per_cpu
+.RS 2
+Each CPU will be specified separately (assuming this information can be retrieved from the operating system), that is, a list with one 
+\fIUtilDesc\fR per CPU will be returned.
+
+.RE
+
+.PP
+Description of \fIUtilDesc = {Cpus, Busy, NonBusy, Misc}\fR:
+
+Cpus
+.RS 2
+If the 
+\fIdetailed\fR and/or \fIper_cpu\fR option is given, this is the CPU number, or a list of the CPU numbers.
+.PP
+If not, this is the atom \fIall\fR which implies that the \fIUtilDesc\fR contains information about all CPUs.
+
+
+.RE
+
+Busy
+.RS 2
+If the 
+\fIdetailed\fR option is given, this is a list of \fI{State, Share}\fR tuples, where each tuple contains information about a processor state that has been identified as a busy processor state (see below). The atom \fIState\fR is the name of the state, and the float \fIShare\fR represents the percentage share of the CPU cycles spent in this state since the last call to \fIutil/0\fR or \fIutil/1\fR.
+.PP
+If not, this is the sum of the percentage shares of the CPU cycles spent in all states identified as busy.
+
+.PP
+If the \fIper_cpu\fR is not given, the value(s) presented are the average of all CPUs.
+
+
+.RE
+
+NonBusy
+.RS 2
+Similar to 
+\fIBusy\fR, but for processor states that have been identified as non-busy (see below).
+
+.RE
+
+Misc
+.RS 2
+Currently unused; reserved for future use.
+
+
+.RE
+
+.PP
+Currently these processor states are identified as busy:
+
+user
+.RS 2
+Executing code in user mode.
+
+
+.RE
+
+nice_user
+.RS 2
+Executing code in low priority (nice) user mode. This state is currently only identified on Linux.
+
+
+.RE
+
+kernel
+.RS 2
+Executing code in kernel mode.
+
+
+.RE
+
+.PP
+Currently these processor states are identified as non-busy:
+
+wait
+.RS 2
+Waiting. This state is currently only identified on Solaris.
+
+
+.RE
+
+idle
+.RS 2
+Idle.
+
+
+.RE
+
+.PP
+\fBNOTE: \fRIdentified processor states may be different on different operating systems and may change between different versions of \fIcpu_sup\fR on the same operating system. The sum of the percentage shares of the CPU cycles spent in all busy and all non-busy processor states will always add up to 100%, though.
+
+
+.PP
+Returns \fI{all,0,0,[]}\fR if \fIcpu_sup\fR is not available.
+
+
+.RE

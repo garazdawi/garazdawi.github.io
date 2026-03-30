@@ -1,0 +1,172 @@
+.TH wxColourData 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxColourData \- This class holds a variety of information related to colour dialogs.
+
+.SH DESCRIPTION
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwx_color()\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxColourDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+.PP
+wxWidgets docs: wxColourData
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxColourData() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxColourData()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetChooseFull(This) -> boolean() when This :: wxColourData().\fR
+
+.br
+.RS
+.PP
+Under Windows, determines whether the Windows colour dialog will display the full dialog with custom colour selection controls.
+
+.PP
+Has no meaning under other platforms.
+
+.PP
+The default value is true.
+
+
+.RE
+.B
+\fBgetColour(This) -> wx:wx_colour4() when This :: wxColourData().\fR
+
+.br
+.RS
+.PP
+Gets the current colour associated with the colour dialog.
+
+.PP
+The default colour is black.
+
+
+.RE
+.B
+\fBgetCustomColour(This, I) -> wx:wx_colour4()\fR
+\fB                         when This :: wxColourData(), I :: integer().\fR
+
+.br
+.RS
+.PP
+Returns custom colours associated with the colour dialog.
+
+
+.RE
+.B
+\fBnew() -> wxColourData().\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Initializes the custom colours to \fIwxNullColour\fR, the \fIdata\fR colour setting to black, and the \fIchoose\fR full setting to true.
+
+
+.RE
+.B
+\fBsetChooseFull(This, Flag) -> ok\fR
+\fB                       when This :: wxColourData(), Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Under Windows, tells the Windows colour dialog to display the full dialog with custom colour selection controls.
+
+.PP
+Under other platforms, has no effect.
+
+.PP
+The default value is true.
+
+
+.RE
+.B
+\fBsetColour(This, Colour) -> ok\fR
+\fB                   when This :: wxColourData(), Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the default colour for the colour dialog.
+
+.PP
+The default colour is black.
+
+
+.RE
+.B
+\fBsetCustomColour(This, I, Colour) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxColourData(),\fR
+\fB                             I :: integer(),\fR
+\fB                             Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets custom colours for the colour dialog.
+
+
+.RE

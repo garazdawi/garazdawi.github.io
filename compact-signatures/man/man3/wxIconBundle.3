@@ -1,0 +1,132 @@
+.TH wxIconBundle 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxIconBundle \- This class contains multiple copies of an icon in different sizes.
+
+.SH DESCRIPTION
+.PP
+It is typically used in \fIwxDialog::SetIcons\fR (not implemented in wx) and \fIwxTopLevelWindow:setIcons/2\fR.
+
+.PP
+Predefined objects (include wx.hrl): ?wxNullIconBundle
+
+.PP
+wxWidgets docs: wxIconBundle
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxIconBundle() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddIcon(This, File) -> ok\fR
+\fB                 when This :: wxIconBundle(), File :: unicode:chardata();\fR
+\fB             (This, Icon) -> ok\fR
+\fB                 when This :: wxIconBundle(), Icon :: wxIcon:wxIcon().\fR
+
+.br
+.RS
+.PP
+Adds the icon to the collection; if the collection already contains an icon with the same width and height, it is replaced by the new one.
+
+
+.RE
+.B
+\fBaddIcon(This, File, Type) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxIconBundle(),\fR
+\fB                     File :: unicode:chardata(),\fR
+\fB                     Type :: wx:wx_enum().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdestroy(This :: wxIconBundle()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetIcon(This, Size) -> wxIcon:wxIcon()\fR
+\fB                 when\fR
+\fB                     This :: wxIconBundle(),\fR
+\fB                     Size :: {W :: integer(), H :: integer()};\fR
+\fB             (This, [Option]) -> wxIcon:wxIcon()\fR
+\fB                 when\fR
+\fB                     This :: wxIconBundle(),\fR
+\fB                     Option :: {size, integer()} | {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Same as.
+
+.PP
+.
+
+
+.RE
+.B
+\fBgetIcon(This, Size, [Option]) -> wxIcon:wxIcon()\fR
+\fB                 when\fR
+\fB                     This :: wxIconBundle(),\fR
+\fB                     Size :: {W :: integer(), H :: integer()},\fR
+\fB                     Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Returns the icon with the given size.
+
+.PP
+If \fIsize\fR is ?wxDefaultSize, it is interpreted as the standard system icon size, i.e. the size returned by \fIwxSystemSettings:getMetric/2\fR for \fIwxSYS_ICON_X\fR and \fIwxSYS_ICON_Y\fR.
+
+.PP
+If the bundle contains an icon with exactly the requested size, it's always returned. Otherwise, the behaviour depends on the flags. If only \fIwxIconBundle::FALLBACK_NONE\fR (not implemented in wx) is given, the function returns an invalid icon. If \fIwxIconBundle::FALLBACK_SYSTEM\fR (not implemented in wx) is given, it tries to find the icon of standard system size, regardless of the size passed as parameter. Otherwise, or if the icon system size is not found neither, but \fIwxIconBundle::FALLBACK_NEAREST_LARGER\fR (not implemented in wx) flag is specified, the function returns the smallest icon of the size larger than the requested one or, if this fails too, just the icon closest to the specified size.
+
+.PP
+The \fIflags\fR parameter is available only since wxWidgets 2.9.4.
+
+
+.RE
+.B
+\fBnew() -> wxIconBundle().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+
+.RE
+.B
+\fBnew(Ic) -> wxIconBundle()\fR
+\fB             when Ic :: wxIconBundle:wxIconBundle() | wxIcon:wxIcon();\fR
+\fB         (File) -> wxIconBundle() when File :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Initializes the bundle with the icon(s) found in the file.
+
+
+.RE
+.B
+\fBnew(File, Type) -> wxIconBundle()\fR
+\fB             when File :: unicode:chardata(), Type :: wx:wx_enum().\fR
+
+.br
+.RS
+
+.RE

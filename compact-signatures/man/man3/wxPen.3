@@ -1,0 +1,545 @@
+.TH wxPen 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPen \- A pen is a drawing tool for drawing outlines.
+
+.SH DESCRIPTION
+.PP
+It is used for drawing lines and painting the outline of rectangles, ellipses, etc. It has a colour, a width and a style.
+
+.PP
+Note: On a monochrome display, wxWidgets shows all non-white pens as black.
+
+.PP
+Do not initialize objects on the stack before the program commences, since other required structures may not have been set up yet. Instead, define global pointers to objects and create them in \fIwxApp::OnInit()\fR (not implemented in wx) or when required.
+
+.PP
+An application may wish to dynamically create pens with different characteristics, and there is the consequent danger that a large number of duplicate pens will be created. Therefore an application may wish to get a pointer to a pen by using the global list of pens ?wxThePenList, and calling the member function \fIwxPenList::FindOrCreatePen()\fR (not implemented in wx). See \fIwxPenList\fR (not implemented in wx) for more info.
+
+.PP
+This class uses reference counting and copy-on-write internally so that assignments between two instances of this class are very cheap. You can therefore use actual objects instead of pointers without efficiency problems. If an instance of this class is changed it will create its own data internally so that other instances, which previously shared the data using the reference counting, are not affected.
+
+.PP
+Predefined objects (include wx.hrl):
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxNullPen
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxBLACK_DASHED_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxBLACK_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxBLUE_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxCYAN_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxGREEN_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxYELLOW_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxGREY_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxLIGHT_GREY_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxMEDIUM_GREY_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxRED_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxTRANSPARENT_PEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxWHITE_PEN
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC:setPen/2\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPen
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPen() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxPen()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetCap(This) -> wx:wx_enum() when This :: wxPen().\fR
+
+.br
+.RS
+.PP
+Returns the pen cap style, which may be one of \fIwxCAP\\_ROUND\fR, \fIwxCAP\\_PROJECTING\fR and \fIwxCAP\\_BUTT\fR.
+
+.PP
+The default is \fIwxCAP_ROUND\fR.
+
+.PP
+See: \fIsetCap/2\fR
+
+
+.RE
+.B
+\fBgetColour(This) -> wx:wx_colour4() when This :: wxPen().\fR
+
+.br
+.RS
+.PP
+Returns a reference to the pen colour.
+
+.PP
+See: \fIsetColour/4\fR
+
+
+.RE
+.B
+\fBgetJoin(This) -> wx:wx_enum() when This :: wxPen().\fR
+
+.br
+.RS
+.PP
+Returns the pen join style, which may be one of \fIwxJOIN\\_BEVEL\fR, \fIwxJOIN\\_ROUND\fR and \fIwxJOIN\\_MITER\fR.
+
+.PP
+The default is \fIwxJOIN_ROUND\fR.
+
+.PP
+See: \fIsetJoin/2\fR
+
+
+.RE
+.B
+\fBgetStyle(This) -> wx:wx_enum() when This :: wxPen().\fR
+
+.br
+.RS
+.PP
+Returns the pen style.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInew/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetStyle/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetWidth(This) -> integer() when This :: wxPen().\fR
+
+.br
+.RS
+.PP
+Returns the pen width.
+
+.PP
+See: \fIsetWidth/2\fR
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxPen().\fR
+
+.br
+.RS
+.PP
+Returns true if the pen is initialised.
+
+.PP
+Notice that an uninitialized pen object can't be queried for any pen properties and all calls to the accessor methods on it will result in an assert failure.
+
+
+.RE
+.B
+\fBnew() -> wxPen().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+.PP
+The pen will be uninitialised, and \fIisOk/1\fR will return false.
+
+
+.RE
+.B
+\fBnew(Colour) -> wxPen() when Colour :: wx:wx_colour();\fR
+\fB         (Pen) -> wxPen() when Pen :: wxPen().\fR
+
+.br
+.RS
+.PP
+Copy constructor, uses overview_refcount.
+
+
+.RE
+.B
+\fBnew(Colour, [Option]) -> wxPen()\fR
+\fB             when\fR
+\fB                 Colour :: wx:wx_colour(),\fR
+\fB                 Option :: {width, integer()} | {style, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Constructs a pen from a colour object, pen width and style.
+
+.PP
+Remark: Different versions of Windows and different versions of other platforms support very different subsets of the styles above so handle with care.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetStyle/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetColour/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetWidth/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetCap(This, CapStyle) -> ok\fR
+\fB                when This :: wxPen(), CapStyle :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the pen cap style, which may be one of \fIwxCAP\\_ROUND\fR, \fIwxCAP\\_PROJECTING\fR and \fIwxCAP\\_BUTT\fR.
+
+.PP
+The default is \fIwxCAP_ROUND\fR.
+
+.PP
+See: \fIgetCap/1\fR
+
+
+.RE
+.B
+\fBsetColour(This, Colour) -> ok\fR
+\fB                   when This :: wxPen(), Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+The pen's colour is changed to the given colour.
+
+.PP
+See: \fIgetColour/1\fR
+
+
+.RE
+.B
+\fBsetColour(This, Red, Green, Blue) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxPen(),\fR
+\fB                       Red :: integer(),\fR
+\fB                       Green :: integer(),\fR
+\fB                       Blue :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetJoin(This, Join_style) -> ok\fR
+\fB                 when This :: wxPen(), Join_style :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the pen join style, which may be one of \fIwxJOIN\\_BEVEL\fR, \fIwxJOIN\\_ROUND\fR and \fIwxJOIN\\_MITER\fR.
+
+.PP
+The default is \fIwxJOIN_ROUND\fR.
+
+.PP
+See: \fIgetJoin/1\fR
+
+
+.RE
+.B
+\fBsetStyle(This, Style) -> ok\fR
+\fB                  when This :: wxPen(), Style :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Set the pen style.
+
+.PP
+See: \fInew/2\fR
+
+
+.RE
+.B
+\fBsetWidth(This, Width) -> ok\fR
+\fB                  when This :: wxPen(), Width :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the pen width.
+
+.PP
+See: \fIgetWidth/1\fR
+
+
+.RE

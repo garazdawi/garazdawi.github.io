@@ -1,0 +1,581 @@
+.TH dict 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+dict \- A Key-value dictionary.
+
+.SH DESCRIPTION
+.PP
+The representation of a dictionary is not defined.
+
+.PP
+This module provides the same interface as the \fIorddict\fR module. One difference is that while this module considers two keys as different if they do not match (\fI=:=\fR), \fIorddict\fR considers two keys as different if and only if they do not compare equal (\fI==\fR).
+
+.PP
+\fBNOTE: \fRFor new code, prefer \fImaps\fR over this module.
+
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIgb_trees\fR, \fIorddict\fR, \fImaps\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBdict() :: dict(_, _).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque dict(Key, Value) \fR
+
+.br
+.RS
+.PP
+Dictionary as returned by \fInew/0\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBappend(Key, Value, Dict1) -> Dict2\fR
+\fB                when\fR
+\fB                    Dict1 :: dict(Key, Value), Dict2 :: dict(Key, Value).\fR
+
+.br
+.RS
+.PP
+Appends a new \fIValue\fR to the current list of values associated with \fIKey\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{a,[]}]).
+2> Dict1 = dict:append(a, 1, Dict0).
+3> dict:to_list(Dict1).
+[{a,[1]}]
+4> Dict2 = dict:append(a, 10, Dict1).
+5> dict:to_list(Dict2).
+[{a,[1,10]}]
+
+.fi
+
+
+.RE
+.B
+\fBappend_list(Key, ValList, Dict1) -> Dict2\fR
+\fB                     when\fR
+\fB                         Dict1 :: dict(Key, Value),\fR
+\fB                         Dict2 :: dict(Key, Value),\fR
+\fB                         ValList :: [Value].\fR
+
+.br
+.RS
+.PP
+Appends a list of values \fIValList\fR to the current list of values associated with \fIKey\fR.
+
+.PP
+An exception is generated if the initial value associated with \fIKey\fR is not a list of values.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{a,[]}]).
+2> Dict1 = dict:append_list(a, [1,2,3], Dict0).
+3> dict:to_list(Dict1).
+[{a,[1,2,3]}]
+
+.fi
+
+
+.RE
+.B
+\fBerase(Key, Dict1) -> Dict2\fR
+\fB               when Dict1 :: dict(Key, Value), Dict2 :: dict(Key, Value).\fR
+
+.br
+.RS
+.PP
+Erases an item with a given key from a dictionary.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{2,b},{1,a}]).
+2> Dict1 = dict:erase(2, Dict0).
+3> dict:to_list(Dict1).
+[{1,a}]
+4> Dict2 = dict:erase(99, Dict0).
+
+.fi
+
+
+.RE
+.B
+\fBfetch(Key, Dict) -> Value when Dict :: dict(Key, Value).\fR
+
+.br
+.RS
+.PP
+Returns the value associated with \fIKey\fR in dictionary \fIDict\fR.
+
+.PP
+This function assumes that \fIKey\fR is present in dictionary \fIDict\fR, and an exception is generated if \fIKey\fR is not in the dictionary.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict = dict:from_list([{2,b},{1,a}]).
+2> dict:fetch(1, Dict).
+a
+
+.fi
+
+
+.RE
+.B
+\fBfetch_keys(Dict) -> Keys\fR
+\fB                    when\fR
+\fB                        Dict :: dict(Key, Value :: term()),\fR
+\fB                        Keys :: [Key].\fR
+
+.br
+.RS
+.PP
+Returns a list of all keys in dictionary \fIDict\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict = dict:from_list([{2,b},{1,a}]).
+2> lists:sort(dict:fetch_keys(Dict)).
+[1,2]
+
+.fi
+
+
+.RE
+.B
+\fBfilter(Pred, Dict1) -> Dict2\fR
+\fB                when\fR
+\fB                    Pred :: fun((Key, Value) -> boolean()),\fR
+\fB                    Dict1 :: dict(Key, Value),\fR
+\fB                    Dict2 :: dict(Key, Value).\fR
+
+.br
+.RS
+.PP
+Returns a dictionary of all keys and values in \fIDict1\fR for which \fIPred(Key, Value)\fR is \fItrue\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{a,1},{b,2},{c,3}]).
+2> Dict1 = dict:filter(fun(_, V) -> V rem 2 =:= 1 end, Dict0).
+3> lists:sort(dict:to_list(Dict1)).
+[{a,1},{c,3}]
+
+.fi
+
+
+.RE
+.B
+\fBfind(Key, Dict) -> {ok, Value} | error\fR
+\fB              when Dict :: dict(Key, Value).\fR
+
+.br
+.RS
+.PP
+Searches for a key in dictionary \fIDict\fR.
+
+.PP
+Returns \fI{ok, Value}\fR, where \fIValue\fR is the value associated with \fIKey\fR, or \fIerror\fR if the key is not present in the dictionary.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict = dict:from_list([{2,b},{1,a}]).
+2> dict:find(1, Dict).
+{ok,a}
+3> dict:find(99, Dict).
+error
+
+.fi
+
+
+.RE
+.B
+\fBfold(Fun, Acc0, Dict) -> Acc1\fR
+\fB              when\fR
+\fB                  Fun :: fun((Key, Value, AccIn) -> AccOut),\fR
+\fB                  Dict :: dict(Key, Value),\fR
+\fB                  Acc0 :: Acc,\fR
+\fB                  Acc1 :: Acc,\fR
+\fB                  AccIn :: Acc,\fR
+\fB                  AccOut :: Acc.\fR
+
+.br
+.RS
+.PP
+Calls \fIFun\fR on successive keys and values of dictionary \fIDict\fR together with an extra argument \fIAcc\fR (short for accumulator).
+
+.PP
+\fIFun\fR must return a new accumulator that is passed to the next call. \fIAcc0\fR is returned if the dictionary is empty.
+
+.PP
+The evaluation order is undefined.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{a,1},{b,2},{c,3}]).
+2> dict:fold(fun(_, N, Acc) -> Acc + N end, 0, Dict0).
+6
+
+.fi
+
+
+.RE
+.B
+\fBfrom_list(List) -> Dict\fR
+\fB                   when Dict :: dict(Key, Value), List :: [{Key, Value}].\fR
+
+.br
+.RS
+.PP
+Converts the \fIKey\fR-\fIValue\fR list \fIList\fR to dictionary \fIDict\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict = dict:from_list([{2,b},{1,a}]).
+2> lists:sort(dict:to_list(Dict)).
+[{1,a},{2,b}]
+
+.fi
+
+
+.RE
+.B
+\fBis_empty(Dict) -> boolean() when Dict :: dict().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if dictionary \fIDict\fR has no elements; otherwise returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict = dict:new().
+2> dict:is_empty(Dict).
+true
+
+.fi
+
+
+.RE
+.B
+\fBis_key(Key, Dict) -> boolean()\fR
+\fB                when Dict :: dict(Key, Value :: term()).\fR
+
+.br
+.RS
+.PP
+Tests whether \fIKey\fR is contained in dictionary \fIDict\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict = dict:from_list([{count,0}]).
+2> dict:is_key(count, Dict).
+true
+3> dict:is_key(table, Dict).
+false
+
+.fi
+
+
+.RE
+.B
+\fBmap(Fun, Dict1) -> Dict2\fR
+\fB             when\fR
+\fB                 Fun :: fun((Key, Value1) -> Value2),\fR
+\fB                 Dict1 :: dict(Key, Value1),\fR
+\fB                 Dict2 :: dict(Key, Value2).\fR
+
+.br
+.RS
+.PP
+Calls \fIFun\fR on successive keys and values of dictionary \fIDict1\fR to return a new value for each key.
+
+.PP
+The evaluation order is undefined.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{a,1},{b,2},{c,3}]).
+2> Dict1 = dict:map(fun(_, V) -> 2 * V end, Dict0).
+3> lists:sort(dict:to_list(Dict1)).
+[{a,2},{b,4},{c,6}]
+
+.fi
+
+
+.RE
+.B
+\fBmerge(Fun, Dict1, Dict2) -> Dict3\fR
+\fB               when\fR
+\fB                   Fun :: fun((Key, Value1, Value2) -> Value),\fR
+\fB                   Dict1 :: dict(Key, Value1),\fR
+\fB                   Dict2 :: dict(Key, Value2),\fR
+\fB                   Dict3 :: dict(Key, Value).\fR
+
+.br
+.RS
+.PP
+Merges two dictionaries, \fIDict1\fR and \fIDict2\fR, to create a new dictionary.
+
+.PP
+All the \fIKey\fR-\fIValue\fR pairs from both dictionaries are included in the new dictionary. If a key occurs in both dictionaries, \fIFun\fR is called with the key and both values to return a new value.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{a,1},{b,2}]).
+2> Dict1 = dict:from_list([{b,7},{c,99}]).
+3> Dict2 = dict:merge(fun(_, V1, V2) -> V1 + V2 end, Dict0, Dict1).
+4> lists:sort(dict:to_list(Dict2)).
+[{a,1},{b,9},{c,99}]
+
+.fi
+
+
+.RE
+.B
+\fBnew() -> dict().\fR
+
+.br
+.RS
+.PP
+Creates a new dictionary.
+
+.SS "Examples"
+
+.IP
+.nf
+1> dict:new().
+
+.fi
+
+
+.RE
+.B
+\fBsize(Dict) -> non_neg_integer() when Dict :: dict().\fR
+
+.br
+.RS
+.PP
+Returns the number of elements in dictionary \fIDict\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict = dict:from_list([{2,b},{1,a}]).
+2> dict:size(Dict).
+2
+
+.fi
+
+
+.RE
+.B
+\fBstore(Key, Value, Dict1) -> Dict2\fR
+\fB               when Dict1 :: dict(Key, Value), Dict2 :: dict(Key, Value).\fR
+
+.br
+.RS
+.PP
+Stores a \fIKey\fR-\fIValue\fR pair in dictionary \fIDict2\fR.
+
+.PP
+If \fIKey\fR already exists in \fIDict1\fR, the associated value is replaced by \fIValue\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:new().
+2> Dict1 = dict:store(name, arne, Dict0).
+3> dict:to_list(Dict1).
+[{name,arne}]
+4> Dict2 = dict:store(name, kalle, Dict1).
+5> dict:to_list(Dict2).
+[{name,kalle}]
+
+.fi
+
+
+.RE
+.B
+\fBtake(Key, Dict) -> {Value, Dict1} | error\fR
+\fB              when\fR
+\fB                  Dict :: dict(Key, Value),\fR
+\fB                  Dict1 :: dict(Key, Value),\fR
+\fB                  Key :: term(),\fR
+\fB                  Value :: term().\fR
+
+.br
+.RS
+.PP
+This function returns a value from dictionary and a new dictionary without this value.
+
+.PP
+Returns \fIerror\fR if the key is not present in the dictionary.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{2,b},{1,a}]).
+2> {V, Dict2} = dict:take(1, Dict0).
+3> V.
+a
+4> dict:to_list(Dict2).
+[{2,b}]
+
+.fi
+
+
+.RE
+.B
+\fBto_list(Dict) -> List\fR
+\fB                 when Dict :: dict(Key, Value), List :: [{Key, Value}].\fR
+
+.br
+.RS
+.PP
+Converts a dictionary to a list representation.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict = dict:from_list([{2,b},{1,a}]).
+2> lists:sort(dict:to_list(Dict)).
+[{1,a},{2,b}]
+
+.fi
+
+
+.RE
+.B
+\fBupdate(Key, Fun, Dict1) -> Dict2\fR
+\fB                when\fR
+\fB                    Dict1 :: dict(Key, Value),\fR
+\fB                    Dict2 :: dict(Key, Value),\fR
+\fB                    Fun :: fun((Value1 :: Value) -> Value2 :: Value).\fR
+
+.br
+.RS
+.PP
+Updates a value in a dictionary by calling \fIFun\fR on the value to get a new value.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:from_list([{a,10}]).
+2> Dict1 = dict:update(a, fun(N) -> N + 1 end, Dict0).
+3> dict:to_list(Dict1).
+[{a,11}]
+
+.fi
+
+.PP
+An exception is generated if \fIKey\fR is not present in the dictionary.
+
+
+.RE
+.B
+\fBupdate(Key, Fun, Initial, Dict1) -> Dict2\fR
+\fB                when\fR
+\fB                    Dict1 :: dict(Key, Value),\fR
+\fB                    Dict2 :: dict(Key, Value),\fR
+\fB                    Fun :: fun((Value1 :: Value) -> Value2 :: Value),\fR
+\fB                    Initial :: Value.\fR
+
+.br
+.RS
+.PP
+Updates a value in a dictionary by calling \fIFun\fR on the value to get a new value.
+
+.PP
+If \fIKey\fR is not present in the dictionary, \fIInitial\fR is stored as the first value.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:new().
+2> Inc = fun(N) -> N + 1 end.
+3> Dict1 = dict:update(a, Inc, 0, Dict0).
+4> dict:to_list(Dict1).
+[{a,0}]
+5> Dict2 = dict:update(a, Inc, 0, Dict1).
+6> dict:to_list(Dict2).
+[{a,1}]
+
+.fi
+
+
+.RE
+.B
+\fBupdate_counter(Key, Increment, Dict1) -> Dict2\fR
+\fB                        when\fR
+\fB                            Dict1 :: dict(Key, Value),\fR
+\fB                            Dict2 :: dict(Key, Value),\fR
+\fB                            Increment :: number().\fR
+
+.br
+.RS
+.PP
+Adds \fIIncrement\fR to the value associated with \fIKey\fR and stores this value.
+
+.PP
+If \fIKey\fR is not present in the dictionary, \fIIncrement\fR is stored as the first value.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Dict0 = dict:new().
+2> Dict1 = dict:update_counter(a, 10, Dict0).
+3> dict:to_list(Dict1).
+[{a,10}]
+4> Dict2 = dict:update_counter(a, 10, Dict1).
+5> dict:to_list(Dict2).
+[{a,20}]
+
+.fi
+
+
+.RE

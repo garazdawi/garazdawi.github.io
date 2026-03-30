@@ -1,0 +1,497 @@
+.TH proplists 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+proplists \- Support functions for property lists.
+
+.SH DESCRIPTION
+.PP
+Property lists are ordinary lists containing entries in the form of either tuples, whose first elements are keys used for lookup and insertion, or atoms, which work as shorthand for tuples \fI{Atom, true}\fR. (Other terms are allowed in the lists, but are ignored by this module.) If there is more than one entry in a list for a certain key, the first occurrence normally overrides any later (irrespective of the arity of the tuples).
+
+.PP
+Property lists are useful for representing inherited properties, such as options passed to a function where a user can specify options overriding the default settings, object properties, annotations, and so on.
+
+.PP
+Two keys are considered equal if they match (\fI=:=\fR). That is, numbers are compared literally rather than by value, so that, for example, \fI1\fR and \fI1.0\fR are different keys.
+
+.SH DATA TYPES
+.LP
+.B
+\fBproperty() :: atom() | tuple().\fR
+
+.br
+.RS
+.PP
+A property item within a list
+
+
+.RE
+.B
+\fBproplist() :: [property()].\fR
+
+.br
+.RS
+.PP
+A list of \fIproperty/0\fR, also knows as a proplist.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBappend_values(Key, ListIn) -> ListOut\fR
+\fB                       when\fR
+\fB                           Key :: term(),\fR
+\fB                           ListIn :: [term()],\fR
+\fB                           ListOut :: [term()].\fR
+
+.br
+.RS
+.PP
+Similar to \fIget_all_values/2\fR, but each value is wrapped in a list unless it is already itself a list. The resulting list of lists is concatenated. This is often useful for "incremental" options.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+append_values(a, [{a, [1,2]}, {b, 0}, {a, 3}, {c, -1}, {a, [4]}])
+
+.fi
+
+.PP
+returns:
+
+.IP
+.nf
+[1,2,3,4]
+
+.fi
+
+
+.RE
+.B
+\fBcompact(ListIn) -> ListOut\fR
+\fB                 when ListIn :: [property()], ListOut :: [property()].\fR
+
+.br
+.RS
+.PP
+Minimizes the representation of all entries in the list. This is equivalent to \fI[property(P) || P <- ListIn]\fR.
+
+.PP
+See also \fIproperty/1\fR, \fIunfold/1\fR.
+
+
+.RE
+.B
+\fBdelete(Key, List) -> List when Key :: term(), List :: [term()].\fR
+
+.br
+.RS
+.PP
+Deletes all entries associated with \fIKey\fR from \fIList\fR.
+
+
+.RE
+.B
+\fBexpand(Expansions, ListIn) -> ListOut\fR
+\fB                when\fR
+\fB                    Expansions ::\fR
+\fB                        [{Property :: property(), Expansion :: [term()]}],\fR
+\fB                    ListIn :: [term()],\fR
+\fB                    ListOut :: [term()].\fR
+
+.br
+.RS
+.PP
+Expands particular properties to corresponding sets of properties (or other terms).
+
+.PP
+For each pair \fI{Property, Expansion}\fR in \fIExpansions\fR: if \fIE\fR is the first entry in \fIListIn\fR with the same key as \fIProperty\fR, and \fIE\fR and \fIProperty\fR have equivalent normal forms, then \fIE\fR is replaced with the terms in \fIExpansion\fR, and any following entries with the same key are deleted from \fIListIn\fR.
+
+.PP
+For example, the following expressions all return \fI[fie, bar, baz, fum]\fR:
+
+.IP
+.nf
+expand([{foo, [bar, baz]}], [fie, foo, fum])
+expand([{{foo, true}, [bar, baz]}], [fie, foo, fum])
+expand([{{foo, false}, [bar, baz]}], [fie, {foo, false}, fum])
+
+.fi
+
+.PP
+However, no expansion is done in the following call because \fI{foo, false}\fR shadows \fIfoo\fR:
+
+.IP
+.nf
+expand([{{foo, true}, [bar, baz]}], [{foo, false}, fie, foo, fum])
+
+.fi
+
+.PP
+Notice that if the original property term is to be preserved in the result when expanded, it must be included in the expansion list. The inserted terms are not expanded recursively. If \fIExpansions\fR contains more than one property with the same key, only the first occurrence is used.
+
+.PP
+See also \fInormalize/2\fR.
+
+
+.RE
+.B
+\fBfrom_map(Map) -> List\fR
+\fB                  when\fR
+\fB                      Map :: #{Key => Value},\fR
+\fB                      List :: [{Key, Value}],\fR
+\fB                      Key :: term(),\fR
+\fB                      Value :: term().\fR
+
+.br
+.RS
+.PP
+Converts the map \fIMap\fR to a property list.
+
+
+.RE
+.B
+\fBget_all_values(Key, List) -> [term()]\fR
+\fB                        when Key :: term(), List :: [term()].\fR
+
+.br
+.RS
+.PP
+Similar to \fIget_value/2\fR, but returns the list of values for \fIall\fR entries \fI{Key, Value}\fR in \fIList\fR. If no such entry exists, the result is the empty list.
+
+
+.RE
+.B
+\fBget_bool(Key, List) -> boolean()\fR
+\fB                  when Key :: term(), List :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns the value of a boolean key/value option. If \fIlookup(Key, List)\fR would yield \fI{Key, true}\fR, this function returns \fItrue\fR, otherwise \fIfalse\fR.
+
+.PP
+See also \fIget_value/2\fR, \fIlookup/2\fR.
+
+
+.RE
+.B
+\fBget_keys(List) -> [term()] when List :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns an unordered list of the keys used in \fIList\fR, not containing duplicates.
+
+
+.RE
+.B
+\fBget_value(Key, List, Default) -> term()\fR
+\fB                   when\fR
+\fB                       Key :: term(),\fR
+\fB                       List :: [term()],\fR
+\fB                       Default :: term().\fR
+
+.br
+.RS
+.PP
+Returns the value of a simple key/value property in \fIList\fR. If \fIlookup(Key, List)\fR would yield \fI{Key, Value}\fR, this function returns the corresponding \fIValue\fR, otherwise \fIDefault\fR.
+
+.PP
+See also \fIget_all_values/2\fR, \fIget_bool/2\fR, \fIget_value/2\fR, \fIlookup/2\fR.
+
+
+.RE
+.B
+\fBis_defined(Key, List) -> boolean()\fR
+\fB                    when Key :: term(), List :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIList\fR contains at least one entry associated with \fIKey\fR, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBlookup(Key, List) -> none | tuple()\fR
+\fB                when Key :: term(), List :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns the first entry associated with \fIKey\fR in \fIList\fR, if one exists, otherwise returns \fInone\fR. For an atom \fIA\fR in the list, the tuple \fI{A, true}\fR is the entry associated with \fIA\fR.
+
+.PP
+See also \fIget_bool/2\fR, \fIget_value/2\fR, \fIlookup_all/2\fR.
+
+
+.RE
+.B
+\fBlookup_all(Key, List) -> [tuple()]\fR
+\fB                    when Key :: term(), List :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns the list of all entries associated with \fIKey\fR in \fIList\fR. If no such entry exists, the result is the empty list.
+
+.PP
+See also \fIlookup/2\fR.
+
+
+.RE
+.B
+\fBnormalize(ListIn, Stages) -> ListOut\fR
+\fB                   when\fR
+\fB                       ListIn :: [term()],\fR
+\fB                       Stages :: [Operation],\fR
+\fB                       Operation ::\fR
+\fB                           {aliases, Aliases} |\fR
+\fB                           {negations, Negations} |\fR
+\fB                           {expand, Expansions},\fR
+\fB                       Aliases :: [{Key, Key}],\fR
+\fB                       Negations :: [{Key, Key}],\fR
+\fB                       Expansions ::\fR
+\fB                           [{Property :: property(),\fR
+\fB                             Expansion :: [term()]}],\fR
+\fB                       ListOut :: [term()].\fR
+
+.br
+.RS
+.PP
+Passes \fIListIn\fR through a sequence of substitution/expansion stages. For an \fIaliases\fR operation, function \fIsubstitute_aliases/2\fR is applied using the specified list of aliases:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For a \fInegations\fR operation, \fIsubstitute_negations/2\fR is applied using the specified negation list.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For an \fIexpand\fR operation, function \fIexpand/2\fR is applied using the specified list of expansions.
+
+.RE
+
+.PP
+The final result is automatically compacted (compare \fIcompact/1\fR).
+
+.PP
+Typically you want to substitute negations first, then aliases, then perform one or more expansions (sometimes you want to pre-expand particular entries before doing the main expansion). You might want to substitute negations and/or aliases repeatedly, to allow such forms in the right-hand side of aliases and expansion lists.
+
+.PP
+See also \fIsubstitute_negations/2\fR.
+
+
+.RE
+.B
+\fBproperty(PropertyIn) -> PropertyOut\fR
+\fB                  when\fR
+\fB                      PropertyIn :: property(),\fR
+\fB                      PropertyOut :: property().\fR
+
+.br
+.RS
+.PP
+Creates a normal form (minimal) representation of a property. If \fIPropertyIn\fR is \fI{Key, true}\fR, where \fIKey\fR is an atom, \fIKey\fR is returned, otherwise the whole term \fIPropertyIn\fR is returned.
+
+.PP
+See also \fIproperty/2\fR.
+
+
+.RE
+.B
+\fBproperty(Key, Value) -> Property\fR
+\fB                  when\fR
+\fB                      Key :: term(),\fR
+\fB                      Value :: term(),\fR
+\fB                      Property :: atom() | {term(), term()}.\fR
+
+.br
+.RS
+.PP
+Creates a normal form (minimal) representation of a simple key/value property. Returns \fIKey\fR if \fIValue\fR is \fItrue\fR and \fIKey\fR is an atom, otherwise a tuple \fI{Key, Value}\fR is returned.
+
+.PP
+See also \fIproperty/1\fR.
+
+
+.RE
+.B
+\fBsplit(List, Keys) -> {Lists, Rest}\fR
+\fB               when\fR
+\fB                   List :: [term()],\fR
+\fB                   Keys :: [term()],\fR
+\fB                   Lists :: [[term()]],\fR
+\fB                   Rest :: [term()].\fR
+
+.br
+.RS
+.PP
+Partitions \fIList\fR into a list of sublists and a remainder.
+
+.PP
+\fILists\fR contains one sublist for each key in \fIKeys\fR, in the corresponding order. The relative order of the elements in each sublist is preserved from the original \fIList\fR. \fIRest\fR contains the elements in \fIList\fR that are not associated with any of the specified keys, also with their original relative order preserved.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+split([{c, 2}, {e, 1}, a, {c, 3, 4}, d, {b, 5}, b], [a, b, c])
+
+.fi
+
+.PP
+returns:
+
+.IP
+.nf
+{[[a], [{b, 5}, b],[{c, 2}, {c, 3, 4}]], [{e, 1}, d]}
+
+.fi
+
+
+.RE
+.B
+\fBsubstitute_aliases(Aliases, ListIn) -> ListOut\fR
+\fB                            when\fR
+\fB                                Aliases :: [{Key, Key}],\fR
+\fB                                Key :: term(),\fR
+\fB                                ListIn :: [term()],\fR
+\fB                                ListOut :: [term()].\fR
+
+.br
+.RS
+.PP
+Substitutes keys of properties. For each entry in \fIListIn\fR, if it is associated with some key \fIK1\fR such that \fI{K1, K2}\fR occurs in \fIAliases\fR, the key of the entry is changed to \fIK2\fR. If the same \fIK1\fR occurs more than once in \fIAliases\fR, only the first occurrence is used.
+
+.PP
+For example, \fIsubstitute_aliases([{color, colour}], L)\fR replaces all tuples \fI{color, ...}\fR in \fIL\fR with \fI{colour, ...}\fR, and all atoms \fIcolor\fR with \fIcolour\fR.
+
+.PP
+See also \fInormalize/2\fR, \fIsubstitute_negations/2\fR.
+
+
+.RE
+.B
+\fBsubstitute_negations(Negations, ListIn) -> ListOut\fR
+\fB                              when\fR
+\fB                                  Negations :: [{Key1, Key2}],\fR
+\fB                                  Key1 :: term(),\fR
+\fB                                  Key2 :: term(),\fR
+\fB                                  ListIn :: [term()],\fR
+\fB                                  ListOut :: [term()].\fR
+
+.br
+.RS
+.PP
+Substitutes keys of boolean-valued properties and simultaneously negates their values.
+
+.PP
+For each entry in \fIListIn\fR, if it is associated with some key \fIK1\fR such that \fI{K1, K2}\fR occurs in \fINegations\fR: if the entry was \fI{K1, true}\fR, it is replaced with \fI{K2, false}\fR, otherwise with \fIK2\fR, thus changing the name of the option and simultaneously negating the value specified by \fIget_bool(Key, ListIn)\fR. If the same \fIK1\fR occurs more than once in \fINegations\fR, only the first occurrence is used.
+
+.PP
+For example, \fIsubstitute_negations([{no_foo, foo}], L)\fR replaces any atom \fIno_foo\fR or tuple \fI{no_foo, true}\fR in \fIL\fR with \fI{foo, false}\fR, and any other tuple \fI{no_foo, ...}\fR with \fIfoo\fR.
+
+.PP
+See also \fIget_bool/2\fR, \fInormalize/2\fR, \fIsubstitute_aliases/2\fR.
+
+
+.RE
+.B
+\fBto_map(List) -> Map\fR
+\fB                when\fR
+\fB                    List :: [Shorthand | {Key, Value} | term()],\fR
+\fB                    Map :: #{Shorthand => true, Key => Value},\fR
+\fB                    Shorthand :: atom(),\fR
+\fB                    Key :: term(),\fR
+\fB                    Value :: term().\fR
+
+.br
+.RS
+.PP
+Converts the property list \fIList\fR to a map.
+
+.PP
+Shorthand atom values in \fIList\fR will be expanded to an association of the form \fIAtom => true\fR. Tuples of the form \fI{Key, Value}\fR in \fIList\fR will be converted to an association of the form \fIKey => Value\fR. Anything else will be silently ignored.
+
+.PP
+If the same key appears in \fIList\fR multiple times, the value of the one appearing nearest to the head of \fIList\fR will be in the result map, that is the value that would be returned by a call to \fIget_value(Key, List)\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+to_map([a, {b, 1}, {c, 2}, {c, 3}])
+
+.fi
+
+.PP
+returns:
+
+.IP
+.nf
+#{a => true, b => 1, c => 2}
+
+.fi
+
+
+.RE
+.B
+\fBto_map(List, Stages) -> Map\fR
+\fB                when\fR
+\fB                    List :: [term()],\fR
+\fB                    Stages :: [Operation],\fR
+\fB                    Operation ::\fR
+\fB                        {aliases, Aliases} |\fR
+\fB                        {negations, Negations} |\fR
+\fB                        {expand, Expansions},\fR
+\fB                    Aliases :: [{Key, Key}],\fR
+\fB                    Negations :: [{Key, Key}],\fR
+\fB                    Expansions ::\fR
+\fB                        [{Property :: property(), Expansion :: [term()]}],\fR
+\fB                    Map :: #{term() => term()}.\fR
+
+.br
+.RS
+.PP
+Converts the property list \fIList\fR to a map after applying the normalizations given in \fIStages\fR.
+
+.PP
+See also \fInormalize/2\fR, \fIto_map/1\fR.
+
+
+.RE
+.B
+\fBunfold(ListIn) -> ListOut\fR
+\fB                when ListIn :: [term()], ListOut :: [term()].\fR
+
+.br
+.RS
+.PP
+Unfolds all occurrences of atoms in \fIListIn\fR to tuples \fI{Atom, true}\fR.
+
+.PP
+See also \fIcompact/1\fR.
+
+
+.RE

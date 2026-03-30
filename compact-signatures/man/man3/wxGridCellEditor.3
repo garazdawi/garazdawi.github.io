@@ -1,0 +1,200 @@
+.TH wxGridCellEditor 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGridCellEditor \- This class is responsible for providing and manipulating the in-place edit controls for the grid.
+
+.SH DESCRIPTION
+.PP
+Instances of \fIwxGridCellEditor\fR (actually, instances of derived classes since it is an abstract class) can be associated with the cell attributes for individual cells, rows, columns, or even for the entire grid.
+
+.PP
+Normally \fIwxGridCellEditor\fR shows some UI control allowing the user to edit the cell, but starting with wxWidgets 3.1.4 it's also possible to define "activatable" cell editors, that change the value of the cell directly when it's activated (typically by pressing Space key or clicking on it), see \fITryActivate()\fR (not implemented in wx) method. Note that when implementing an editor which is always activatable, i.e. never shows any in-place editor, it is more convenient to derive its class from \fIwxGridCellActivatableEditor\fR (not implemented in wx) than from \fIwxGridCellEditor\fR itself.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellBoolEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellChoiceEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellFloatEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellNumberEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellTextEditor\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGridCellEditor
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGridCellEditor() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, EvtHandler) -> ok\fR
+\fB                when\fR
+\fB                    This :: wxGridCellEditor(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    EvtHandler :: wxEvtHandler:wxEvtHandler().\fR
+
+.br
+.RS
+.PP
+Creates the actual edit control.
+
+
+.RE
+.B
+\fBhandleReturn(This, Event) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxGridCellEditor(),\fR
+\fB                          Event :: wxKeyEvent:wxKeyEvent().\fR
+
+.br
+.RS
+.PP
+Some types of controls on some platforms may need some help with the Return key.
+
+
+.RE
+.B
+\fBisCreated(This) -> boolean() when This :: wxGridCellEditor().\fR
+
+.br
+.RS
+.PP
+Returns true if the edit control has been created.
+
+
+.RE
+.B
+\fBreset(This) -> ok when This :: wxGridCellEditor().\fR
+
+.br
+.RS
+.PP
+Reset the value in the control back to its starting value.
+
+
+.RE
+.B
+\fBsetSize(This, Rect) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxGridCellEditor(),\fR
+\fB                     Rect ::\fR
+\fB                         {X :: integer(),\fR
+\fB                          Y :: integer(),\fR
+\fB                          W :: integer(),\fR
+\fB                          H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Size and position the edit control.
+
+
+.RE
+.B
+\fBshow(This, Show, [Option]) -> ok\fR
+\fB              when\fR
+\fB                  This :: wxGridCellEditor(),\fR
+\fB                  Show :: boolean(),\fR
+\fB                  Option :: {attr, wxGridCellAttr:wxGridCellAttr()}.\fR
+
+.br
+.RS
+.PP
+Show or hide the edit control, use the specified attributes to set colours/fonts for it.
+
+
+.RE
+.B
+\fBstartingClick(This) -> ok when This :: wxGridCellEditor().\fR
+
+.br
+.RS
+.PP
+If the editor is enabled by clicking on the cell, this method will be called.
+
+
+.RE
+.B
+\fBstartingKey(This, Event) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxGridCellEditor(),\fR
+\fB                         Event :: wxKeyEvent:wxKeyEvent().\fR
+
+.br
+.RS
+.PP
+If the editor is enabled by pressing keys on the grid, this will be called to let the editor do something about that first key if desired.
+
+
+.RE

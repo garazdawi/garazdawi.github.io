@@ -1,0 +1,855 @@
+.TH eldap 3 "eldap 1.2.16" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+eldap \- LDAP Client
+
+.SH DESCRIPTION
+.PP
+This module provides a client api to the Lightweight Directory Access Protocol (LDAP).
+
+.PP
+References:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 4510 - RFC 4519
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 2830
+
+.RE
+
+.PP
+The above publications can be found at IETF.
+
+.PP
+Terminology abbreviations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Dn. An LDAPDN is defined to be the representation of a Distinguished Name (DN) after encoding according to the specification in [RFC4514].
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBattribute() :: {Type :: string(), Value :: [string()]}.\fR
+
+.br
+.RS
+.PP
+The attributes of an entry
+
+
+.RE
+.B
+\fBconnection_info() ::\fR
+\fB          #{socket := ssl:sslsocket() | gen_tcp:socket(),\fR
+\fB            socket_type := tcp | ssl}.\fR
+
+.br
+.RS
+.PP
+The LDAP socket and the transport protocol, TCP or TLS (SSL), used by the ldap connection
+
+
+.RE
+.B
+\fB-opaque dereference() \fR
+
+.br
+.RS
+.PP
+How to handle aliases during a search. See \fIneverDerefAliases/0\fR, \fIderefInSearching/0\fR, \fIderefFindingBaseObj/0\fR, \fIderefAlways/0\fR
+
+
+.RE
+.B
+\fBfilter() :: term().\fR
+
+.br
+.RS
+.PP
+An opaque type representing a filter operation.
+
+.PP
+See the filter creation functions for more info, including, \fIpresent/1\fR, \fIsubstrings/2\fR, \fIequalityMatch/2\fR, \fIgreaterOrEqual/2\fR, \fIlessOrEqual/2\fR, \fIapproxMatch/2\fR, \fIextensibleMatch/2\fR, \fI'and'/1\fR, \fI'or'/1\fR, \fI'not'/1\fR
+
+
+.RE
+.B
+\fBhandle() :: term().\fR
+
+.br
+.RS
+.PP
+An opaque handle unique for the connection
+
+
+.RE
+.B
+\fBmodify_op() :: term().\fR
+
+.br
+.RS
+.PP
+Entry modification operations. See \fImod_add/2\fR, \fImod_delete/2\fR, \fImod_replace/2\fR
+
+
+.RE
+.B
+\fBreferrals() :: [Address :: string()].\fR
+
+.br
+.RS
+.PP
+The LDAP Server Address. The contents of \fIAddress\fR is server dependent.
+
+
+.RE
+.B
+\fB-opaque scope() \fR
+
+.br
+.RS
+.PP
+Scope of a search. See \fIbaseObject/0\fR, \fIsingleLevel/0\fR, \fIwholeSubtree/0\fR
+
+
+.RE
+.B
+\fBsearch_option() ::\fR
+\fB          {base, string()} |\fR
+\fB          {filter, filter()} |\fR
+\fB          {scope, scope()} |\fR
+\fB          {attributes, [string()]} |\fR
+\fB          {deref, dereference()} |\fR
+\fB          {types_only, boolean()} |\fR
+\fB          {timeout, integer()}.\fR
+
+.br
+.RS
+.PP
+A requested set of serach options for seaching the directory
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd(Handle, Dn, Attributes) -> ok | {ok, Refs} | {error, Reason}\fR
+\fB             when\fR
+\fB                 Handle :: handle(),\fR
+\fB                 Dn :: string(),\fR
+\fB                 Attributes :: [attribute()],\fR
+\fB                 Refs :: {referral, referrals()},\fR
+\fB                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Add an entry. The entry must not exist.
+
+.IP
+.nf
+  add(Handle,
+      "cn=Bill Valentine, ou=people, o=Example Org, dc=example, dc=com",
+       [{"objectclass", ["person"]},
+        {"cn", ["Bill Valentine"]},
+        {"sn", ["Valentine"]},
+        {"telephoneNumber", ["545 555 00"]}]
+     )
+
+.fi
+
+
+.RE
+.B
+\fB'and'(ListOfFilters) -> filter() when ListOfFilters :: [filter()].\fR
+
+.br
+.RS
+.PP
+Creates a filter where all \fIFilter\fR must be true.
+
+
+.RE
+.B
+\fBapproxMatch(Type, Value) -> filter()\fR
+\fB                     when Type :: string(), Value :: string().\fR
+
+.br
+.RS
+.PP
+Create a approximation match filter.
+
+
+.RE
+.B
+\fBbaseObject() -> scope().\fR
+
+.br
+.RS
+.PP
+Search baseobject only.
+
+
+.RE
+.B
+\fBclose(Handle) -> ok when Handle :: handle().\fR
+
+.br
+.RS
+.PP
+Shutdown the connection after sending an unbindRequest to the server.
+
+.PP
+If the connection is TLS the connection will be closed with \fIssl:close/1\fR, otherwise with \fIgen_tcp:close/1\fR.
+
+
+.RE
+.B
+\fBdelete(Handle, Dn) -> ok | {ok, Refs} | {error, Reason}\fR
+\fB                when\fR
+\fB                    Handle :: handle(),\fR
+\fB                    Dn :: string(),\fR
+\fB                    Refs :: {referral, referrals()},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+Delete an entry.
+
+.IP
+.nf
+  delete(Handle, "cn=Bill Valentine, ou=people, o=Example Org, dc=example, dc=com")
+
+.fi
+
+
+.RE
+.B
+\fBderefAlways() -> dereference().\fR
+
+.br
+.RS
+.PP
+Always dereference aliases.
+
+
+.RE
+.B
+\fBderefFindingBaseObj() -> dereference().\fR
+
+.br
+.RS
+.PP
+Dereference aliases only in finding the base.
+
+
+.RE
+.B
+\fBderefInSearching() -> dereference().\fR
+
+.br
+.RS
+.PP
+Dereference aliases only when searching.
+
+
+.RE
+.B
+\fBequalityMatch(Type, Value) -> filter()\fR
+\fB                       when Type :: string(), Value :: string().\fR
+
+.br
+.RS
+.PP
+Create a equality filter.
+
+
+.RE
+.B
+\fBextensibleMatch(MatchValue, OptionalAttrs) -> filter()\fR
+\fB                         when\fR
+\fB                             MatchValue :: string(),\fR
+\fB                             OptionalAttrs ::\fR
+\fB                                 [{matchingRule, string()} |\fR
+\fB                                  {type, string()} |\fR
+\fB                                  {dnAttributes, boolean()}].\fR
+
+.br
+.RS
+.PP
+Creates an extensible match filter. For example,
+
+.IP
+.nf
+  eldap:extensibleMatch("Bar", [{type,"sn"}, {matchingRule,"caseExactMatch"}]))
+
+.fi
+
+.PP
+creates a filter which performs a \fIcaseExactMatch\fR on the attribute \fIsn\fR and matches with the value \fI"Bar"\fR. The default value of \fIdnAttributes\fR is \fIfalse\fR.
+
+
+.RE
+.B
+\fBgreaterOrEqual(Type, Value) -> filter()\fR
+\fB                        when Type :: string(), Value :: string().\fR
+
+.br
+.RS
+.PP
+Create a greater or equal filter.
+
+
+.RE
+.B
+\fBinfo(Handle) -> connection_info() when Handle :: handle().\fR
+
+.br
+.RS
+.PP
+Currently available information reveals the socket and the transport protocol, TCP or TLS (SSL), used by the LDAP connection.
+
+
+.RE
+.B
+\fBlessOrEqual(Type, Value) -> filter()\fR
+\fB                     when Type :: string(), Value :: string().\fR
+
+.br
+.RS
+.PP
+Create a less or equal filter.
+
+
+.RE
+.B
+\fBmod_add(Type, Values) -> modify_op()\fR
+\fB                 when Type :: string(), Values :: [string()].\fR
+
+.br
+.RS
+.PP
+Create an add modification operation.
+
+
+.RE
+.B
+\fBmod_delete(Type, Values) -> modify_op()\fR
+\fB                    when Type :: string(), Values :: [string()].\fR
+
+.br
+.RS
+.PP
+Create a delete modification operation.
+
+
+.RE
+.B
+\fBmod_replace(Type, Values) -> modify_op()\fR
+\fB                     when Type :: string(), Values :: [string()].\fR
+
+.br
+.RS
+.PP
+Create a replace modification operation.
+
+
+.RE
+.B
+\fBmodify(Handle, Dn, ModifyOps) -> ok | {ok, Refs} | {error, Reason}\fR
+\fB                when\fR
+\fB                    Handle :: handle(),\fR
+\fB                    Dn :: string(),\fR
+\fB                    ModifyOps :: [term()],\fR
+\fB                    Refs :: {referral, referrals()},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+Modify an entry.
+
+.IP
+.nf
+  modify(Handle, "cn=Bill Valentine, ou=people, o=Example Org, dc=example, dc=com",
+         [eldap:mod_replace("telephoneNumber", ["555 555 00"]),
+	  eldap:mod_add("description", ["LDAP Hacker"]) ])
+
+.fi
+
+
+.RE
+.B
+\fBmodify_dn(Handle, Dn, NewRDN, DeleteOldRDN, NewSupDN) ->\fR
+\fB                   ok | {ok, Refs} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Handle :: handle(),\fR
+\fB                       Dn :: string(),\fR
+\fB                       NewRDN :: string(),\fR
+\fB                       DeleteOldRDN :: boolean(),\fR
+\fB                       NewSupDN :: string(),\fR
+\fB                       Refs :: {referral, referrals()},\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Modify the DN of an entry.
+
+.PP
+\fIDeleteOldRDN\fR indicates whether the current RDN should be removed from the attribute list after the operation. \fINewSupDN\fR is the new parent that the RDN shall be moved to. If the old parent should remain as parent, \fINewSupDN\fR shall be "".
+
+.IP
+.nf
+  modify_dn(Handle, "cn=Bill Valentine, ou=people, o=Example Org, dc=example, dc=com ",
+            "cn=Bill Jr Valentine", true, "")
+
+.fi
+
+
+.RE
+.B
+\fBmodify_password(Handle, Dn, NewPasswd) ->\fR
+\fB                         ok |\fR
+\fB                         {ok, Refs} |\fR
+\fB                         {error, term()} |\fR
+\fB                         {ok, GenPasswd}\fR
+\fB                         when\fR
+\fB                             Handle :: handle(),\fR
+\fB                             Dn :: string(),\fR
+\fB                             NewPasswd :: string(),\fR
+\fB                             Refs :: {referral, referrals()},\fR
+\fB                             GenPasswd :: string().\fR
+
+.br
+.RS
+.PP
+Modify the password of a user. See \fImodify_password/4\fR.
+
+
+.RE
+.B
+\fBmodify_password(Handle, Dn, NewPasswd, OldPasswd) ->\fR
+\fB                         ok |\fR
+\fB                         {ok, Refs} |\fR
+\fB                         {error, term()} |\fR
+\fB                         {ok, GenPasswd}\fR
+\fB                         when\fR
+\fB                             Handle :: handle(),\fR
+\fB                             Dn :: string(),\fR
+\fB                             NewPasswd :: string(),\fR
+\fB                             OldPasswd :: string(),\fR
+\fB                             Refs :: {referral, referrals()},\fR
+\fB                             GenPasswd :: string().\fR
+
+.br
+.RS
+.PP
+Modify the password of a user.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDn\fR. The user to modify. Should be "" if the modify request is for the user of the LDAP session.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINewPasswd\fR. The new password to set. Should be "" if the server is to generate the password. In this case, the result will be \fI{ok, GenPasswd}\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIOldPasswd\fR. Sometimes required by server policy for a user to change their password. If not required, use \fImodify_password/3\fR.
+
+.RE
+
+
+.RE
+.B
+\fBneverDerefAliases() -> dereference().\fR
+
+.br
+.RS
+.PP
+Never dereference aliases, treat aliases as entries.
+
+
+.RE
+.B
+\fB'not'(Filter) -> filter() when Filter :: filter().\fR
+
+.br
+.RS
+.PP
+Negate a filter.
+
+
+.RE
+.B
+\fBopen(Hosts) -> {ok, Handle} | {error, Reason}\fR
+\fB              when\fR
+\fB                  Hosts :: [Host],\fR
+\fB                  Host :: inet:socket_address() | inet:hostname(),\fR
+\fB                  Handle :: handle(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Setup a connection to an LDAP server, the \fIHOST\fR's are tried in order.
+
+
+.RE
+.B
+\fBopen(Hosts, Options) -> {ok, Handle} | {error, Reason}\fR
+\fB              when\fR
+\fB                  Hosts :: [Host],\fR
+\fB                  Host :: inet:socket_address() | inet:hostname(),\fR
+\fB                  Options ::\fR
+\fB                      [{port, integer()} |\fR
+\fB                       {log, function()} |\fR
+\fB                       {timeout, timeout()} |\fR
+\fB                       {ssl, boolean()} |\fR
+\fB                       {sslopts, [ssl:tls_client_option()]} |\fR
+\fB                       {tcpopts,\fR
+\fB                        [inet:inet_backend() | gen_tcp:connect_option()]}],\fR
+\fB                  Handle :: handle(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Setup a connection to an LDAP server, the \fIHOST\fR's are tried in order.
+
+.PP
+The log function takes three arguments, \fIfun(Level, FormatString, [FormatArg]) end\fR.
+
+.PP
+Timeout set the maximum time in milliseconds that each server request may take.
+
+.PP
+All TCP socket options are accepted except \fIactive\fR, \fIbinary\fR, \fIdeliver\fR, \fIlist\fR, \fImode\fR and \fIpacket\fR
+
+
+.RE
+.B
+\fB'or'(ListOfFilters) -> filter() when ListOfFilters :: [filter()].\fR
+
+.br
+.RS
+.PP
+Create a filter where at least one of the \fIFilter\fR must be true.
+
+
+.RE
+.B
+\fBpaged_result_control(PageSize) ->\fR
+\fB                              {control, ControlOID, true, binary()}\fR
+\fB                              when\fR
+\fB                                  PageSize :: integer(),\fR
+\fB                                  ControlOID :: string().\fR
+
+.br
+.RS
+.PP
+Paged results is an extension to the LDAP protocol specified by RFC2696
+
+.PP
+This function creates a control with the specified page size for use in \fIsearch/3\fR, for example:
+
+.IP
+.nf
+Control = eldap:paged_result_control(50),
+{ok, SearchResults} = search(Handle, [{base, "dc=example, dc=com"}], [Control]),
+
+.fi
+
+
+.RE
+.B
+\fBpaged_result_control(PageSize, Cookie) ->\fR
+\fB                              {control, ControlOID, true, binary()}\fR
+\fB                              when\fR
+\fB                                  PageSize :: integer(),\fR
+\fB                                  Cookie :: string(),\fR
+\fB                                  ControlOID :: string().\fR
+
+.br
+.RS
+.PP
+Paged results is an extension to the LDAP protocol specified by RFC2696
+
+.PP
+This function creates a control with the specified page size and cookie for use in \fIsearch/3\fR to retrieve the next results page.
+
+.PP
+For example:
+
+.IP
+.nf
+PageSize = 50,
+Control1 = eldap:paged_result_control(PageSize),
+{ok, SearchResults1} = search(Handle, [{base, "dc=example, dc=com"}], [Control1]),
+%% retrieve the returned cookie from the search results
+{ok, Cookie1} = eldap:paged_result_cookie(SearchResults1),
+Control2 = eldap:paged_result_control(PageSize, Cookie1),
+{ok, SearchResults2} = eldap:search(Handle, [{base, "dc=example,dc=com"}], [Control2]),
+%% etc
+
+.fi
+
+
+.RE
+.B
+\fBpaged_result_cookie(#eldap_search_result{controls ::\fR
+\fB                                                   maybe_improper_list(),\fR
+\fB                                               entries :: term(),\fR
+\fB                                               referrals :: term()}) ->\fR
+\fB                             {error, no_cookie} |\fR
+\fB                             {ok,\fR
+\fB                              asn1_NOVALUE |\fR
+\fB                              [[any()] | byte() | {_, _} | {_, _, _}] |\fR
+\fB                              #'AttributeValueAssertion'{attributeDesc ::\fR
+\fB                                                             [any()],\fR
+\fB                                                         assertionValue ::\fR
+\fB                                                             [any()]}}.\fR
+
+.br
+.RS
+.PP
+Paged results is an extension to the LDAP protocol specified by RFC2696.
+
+.PP
+This function extracts the cookie returned from the server as a result of a paged search result.
+
+.PP
+If the returned cookie is the empty string \fI""\fR, then these search results represent the last in the series.
+
+
+.RE
+.B
+\fBpresent(Type) -> filter() when Type :: string().\fR
+
+.br
+.RS
+.PP
+Create a filter which filters on attribute type presence.
+
+
+.RE
+.B
+\fBsearch(Handle, SearchOptions) ->\fR
+\fB                {ok,\fR
+\fB                 #eldap_search_result{entries :: term(),\fR
+\fB                                      referrals :: term(),\fR
+\fB                                      controls :: term()}} |\fR
+\fB                {ok, Refs} |\fR
+\fB                {error, Reason}\fR
+\fB                when\fR
+\fB                    Handle :: handle(),\fR
+\fB                    SearchOptions ::\fR
+\fB                        #eldap_search{base :: term(),\fR
+\fB                                      filter :: term(),\fR
+\fB                                      size_limit :: term(),\fR
+\fB                                      scope :: term(),\fR
+\fB                                      deref :: term(),\fR
+\fB                                      attributes :: term(),\fR
+\fB                                      types_only :: term(),\fR
+\fB                                      timeout :: term()} |\fR
+\fB                        [search_option()],\fR
+\fB                    Refs :: {referral, referrals()},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+Search the directory with the supplied the SearchOptions.
+
+.PP
+The base and filter options must be supplied. Default values: scope is \fIwholeSubtree/0\fR, deref is \fIderefAlways/0\fR, types_only is \fIfalse\fR and timeout is \fI0\fR (meaning infinity).
+
+.IP
+.nf
+  Filter = eldap:substrings("cn", [{any,"V"}]),
+  search(Handle, [{base, "dc=example, dc=com"}, {filter, Filter}, {attributes, ["cn"]}]),
+
+.fi
+
+.PP
+The \fItimeout\fR option in the \fISearchOptions\fR is for the ldap server, while the timeout in eldap:open/2 is used for each individual request in the search operation.
+
+
+.RE
+.B
+\fBsimple_bind(Handle, Dn, Password) ->\fR
+\fB                     ok | {ok, Refs} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Handle :: handle(),\fR
+\fB                         Dn :: string(),\fR
+\fB                         Password :: string(),\fR
+\fB                         Refs :: {referral, referrals()},\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Authenticate the connection using simple authentication.
+
+
+.RE
+.B
+\fBsingleLevel() -> scope().\fR
+
+.br
+.RS
+.PP
+Search the specified level only, i.e. do not recurse.
+
+
+.RE
+.B
+\fBstart_tls(Handle, TlsOptions) -> ok | {ok, Refs} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Handle :: handle(),\fR
+\fB                       TlsOptions :: [ssl:tls_client_option()],\fR
+\fB                       Refs :: {referral, referrals()},\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Same as start_tls(Handle, Options, infinity)
+
+
+.RE
+.B
+\fBstart_tls(Handle, TlsOptions, Timeout) ->\fR
+\fB                   ok | {ok, Refs} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Handle :: handle(),\fR
+\fB                       TlsOptions :: [ssl:tls_client_option()],\fR
+\fB                       Timeout :: infinity | pos_integer(),\fR
+\fB                       Refs :: {referral, referrals()},\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Upgrade the connection associated with \fIHandle\fR to a TLS connection if possible.
+
+.PP
+The upgrade is done in two phases: first the server is asked for permission to upgrade. Second, if the request is acknowledged, the upgrade to TLS is performed.
+
+.PP
+Error responses from phase one will not affect the current encryption state of the connection. Those responses are:
+
+tls_already_started
+.RS 2
+The connection is already encrypted. The connection is not affected.
+
+
+.RE
+
+{response,ResponseFromServer}
+.RS 2
+The upgrade was refused by the LDAP server. The 
+\fIResponseFromServer\fR is an atom delivered byt the LDAP server explained in section 2.3 of rfc 2830. The connection is not affected, so it is still un-encrypted.
+
+.RE
+
+.PP
+Errors in the second phase will however end the connection:
+
+Error
+.RS 2
+Any error responded from ssl:connect/3
+
+
+.RE
+
+.PP
+The \fITimeout\fR parameter is for the actual TLS upgrade (phase 2) while the timeout in eldap:open/2 is used for the initial negotiation about upgrade (phase 1).
+
+
+.RE
+.B
+\fBsubstrings(Type, SubStrings) -> filter()\fR
+\fB                    when\fR
+\fB                        Type :: string(),\fR
+\fB                        SubStrings ::\fR
+\fB                            [{initial, string()} |\fR
+\fB                             {any, string()} |\fR
+\fB                             {final, string()}].\fR
+
+.br
+.RS
+.PP
+Create a filter which filters on substrings.
+
+
+.RE
+.B
+\fBwholeSubtree() -> scope().\fR
+
+.br
+.RS
+.PP
+Search the entire subtree.
+
+
+.RE

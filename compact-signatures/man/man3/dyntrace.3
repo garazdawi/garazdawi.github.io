@@ -1,0 +1,372 @@
+.TH dyntrace 3 "runtime_tools 2.3.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+dyntrace \- Interface to dynamic tracing
+
+.SH DESCRIPTION
+.PP
+This module implements interfaces to dynamic tracing, should such be compiled into the virtual machine. For a standard and/or commercial build, no dynamic tracing is available, in which case none of the functions in this module is usable or give any effect.
+
+.PP
+Should dynamic tracing be enabled in the current build, either by configuring with \fI./configure --with-dynamic-trace=dtrace\fR or with \fI./configure --with-dynamic-trace=systemtap\fR, the module can be used for two things:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Trigger the user-probe \fIuser_trace_i4s4\fR in the NIF library \fIdyntrace.so\fR by calling \fIdyntrace:p/{1,2,3,4,5,6,7,8}\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Set a user specified tag that will be present in the trace messages of both the \fIefile_drv\fR and the user-probe mentioned above.
+
+.RE
+
+.PP
+Both building with dynamic trace probes and using them is experimental and unsupported by Erlang/OTP. It is included as an option for the developer to trace and debug performance issues in their systems.
+
+.PP
+The original implementation is mostly done by Scott Lystiger Fritchie as an Open Source Contribution and it should be viewed as such even though the source for dynamic tracing as well as this module is included in the main distribution. However, the ability to use dynamic tracing of the virtual machine is a very valuable contribution which OTP has every intention to maintain as a tool for the developer.
+
+.PP
+How to write \fId\fR programs or \fIsystemtap\fR scripts can be learned from books and from a lot of pages on the Internet. This manual page does not include any documentation about using the dynamic trace tools of respective platform. However, the \fIexamples\fR directory of the \fIruntime_tools\fR application contains comprehensive examples of both \fId\fR and \fIsystemtap\fR programs that will help you get started. Another source of information is the dtrace and systemtap chapters in the Runtime Tools Users' Guide.
+
+.SH DATA TYPES
+.LP
+.B
+\fBprobe_arg() :: integer() | iolist().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBavailable() -> true | false.\fR
+
+.br
+.RS
+.PP
+This function uses the NIF library to determine if dynamic tracing is available.
+
+.PP
+This function will throw an exception if the \fIdyntrace\fR NIF library could not be loaded by the \fIon_load\fR function in this module.
+
+.PP
+Use \fIerlang:system_info(dynamic_trace)\fR to determine whether the run-time system supports dynamic tracing.
+
+
+.RE
+.B
+\fBget_tag() -> binary() | undefined.\fR
+
+.br
+.RS
+.PP
+This function returns the user tag set in the current process. If no tag is set or dynamic tracing is not available, it returns \fIundefined\fR.
+
+.PP
+This function returns the user tag set in the current process or, if no user tag is present, the last user tag sent to the process together with a message (in the same way as sequential trace tokens are spread to other processes together with messages. For an explanation of how user tags can be spread together with messages, see \fIspread_tag/1\fR. If no tag is found or dynamic tracing is not available, it returns \fIundefined\fR
+
+
+.RE
+.B
+\fBp() -> true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function triggers the "user" trace probe \fIuser_trace_i4s4\fR in the dyntrace NIF module, sending a trace message containing only the user tag and zeroes/empty strings in all other fields.
+
+
+.RE
+.B
+\fBp(probe_arg()) -> true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function will trigger the "user" trace probe \fIuser_trace_i4s4\fR in the \fIdyntrace\fR NIF module, sending a trace message containing the user tag and the integer or string parameter in the first integer/string field.
+
+
+.RE
+.B
+\fBp(probe_arg(), probe_arg()) -> true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function will trigger the "user" trace probe \fIuser_trace_i4s4\fR in the dyntrace NIF module, sending a trace message containing the user tag and the \fIinteger()\fR or \fIstring()\fR parameters as the first fields of their respective type.
+
+.PP
+\fIinteger()\fR parameters should be put before any \fIstring()\fR parameters.
+
+.PP
+That is, the following calls work:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdyntrace:p(1, "Hello")\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdyntrace:p(1, 1)\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdyntrace:p("Hello", "Again")\fR
+
+.RE
+
+.PP
+The following call is invalid because the string argument comes before the integer argument:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdyntrace:p("Hello", 1)\fR
+
+.RE
+
+
+.RE
+.B
+\fBp(probe_arg(), probe_arg(), probe_arg()) ->\fR
+\fB           true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function will trigger the "user" trace probe \fIuser_trace_i4s4\fR in the dyntrace NIF module, sending a trace message containing the user tag and the \fIinteger()\fR or \fIstring()\fR parameters as the first fields of their respective type.
+
+.PP
+\fIinteger()\fR parameters should be put before any \fIstring()\fR parameters.
+
+
+.RE
+.B
+\fBp(probe_arg(), probe_arg(), probe_arg(), probe_arg()) ->\fR
+\fB           true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function will trigger the "user" trace probe \fIuser_trace_i4s4\fR in the dyntrace NIF module, sending a trace message containing the user tag and the \fIinteger()\fR or \fIstring()\fR parameters as the first fields of their respective type.
+
+.PP
+\fIinteger()\fR parameters should be put before any \fIstring()\fR parameters.
+
+
+.RE
+.B
+\fBp(probe_arg(), probe_arg(), probe_arg(), probe_arg(), probe_arg()) ->\fR
+\fB           true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function will trigger the "user" trace probe \fIuser_trace_i4s4\fR in the dyntrace NIF module, sending a trace message containing the user tag and the \fIinteger()\fR or \fIstring()\fR parameters as the first fields of their respective type.
+
+.PP
+\fIinteger()\fR parameters should be put before any \fIstring()\fR parameters.
+
+.PP
+There can be no more than four parameters of each type, so the first parameter must be of type \fIinteger()\fR and the last parameter of type \fIstring()\fR.
+
+
+.RE
+.B
+\fBp(probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg()) ->\fR
+\fB           true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function will trigger the "user" trace probe \fIuser_trace_i4s4\fR in the dyntrace NIF module, sending a trace message containing the user tag and the \fIinteger()\fR or \fIstring()\fR parameters as the first fields of their respective type.
+
+.PP
+\fIinteger()\fR parameters should be put before any \fIstring()\fR parameters.
+
+.PP
+There can be no more than four parameters of each type, so the first two parameters must be of type \fIinteger()\fR and the last two of type \fIstring()\fR.
+
+
+.RE
+.B
+\fBp(probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg()) ->\fR
+\fB           true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function will trigger the "user" trace probe \fIuser_trace_i4s4\fR in the dyntrace NIF module, sending a trace message containing the user tag and the \fIinteger()\fR or \fIstring()\fR parameters as the first fields of their respective type.
+
+.PP
+\fIinteger()\fR parameters should be put before any \fIstring()\fR parameters.
+
+.PP
+There can be no more than four parameters of each type, so the first three parameters must be of type \fIinteger()\fR and the last three of type \fIstring()\fR.
+
+
+.RE
+.B
+\fBp(probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg(),\fR
+\fB        probe_arg()) ->\fR
+\fB           true | false | error | badarg.\fR
+
+.br
+.RS
+.PP
+Calling this function will trigger the "user" trace \fIprobe user_trace_i4s4\fR in the dyntrace NIF module, sending a trace message containing all the \fIinteger()\fR and \fIstring()\fR parameters provided, as well as any user tag set in the current process.
+
+
+.RE
+.B
+\fBput_tag(undefined | iodata()) -> binary() | undefined.\fR
+
+.br
+.RS
+.PP
+This function sets the user tag of the current process.
+
+.PP
+The user tag is a \fIbinary()\fR, but can be specified as any \fIiodata()\fR, which is automatically converted to a binary by this function.
+
+.PP
+The user tag is provided to the user probes triggered by calls top \fIdyntrace:p/{1,2,3,4,5,6,7,8}\fR as well as probes in the \fIefile\fR driver. In the future, user tags might be added to more probes.
+
+.PP
+The old user tag (if any) is returned, or \fIundefined\fR if no user tag was present, or dynamic tracing is not enabled.
+
+
+.RE
+.B
+\fBrestore_tag(true | {non_neg_integer(), binary() | []}) -> true.\fR
+
+.br
+.RS
+.PP
+Restores the previous state of user tags and their spreading as it was before a call to \fIspread_tag/1\fR.
+
+.PP
+Note that the restoring is not limited to the same process; one can utilize this to turn off spreding in one process and restore it in a newly created process that is is actually going to send messages:
+
+.IP
+.nf
+f() ->
+    TagData = dyntrace:spread_tag(false),
+    spawn(fun() ->
+             dyntrace:restore_tag(TagData),
+             do_something()
+          end),
+    do_something_else(),
+    dyntrace:restore_tag(TagData).
+
+.fi
+
+.PP
+Correctly handling user tags and their spreading might take some effort, as Erlang programs tend to send and receive messages so that sometimes the user tag gets lost due to various things, like double receives or communication with a port (ports do not handle user tags, in the same way as they do not handle regular sequential trace tokens).
+
+
+.RE
+.B
+\fBspread_tag(boolean()) -> true | {non_neg_integer(), binary() | []}.\fR
+
+.br
+.RS
+.PP
+This function controls if user tags are to be spread to other processes with the next message.
+
+.PP
+Spreading of user tags work like spreading of sequential trace tokens, so that a received user tag will be active in the process until the next message arrives (if that message does not also contain the user tag).
+
+.PP
+This functionality is used when a client process communicates with a file i/o-server to spread the user tag to the I/O-server and then down to the \fIefile\fR driver. By using \fIspread_tag/1\fR and \fIrestore_tag/1\fR, one can enable or disable spreading of user tags to other processes and then restore the previous state of the user tag. The TagData returned from this call contains all previous information so the state (including any previously spread user tags) will be completely restored by a later call to \fIrestore_tag/1\fR.
+
+.PP
+The \fIfile\fR module already spreads tags, so there is no need to manually call this function to get user tags spread to the \fIefile\fR driver through that module.
+
+.PP
+The most use of this function would be if one, for example, uses the \fIio\fR module to communicate with an I/O-server for a regular file, such as in the following example:
+
+.IP
+.nf
+f() ->
+   {ok, F} = file:open("test.tst", [write]),
+   Saved = dyntrace:spread_tag(true),
+   io:format(F, "Hello world!", []),
+   dyntrace:restore_tag(Saved),
+   file:close(F).
+
+.fi
+
+.PP
+In this example, any user tag set in the calling process will be spread to the I/O-server when the \fIio:format/3\fR call is done.
+
+
+.RE

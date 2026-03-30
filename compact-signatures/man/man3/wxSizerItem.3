@@ -1,0 +1,486 @@
+.TH wxSizerItem 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSizerItem \- The \fIwxSizerItem\fR class is used to track the position, size and other attributes of each item managed by a \fIwxSizer\fR.
+
+.SH DESCRIPTION
+.PP
+It is not usually necessary to use this class because the sizer elements can also be identified by their positions or window or sizer pointers but sometimes it may be more convenient to use it directly.
+
+.PP
+wxWidgets docs: wxSizerItem
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSizerItem() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBassignSizer(This, Sizer) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxSizerItem(),\fR
+\fB                         Sizer :: wxSizer:wxSizer().\fR
+
+.br
+.RS
+.PP
+Set the sizer tracked by this item.
+
+.PP
+Old sizer, if any, is deleted.
+
+
+.RE
+.B
+\fBassignSpacer(This, Size) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxSizerItem(),\fR
+\fB                          Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Set the size of the spacer tracked by this item.
+
+.PP
+Old spacer, if any, is deleted.
+
+
+.RE
+.B
+\fBassignSpacer(This, W, H) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxSizerItem(),\fR
+\fB                          W :: integer(),\fR
+\fB                          H :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBassignWindow(This, Window) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxSizerItem(),\fR
+\fB                          Window :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Set the window to be tracked by this item.
+
+.PP
+Note: This is a low-level method which is dangerous if used incorrectly, avoid using it if possible, i.e. if higher level methods such as \fIwxSizer:replace/4\fR can be used instead.
+
+.PP
+If the sizer item previously contained a window, it is dissociated from the sizer containing this sizer item (if any), but this object doesn't have the pointer to the containing sizer and so it's the caller's responsibility to call \fIwxWindow:setContainingSizer/2\fR on \fIwindow\fR. Failure to do this can result in memory corruption when the window is destroyed later, so it is crucial to not forget to do it.
+
+.PP
+Also note that the previously contained window is \fInot\fR deleted, so it's also the callers responsibility to do it, if necessary.
+
+
+.RE
+.B
+\fBcalcMin(This) -> {W :: integer(), H :: integer()}\fR
+\fB                 when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Calculates the minimum desired size for the item, including any space needed by borders.
+
+
+.RE
+.B
+\fBdeleteWindows(This) -> ok when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Destroy the window or the windows in a subsizer, depending on the type of item.
+
+
+.RE
+.B
+\fBdestroy(This :: wxSizerItem()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBdetachSizer(This) -> ok when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Enable deleting the SizerItem without destroying the contained sizer.
+
+
+.RE
+.B
+\fBgetBorder(This) -> integer() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Return the border attribute.
+
+
+.RE
+.B
+\fBgetFlag(This) -> integer() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Return the flags attribute.
+
+.PP
+See \fIwxSizer flags list\fR (not implemented in wx) for details.
+
+
+.RE
+.B
+\fBgetMinSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                    when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Get the minimum size needed for the item.
+
+
+.RE
+.B
+\fBgetPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                     when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+What is the current position of the item, as set in the last Layout.
+
+
+.RE
+.B
+\fBgetProportion(This) -> integer() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Get the proportion item attribute.
+
+
+.RE
+.B
+\fBgetRatio(This) -> number() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Get the ratio item attribute.
+
+
+.RE
+.B
+\fBgetRect(This) ->\fR
+\fB                 {X :: integer(),\fR
+\fB                  Y :: integer(),\fR
+\fB                  W :: integer(),\fR
+\fB                  H :: integer()}\fR
+\fB                 when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Get the rectangle of the item on the parent window, excluding borders.
+
+
+.RE
+.B
+\fBgetSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                 when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Get the current size of the item, as set in the last Layout.
+
+
+.RE
+.B
+\fBgetSizer(This) -> wxSizer:wxSizer() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+If this item is tracking a sizer, return it.
+
+.PP
+NULL otherwise.
+
+
+.RE
+.B
+\fBgetSpacer(This) -> {W :: integer(), H :: integer()}\fR
+\fB                   when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+If this item is tracking a spacer, return its size.
+
+
+.RE
+.B
+\fBgetUserData(This) -> wx:wx_object() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Get the userData item attribute.
+
+
+.RE
+.B
+\fBgetWindow(This) -> wxWindow:wxWindow() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+If this item is tracking a window then return it.
+
+.PP
+NULL otherwise.
+
+
+.RE
+.B
+\fBisShown(This) -> boolean() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Returns true if this item is a window or a spacer and it is shown or if this item is a sizer and not all of its elements are hidden.
+
+.PP
+In other words, for sizer items, all of the child elements must be hidden for the sizer itself to be considered hidden.
+
+.PP
+As an exception, if the \fIwxRESERVE_SPACE_EVEN_IF_HIDDEN\fR flag was used for this sizer item, then \fIisShown/1\fR always returns true for it (see \fIwxSizerFlags::ReserveSpaceEvenIfHidden()\fR (not implemented in wx)).
+
+
+.RE
+.B
+\fBisSizer(This) -> boolean() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Is this item a sizer?
+
+
+.RE
+.B
+\fBisSpacer(This) -> boolean() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Is this item a spacer?
+
+
+.RE
+.B
+\fBisWindow(This) -> boolean() when This :: wxSizerItem().\fR
+
+.br
+.RS
+.PP
+Is this item a window?
+
+
+.RE
+.B
+\fBnew(Width, Height) -> wxSizerItem()\fR
+\fB             when Width :: integer(), Height :: integer();\fR
+\fB         (Window, Flags) -> wxSizerItem()\fR
+\fB             when\fR
+\fB                 Window :: wxWindow:wxWindow() | wxSizer:wxSizer(),\fR
+\fB                 Flags :: wxSizerFlags:wxSizerFlags();\fR
+\fB         (Window, [Option]) -> wxSizerItem()\fR
+\fB             when\fR
+\fB                 Window :: wxWindow:wxWindow() | wxSizer:wxSizer(),\fR
+\fB                 Option ::\fR
+\fB                     {proportion, integer()} |\fR
+\fB                     {flag, integer()} |\fR
+\fB                     {border, integer()} |\fR
+\fB                     {userData, wx:wx_object()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(Width, Height, [Option]) -> wxSizerItem()\fR
+\fB             when\fR
+\fB                 Width :: integer(),\fR
+\fB                 Height :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {proportion, integer()} |\fR
+\fB                     {flag, integer()} |\fR
+\fB                     {border, integer()} |\fR
+\fB                     {userData, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Construct a sizer item for tracking a spacer.
+
+
+.RE
+.B
+\fBsetBorder(This, Border) -> ok\fR
+\fB                   when This :: wxSizerItem(), Border :: integer().\fR
+
+.br
+.RS
+.PP
+Set the border item attribute.
+
+
+.RE
+.B
+\fBsetDimension(This, Pos, Size) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxSizerItem(),\fR
+\fB                          Pos :: {X :: integer(), Y :: integer()},\fR
+\fB                          Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Set the position and size of the space allocated to the sizer, and adjust the position and size of the item to be within that space taking alignment and borders into account.
+
+
+.RE
+.B
+\fBsetFlag(This, Flag) -> ok\fR
+\fB                 when This :: wxSizerItem(), Flag :: integer().\fR
+
+.br
+.RS
+.PP
+Set the flag item attribute.
+
+
+.RE
+.B
+\fBsetInitSize(This, X, Y) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxSizerItem(),\fR
+\fB                         X :: integer(),\fR
+\fB                         Y :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the minimum size to be allocated for this item.
+
+.PP
+This is identical to \fIsetMinSize/3\fR, prefer to use the other function, as its name is more clear.
+
+
+.RE
+.B
+\fBsetMinSize(This, Size) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxSizerItem(),\fR
+\fB                        Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the minimum size to be allocated for this item.
+
+.PP
+If this item is a window, the \fIsize\fR is also passed to \fIwxWindow:setMinSize/2\fR.
+
+
+.RE
+.B
+\fBsetMinSize(This, X, Y) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxSizerItem(),\fR
+\fB                        X :: integer(),\fR
+\fB                        Y :: integer().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBsetProportion(This, Proportion) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxSizerItem(),\fR
+\fB                           Proportion :: integer().\fR
+
+.br
+.RS
+.PP
+Set the proportion item attribute.
+
+
+.RE
+.B
+\fBsetRatio(This, Ratio) -> ok\fR
+\fB                  when This :: wxSizerItem(), Ratio :: number();\fR
+\fB              (This, Size) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxSizerItem(),\fR
+\fB                      Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetRatio(This, Width, Height) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxSizerItem(),\fR
+\fB                      Width :: integer(),\fR
+\fB                      Height :: integer().\fR
+
+.br
+.RS
+.PP
+Set the ratio item attribute.
+
+
+.RE
+.B
+\fBshow(This, Show) -> ok\fR
+\fB              when This :: wxSizerItem(), Show :: boolean().\fR
+
+.br
+.RS
+.PP
+Set the show item attribute, which sizers use to determine if the item is to be made part of the layout or not.
+
+.PP
+If the item is tracking a window then it is shown or hidden as needed.
+
+
+.RE

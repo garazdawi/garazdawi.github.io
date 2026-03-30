@@ -1,0 +1,258 @@
+.TH wxPreviewControlBar 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPreviewControlBar \- This is the default implementation of the preview control bar, a panel with buttons and a zoom control.
+
+.SH DESCRIPTION
+.PP
+You can derive a new class from this and override some or all member functions to change the behaviour and appearance; or you can leave it as it is.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPreviewFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPreviewCanvas\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPrintPreview\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPanel\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPreviewControlBar
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPreviewControlBar() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreateButtons(This) -> ok when This :: wxPreviewControlBar().\fR
+
+.br
+.RS
+.PP
+Creates buttons, according to value of the button style flags.
+
+
+.RE
+.B
+\fBdestroy(This :: wxPreviewControlBar()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetPrintPreview(This) -> wxPrintPreview:wxPrintPreview()\fR
+\fB                         when This :: wxPreviewControlBar().\fR
+
+.br
+.RS
+.PP
+Gets the print preview object associated with the control bar.
+
+
+.RE
+.B
+\fBgetZoomControl(This) -> integer()\fR
+\fB                        when This :: wxPreviewControlBar().\fR
+
+.br
+.RS
+.PP
+Gets the current zoom setting in percent.
+
+
+.RE
+.B
+\fBnew(Preview, Buttons, Parent, [Option]) -> wxPreviewControlBar()\fR
+\fB             when\fR
+\fB                 Preview :: wxPrintPreview:wxPrintPreview(),\fR
+\fB                 Buttons :: integer(),\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+The \fIbuttons\fR parameter may be a combination of the following, using the bitwise 'or' operator:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPREVIEW_PRINT: Create a print button.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPREVIEW_NEXT: Create a next page button.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPREVIEW_PREVIOUS: Create a previous page button.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPREVIEW_ZOOM: Create a zoom control.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPREVIEW_DEFAULT: Equivalent to a combination of \fIwxPREVIEW_PREVIOUS\fR, \fIwxPREVIEW_NEXT\fR and \fIwxPREVIEW_ZOOM\fR.
+
+.RE
+
+
+.RE
+.B
+\fBsetZoomControl(This, Percent) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxPreviewControlBar(),\fR
+\fB                            Percent :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the zoom control.
+
+
+.RE

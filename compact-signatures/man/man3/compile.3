@@ -1,0 +1,1584 @@
+.TH compile 3 "compiler 9.0.5" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+compile \- Erlang Compiler
+
+.SH DESCRIPTION
+.PP
+This module provides an interface to the standard Erlang compiler. It can generate either a file containing the object code or return a binary that can be loaded directly.
+
+.SS "Default Compiler Options"
+
+.PP
+The (host operating system) environment variable \fIERL_COMPILER_OPTIONS\fR can be used to give default compiler options. Its value must be a valid Erlang term. If the value is a list, it is used as is. If it is not a list, it is put into a list.
+
+.PP
+The list is appended to any options given to \fIfile/2\fR, \fIforms/2\fR, and output_generated/2. Use the alternative functions \fInoenv_file/2\fR, \fInoenv_forms/2\fR, or noenv_output_generated/2 if you do not want the environment variable to be consulted, for example, if you are calling the compiler recursively from inside a parse transform.
+
+.PP
+The list can be retrieved with \fIenv_compiler_options/0\fR.
+
+.SS "Order of Compiler Options"
+
+.PP
+Options given in the \fIcompile()\fR attribute in the source code take precedence over options given to the compiler, which in turn take precedence over options given in the environment.
+
+.PP
+A later compiler option takes precedence over an earlier one in the option list. Example:
+
+.IP
+.nf
+compile:file(something, [nowarn_missing_spec,warn_missing_spec]).
+
+.fi
+
+.PP
+Warnings will be emitted for functions without specifications, unless the source code for module \fIsomething\fR contains a \fIcompile(nowarn_missing_spec)\fR attribute.
+
+.PP
+\fBCHANGE: \fRIn Erlang/OTP 26 and earlier, the option order was the opposite of what is described here.
+
+
+.SS "Inlining"
+
+.PP
+The compiler can do function inlining within an Erlang module. Inlining means that a call to a function is replaced with the function body with the arguments replaced with the actual values. The semantics are preserved, except if exceptions are generated in the inlined code, in which case exceptions are reported as occurring in the function the body was inlined into. Also, \fIfunction_clause\fR exceptions are converted to similar \fIcase_clause\fR exceptions.
+
+.PP
+When a function is inlined, the original function is kept if it is exported (either by an explicit export or if the option \fIexport_all\fR was given) or if not all calls to the function are inlined.
+
+.PP
+Inlining does not necessarily improve running time. For example, inlining can increase Beam stack use, which probably is detrimental to performance for recursive functions.
+
+.PP
+Inlining is never default. It must be explicitly enabled with a compiler option or a \fI-compile()\fR attribute in the source module.
+
+.PP
+To enable inlining, either use the option \fIinline\fR to let the compiler decide which functions to inline, or \fI{inline,[{Name,Arity},...]}\fR to have the compiler inline all calls to the given functions. If the option is given inside a \fIcompile\fR directive in an Erlang module, \fI{Name,Arity}\fR can be written as \fIName/Arity\fR.
+
+.PP
+Example of explicit inlining:
+
+.IP
+.nf
+-compile({inline,[pi/0]}).
+
+pi() -> 3.1416.
+
+.fi
+
+.PP
+Example of implicit inlining:
+
+.IP
+.nf
+-compile(inline).
+
+.fi
+
+.PP
+The option \fI{inline_size,Size}\fR controls how large functions that are allowed to be inlined. Default is \fI24\fR, which keeps the size of the inlined code roughly the same as the un-inlined version (only relatively small functions are inlined).
+
+.PP
+Example:
+
+.IP
+.nf
+%% Aggressive inlining - will increase code size.
+-compile(inline).
+-compile({inline_size,100}).
+
+.fi
+
+.SS "Inlining of List Functions"
+
+.PP
+The compiler can also inline various list manipulation functions from the module \fIlist\fR in STDLIB.
+
+.PP
+This feature must be explicitly enabled with a compiler option or a \fI-compile()\fR attribute in the source module.
+
+.PP
+To enable inlining of list functions, use option \fIinline_list_funcs\fR.
+
+.PP
+The following functions are inlined:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:all/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:any/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:foreach/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:map/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:flatmap/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:filter/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:foldl/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:foldr/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:mapfoldl/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlists:mapfoldr/3\fR
+
+.RE
+
+.SS "Parse Transformations"
+
+.PP
+Parse transformations are used when a programmer wants to use Erlang syntax but with different semantics. The original Erlang code is then transformed into other Erlang code.
+
+.PP
+See \fIerl_id_trans\fR for an example and an explanation of the function \fIparse_transform_info/0\fR.
+
+.SS "Recommendations for Language Implementors"
+
+.PP
+Except for Erlang, there are quite a few other languages that can run on the Erlang runtime system. Generally, such compilers produce a file or binary that is fed into the Erlang compiler. There are four ways to do that using documented functionality:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBErlang source code (\fI.erl\fR file)\fR: The file is compiled using \fIcompile:file/2\fR or \fIerlc <FILE>.erl\fR. This is the most straightforward and portable way. The main disadvantage is that it is hard or impossible to map each line of Erlang code back to the corresponding line in the original source file.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBThe abstract format\fR: This format supports mapping every Erlang source line back to its corresponding line in the original source file. To compile from the abstract format, do one following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Call \fIcompile:forms/2\fR to directly pass in the term representation of the abstract format.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Write the term representation to a file with the extension \fI.abstr\fR and compile that file using \fIcompile:file(<File>, [from_abstr])\fR or \fIerlc <File>.abstr\fR.
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBCore Erlang\fR: While there is a specification for Core Erlang, certain details are left to the implementation via the \fIprimop\fR expression. Primops can be added, deleted, or changed in any major release without notice. Note that by generating Core Erlang directly, it is possible to construct code that the Core-to-BEAM backend has never encountered before, and there are no guarantees that the final BEAM code will be safe.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBBEAM assembly code\fR: Strongly discouraged, as it is very hard to get right and requires continuous maintenance. New instructions are typically introduced in each major release (and sometimes old ones are removed). In particular, note that BEAM code that does not follow the correct conventions can cause the runtime system to crash (segfault).
+
+.RE
+
+.PP
+Our recommendation is to use either the abstract format or Erlang source code.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIepp\fR, \fIerl_expand_records\fR, \fIerl_id_trans\fR, \fIerl_lint\fR, \fIbeam_lib\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBabstract_code() :: [erl_parse:abstract_form()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbin_ret() ::\fR
+\fB          {ok, module(), binary()} |\fR
+\fB          {ok, module(), binary(), warnings()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcomp_ret() :: mod_ret() | bin_ret() | err_ret().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerr_ret() :: error | {error, errors(), warnings()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerror_description() :: erl_lint:error_description().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerror_info() :: erl_lint:error_info().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerrors() :: [{file:filename(), [error_info()]}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBforms() :: abstract_code() | cerl:c_module().\fR
+
+.br
+.RS
+.PP
+List of Erlang abstract or Core Erlang format representations, as used by \fIforms/2\fR.
+
+
+.RE
+.B
+\fBmod_ret() ::\fR
+\fB          {ok, module()} |\fR
+\fB          {ok, module(), cerl:c_module()} |\fR
+\fB          {ok, module() | [], abstract_code()} |\fR
+\fB          {ok, module(), warnings()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() :: atom() | {atom(), term()} | {d, atom(), term()}.\fR
+
+.br
+.RS
+.PP
+See \fIfile/2\fR for detailed description.
+
+
+.RE
+.B
+\fBwarnings() :: [{file:filename(), [error_info()]}].\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBenv_compiler_options() -> [term()].\fR
+
+.br
+.RS
+.PP
+Return compiler options given via the environment variable \fIERL_COMPILER_OPTIONS\fR. If the value is a list, it is returned as is. If it is not a list, it is put into a list.
+
+
+.RE
+.B
+\fBfile(module() | file:filename()) -> CompRet :: comp_ret().\fR
+
+.br
+.RS
+.PP
+Is the same as \fIfile(File, [verbose,report_errors,report_warnings])\fR.
+
+
+.RE
+.B
+\fBfile(File :: module() | file:filename(),\fR
+\fB           Options :: [option()] | option()) ->\fR
+\fB              CompRet :: comp_ret().\fR
+
+.br
+.RS
+.PP
+Compiles the code in the file \fIFile\fR, which is an Erlang source code file without the \fI.erl\fR extension.
+
+.PP
+\fIOptions\fR determine the behavior of the compiler.
+
+.PP
+Returns \fI{ok,ModuleName}\fR if successful, or \fIerror\fR if there are errors. An object code file is created if the compilation succeeds without errors. It is considered to be an error if the module name in the source code is not the same as the basename of the output file.
+
+.PP
+Available options:
+
+brief
+.RS 2
+Restricts error and warning messages to a single line of output.  As of Erlang/OTP 24, the compiler will by default also display the part of the source code that the message refers to.
+
+
+.RE
+
+basic_validation
+.RS 2
+This option is a fast way to test whether a module will compile successfully. This is useful for code generators that want to verify the code that they emit. No code is generated. If warnings are enabled, warnings generated by the 
+\fIerl_lint\fR module (such as warnings for unused variables and functions) are also returned.
+.PP
+Use option \fIstrong_validation\fR to generate all warnings that the compiler would generate.
+
+
+.RE
+
+strong_validation
+.RS 2
+Similar to option 
+\fIbasic_validation\fR. No code is generated, but more compiler passes are run to ensure that warnings generated by the optimization passes are generated (such as clauses that will not match, or expressions that are guaranteed to fail with an exception at runtime).
+
+.RE
+
+no_docs
+.RS 2
+The compiler by default extracts documentation from 
+\fI-doc\fR attributes and places them in the \fIDocs\fR chunk according to EEP-48.
+.PP
+This option switches off the placement of \fI-doc\fR attributes in the \fIDocs\fR chunk.
+
+
+.RE
+
+binary
+.RS 2
+The compiler returns the object code in a binary instead of creating an object file. If successful, the compiler returns 
+\fI{ok,ModuleName,Binary}\fR.
+
+.RE
+
+bin_opt_info
+.RS 2
+The compiler will emit informational warnings about binary matching optimizations (both successful and unsuccessful). For more information, see the section about bin_opt_info in the Efficiency Guide.
+
+
+.RE
+
+{compile_info, [{atom(), term()}]}
+.RS 2
+Allows compilers built on top of 
+\fIcompile\fR to attach extra compilation metadata to the \fIcompile_info\fR chunk in the generated BEAM file.
+.PP
+It is advised for compilers to remove all non-deterministic information if the \fIdeterministic\fR option is supported and it was supplied by the user.
+
+
+.RE
+
+compressed
+.RS 2
+The compiler will compress the generated object code, which can be useful for embedded systems.
+
+
+.RE
+
+debug_info
+.RS 2
+Includes debug information in the form of Erlang Abstract Format in the 
+\fIdebug_info\fR chunk of the compiled beam module. Tools such as Debugger, Xref, and Cover require the debug information to be included.
+.PP
+\fIWarning\fR: Source code can be reconstructed from the debug information. Use encrypted debug information (\fIencrypt_debug_info\fR) to prevent this.
+
+.PP
+For details, see beam_lib(3).
+
+
+.RE
+
+{debug_info, {Backend, Data}}
+.RS 2
+Includes custom debug information in the form of a 
+\fIBackend\fR module with custom \fIData\fR in the compiled beam module. The given module must implement a \fIdebug_info/4\fR function and is responsible for generating different code representations, as described in the \fIdebug_info\fR under beam_lib(3).
+.PP
+\fIWarning\fR: Source code can be reconstructed from the debug information. Use encrypted debug information (\fIencrypt_debug_info\fR) to prevent this.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{debug_info_key,KeyString}\fR\fR
+
+.RE
+
+{debug_info_key,{Mode,KeyString}}
+.RS 2
+Includes debug information, but encrypts it so that it cannot be accessed without supplying the key. (To give option 
+\fIdebug_info\fR as well is allowed, but not necessary.) Using this option is a good way to always have the debug information available during testing, yet protecting the source code.
+.PP
+\fIMode\fR is the type of crypto algorithm to be used for encrypting the debug information. The default (and currently the only) type is \fIdes3_cbc\fR.
+
+.PP
+For details, see beam_lib(3).
+
+
+.RE
+
+encrypt_debug_info
+.RS 2
+Similar to the 
+\fIdebug_info_key\fR option, but the key is read from an \fI.erlang.crypt\fR file.
+.PP
+For details, see beam_lib(3).
+
+
+.RE
+
+deterministic
+.RS 2
+Omit the 
+\fIoptions\fR and \fIsource\fR tuples in the list returned by \fIModule:module_info(compile)\fR, and reduce the paths in stack traces to the module name alone. This option will make it easier to achieve reproducible builds.
+
+.RE
+
+{feature, Feature, enable | disable}
+.RS 2
+Enable (disable) the feature 
+\fIFeature\fR during compilation. The special feature \fIall\fR can be used to enable (disable) all features.
+.PP
+\fBNOTE: \fRThis option has no effect when used in a \fI-compile(..)\fR attribute. Instead, the \fI-feature(..)\fR directive (described next) should be used.  A feature can also be enabled (disabled) using the \fI-feature(Feature, enable | disable).\fR module directive. Note that this directive can only be present in a prefix of the file, before exports and function definitions. This is the preferred method of enabling and disabling features, since it is a local property of a module.
+
+
+
+.RE
+
+makedep
+.RS 2
+Produces a Makefile rule to track headers dependencies. No object file is produced.
+
+.PP
+By default, this rule is written to \fI<File>.Pbeam\fR. However, if option \fIbinary\fR is set, nothing is written and the rule is returned in \fIBinary\fR.
+
+.PP
+The output will be encoded in UTF-8.
+
+.PP
+For example, if you have the following module:
+
+.IP
+.nf
+-module(module).
+
+-include_lib("eunit/include/eunit.hrl").
+-include("header.hrl").
+
+.fi
+
+.PP
+The Makefile rule generated by this option looks as follows:
+
+.IP
+.nf
+module.beam: module.erl \\
+  /usr/local/lib/erlang/lib/eunit/include/eunit.hrl \\
+  header.hrl
+
+.fi
+
+
+.RE
+
+makedep_side_effect
+.RS 2
+The dependencies are created as a side effect to the normal compilation process. This means that the object file will also be produced. This option override the 
+\fImakedep\fR option.
+
+.RE
+
+{makedep_output, Output}
+.RS 2
+Writes generated rules to 
+\fIOutput\fR instead of the default \fI<File>.Pbeam\fR. \fIOutput\fR can be a filename or an \fIio_device()\fR. To write to stdout, use \fIstandard_io\fR. However, if \fIbinary\fR is set, nothing is written to \fIOutput\fR and the result is returned to the caller with \fI{ok, ModuleName, Binary}\fR.
+
+.RE
+
+{makedep_target, Target}
+.RS 2
+Changes the name of the rule emitted to 
+\fITarget\fR.
+
+.RE
+
+makedep_quote_target
+.RS 2
+Characters in 
+\fITarget\fR special to make(1) are quoted.
+
+.RE
+
+makedep_add_missing
+.RS 2
+Considers missing headers as generated files and adds them to the dependencies.
+
+
+.RE
+
+makedep_phony
+.RS 2
+Adds a phony target for each dependency.
+
+
+.RE
+
+'P'
+.RS 2
+Produces a listing of the parsed code, after preprocessing and parse transforms, in the file 
+\fI<File>.P\fR. No object file is produced.
+
+.RE
+
+'E'
+.RS 2
+Produces a listing of the code, after all source code transformations have been performed, in the file 
+\fI<File>.E\fR. No object file is produced.
+
+.RE
+
+'S'
+.RS 2
+Produces a listing of the assembler code in the file 
+\fI<File>.S\fR. No object file is produced.
+
+.RE
+
+recv_opt_info
+.RS 2
+The compiler will emit informational warnings about selective 
+\fIreceive\fR optimizations (both successful and unsuccessful). For more information, see the section about selective receive optimization in the Efficiency Guide.
+
+.RE
+
+report_errors/report_warnings
+.RS 2
+Causes errors/warnings to be printed as they occur.
+
+
+.RE
+
+report
+.RS 2
+A short form for both 
+\fIreport_errors\fR and \fIreport_warnings\fR.
+
+.RE
+
+return_errors
+.RS 2
+If this flag is set, 
+\fI{error,ErrorList,WarningList}\fR is returned when there are errors.
+
+.RE
+
+return_warnings
+.RS 2
+If this flag is set, an extra field, containing 
+\fIWarningList\fR, is added to the tuples returned on success.
+
+.RE
+
+warnings_as_errors
+.RS 2
+Causes warnings to be treated as errors.
+
+
+.RE
+
+{error_location,line | column}
+.RS 2
+If the value of this flag is 
+\fIline\fR, the location \fIErrorLocation\fR of warnings and errors is a line number. If the value is \fIcolumn\fR, \fIErrorLocation\fR includes both a line number and a column number. Default is \fIcolumn\fR. This option is supported since Erlang/OTP 24.0.
+.PP
+If the value of this flag is \fIcolumn\fR, debug information includes column information.
+
+
+.RE
+
+return
+.RS 2
+A short form for both 
+\fIreturn_errors\fR and \fIreturn_warnings\fR.
+
+.RE
+
+verbose
+.RS 2
+Causes more verbose information from the compiler, describing what it is doing.
+
+
+.RE
+
+{source,FileName}
+.RS 2
+Overrides the source file name as presented in 
+\fImodule_info(compile)\fR and stack traces.
+
+.RE
+
+absolute_source
+.RS 2
+Turns the source file name (as presented in 
+\fImodule_info(compile)\fR and stack traces) into an absolute path, which helps external tools like \fIperf\fR and \fIgdb\fR find Erlang source code.
+
+.RE
+
+{outdir,Dir}
+.RS 2
+Sets a new directory for the object code. The current directory is used for output, except when a directory has been specified with this option.
+
+
+.RE
+
+export_all
+.RS 2
+Causes all functions in the module to be exported.
+
+
+.RE
+
+{i,Dir}
+.RS 2
+Adds 
+\fIDir\fR to the list of directories to be searched when including a file. When encountering an \fI-include\fR or \fI-include_lib\fR directive, the compiler searches for header files in the following directories:
+.nr li 0 1
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+\fI"."\fR, the current working directory of the file server
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+The base name of the compiled file
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+The directories specified using option \fIi\fR; the directory specified last is searched first
+
+.RE
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{d,Macro}\fR\fR
+
+.RE
+
+{d,Macro,Value}
+.RS 2
+Defines a macro 
+\fIMacro\fR to have the value \fIValue\fR. \fIMacro\fR is of type atom, and \fIValue\fR can be any term. The default \fIValue\fR is \fItrue\fR.
+
+.RE
+
+{parse_transform,Module}
+.RS 2
+Causes the parse transformation function 
+\fIModule:parse_transform/2\fR to be applied to the parsed code before the code is checked for errors.
+
+.RE
+
+to_abstr
+.RS 2
+Dumps the terms representing the abstract format, after preprocessing and parse transforms, in the file 
+\fI<File>.abstr\fR. No object file is produced.
+
+.RE
+
+to_exp
+.RS 2
+Dumps the terms representing the abstract format, after all source code transformations have been performed, to the file 
+\fI<File>.exp\fR. No object file is produced.
+
+.RE
+
+from_abstr
+.RS 2
+The input file is expected to contain Erlang terms representing forms in the abstract format as generated by the 
+\fIto_abstr\fR option (default file suffix ".abstr"). Note that the format of such terms can change between releases.
+.PP
+See also the \fIno_lint\fR option.
+
+
+.RE
+
+from_asm
+.RS 2
+The input file is expected to be BEAM assembly code as generated by the 
+\fI'S'\fR option (default file suffix ".S"). Note that the format of assembler files is not documented, and can change between releases.
+
+.RE
+
+from_core
+.RS 2
+The input file is expected to be Core Erlang code (default file suffix ".core"). Note that the exact format of Core Erlang files is not documented, and can change between releases.
+
+
+.RE
+
+no_spawn_compiler_process
+.RS 2
+By default, all code is compiled in a separate process which is terminated at the end of compilation. However, some tools, like Dialyzer or compilers for other BEAM languages, may already manage their own worker processes and spawning an extra process may slow the compilation down. In such scenarios, you can pass this option to stop the compiler from spawning an additional process.
+
+
+.RE
+
+no_strict_record_tests
+.RS 2
+This option is not recommended.
+
+.PP
+By default, the generated code for operation \fIRecord#record_tag.field\fR verifies that the tuple \fIRecord\fR has the correct size for the record, and that the first element is the tag \fIrecord_tag\fR. Use this option to omit the verification code.
+
+
+.RE
+
+no_error_module_mismatch
+.RS 2
+Normally the compiler verifies that the module name given in the source code is the same as the base name of the output file and refuses to generate an output file if there is a mismatch. If there is a good reason for having a module name unrelated to the name of the output file, this option disables that verification (there will not even be a warning if there is a mismatch).
+
+
+.RE
+
+{no_auto_import,[{F,A}, ...]}
+.RS 2
+Makes the function 
+\fIF/A\fR no longer being auto-imported from the \fIerlang\fR module, which resolves BIF name clashes. This option must be used to resolve name clashes with auto-imported BIFs that existed before Erlang/OTP R14A  when calling a local function with the same name as an auto-imported BIF without module prefix.
+.PP
+If the BIF is to be called, use the \fIerlang\fR module prefix in the call, not \fI{no_auto_import,[{F,A}, ...]}\fR.
+
+.PP
+If this option is written in the source code, as a \fI-compile\fR directive, the syntax \fIF/A\fR can be used instead of \fI{F,A}\fR. For example:
+
+.IP
+.nf
+-compile({no_auto_import,[error/1]}).
+
+.fi
+
+
+.RE
+
+no_auto_import
+.RS 2
+Do not auto-import any functions from 
+\fIerlang\fR module.
+
+.RE
+
+no_line_info
+.RS 2
+Omits line number information to produce a slightly smaller output file.
+
+
+.RE
+
+no_lint
+.RS 2
+Skips the pass that checks for errors and warnings. Only applicable together with the 
+\fIfrom_abstr\fR option. This is mainly for implementations of other languages on top of Erlang, which have already done their own checks to guarantee correctness of the code.
+.PP
+Caveat: When this option is used, there are no guarantees that the code output by the compiler is correct and safe to use. The responsibility for correctness lies on the code or person generating the abstract format. If the code contains errors, the compiler may crash or produce unsafe code.
+
+
+.RE
+
+{extra_chunks, [{binary(), binary()}]}
+.RS 2
+Pass extra chunks to be stored in the 
+\fI.beam\fR file. The extra chunks must be a list of tuples with a four byte binary as chunk name followed by a binary with the chunk contents. See \fIbeam_lib\fR for more information.
+
+.RE
+
+{check_ssa, Tag :: atom()}
+.RS 2
+Parse and check assertions on the structure and content of the BEAM SSA code produced by the compiler. The 
+\fITag\fR indicates the set of assertions to check and after which compiler pass the check is performed. This option is internal to the compiler and can be changed or removed at any time without prior warning.
+
+.RE
+
+line_coverage
+.RS 2
+Instrument the compiled code for line coverage by inserting an 
+\fIexecutable_line\fR instruction for each executable line in the source code. By default, this instruction will be ignored when loading the code.
+.PP
+To activate the \fIexecutable_line\fR instructions, the runtime system must be started with the option +JPcover to enable a coverage mode. Alternatively, \fIcode:set_coverage_mode/1\fR can be used to set a coverage mode before loading the code.
+
+.PP
+The coverage information gathered by the instrumented code can be retrieved by calling code:get_coverage(line, Module).
+
+
+.RE
+
+force_line_counters
+.RS 2
+When combined with option 
+\fIline_coverage\fR, this module will be loaded in the \fIline_counter\fR coverage mode, regardless of the current coverage mode in the runtime system. This option is used by \fIcover\fR to load cover-compiled code.
+
+.RE
+
+.PP
+If warnings are turned on (option \fIreport_warnings\fR described earlier), the following options control what type of warnings that are generated.  Except from \fI{warn_format,Verbosity}\fR, the following options have two forms:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwarn_xxx\fR form, to turn on the warning.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInowarn_xxx\fR form, to turn off the warning.
+
+.RE
+
+.PP
+In the descriptions that follow, the form that is used to change the default value are listed.
+
+{warn_format, Verbosity}
+.RS 2
+Causes warnings to be emitted for malformed format strings as arguments to 
+\fIio:format\fR and similar functions.
+.PP
+\fIVerbosity\fR selects the number of warnings:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI0\fR = No warnings
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI1\fR = Warnings for invalid format strings and incorrect number of arguments
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI2\fR = Warnings also when the validity cannot be checked, for example, when the format string argument is a variable.
+
+.RE
+
+.PP
+The default verbosity is \fI1\fR. Verbosity \fI0\fR can also be selected by option \fInowarn_format\fR.
+
+
+.RE
+
+nowarn_bif_clash
+.RS 2
+This option is removed; it generates a fatal error if used.
+
+.PP
+To resolve BIF clashes, use explicit module names or the \fI{no_auto_import,[F/A]}\fR compiler directive.
+
+
+.RE
+
+{nowarn_bif_clash, FAs}
+.RS 2
+This option is removed; it generates a fatal error if used.
+
+.PP
+To resolve BIF clashes, use explicit module names or the \fI{no_auto_import,[F/A]}\fR compiler directive.
+
+
+.RE
+
+nowarn_export_all
+.RS 2
+Turns off warnings for uses of the 
+\fIexport_all\fR option. Default is to emit a warning if option \fIexport_all\fR is also given.
+
+.RE
+
+warn_export_vars
+.RS 2
+Emits warnings for all implicitly exported variables referred to after the primitives where they were first defined. By default, the compiler only emits warnings for exported variables referred to in a pattern.
+
+
+.RE
+
+nowarn_shadow_vars
+.RS 2
+Turns off warnings for "fresh" variables in functional objects or list comprehensions with the same name as some already defined variable. Default is to emit warnings for such variables.
+
+
+.RE
+
+warn_keywords
+.RS 2
+Emits warnings when the code contains atoms that are used as keywords in some feature. When the feature is enabled, any occurrences will lead to a syntax error. To prevent this, the atom has to be renamed or quoted.
+
+
+.RE
+
+nowarn_unused_function
+.RS 2
+Turns off warnings for unused local functions. Default is to emit warnings for all local functions that are not called directly or indirectly by an exported function. The compiler does not include unused local functions in the generated BEAM file, but the warning is still useful to keep the source code cleaner.
+
+
+.RE
+
+{nowarn_unused_function, FAs}
+.RS 2
+Turns off warnings for unused local functions like 
+\fInowarn_unused_function\fR does, but only for the mentioned local functions. \fIFAs\fR is a tuple \fI{Name,Arity}\fR or a list of such tuples.
+
+.RE
+
+nowarn_deprecated_function
+.RS 2
+Turns off warnings for calls to deprecated functions. Default is to emit warnings for every call to a function known by the compiler to be deprecated. Notice that the compiler does not know about attribute 
+\fI-deprecated()\fR, but uses an assembled list of deprecated functions in Erlang/OTP. To do a more general check, the Xref tool can be used. See also xref(3) and the function \fIxref:m/1\fR, also accessible through the function \fI\\c:xm/1\fR.
+
+.RE
+
+{nowarn_deprecated_function, MFAs}
+.RS 2
+Turns off warnings for calls to deprecated functions like 
+\fInowarn_deprecated_function\fR does, but only for the mentioned functions. \fIMFAs\fR is a tuple \fI{Module,Name,Arity}\fR or a list of such tuples.
+
+.RE
+
+nowarn_deprecated_type
+.RS 2
+Turns off warnings for use of deprecated types. Default is to emit warnings for every use of a type known by the compiler to be deprecated.
+
+
+.RE
+
+nowarn_deprecated_callback
+.RS 2
+Turns off warnings for use of deprecated callbacks. Default is to emit warnings for every use of a callback known by the compiler to be deprecated.
+
+
+.RE
+
+nowarn_deprecated_catch
+.RS 2
+Turns off warnings for use of old style catch expressions of the form 
+\fIcatch Expr\fR instead of the modern \fItry ... catch ... end\fR.
+
+.RE
+
+nowarn_removed
+.RS 2
+Turns off warnings for calls to functions that have been removed. Default is to emit warnings for every call to a function known by the compiler to have been recently removed from Erlang/OTP.
+
+
+.RE
+
+{nowarn_removed, ModulesOrMFAs}
+.RS 2
+Turns off warnings for calls to modules or functions that have been removed. Default is to emit warnings for every call to a function known by the compiler to have been recently removed from Erlang/OTP.
+
+
+.RE
+
+nowarn_obsolete_guard
+.RS 2
+Turns off warnings for calls to old type testing BIFs, such as 
+\fIpid/1\fR and \fIlist/1\fR. See the Erlang Reference Manual for a complete list of type testing BIFs and their old equivalents. Default is to emit warnings for calls to old type testing BIFs.
+
+.RE
+
+warn_unused_import
+.RS 2
+Emits warnings for unused imported functions. Default is to emit no warnings for unused imported functions.
+
+
+.RE
+
+nowarn_underscore_match
+.RS 2
+By default, warnings are emitted when a variable that begins with an underscore is matched after being bound. Use this option to turn off this kind of warning.
+
+
+.RE
+
+nowarn_unused_vars
+.RS 2
+By default, warnings are emitted for unused variables, except for variables beginning with an underscore ("Prolog style warnings"). Use this option to turn off this kind of warning.
+
+
+.RE
+
+nowarn_unused_record
+.RS 2
+Turns off warnings for unused record definitions. Default is to emit warnings for unused locally defined records.
+
+
+.RE
+
+{nowarn_unused_record, RecordNames}
+.RS 2
+Turns off warnings for unused record definitions. Default is to emit warnings for unused locally defined records.
+
+
+.RE
+
+nowarn_unused_type
+.RS 2
+Turns off warnings for unused type declarations. Default is to emit warnings for unused local type declarations.
+
+
+.RE
+
+nowarn_nif_inline
+.RS 2
+By default, warnings are emitted when inlining is enabled in a module that may load NIFs, as the compiler may inline NIF fallbacks by accident. Use this option to turn off this kind of warnings.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIwarn_missing_doc\fR | \fIwarn_missing_doc_functions\fR | \fIwarn_missing_doc_types\fR | \fIwarn_missing_doc_callbacks\fR \fR  By default, warnings are not emitted when \fI-doc\fR attribute for an exported function, callback or type is not given. Use these option to turn on this kind of warning. \fIwarn_missing_doc\fR is equivalent to setting all of \fIwarn_missing_doc_functions\fR, \fIwarn_missing_doc_types\fR and \fIwarn_missing_doc_callbacks\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fInowarn_missing_doc\fR | \fInowarn_missing_doc_functions\fR | \fInowarn_missing_doc_types\fR | \fInowarn_missing_doc_callbacks\fR \fR  If warnings are enabled by \fIwarn_missing_doc\fR, then you can use these options turn those warnings off again. \fInowarn_missing_doc\fR is equivalent to setting all of \fInowarn_missing_doc_functions\fR, \fInowarn_missing_doc_types\fR and \fInowarn_missing_doc_callbacks\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fInowarn_hidden_doc\fR | \fI{nowarn_hidden_doc,NAs}\fR\fR  By default, warnings are emitted when \fI-doc false\fR attribute is set on a callback or referenced type. You can set \fInowarn_hidden_doc\fR to suppress all those warnings, or \fI{nowarn_hidden_doc, NAs}\fR to suppress specific callbacks or types. \fINAs\fR is a tuple \fI{Name, Arity}\fR or a list of such tuples.
+
+.RE
+
+warn_missing_spec
+.RS 2
+By default, warnings are not emitted when a specification (or contract) for an exported function is not given. Use this option to turn on this kind of warning.
+
+
+.RE
+
+warn_missing_spec_documented
+.RS 2
+By default, warnings are not emitted when a specification (or contract) for a documented function is not given. Use this option to turn on this kind of warning.
+
+
+.RE
+
+warn_missing_spec_all
+.RS 2
+By default, warnings are not emitted when a specification (or contract) for an exported or unexported function is not given. Use this option to turn on this kind of warning.
+
+
+.RE
+
+nowarn_redefined_builtin_type
+.RS 2
+By default, a warning is emitted when a built-in type is locally redefined. Use this option to turn off this kind of warning.
+
+
+.RE
+
+{nowarn_redefined_builtin_type, Types}
+.RS 2
+By default, a warning is emitted when a built-in type is locally redefined. Use this option to turn off this kind of warning for the types in 
+\fITypes\fR, where \fITypes\fR is a tuple \fI{TypeName,Arity}\fR or a list of such tuples.
+
+.RE
+
+nowarn_behaviours
+.RS 2
+By default, warnings are emitted for issues with behaviours. Use this option to turn off all warnings of this kind.
+
+
+.RE
+
+nowarn_conflicting_behaviours
+.RS 2
+By default, warnings are emitted when a module opts in to multiple behaviours that share the names of one or more callback functions. Use this option to turn off this kind of warning.
+
+
+.RE
+
+nowarn_undefined_behaviour_func
+.RS 2
+By default, a warning is emitted when a module that uses a behaviour does not export a mandatory callback function required by that behaviour. Use this option to turn off this kind of warning.
+
+
+.RE
+
+nowarn_undefined_behaviour
+.RS 2
+By default, a warning is emitted when a module attempts to us an unknown behaviour. Use this option to turn off this kind of warning.
+
+
+.RE
+
+nowarn_undefined_behaviour_callbacks
+.RS 2
+By default, a warning is emitted when 
+\fIbehaviour_info(callbacks)\fR in the behaviour module returns \fIundefined\fR instead of a list of callback functions. Use this option to turn off this kind of warning.
+
+.RE
+
+nowarn_ill_defined_behaviour_callbacks
+.RS 2
+By default, a warning is emitted when 
+\fIbehaviour_info(callbacks)\fR in the behaviour module returns a badly formed list of functions. Use this option to turn off this kind of warning.
+
+.RE
+
+nowarn_ill_defined_optional_callbacks
+.RS 2
+By default, a warning is emitted when 
+\fIbehaviour_info(optional_callbacks)\fR in the behaviour module returns a badly formed list of functions. Use this option to turn off this kind of warning.
+
+.RE
+
+nowarn_novalue
+.RS 2
+Disable warnings for creating a native record without giving values for all fields. Note that this kind of warning is only emitted when the module name for the record is explicitly given as the current module; when no module name is given, not initializing all fields is a compilation error.
+
+
+.RE
+
+nowarn_undefined_field
+.RS 2
+Disable warnings for referencing field names not present in the local native record definition.  This warning is emitted when accessing, matching, or updating a native record. It can also be emitted when creating a record if the module name for the record is explicitly given as the current module.
+
+
+.RE
+
+.PP
+Other kinds of warnings are \fIopportunistic warnings\fR. They are generated when the compiler happens to notice potential issues during optimization and code generation.
+
+.PP
+\fBNOTE: \fRThe compiler does not warn for expressions that it does not attempt to optimize. For example, the compiler will emit a warning for \fI1/0\fR but not for \fIX/0\fR, because \fI1/0\fR is a constant expression that the compiler will attempt to evaluate. The absence of warnings does not mean that there are no remaining errors in the code.
+
+
+.PP
+Opportunistic warnings can be disabled using the following options:
+
+nowarn_opportunistic
+.RS 2
+Disable all opportunistic warnings.
+
+
+.RE
+
+nowarn_failed
+.RS 2
+Disable warnings for expressions that will always fail (such as 
+\fIatom+42\fR).
+
+.RE
+
+nowarn_ignored
+.RS 2
+Disable warnings for expressions whose values are ignored.
+
+
+.RE
+
+nowarn_nomatch
+.RS 2
+Disable warnings for patterns that will never match (such as 
+\fIa=b\fR) and for guards that always evaluate to \fIfalse\fR.
+
+.RE
+
+.PP
+\fBNOTE: \fRAll options, except the include path (\fI{i,Dir}\fR), can also be given in the file with attribute \fI-compile([Option,...])\fR. Attribute \fI-compile()\fR is allowed after the function definitions.
+
+
+.PP
+\fBNOTE: \fRBefore Erlang/OTP 22, the option \fI{nowarn_deprecated_function, MFAs}\fR was only recognized when given in the file with attribute \fI-compile()\fR. (The option \fI{nowarn_unused_function,FAs}\fR was incorrectly documented to only work in a file, but it also worked when given in the option list.) Starting from Erlang/OTP 22, all options that can be given in the file can also be given in the option list.
+
+
+.PP
+For debugging of the compiler, or for pure curiosity, the intermediate code generated by each compiler pass can be inspected. To print a complete list of the options to produce list files, type \fIcompile:options()\fR at the Erlang shell prompt. The options are printed in the order that the passes are executed. If more than one listing option is used, the one representing the earliest pass takes effect.
+
+.PP
+Unrecognized options are ignored.
+
+.PP
+Both \fIWarningList\fR and \fIErrorList\fR have the following format:
+
+.IP
+.nf
+[{FileName,[ErrorInfo]}].
+
+.fi
+
+.PP
+The filename is included here, as the compiler uses the Erlang pre-processor \fIepp\fR, which allows the code to be included in other files. It is therefore important to know to \fIwhich\fR file the location of an error or a warning refers.
+
+.PP
+The \fIErrorInfo\fR structure has the following format:
+
+.IP
+.nf
+{ErrorLocation, Module, ErrorDescriptor}
+
+.fi
+
+.PP
+\fIErrorLocation\fR is usually the tuple \fI{Line, Column}\fR. If option \fI{error_location,line}\fR has been given, \fIErrorLocation\fR is only the line number.  If the error does not correspond to a specific location (for example, if the source file does not exist), \fIErrorLocation\fR is the atom \fInone\fR.
+
+.PP
+A string describing the error is obtained with the following call:
+
+.IP
+.nf
+Module:format_error(ErrorDescriptor)
+
+.fi
+
+
+.RE
+.B
+\fBformat_error(ErrorDescription :: error_description()) -> string().\fR
+
+.br
+.RS
+.PP
+Uses an \fIErrorDescriptor\fR and returns a deep list of characters that describes the error.
+
+.PP
+This function is usually called implicitly when an \fIErrorInfo\fR structure is processed.
+
+
+.RE
+.B
+\fBforms(forms()) -> CompRet :: comp_ret().\fR
+
+.br
+.RS
+.PP
+Is the same as \fIforms(Forms, [verbose,report_errors,report_warnings])\fR.
+
+
+.RE
+.B
+\fBforms(Forms :: forms(), Options :: [option()] | option()) ->\fR
+\fB               CompRet :: comp_ret().\fR
+
+.br
+.RS
+.PP
+Analogous to \fIfile/1\fR, but takes a list of forms (in either Erlang abstract or Core Erlang format representation) as first argument.
+
+.PP
+Option \fIbinary\fR is implicit, that is, no object code file is produced. For options that normally produce a listing file, such as 'E', the internal format for that compiler pass (an Erlang term, usually not a binary) is returned instead of a binary.
+
+
+.RE
+.B
+\fBnoenv_file(File :: module() | file:filename(),\fR
+\fB                 Options :: [option()] | option()) ->\fR
+\fB                    comp_ret().\fR
+
+.br
+.RS
+.PP
+Works like \fIfile/2\fR, except that the environment variable \fIERL_COMPILER_OPTIONS\fR is not consulted.
+
+
+.RE
+.B
+\fBnoenv_forms(Forms :: forms(), Options :: [option()] | option()) ->\fR
+\fB                     comp_ret().\fR
+
+.br
+.RS
+.PP
+Works like \fIforms/2\fR, except that the environment variable \fIERL_COMPILER_OPTIONS\fR is not consulted.
+
+
+.RE
+.B
+\fBnoenv_output_generated(Options :: [option()]) -> boolean().\fR
+
+.br
+.RS
+.PP
+Works like \fIoutput_generated/1\fR, except that the environment variable \fIERL_COMPILER_OPTIONS\fR is not consulted.
+
+
+.RE
+.B
+\fBoutput_generated(Options :: [option()]) -> boolean().\fR
+
+.br
+.RS
+.PP
+Determines whether the compiler generates a BEAM file with the given options.
+
+.PP
+\fItrue\fR means that a BEAM file is generated. \fIfalse\fR means that the compiler generates some listing file, returns a binary, or merely checks the syntax of the source code.
+
+
+.RE

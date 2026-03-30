@@ -1,0 +1,316 @@
+.TH wxStaticText 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxStaticText \- A static text control displays one or more lines of read-only text.
+
+.SH DESCRIPTION
+.PP
+\fIwxStaticText\fR supports the three classic text alignments, label ellipsization i.e. replacing parts of the text with the ellipsis ("...") if the label doesn't fit into the provided space and also formatting markup with \fIwxControl::SetLabelMarkup()\fR (not implemented in wx).
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxALIGN_LEFT: Align the text to the left.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxALIGN_RIGHT: Align the text to the right.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxALIGN_CENTRE_HORIZONTAL: Center the text (horizontally).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxST_NO_AUTORESIZE: By default, the control will adjust its size to exactly fit to the size of the text when \fIsetLabel/2\fR is called. If this style flag is given, the control will not change its size (this style is especially useful with controls which also have the \fIwxALIGN_RIGHT\fR or the \fIwxALIGN_CENTRE_HORIZONTAL\fR style because otherwise they won't make sense any longer after a call to \fIsetLabel/2\fR).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxST_ELLIPSIZE_START: If the labeltext width exceeds the control width, replace the beginning of the label with an ellipsis; uses \fIwxControl::Ellipsize\fR (not implemented in wx).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxST_ELLIPSIZE_MIDDLE: If the label text width exceeds the control width, replace the middle of the label with an ellipsis; uses \fIwxControl::Ellipsize\fR (not implemented in wx).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxST_ELLIPSIZE_END: If the label text width exceeds the control width, replace the end of the label with an ellipsis; uses \fIwxControl::Ellipsize\fR (not implemented in wx).
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxStaticBitmap\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxStaticBox\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxStaticText
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxStaticText() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Label, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxStaticText(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Label :: unicode:chardata(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Creation function, for two-step construction.
+
+.PP
+For details see \fInew/4\fR.
+
+
+.RE
+.B
+\fBdestroy(This :: wxStaticText()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetLabel(This) -> unicode:charlist() when This :: wxStaticText().\fR
+
+.br
+.RS
+.PP
+Returns the control's label, as it was passed to \fIwxControl:setLabel/2\fR.
+
+.PP
+Note that the returned string may contains mnemonics ("&" characters) if they were passed to the \fIwxControl:setLabel/2\fR function; use \fIGetLabelText()\fR (not implemented in wx) if they are undesired.
+
+.PP
+Also note that the returned string is always the string which was passed to \fIwxControl:setLabel/2\fR but may be different from the string passed to \fISetLabelText()\fR (not implemented in wx) (since this last one escapes mnemonic characters).
+
+
+.RE
+.B
+\fBnew() -> wxStaticText().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Label, [Option]) -> wxStaticText()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Label :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a text control.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBsetLabel(This, Label) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxStaticText(),\fR
+\fB                      Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change the label shown in the control.
+
+.PP
+Notice that since wxWidgets 3.1.1 this function is guaranteed not to do anything if the label didn't really change, so there is no benefit to checking if the new label is different from the current one in the application code.
+
+.PP
+See: \fIwxControl:setLabel/2\fR
+
+
+.RE
+.B
+\fBwrap(This, Width) -> ok\fR
+\fB              when This :: wxStaticText(), Width :: integer().\fR
+
+.br
+.RS
+.PP
+This functions wraps the controls label so that each of its lines becomes at most \fIwidth\fR pixels wide if possible (the lines are broken at words boundaries so it might not be the case if words are too long).
+
+.PP
+If \fIwidth\fR is negative, no wrapping is done. Note that this width is not necessarily the total width of the control, since a few pixels for the border (depending on the controls border style) may be added.
+
+.PP
+Since: 2.6.2
+
+
+.RE

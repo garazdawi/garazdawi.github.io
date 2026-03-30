@@ -1,0 +1,148 @@
+.TH snmpa_notification_delivery_info_receiver 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpa_notification_delivery_info_receiver \- Behaviour module for the SNMP agent notification delivery information receiver.
+
+.SH DESCRIPTION
+.PP
+This module defines the behaviour of the notification delivery information receiver.
+
+.PP
+When the user sends a notification (see \fIsnmpa:send_notification2/3\fR), the user can (optionally) choose to receive delivery information (was the message received and acknowledged by the target(s)). This behaviour describes a way for the user to get such (delivery) information.
+
+.PP
+A \fIsnmpa_notification_delivery_info_receiver\fR compliant module must export the following functions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdelivery_targets/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdelivery_info/4\fR
+
+.RE
+
+.PP
+The semantics of them and their exact signatures are explained below.
+
+.PP
+Legacy notification delivery information receiver modules used a target argument of the form \fI{IpAddr, PortNumber}\fR instead of \fI{Domain, Addr}\fR, and if the SNMP Agent is run without changing the configuration to use transport domains the notification delivery information receiver will still get the old arguments and work as before.
+
+.SH DATA TYPES
+.LP
+.B
+\fBnotification_delivery_info() ::\fR
+\fB          #snmpa_notification_delivery_info{}.\fR
+
+.br
+.RS
+.PP
+How shall (notification) delivery info be reported.
+
+.PP
+This record defines the info related to inform delivery info. That is, when sending an inform, info about the delivery (such if it was acknowledged) will be delivered using the info in this record.
+
+.PP
+The delivery will be performed according to:
+
+.IP
+.nf
+	Mod:delivery_targets(Tag, Addresses, Extra)
+	Mod:delivery_info(Tag, Address, DeliveryResult, Extra)
+
+.fi
+
+.PP
+The Extra is any term, provided by the user.
+
+.PP
+The fields of this record has the following meaning:
+
+tag = term()
+.RS 2
+Value selected by the user to identify this sending
+
+
+.RE
+
+mod = module()
+.RS 2
+A module implementing the 
+\fIsnmpa_notification_delivery_info_receiver\fR behaviour.
+
+.RE
+
+extra = term()
+.RS 2
+This is any extra info the user wants to have supplied when the functions in the callback module is called. Provided when calling the send function.
+
+
+.RE
+
+
+.RE
+.B
+\fBtransportAddressWithPort() ::\fR
+\fB          snmpa_conf:transportAddressWithPort().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportDomain() :: snmpa_conf:transportDomain().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.SH CALLBACKS
+.LP
+.B
+\fBdelivery_info(Tag, Targets, DeliveryResult, Extra)\fR
+
+.br
+.RS
+.PP
+Inform about delivery result.
+
+.PP
+This function is called for each target in the \fITargets\fR argument of the \fIdelivery_targets/3\fR function, see above.
+
+.PP
+The purpose is to inform the \fIreceiver\fR of the result of the delivery (was the notification acknowledged or not) for each target.
+
+
+.RE
+.B
+\fBdelivery_targets(Tag, Targets, Extra)\fR
+
+.br
+.RS
+.PP
+Inform about target addresses.
+
+.PP
+This is the first function called when a notification delivery is in progress. It informs the \fIreceiver\fR which targets will get the notification. The result of the delivery will be provided via successive calls to \fIdelivery_info/4\fR function, see below.
+
+
+.RE

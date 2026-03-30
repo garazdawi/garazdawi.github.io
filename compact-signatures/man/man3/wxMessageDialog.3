@@ -1,0 +1,374 @@
+.TH wxMessageDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMessageDialog \- This class represents a dialog that shows a single or multi-line message, with a choice of OK, Yes, No and Cancel buttons.
+
+.SH DESCRIPTION
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxOK: Puts an Ok button in the message box. May be combined with \fIwxCANCEL\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCANCEL: Puts a Cancel button in the message box. Must be combined with either \fIwxOK\fR or \fIwxYES_NO\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxYES_NO: Puts Yes and No buttons in the message box. It is recommended to always use \fIwxCANCEL\fR with this style as otherwise the message box won't have a close button under wxMSW and the user will be forced to answer it.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxHELP: Puts a Help button to the message box. This button can have special appearance or be specially positioned if its label is not changed from the default one. Notice that using this button is not supported when showing a message box from non-main thread in wxOSX/Cocoa. Available since wxWidgets 2.9.3.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNO_DEFAULT: Makes the "No" button default, can only be used with \fIwxYES_NO\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCANCEL_DEFAULT: Makes the "Cancel" button default, can only be used with \fIwxCANCEL\fR. This style is currently not supported (and ignored) in wxOSX.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxYES_DEFAULT: Makes the "Yes" button default, this is the default behaviour and this flag exists solely for symmetry with \fIwxNO_DEFAULT\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxOK_DEFAULT: Makes the "OK" button default, this is the default behaviour and this flag exists solely for symmetry with \fIwxCANCEL_DEFAULT\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICON_NONE: Displays no icon in the dialog if possible (an icon might still be displayed if the current platform mandates its use). This style may be used to prevent the dialog from using the default icon based on \fIwxYES_NO\fR presence as explained in \fIwxICON_QUESTION\fR and \fIwxICON_INFORMATION\fR documentation below.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICON_ERROR: Displays an error icon in the dialog.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICON_WARNING: Displays a warning icon in the dialog. This style should be used for informative warnings or, in combination with \fIwxYES_NO\fR or \fIwxCANCEL\fR, for questions that have potentially serious consequences (caution icon is used on macOS in this case).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICON_QUESTION: Displays a question mark symbol. This icon is automatically used with \fIwxYES_NO\fR so it's usually unnecessary to specify it explicitly. This style is not supported for message dialogs under wxMSW when a task dialog is used to implement them (i.e. when running under Windows Vista or later) because Microsoft guidelines indicate that no icon should be used for routine confirmations. If it is specified, no icon will be displayed.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICON_INFORMATION: Displays an information symbol. This icon is used by default if \fIwxYES_NO\fR is not given so it is usually unnecessary to specify it explicitly.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICON_EXCLAMATION: Alias for \fIwxICON_WARNING\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICON_HAND: Alias for \fIwxICON_ERROR\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICON_AUTH_NEEDED: Displays an authentication needed symbol. This style is only supported for message dialogs under wxMSW when a task dialog is used to implement them (i.e. when running under Windows Vista or later). In other cases the default icon selection logic will be used. Note this can be combined with other styles to provide a fallback. For instance, using wxICON_AUTH_NEEDED | wxICON_QUESTION will show a shield symbol on Windows Vista or above and a question symbol on other platforms. Available since wxWidgets 2.9.5
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTAY_ON_TOP: Makes the message box stay on top of all other windows and not only just its parent (currently implemented only under MSW and GTK).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCENTRE: Centre the message box on its parent or on the screen if parent is not specified. Setting this style under MSW makes no differences as the dialog is always centered on the parent.
+
+.RE
+
+.PP
+See: Overview cmndlg
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMessageDialog
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMessageDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxMessageDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew(Parent, Message, [Option]) -> wxMessageDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Message :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {caption, unicode:chardata()} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Constructor specifying the message box properties.
+
+.PP
+Use \fIwxDialog:showModal/1\fR to show the dialog.
+
+.PP
+\fIstyle\fR may be a bit list of the identifiers described above.
+
+.PP
+Notice that not all styles are compatible: only one of \fIwxOK\fR and \fIwxYES_NO\fR may be specified (and one of them must be specified) and at most one default button style can be used and it is only valid if the corresponding button is shown in the message box.
+
+
+.RE

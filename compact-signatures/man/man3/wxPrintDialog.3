@@ -1,0 +1,160 @@
+.TH wxPrintDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPrintDialog \- This class represents the print and print setup common dialogs.
+
+.SH DESCRIPTION
+.PP
+You may obtain a \fIwxPrinterDC\fR (not implemented in wx) device context from a successfully dismissed print dialog.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview printing
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPrintDialog
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPrintDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxPrintDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetPrintDC(This) -> wxDC:wxDC() when This :: wxPrintDialog().\fR
+
+.br
+.RS
+.PP
+Returns the device context created by the print dialog, if any.
+
+.PP
+When this function has been called, the ownership of the device context is transferred to the application, so it must then be deleted explicitly.
+
+
+.RE
+.B
+\fBgetPrintDialogData(This) -> wxPrintDialogData:wxPrintDialogData()\fR
+\fB                            when This :: wxPrintDialog().\fR
+
+.br
+.RS
+.PP
+Returns the print dialog data associated with the print dialog.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxPrintDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option :: {data, wxPrintDialogData:wxPrintDialogData()};\fR
+\fB         (Parent, Data) -> wxPrintDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Data :: wxPrintData:wxPrintData().\fR
+
+.br
+.RS
+
+.RE

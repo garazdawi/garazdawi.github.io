@@ -1,0 +1,1101 @@
+.TH wxFrame 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxFrame \- A frame is a window whose size and position can (usually) be changed by the user.
+
+.SH DESCRIPTION
+.PP
+It usually has thick borders and a title bar, and can optionally contain a menu bar, toolbar and status bar. A frame can contain any window that is not a frame or dialog.
+
+.PP
+A frame that has a status bar and toolbar, created via the \fIcreateStatusBar/2\fR and \fIcreateToolBar/2\fR functions, manages these windows and adjusts the value returned by \fIwxWindow:getClientSize/1\fR to reflect the remaining size available to application windows.
+
+.PP
+Remark: An application should normally define an \fIwxCloseEvent\fR handler for the frame to respond to system close events, for example so that related data and subwindows can be cleaned up.
+
+.PP
+Default event processing
+
+.PP
+\fIwxFrame\fR processes the following events:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_SIZE:\fR if the frame has exactly one child window, not counting the status and toolbar, this child is resized to take the entire frame client area. If two or more windows are present, they should be laid out explicitly either by manually handling \fIwxEVT_SIZE\fR or using sizers;
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_MENU_HIGHLIGHT:\fR the default implementation displays the help string associated with the selected item in the first pane of the status bar, if there is one.
+
+.RE
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDEFAULT_FRAME_STYLE: Defined as wxMINIMIZE_BOX | wxMAXIMIZE_BOX | wxRESIZE_BORDER | wxSYSTEM_MENU | wxCAPTION | wxCLOSE_BOX | wxCLIP_CHILDREN.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxICONIZE: Display the frame iconized (minimized). Windows only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCAPTION: Puts a caption on the frame. Notice that this flag is required by wxMINIMIZE_BOX, wxMAXIMIZE_BOX and wxCLOSE_BOX on most systems as the corresponding buttons cannot be shown if the window has no title bar at all. I.e. if wxCAPTION is not specified those styles would be simply ignored.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMINIMIZE: Identical to wxICONIZE. Windows only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMINIMIZE_BOX: Displays a minimize box on the frame.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMAXIMIZE: Displays the frame maximized. Windows and GTK+ only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMAXIMIZE_BOX: Displays a maximize box on the frame. Notice that under wxGTK wxRESIZE_BORDER must be used as well or this style is ignored.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCLOSE_BOX: Displays a close box on the frame.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTAY_ON_TOP: Stay on top of all other windows, see also wxFRAME_FLOAT_ON_PARENT.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSYSTEM_MENU: Displays a system menu containing the list of various windows commands in the window title bar. Unlike wxMINIMIZE_BOX, wxMAXIMIZE_BOX and wxCLOSE_BOX styles this style can be used without wxCAPTION, at least under Windows, and makes the system menu available without showing it on screen in this case. However it is recommended to only use it together with wxCAPTION for consistent behaviour under all platforms.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxRESIZE_BORDER: Displays a resizable border around the window.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFRAME_TOOL_WINDOW: Causes a frame with a small title bar to be created; the frame does not appear in the taskbar under Windows or GTK+.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFRAME_NO_TASKBAR: Creates an otherwise normal frame but it does not appear in the taskbar under Windows or GTK+ (note that it will minimize to the desktop window under Windows which may seem strange to the users and thus it might be better to use this style only without wxMINIMIZE_BOX style). In wxGTK, the flag is respected only if the window manager supports _NET_WM_STATE_SKIP_TASKBAR hint.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFRAME_FLOAT_ON_PARENT: The frame will always be on top of its parent (unlike wxSTAY_ON_TOP). A frame created with this style must have a non-NULL parent.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFRAME_SHAPED: Windows with this style are allowed to have their shape changed with the \fIwxTopLevelWindow:setShape/2\fR method. The default frame style is for normal, resizable frames. To create a frame which cannot be resized by user, you may use the following combination of styles:
+
+.RE
+
+.PP
+See also the overview_windowstyles.
+
+.SS "Extra Styles"
+
+.PP
+This class supports the following extra styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFRAME_EX_CONTEXTHELP: Under Windows, puts a query button on the caption. When pressed, Windows will go into a context-sensitive help mode and wxWidgets will send a \fIwxEVT_HELP\fR event if the user clicked on an application window. Note that this is an extended style and must be set by calling SetExtraStyle before Create is called (two-step construction). You cannot use this style together with wxMAXIMIZE_BOX or wxMINIMIZE_BOX, so you should use wxDEFAULT_FRAME_STYLE ~ (wxMINIMIZE_BOX | wxMAXIMIZE_BOX) for the frames having this style (the dialogs don't have a minimize or a maximize box by default)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFRAME_EX_METAL: On macOS, frames with this style will be shown with a metallic look. This is an extra style.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMDIParentFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMDIChildFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMiniFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxFrame
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIclose_window\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIiconize\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImenu_open\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImenu_close\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImenu_highlight\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxFrame() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Title, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxFrame(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Title :: unicode:chardata(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Used in two-step frame construction.
+
+.PP
+See \fInew/4\fR for further details.
+
+
+.RE
+.B
+\fBcreateStatusBar(This, [Option]) -> wxStatusBar:wxStatusBar()\fR
+\fB                         when\fR
+\fB                             This :: wxFrame(),\fR
+\fB                             Option ::\fR
+\fB                                 {number, integer()} |\fR
+\fB                                 {style, integer()} |\fR
+\fB                                 {id, integer()}.\fR
+
+.br
+.RS
+.PP
+Creates a status bar at the bottom of the frame.
+
+.PP
+Return: A pointer to the status bar if it was created successfully, NULL otherwise.
+
+.PP
+Remark: The width of the status bar is the whole width of the frame (adjusted automatically when resizing), and the height and text size are chosen by the host windowing system.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetStatusText/3\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetStatusBar/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBcreateToolBar(This, [Option]) -> wxToolBar:wxToolBar()\fR
+\fB                       when\fR
+\fB                           This :: wxFrame(),\fR
+\fB                           Option ::\fR
+\fB                               {style, integer()} | {id, integer()}.\fR
+
+.br
+.RS
+.PP
+Creates a toolbar at the top or left of the frame.
+
+.PP
+Return: A pointer to the toolbar if it was created successfully, NULL otherwise.
+
+.PP
+Remark: By default, the toolbar is an instance of \fIwxToolBar\fR. To use a different class, override \fIOnCreateToolBar()\fR (not implemented in wx). When a toolbar has been created with this function, or made known to the frame with \fIsetToolBar/2\fR, the frame will manage the toolbar position and adjust the return value from \fIwxWindow:getClientSize/1\fR to reflect the available space for application windows. Under Pocket PC, you should always use this function for creating the toolbar to be managed by the frame, so that wxWidgets can use a combined menubar and toolbar. Where you manage your own toolbars, create a \fIwxToolBar\fR as usual.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcreateStatusBar/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetToolBar/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetToolBar/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBdestroy(This :: wxFrame()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetClientAreaOrigin(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                             when This :: wxFrame().\fR
+
+.br
+.RS
+.PP
+Returns the origin of the frame client area (in client coordinates).
+
+.PP
+It may be different from (0, 0) if the frame has a toolbar.
+
+
+.RE
+.B
+\fBgetMenuBar(This) -> wxMenuBar:wxMenuBar() when This :: wxFrame().\fR
+
+.br
+.RS
+.PP
+Returns a pointer to the menubar currently associated with the frame (if any).
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetMenuBar/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMenuBar\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMenu\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetStatusBar(This) -> wxStatusBar:wxStatusBar()\fR
+\fB                      when This :: wxFrame().\fR
+
+.br
+.RS
+.PP
+Returns a pointer to the status bar currently associated with the frame (if any).
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcreateStatusBar/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxStatusBar\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetStatusBarPane(This) -> integer() when This :: wxFrame().\fR
+
+.br
+.RS
+.PP
+Returns the status bar pane used to display menu and toolbar help.
+
+.PP
+See: \fIsetStatusBarPane/2\fR
+
+
+.RE
+.B
+\fBgetToolBar(This) -> wxToolBar:wxToolBar() when This :: wxFrame().\fR
+
+.br
+.RS
+.PP
+Returns a pointer to the toolbar currently associated with the frame (if any).
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcreateToolBar/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxToolBar\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetToolBar/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBnew() -> wxFrame().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Title, [Option]) -> wxFrame()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Title :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating the window.
+
+.PP
+Remark: For Motif, MWM (the Motif Window Manager) should be running for any window styles to work (otherwise all styles take effect).
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBprocessCommand(This, Id) -> boolean()\fR
+\fB                        when This :: wxFrame(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Simulate a menu command.
+
+
+.RE
+.B
+\fBsendSizeEvent(This, [Option]) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxFrame(),\fR
+\fB                           Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+This function sends a dummy \fIwxSizeEvent\fR to the window allowing it to re-layout its children positions.
+
+.PP
+It is sometimes useful to call this function after adding or deleting a children after the frame creation or if a child size changes. Note that if the frame is using either sizers or constraints for the children layout, it is enough to call \fIwxWindow:layout/1\fR directly and this function should not be used in this case.
+
+.PP
+If \fIflags\fR includes \fIwxSEND_EVENT_POST\fR value, this function posts the event, i.e. schedules it for later processing, instead of dispatching it directly. You can also use \fIPostSizeEvent()\fR (not implemented in wx) as a more readable equivalent of calling this function with this flag.
+
+
+.RE
+.B
+\fBsetMenuBar(This, MenuBar) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxFrame(),\fR
+\fB                        MenuBar :: wxMenuBar:wxMenuBar().\fR
+
+.br
+.RS
+.PP
+Tells the frame to show the given menu bar.
+
+.PP
+Remark: If the frame is destroyed, the menu bar and its menus will be destroyed also, so do not delete the menu bar explicitly (except by resetting the frame's menu bar to another frame or NULL). Under Windows, a size event is generated, so be sure to initialize data members properly before calling \fIsetMenuBar/2\fR. Note that on some platforms, it is not possible to call this function twice for the same frame object.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMenuBar/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMenuBar\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMenu\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetStatusBar(This, StatusBar) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxFrame(),\fR
+\fB                          StatusBar :: wxStatusBar:wxStatusBar().\fR
+
+.br
+.RS
+.PP
+Associates a status bar with the frame.
+
+.PP
+If \fIstatusBar\fR is NULL, then the status bar, if present, is detached from the frame, but \fInot\fR deleted.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcreateStatusBar/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxStatusBar\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetStatusBar/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetStatusBarPane(This, N) -> ok\fR
+\fB                          when This :: wxFrame(), N :: integer().\fR
+
+.br
+.RS
+.PP
+Set the status bar pane used to display menu and toolbar help.
+
+.PP
+Using -1 disables help display.
+
+
+.RE
+.B
+\fBsetStatusText(This, Text, [Option]) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxFrame(),\fR
+\fB                           Text :: unicode:chardata(),\fR
+\fB                           Option :: {number, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the status bar text and updates the status bar display.
+
+.PP
+This is a simple wrapper for \fIwxStatusBar:setStatusText/3\fR which doesn't do anything if the frame has no status bar, i.e. \fIgetStatusBar/1\fR returns NULL.
+
+.PP
+Remark: Use an empty string to clear the status bar.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcreateStatusBar/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxStatusBar\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetStatusWidths(This, Widths_field) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxFrame(),\fR
+\fB                             Widths_field :: [integer()].\fR
+
+.br
+.RS
+.PP
+Sets the widths of the fields in the status bar.
+
+.PP
+Remark: The widths of the variable fields are calculated from the total width of all fields, minus the sum of widths of the non-variable fields, divided by the number of variable fields.
+
+
+.RE
+.B
+\fBsetToolBar(This, ToolBar) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxFrame(),\fR
+\fB                        ToolBar :: wxToolBar:wxToolBar().\fR
+
+.br
+.RS
+.PP
+Associates a toolbar with the frame.
+
+
+.RE

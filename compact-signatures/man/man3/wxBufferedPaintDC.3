@@ -1,0 +1,153 @@
+.TH wxBufferedPaintDC 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxBufferedPaintDC \- This is a subclass of \fIwxBufferedDC\fR which can be used inside of an \fIEVT\\_PAINT()\fR event handler to achieve double-buffered drawing.
+
+.SH DESCRIPTION
+.PP
+Just use this class instead of \fIwxPaintDC\fR and make sure \fIwxWindow:setBackgroundStyle/2\fR is called with wxBG_STYLE_PAINT somewhere in the class initialization code, and that's all you have to do to (mostly) avoid flicker. The only thing to watch out for is that if you are using this class together with \fIwxScrolled\fR (not implemented in wx), you probably do \fInot\fR want to call \fIwxScrolledWindow:prepareDC/2\fR on it as it already does this internally for the real underlying \fIwxPaintDC\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBufferedDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPaintDC\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBufferedDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMemoryDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxBufferedPaintDC
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxBufferedPaintDC() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxBufferedPaintDC()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew(Window, Buffer) -> wxBufferedPaintDC()\fR
+\fB             when\fR
+\fB                 Window :: wxWindow:wxWindow(),\fR
+\fB                 Buffer :: wxBitmap:wxBitmap();\fR
+\fB         (Window, [Option]) -> wxBufferedPaintDC()\fR
+\fB             when\fR
+\fB                 Window :: wxWindow:wxWindow(),\fR
+\fB                 Option :: {style, integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(Window, Buffer, [Option]) -> wxBufferedPaintDC()\fR
+\fB             when\fR
+\fB                 Window :: wxWindow:wxWindow(),\fR
+\fB                 Buffer :: wxBitmap:wxBitmap(),\fR
+\fB                 Option :: {style, integer()}.\fR
+
+.br
+.RS
+.PP
+As with \fIwxBufferedDC\fR, you may either provide the bitmap to be used for buffering or let this object create one internally (in the latter case, the size of the client part of the window is used).
+
+.PP
+Pass wxBUFFER_CLIENT_AREA for the \fIstyle\fR parameter to indicate that just the client area of the window is buffered, or wxBUFFER_VIRTUAL_AREA to indicate that the buffer bitmap covers the virtual area.
+
+
+.RE

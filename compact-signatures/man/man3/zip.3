@@ -1,0 +1,771 @@
+.TH zip 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+zip \- Utility for reading and creating 'zip' archives.
+
+.SH DESCRIPTION
+.PP
+This module archives and extracts files to and from a zip archive. The zip format is specified by the "ZIP Appnote.txt" file, available on the PKWARE web site www.pkware.com.
+
+.PP
+The zip module supports zip archive versions up to 6.1. However, password-protection is not supported.
+
+.PP
+By convention, the name of a zip file is to end with \fI.zip\fR. To abide to the convention, add \fI.zip\fR to the filename.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+To create zip archives, use function \fIzip/2\fR or \fIzip/3\fR. They are also available as \fIcreate/2,3\fR, to resemble the \fIerl_tar\fR module.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+To extract files from a zip archive, use function \fIunzip/1\fR or \fIunzip/2\fR. They are also available as \fIextract/1,2\fR, to resemble the \fIerl_tar\fR module.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+To fold a function over all files in a zip archive, use function \fIfoldl/3\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+To return a list of the files in a zip archive, use function \fIlist_dir/1\fR or \fIlist_dir/2\fR. They are also available as \fItable/1,2\fR, to resemble the \fIerl_tar\fR module.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+To print a list of files to the Erlang shell, use function \fIt/1\fR or \fItt/1\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Sometimes it is desirable to open a zip archive, and to unzip files from it file by file, without having to reopen the archive. This can be done by functions \fIzip_open/1,2\fR, \fIzip_get/1,2\fR, \fIzip_list_dir/1\fR, and \fIzip_close/1\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The ZIP extensions 0x5355 "extended timestamps" and 0x7875 "UID+GID handling" are supported. Both extensions are by default enabled when creating an archive, but only "extended timestamps" are enabled when extracting. Use the \fIextra/0\fR option to change how these extensions are used.
+
+.RE
+
+.SS "Limitations"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Password-protected and encrypted archives are not supported.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Only the DEFLATE (zlib-compression) and the STORE (uncompressed data) zip methods are supported.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Comments for individual files are not supported when creating zip archives. The zip archive comment for the whole zip archive is supported.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Changing a zip archive is not supported. To add or remove a file from an archive, the whole archive must be recreated.
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBcreate_option() ::\fR
+\fB          memory | cooked | verbose |\fR
+\fB          {comment, Comment :: string()} |\fR
+\fB          {cwd, CWD :: file:filename()} |\fR
+\fB          {compress, What :: extension_spec()} |\fR
+\fB          {uncompress, What :: extension_spec()} |\fR
+\fB          {extra, extra()}.\fR
+
+.br
+.RS
+.PP
+These options are described in \fIcreate/3\fR.
+
+
+.RE
+.B
+\fBextension() :: string().\fR
+
+.br
+.RS
+.PP
+A filename extension, for example ".txt".
+
+
+.RE
+.B
+\fBextension_spec() ::\fR
+\fB          all |\fR
+\fB          [Extension :: extension()] |\fR
+\fB          {add, [Extension :: extension()]} |\fR
+\fB          {del, [Extension :: extension()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBextra() :: [extended_timestamp | uid_gid].\fR
+
+.br
+.RS
+.PP
+The possible extra extension that can be used.
+
+extended_timestamp
+.RS 2
+enables the 0x5455 "extended timestamps" zip extension that embeds POSIX timestamps for access and modification times for each file in the archive. This makes the timestamps to be in UTC instead of local time and also increases the time resolution from 2 seconds to 1 second.
+
+
+.RE
+uid_gid
+.RS 2
+enables 0x7875 "UNIX 3rd generation" zip extension that embeds the UID and GID for each file into the archive.
+
+
+.RE
+
+
+.RE
+.B
+\fBfilename() :: file:filename().\fR
+
+.br
+.RS
+.PP
+The name of a zip file.
+
+
+.RE
+.B
+\fB-opaque handle() \fR
+
+.br
+.RS
+.PP
+As returned by \fIzip_open/2\fR.
+
+
+.RE
+.B
+\fBzip_comment() :: #zip_comment{}.\fR
+
+.br
+.RS
+.PP
+The record \fIzip_comment\fR only contains the archive comment for a zip archive.
+
+
+.RE
+.B
+\fBzip_file() :: #zip_file{}.\fR
+
+.br
+.RS
+.PP
+The record \fIzip_file\fR contains the following fields:
+
+name
+.RS 2
+The filename
+
+
+.RE
+
+info
+.RS 2
+File information as in 
+\fIfile:read_file_info/1\fR in Kernel. \fImtime\fR, \fIatime\fR and \fIctime\fR are expected to be in \fIlocal time\fR if represented using \fIcalendar:datetime/0\fR, or in OS system time if represented by an integer.
+
+.RE
+
+comment
+.RS 2
+The comment for the file in the zip archive
+
+
+.RE
+
+offset
+.RS 2
+The file offset in the zip archive (used internally)
+
+
+.RE
+
+comp_size
+.RS 2
+The size of the compressed file (the size of the uncompressed file is found in 
+\fIinfo\fR)
+
+.RE
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBfoldl(Fun, Acc0, Archive) -> {ok, Acc1} | {error, Reason}\fR
+\fB               when\fR
+\fB                   Fun ::\fR
+\fB                       fun((FileInArchive, GetInfo, GetBin, AccIn) ->\fR
+\fB                               AccOut),\fR
+\fB                   FileInArchive :: file:name(),\fR
+\fB                   GetInfo :: fun(() -> file:file_info()),\fR
+\fB                   GetBin :: fun(() -> binary()),\fR
+\fB                   Acc0 :: term(),\fR
+\fB                   Acc1 :: term(),\fR
+\fB                   AccIn :: term(),\fR
+\fB                   AccOut :: term(),\fR
+\fB                   Archive :: file:name() | {file:name(), binary()},\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+Calls \fIFun(FileInArchive, GetInfo, GetBin, AccIn)\fR on successive files in the \fIArchive\fR, starting with \fIAccIn == Acc0\fR.
+
+.PP
+\fIFileInArchive\fR is the name that the file has in the archive.
+
+.PP
+\fIGetInfo\fR is a fun that returns information about the file.
+
+.PP
+\fIGetBin\fR returns the file contents.
+
+.PP
+Both \fIGetInfo\fR and \fIGetBin\fR must be called within the \fIFun\fR. Their behavior is undefined if they are called outside the context of \fIFun\fR.
+
+.PP
+The \fIFun\fR must return a new accumulator, which is passed to the next call. \fIfoldl/3\fR returns the final accumulator value. \fIAcc0\fR is returned if the archive is empty. It is not necessary to iterate over all files in the archive. The iteration can be ended prematurely in a controlled manner by throwing an exception.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+> Name = "dummy.zip".
+"dummy.zip"
+> {ok, {Name, Bin}} = zip:create(Name, [{"foo", <<"FOO">>}, {"bar", <<"BAR">>}], [memory]).
+{ok,{"dummy.zip",
+     <<80,75,3,4,20,0,0,0,0,0,74,152,97,60,171,39,212,26,3,0,
+       0,0,3,0,0,...>>}}
+> {ok, FileSpec} = zip:foldl(fun(N, I, B, Acc) -> [{N, B(), I()} | Acc] end, [], {Name, Bin}).
+{ok,[{"bar",<<"BAR">>,
+      {file_info,3,regular,read_write,
+                 {{2010,3,1},{19,2,10}},
+                 {{2010,3,1},{19,2,10}},
+                 {{2010,3,1},{19,2,10}},
+                 54,1,0,0,0,0,0}},
+     {"foo",<<"FOO">>,
+      {file_info,3,regular,read_write,
+                 {{2010,3,1},{19,2,10}},
+                 {{2010,3,1},{19,2,10}},
+                 {{2010,3,1},{19,2,10}},
+                 54,1,0,0,0,0,0}}]}
+> {ok, {Name, Bin}} = zip:create(Name, lists:reverse(FileSpec), [memory]).
+{ok,{"dummy.zip",
+     <<80,75,3,4,20,0,0,0,0,0,74,152,97,60,171,39,212,26,3,0,
+       0,0,3,0,0,...>>}}
+> catch zip:foldl(fun("foo", _, B, _) -> throw(B()); (_,_,_,Acc) -> Acc end, [], {Name, Bin}).
+<<"FOO">>
+
+.fi
+
+
+.RE
+.B
+\fBlist_dir(Archive, Options) -> RetValue\fR
+\fB                  when\fR
+\fB                      Archive :: file:name() | binary(),\fR
+\fB                      RetValue ::\fR
+\fB                          {ok, CommentAndFiles} |\fR
+\fB                          {error, Reason :: term()},\fR
+\fB                      CommentAndFiles :: [zip_comment() | zip_file()],\fR
+\fB                      Options :: [Option],\fR
+\fB                      Option ::\fR
+\fB                          cooked | skip_directories | {extra, extra()}.\fR
+
+.br
+.RS
+.PP
+Retrieves all filenames in the zip archive \fIArchive\fR.
+
+.PP
+The result value is the tuple \fI{ok, List}\fR, where \fIList\fR contains the zip archive comment as the first element.
+
+.PP
+One option is available:
+
+cooked
+.RS 2
+By default, this function opens the zip file in 
+\fIraw\fR mode, which is faster but does not allow a remote (Erlang) file server to be used. Adding \fIcooked\fR to the mode list overrides the default and opens the zip file without option \fIraw\fR.
+
+.RE
+
+skip_directories
+.RS 2
+By default empty directories within zip archives are listed. With option 
+\fIskip_directories\fR set, empty directories are no longer listed.
+
+.RE
+
+{extra, Extras}
+.RS 2
+The zip "extra" features to respect. The supported "extra" features are "extended timestamps" and "UID and GID" handling. By default only "extended timestamps" is enabled when listing files. See 
+\fIextra/0\fR for more details.
+
+.RE
+
+
+.RE
+.B
+\fBt(Archive) -> ok\fR
+\fB           when\fR
+\fB               Archive :: file:name() | binary() | ZipHandle,\fR
+\fB               ZipHandle :: handle().\fR
+
+.br
+.RS
+.PP
+Prints all filenames in the zip archive \fIArchive\fR to the Erlang shell. (Similar to \fItar t\fR.)
+
+
+.RE
+.B
+\fBtt(Archive) -> ok\fR
+\fB            when\fR
+\fB                Archive :: file:name() | binary() | ZipHandle,\fR
+\fB                ZipHandle :: handle().\fR
+
+.br
+.RS
+.PP
+Prints filenames and information about all files in the zip archive \fIArchive\fR to the Erlang shell. (Similar to \fItar tv\fR.)
+
+
+.RE
+.B
+\fBunzip(Archive, Options) -> RetValue\fR
+\fB               when\fR
+\fB                   Archive :: file:name() | binary(),\fR
+\fB                   Options :: [Option],\fR
+\fB                   Option ::\fR
+\fB                       {file_list, FileList} |\fR
+\fB                       cooked | keep_old_files | verbose | memory |\fR
+\fB                       skip_directories |\fR
+\fB                       {file_filter, FileFilter} |\fR
+\fB                       {cwd, CWD} |\fR
+\fB                       {extra, extra()},\fR
+\fB                   FileList :: [file:name()],\fR
+\fB                   FileBinList :: [{file:name(), binary()}],\fR
+\fB                   FileFilter :: fun((ZipFile) -> boolean()),\fR
+\fB                   CWD :: file:filename(),\fR
+\fB                   ZipFile :: zip_file(),\fR
+\fB                   RetValue ::\fR
+\fB                       {ok, FileList} |\fR
+\fB                       {ok, FileBinList} |\fR
+\fB                       {error, Reason :: term()} |\fR
+\fB                       {error, {Name :: file:name(), Reason :: term()}}.\fR
+
+.br
+.RS
+.PP
+Extracts all files from a zip archive.
+
+.PP
+If argument \fIArchive\fR is specified as a \fIbinary/0\fR, the contents of the binary is assumed to be a zip archive, otherwise a filename.
+
+.PP
+Options:
+
+{file_list, FileList}
+.RS 2
+By default, all files are extracted from the zip archive. With option 
+\fI{file_list, FileList}\fR, function \fIunzip/2\fR only extracts the files whose names are included in \fIFileList\fR. The full paths, including the names of all subdirectories within the zip archive, must be specified.
+
+.RE
+
+cooked
+.RS 2
+By default, this function opens the zip file in 
+\fIraw\fR mode, which is faster but does not allow a remote (Erlang) file server to be used. Adding \fIcooked\fR to the mode list overrides the default and opens the zip file without option \fIraw\fR. The same applies for the files extracted.
+
+.RE
+
+keep_old_files
+.RS 2
+By default, all files with the same name as files in the zip archive are overwritten. With option 
+\fIkeep_old_files\fR set, function \fIunzip/2\fR does not overwrite existing files. Notice that even with option \fImemory\fR specified, which means that no files are overwritten, existing files are excluded from the result.
+
+.RE
+
+skip_directories
+.RS 2
+By default empty directories within zip archives are extracted. With option 
+\fIskip_directories\fR set, empty directories are no longer created.
+
+.RE
+
+{extra, Extras}
+.RS 2
+The zip "extra" features to respect. The supported "extra" features are "extended timestamps" and "UID and GID" handling. By default only "extended timestamps" is enabled when unzipping. See 
+\fIextra/0\fR for more details.
+
+.RE
+
+verbose
+.RS 2
+Prints an informational message for each extracted file.
+
+
+.RE
+
+memory
+.RS 2
+Instead of extracting to the current directory, the result is given as a list of tuples 
+\fI{Filename, Binary}\fR, where \fIBinary\fR is a binary containing the extracted data of file \fIFilename\fR in the zip archive.
+
+.RE
+
+{cwd, CWD}
+.RS 2
+Uses the specified directory as current directory. It is prepended to filenames when extracting them from the zip archive. (Acting like 
+\fIfile:set_cwd/1\fR in Kernel, but without changing the global \fIcwd\fR property.)
+
+.RE
+
+
+.RE
+.B
+\fBzip(Name, FileList, Options) -> RetValue\fR
+\fB             when\fR
+\fB                 Name :: file:name(),\fR
+\fB                 FileList :: [FileSpec],\fR
+\fB                 FileSpec ::\fR
+\fB                     file:name() |\fR
+\fB                     {file:name(), binary()} |\fR
+\fB                     {file:name(), binary(), file:file_info()},\fR
+\fB                 Options :: [Option],\fR
+\fB                 Option :: create_option(),\fR
+\fB                 RetValue ::\fR
+\fB                     {ok, FileName :: file:name()} |\fR
+\fB                     {ok, {FileName :: file:name(), binary()}} |\fR
+\fB                     {error, Reason :: term()}.\fR
+
+.br
+.RS
+.PP
+Creates a zip archive containing the files specified in \fIFileList\fR.
+
+.PP
+\fIFileList\fR is a list of files, with paths relative to the current directory, which are stored with this path in the archive. File system operations are performed to read the file metadata and, when compression is enabled, to stream the file contents without loading whole files into memory. Files can also be specified as binaries to create an archive directly from data. In such cases, no metadata or file system reads are performed.
+
+.PP
+Files are compressed using the DEFLATE compression, as described in the "Appnote.txt" file. However, files are stored without compression if they are already compressed. \fIzip/2\fR and \fIzip/3\fR check the file extension to determine if the file is to be stored without compression. Files with the following extensions are not compressed: \fI.Z\fR, \fI.zip\fR, \fI.zoo\fR, \fI.arc\fR, \fI.lzh\fR, \fI.arj\fR.
+
+.PP
+It is possible to override the default behavior and control what types of files that are to be compressed by using options \fI{compress, What}\fR and \fI{uncompress, What}\fR. It is also possible to use many \fIcompress\fR and \fIuncompress\fR options.
+
+.PP
+To trigger file compression, its extension must match with the \fIcompress\fR condition and must not match the \fIuncompress\fR condition. For example, if \fIcompress\fR is set to \fI["gif", "jpg"]\fR and \fIuncompress\fR is set to \fI["jpg"]\fR, only files with extension \fI"gif"\fR are compressed.
+
+.PP
+Options:
+
+cooked
+.RS 2
+By default, this function opens the zip file in mode 
+\fIraw\fR, which is faster but does not allow a remote (Erlang) file server to be used. Adding \fIcooked\fR to the mode list overrides the default and opens the zip file without the \fIraw\fR option. The same applies for the files added.
+
+.RE
+
+verbose
+.RS 2
+Prints an informational message about each added file.
+
+
+.RE
+
+memory
+.RS 2
+The output is not to a file, but instead as a tuple 
+\fI{FileName, binary()}\fR. The binary is a full zip archive with header and can be extracted with, for example, \fIunzip/2\fR.
+
+.RE
+
+{comment, Comment}
+.RS 2
+Adds a comment to the zip archive.
+
+
+.RE
+
+{cwd, CWD}
+.RS 2
+Uses the specified directory as current work directory (
+\fIcwd\fR). This is prepended to filenames when adding them, although not in the zip archive (acting like \fIfile:set_cwd/1\fR in Kernel, but without changing the global \fIcwd\fR property.).
+
+.RE
+
+{extra, Extras}
+.RS 2
+The zip "extra" features to respect. The supported "extra" features are "extended timestamps" and "UID and GID" handling. By default both these "extra" features are enabled. See 
+\fIextra/0\fR for more details.
+
+.RE
+
+{compress, What}
+.RS 2
+Controls what types of files to be compressed. Defaults to 
+\fIall\fR. The following values of \fIWhat\fR are allowed:
+all
+.RS 2
+All files are compressed (as long as they pass the 
+\fIuncompress\fR condition).
+
+.RE
+
+[Extension]
+.RS 2
+Only files with exactly these extensions are compressed.
+
+
+.RE
+
+{add,[Extension]}
+.RS 2
+Adds these extensions to the list of compress extensions.
+
+
+.RE
+
+{del,[Extension]}
+.RS 2
+Deletes these extensions from the list of compress extensions.
+
+
+.RE
+
+
+.RE
+
+{uncompress, What}
+.RS 2
+Controls what types of files to be uncompressed. Defaults to 
+\fI[".Z", ".zip", ".zoo", ".arc", ".lzh", ".arj"]\fR. The following values of \fIWhat\fR are allowed:
+all
+.RS 2
+No files are compressed.
+
+
+.RE
+
+[Extension]
+.RS 2
+Files with these extensions are uncompressed.
+
+
+.RE
+
+{add,[Extension]}
+.RS 2
+Adds these extensions to the list of uncompress extensions.
+
+
+.RE
+
+{del,[Extension]}
+.RS 2
+Deletes these extensions from the list of uncompress extensions.
+
+
+.RE
+
+
+.RE
+
+
+.RE
+.B
+\fBzip_close(ZipHandle) -> ok | {error, einval}\fR
+\fB                   when ZipHandle :: handle().\fR
+
+.br
+.RS
+.PP
+Closes a zip archive, previously opened with \fIzip_open/1,2\fR. All resources are closed, and the handle is not to be used after closing.
+
+
+.RE
+.B
+\fBzip_get(FileName, ZipHandle) -> {ok, Result} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     FileName :: file:name(),\fR
+\fB                     ZipHandle :: handle(),\fR
+\fB                     Result :: file:name() | {file:name(), binary()},\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Extracts one or all files from an open archive.
+
+.PP
+The files are unzipped to memory or to file, depending on the options specified to function \fIzip_open/1,2\fR when opening the archive.
+
+
+.RE
+.B
+\fBzip_get_crc32(FileName, ZipHandle) -> {ok, CRC} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           FileName :: file:name(),\fR
+\fB                           ZipHandle :: handle(),\fR
+\fB                           CRC :: non_neg_integer(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Extracts one crc32 checksum from an open archive.
+
+
+.RE
+.B
+\fBzip_list_dir(ZipHandle) -> {ok, Result} | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Result :: [zip_comment() | zip_file()],\fR
+\fB                          ZipHandle :: handle(),\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns the file list of an open zip archive. The first returned element is the zip archive comment.
+
+
+.RE
+.B
+\fBzip_open(Archive, Options) -> {ok, ZipHandle} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Archive :: file:name() | binary(),\fR
+\fB                      ZipHandle :: handle(),\fR
+\fB                      Options :: [Option],\fR
+\fB                      Option ::\fR
+\fB                          cooked | memory |\fR
+\fB                          {cwd, CWD :: file:filename()} |\fR
+\fB                          {extra, extra()},\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+Opens a zip archive, and reads and saves its directory. This means that later reading files from the archive is faster than unzipping files one at a time with \fIunzip/1,2\fR.
+
+.PP
+The options are equivalent to those in \fIunzip/2\fR.
+
+.PP
+The archive must be closed with \fIzip_close/1\fR.
+
+.PP
+The \fIZipHandle\fR is closed if the process that originally opened the archive dies.
+
+
+.RE

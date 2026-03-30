@@ -1,0 +1,562 @@
+.TH wxTopLevelWindow 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxTopLevelWindow \- \fIwxTopLevelWindow\fR is a common base class for \fIwxDialog\fR and \fIwxFrame\fR.
+
+.SH DESCRIPTION
+.PP
+It is an abstract base class meaning that you never work with objects of this class directly, but all of its methods are also applicable for the two classes above.
+
+.PP
+Note that the instances of \fIwxTopLevelWindow\fR are managed by wxWidgets in the internal top level window list.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxTopLevelWindow
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaximize\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImove\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshow\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxTopLevelWindow() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcenterOnScreen(This, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxTopLevelWindow(),\fR
+\fB                            Option :: {dir, integer()}.\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIcentreOnScreen/2\fR
+
+
+.RE
+.B
+\fBcentreOnScreen(This, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxTopLevelWindow(),\fR
+\fB                            Option :: {dir, integer()}.\fR
+
+.br
+.RS
+.PP
+Centres the window on screen.
+
+.PP
+See: \fIwxWindow:centreOnParent/2\fR
+
+
+.RE
+.B
+\fBgetIcon(This) -> wxIcon:wxIcon() when This :: wxTopLevelWindow().\fR
+
+.br
+.RS
+.PP
+Returns the standard icon of the window.
+
+.PP
+The icon will be invalid if it hadn't been previously set by \fIsetIcon/2\fR.
+
+.PP
+See: \fIgetIcons/1\fR
+
+
+.RE
+.B
+\fBgetIcons(This) -> wxIconBundle:wxIconBundle()\fR
+\fB                  when This :: wxTopLevelWindow().\fR
+
+.br
+.RS
+.PP
+Returns all icons associated with the window, there will be none of them if neither \fIsetIcon/2\fR nor \fIsetIcons/2\fR had been called before.
+
+.PP
+Use \fIgetIcon/1\fR to get the main icon of the window.
+
+.PP
+See: \fIwxIconBundle\fR
+
+
+.RE
+.B
+\fBgetTitle(This) -> unicode:charlist()\fR
+\fB                  when This :: wxTopLevelWindow().\fR
+
+.br
+.RS
+.PP
+Gets a string containing the window title.
+
+.PP
+See: \fIsetTitle/2\fR
+
+
+.RE
+.B
+\fBiconize(This, [Option]) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxTopLevelWindow(),\fR
+\fB                     Option :: {iconize, boolean()}.\fR
+
+.br
+.RS
+.PP
+Iconizes or restores the window.
+
+.PP
+Note that in wxGTK the change to the window state is not immediate, i.e. \fIisIconized/1\fR will typically return false right after a call to \fIiconize/2\fR and its return value will only change after the control flow returns to the event loop and the notification about the window being really iconized is received.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisIconized/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxIconizeEvent\fR
+
+.RE
+
+
+.RE
+.B
+\fBisActive(This) -> boolean() when This :: wxTopLevelWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if this window is currently active, i.e. if the user is currently working with it.
+
+
+.RE
+.B
+\fBisFullScreen(This) -> boolean() when This :: wxTopLevelWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is in fullscreen mode.
+
+.PP
+See: \fIshowFullScreen/3\fR
+
+
+.RE
+.B
+\fBisIconized(This) -> boolean() when This :: wxTopLevelWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is iconized.
+
+
+.RE
+.B
+\fBisMaximized(This) -> boolean() when This :: wxTopLevelWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is maximized.
+
+
+.RE
+.B
+\fBmaximize(This, [Option]) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxTopLevelWindow(),\fR
+\fB                      Option :: {maximize, boolean()}.\fR
+
+.br
+.RS
+.PP
+Maximizes or restores the window.
+
+.PP
+Note that, just as with \fIiconize/2\fR, the change to the window state is not immediate in at least wxGTK port.
+
+.PP
+See: \fIiconize/2\fR
+
+
+.RE
+.B
+\fBrequestUserAttention(This, [Option]) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxTopLevelWindow(),\fR
+\fB                                  Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Use a system-dependent way to attract users attention to the window when it is in background.
+
+.PP
+\fIflags\fR may have the value of either \fI?wxUSER\\_ATTENTION\\_INFO\fR (default) or \fI?wxUSER\\_ATTENTION\\_ERROR\fR which results in a more drastic action. When in doubt, use the default value.
+
+.PP
+Note: This function should normally be only used when the application is not already in foreground.
+
+.PP
+This function is currently implemented for Win32 where it flashes the window icon in the taskbar, and for wxGTK with task bars supporting it.
+
+
+.RE
+.B
+\fBsetIcon(This, Icon) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxTopLevelWindow(), Icon :: wxIcon:wxIcon().\fR
+
+.br
+.RS
+.PP
+Sets the icon for this window.
+
+.PP
+Remark: The window takes a 'copy' of \fIicon\fR, but since it uses reference counting, the copy is very quick. It is safe to delete \fIicon\fR after calling this function.
+
+.PP
+Note: In wxMSW, \fIicon\fR must be either 16x16 or 32x32 icon.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxIcon\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetIcons/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetIcons(This, Icons) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxTopLevelWindow(),\fR
+\fB                      Icons :: wxIconBundle:wxIconBundle().\fR
+
+.br
+.RS
+.PP
+Sets several icons of different sizes for this window: this allows using different icons for different situations (e.g.
+
+.PP
+task switching bar, taskbar, window title bar) instead of scaling, with possibly bad looking results, the only icon set by \fIsetIcon/2\fR.
+
+.PP
+Note: In wxMSW, \fIicons\fR must contain a 16x16 or 32x32 icon, preferably both.
+
+.PP
+See: \fIwxIconBundle\fR
+
+
+.RE
+.B
+\fBsetShape(This, Region) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxTopLevelWindow(),\fR
+\fB                      Region ::\fR
+\fB                          wxRegion:wxRegion() |\fR
+\fB                          wxGraphicsPath:wxGraphicsPath().\fR
+
+.br
+.RS
+.PP
+If the platform supports it, sets the shape of the window to that depicted by \fIregion\fR.
+
+.PP
+The system will not display or respond to any mouse event for the pixels that lie outside of the region. To reset the window to the normal rectangular shape simply call \fIsetShape/2\fR again with an empty \fIwxRegion\fR. Returns true if the operation is successful.
+
+.PP
+This method is available in this class only since wxWidgets 2.9.3, previous versions only provided it in \fIwxTopLevelWindow\fR.
+
+.PP
+Note that windows with non default shape have a fixed size and can't be resized using \fIwxWindow:setSize/6\fR.
+
+
+.RE
+.B
+\fBsetTitle(This, Title) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxTopLevelWindow(),\fR
+\fB                      Title :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the window title.
+
+.PP
+See: \fIgetTitle/1\fR
+
+
+.RE
+.B
+\fBshowFullScreen(This, Show, [Option]) -> boolean()\fR
+\fB                        when\fR
+\fB                            This :: wxTopLevelWindow(),\fR
+\fB                            Show :: boolean(),\fR
+\fB                            Option :: {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Depending on the value of \fIshow\fR parameter the window is either shown full screen or restored to its normal state.
+
+.PP
+\fIstyle\fR is a bit list containing some or all of the following values, which indicate what elements of the window to hide in full-screen mode:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI?wxFULLSCREEN\\_NOMENUBAR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI?wxFULLSCREEN\\_NOTOOLBAR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI?wxFULLSCREEN\\_NOSTATUSBAR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI?wxFULLSCREEN\\_NOBORDER\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI?wxFULLSCREEN\\_NOCAPTION\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI?wxFULLSCREEN\\_ALL\fR (all of the above)
+
+.RE
+
+.PP
+This function has not been tested with MDI frames.
+
+.PP
+Note: Showing a window full screen also actually \fIwxWindow:show/2\fRs the window if it isn't shown.
+
+.PP
+See: \fIisFullScreen/1\fR
+
+
+.RE

@@ -1,0 +1,171 @@
+.TH wxGridCellNumberEditor 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGridCellNumberEditor \- Grid cell editor for numeric integer data.
+
+.SH DESCRIPTION
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellBoolEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellChoiceEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellFloatEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellTextEditor\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellTextEditor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellEditor\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGridCellNumberEditor
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGridCellNumberEditor() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxGridCellNumberEditor()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetValue(This) -> unicode:charlist()\fR
+\fB                  when This :: wxGridCellNumberEditor().\fR
+
+.br
+.RS
+.PP
+Returns the value currently in the editor control.
+
+
+.RE
+.B
+\fBnew([Option]) -> wxGridCellNumberEditor()\fR
+\fB             when Option :: {min, integer()} | {max, integer()}.\fR
+
+.br
+.RS
+.PP
+Allows you to specify the range for acceptable data.
+
+.PP
+Values equal to -1 for both \fImin\fR and \fImax\fR indicate that no range checking should be done.
+
+
+.RE
+.B
+\fBsetParameters(This, Params) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxGridCellNumberEditor(),\fR
+\fB                           Params :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Parameters string format is "min,max".
+
+
+.RE

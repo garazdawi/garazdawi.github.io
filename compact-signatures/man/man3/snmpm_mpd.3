@@ -1,0 +1,192 @@
+.TH snmpm_mpd 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpm_mpd \- Message Processing and Dispatch module for the SNMP manager
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmpm_mpd\fR implements the version independent Message Processing and Dispatch functionality in SNMP for the manager. It is supposed to be used from a Network Interface process (Definition of Manager Net if).
+
+.PP
+Legacy API function \fIprocess_msg/7\fR that has got separate \fIIpAddr\fR and \fIPortNumber\fR arguments still works as before for backwards compatibility reasons.
+
+.SH DATA TYPES
+.LP
+.B
+\fBlogger() ::\fR
+\fB          fun((Data ::\fR
+\fB                   binary() |\fR
+\fB                   snmp_pdus:pdu() |\fR
+\fB                   snmp_pdus:trappdu() |\fR
+\fB                   snmp_pdus:message() |\fR
+\fB                   {V3Hdr :: snmp_pdus:v3_hdr(),\fR
+\fB                    ScopedPDUBytes :: binary()}) ->\fR
+\fB                  snmp:void()).\fR
+
+.br
+.RS
+.PP
+A \fIfun\fR that handles audit trail logging.
+
+
+.RE
+.B
+\fB-opaque mpd_state() \fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque msg_data_acm() \fR
+
+.br
+.RS
+.PP
+Is an opaque data structure containing necessary security information for (incoming) v3 messages.
+
+
+.RE
+.B
+\fB-opaque msg_data_cmy() \fR
+
+.br
+.RS
+.PP
+Is an opaque data structure containing necessary security information for v1 and v2 messages.
+
+
+.RE
+.B
+\fB-opaque msg_data_cmyt() \fR
+
+.br
+.RS
+.PP
+Is an opaque data structure containing necessary security and transport information for v1 and v2 messages.
+
+
+.RE
+.B
+\fB-opaque msg_data_v3() \fR
+
+.br
+.RS
+.PP
+Is an opaque data structure containing necessary security information for v3 messages.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgenerate_msg(Vsn, NoteStore, Pdu, MsgData, Log) ->\fR
+\fB                      {ok, Packet} | {discarded, Reason}\fR
+\fB                      when\fR
+\fB                          Vsn :: snmp_pdus:version(),\fR
+\fB                          NoteStore :: pid(),\fR
+\fB                          Pdu :: snmp_pdus:pdu(),\fR
+\fB                          MsgData :: msg_data_cmy() | msg_data_v3(),\fR
+\fB                          Log :: logger(),\fR
+\fB                          Packet :: binary(),\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+Generates a possibly encrypted packet to be sent to the network.
+
+.PP
+\fINoteStore\fR is the \fIpid()\fR of the \fInote-store\fR process.
+
+.PP
+\fIMsgData\fR is the message specific data used in the SNMP message. In SNMPv1 and SNMPv2c, this message data is the community string. In SNMPv3, it is the context information.
+
+.PP
+\fILogger\fR is the function used for audit trail logging.
+
+
+.RE
+.B
+\fBgenerate_response_msg(Vsn, Pdu, MsgData, Log) ->\fR
+\fB                               {ok, Packet} |\fR
+\fB                               {discarded, Reason} |\fR
+\fB                               {error, Reason}\fR
+\fB                               when\fR
+\fB                                   Vsn :: snmp_pdus:version(),\fR
+\fB                                   Pdu :: snmp_pdus:pdu(),\fR
+\fB                                   MsgData ::\fR
+\fB                                       msg_data_cmy() |\fR
+\fB                                       msg_data_cmyt() |\fR
+\fB                                       msg_data_v3(),\fR
+\fB                                   Log :: logger(),\fR
+\fB                                   Packet :: binary(),\fR
+\fB                                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+Generates a possibly encrypted response packet to be sent to the network.
+
+.PP
+\fIMsgData\fR is the message specific data used in the SNMP message. This value is received from the \fIprocess_msg/6\fR function.
+
+
+.RE
+.B
+\fBinit(Vsns) -> MPDState\fR
+\fB              when Vsns :: [snmp:version()], MPDState :: mpd_state().\fR
+
+.br
+.RS
+.PP
+This function can be called from the \fInet-if\fR process at start-up. The options list defines which versions to use.
+
+.PP
+It also initializes some SNMP counters.
+
+
+.RE
+.B
+\fBprocess_msg(Msg, Domain, Addr, State, NoteStore, Log) ->\fR
+\fB                     {ok, Vsn, PduV2, PduMS, MsgDataV2} |\fR
+\fB                     {ok, 'version-3', PduV3, PduMS, MsgDataV3} |\fR
+\fB                     {discarded, Reason}\fR
+\fB                     when\fR
+\fB                         Msg :: binary(),\fR
+\fB                         Domain :: snmpUDPDomain | snmp:tdomain(),\fR
+\fB                         Addr :: {Ip, Port},\fR
+\fB                         Ip :: inet:ip_address(),\fR
+\fB                         Port :: inet:port_number(),\fR
+\fB                         State :: mpd_state(),\fR
+\fB                         NoteStore :: pid(),\fR
+\fB                         Log :: logger(),\fR
+\fB                         Vsn :: 'version-1' | 'version-2',\fR
+\fB                         PduV2 :: snmp_pdus:pdu() | snmp_pdus:trappdu(),\fR
+\fB                         PduV3 :: snmp_pdus:pdu(),\fR
+\fB                         PduMS :: pos_integer(),\fR
+\fB                         MsgDataV2 :: msg_data_cmyt(),\fR
+\fB                         MsgDataV3 ::\fR
+\fB                             ok |\fR
+\fB                             {error, ReqId, ACM} |\fR
+\fB                             undefined |\fR
+\fB                             msg_data_acm(),\fR
+\fB                         ReqId :: snmpm:request_id(),\fR
+\fB                         ACM :: term(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Processes an incoming message. Performs authentication and decryption as necessary. The return values should be passed the manager server.
+
+.PP
+\fINoteStore\fR is the \fIpid()\fR of the \fInote-store\fR process.
+
+.PP
+\fILogger\fR is the function used for audit trail logging.
+
+.PP
+In the case when the pdu type is \fIreport\fR, \fIMsgData\fR is either \fIok\fR or \fI{error, ReqId, Reason}\fR.
+
+
+.RE

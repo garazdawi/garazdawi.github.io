@@ -1,0 +1,429 @@
+.TH wx_misc 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wx_misc \- Miscellaneous functions.
+
+.SH DESCRIPTION
+.SH FUNCTIONS
+.LP
+.B
+\fBbeginBusyCursor([Option]) -> ok\fR
+\fB                         when Option :: {cursor, wxCursor:wxCursor()}.\fR
+
+.br
+.RS
+.PP
+Changes the cursor to the given cursor for all windows in the application.
+
+.PP
+Use \fIwx_misc:endBusyCursor/0\fR to revert the cursor back to its previous state. These two calls can be nested, and a counter ensures that only the outer calls take effect.
+
+.PP
+See: \fIwx_misc:isBusy/0\fR
+
+
+.RE
+.B
+\fBbell() -> ok.\fR
+
+.br
+.RS
+.PP
+Ring the system bell.
+
+.PP
+Note: This function is categorized as a GUI one and so is not thread-safe.
+
+
+.RE
+.B
+\fBdisplaySize() -> {Width :: integer(), Height :: integer()}.\fR
+
+.br
+.RS
+.PP
+Returns the display size in pixels.
+
+.PP
+Note: Use of this function is not recommended in the new code as it only works for the primary display. Use \fIwxDisplay:getGeometry/1\fR to retrieve the size of the appropriate display instead.
+
+.PP
+Either of output pointers can be NULL if the caller is not interested in the corresponding value.
+
+.PP
+See: \fIwxDisplay\fR
+
+
+.RE
+.B
+\fBendBusyCursor() -> ok.\fR
+
+.br
+.RS
+.PP
+Changes the cursor back to the original cursor, for all windows in the application.
+
+.PP
+Use with \fIwx_misc:beginBusyCursor/1\fR.
+
+.PP
+See: \fIwx_misc:isBusy/0\fR
+
+
+.RE
+.B
+\fBfindMenuItemId(Frame, MenuString, ItemString) -> integer()\fR
+\fB                        when\fR
+\fB                            Frame :: wxFrame:wxFrame(),\fR
+\fB                            MenuString :: unicode:chardata(),\fR
+\fB                            ItemString :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Find a menu item identifier associated with the given frame's menu bar.
+
+
+.RE
+.B
+\fBfindWindowAtPoint(Pt) -> wxWindow:wxWindow()\fR
+\fB                           when Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Find the deepest window at the given mouse position in screen coordinates, returning the window if found, or NULL if not.
+
+.PP
+This function takes child windows at the given position into account even if they are disabled. The hidden children are however skipped by it.
+
+
+.RE
+.B
+\fBgetCurrentId() -> integer().\fR
+
+.br
+.RS
+.PP
+Returns the current id.
+
+
+.RE
+.B
+\fBgetEmailAddress() -> unicode:charlist().\fR
+
+.br
+.RS
+.PP
+Copies the user's email address into the supplied buffer, by concatenating the values returned by \fIwxGetFullHostName()\fR (not implemented in wx) and \fIwx_misc:getUserId/0\fR.
+
+.PP
+Return: true if successful, false otherwise.
+
+
+.RE
+.B
+\fBgetHomeDir() -> unicode:charlist().\fR
+
+.br
+.RS
+.PP
+Return the (current) user's home directory.
+
+
+.RE
+.B
+\fBgetKeyState(Key) -> boolean() when Key :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+For normal keys, returns true if the specified key is currently down.
+
+.PP
+For togglable keys (Caps Lock, Num Lock and Scroll Lock), returns true if the key is toggled such that its LED indicator is lit. There is currently no way to test whether togglable keys are up or down.
+
+.PP
+Even though there are virtual key codes defined for mouse buttons, they cannot be used with this function currently.
+
+.PP
+In wxGTK, this function can be only used with modifier keys (\fIWXK_ALT\fR, \fIWXK_CONTROL\fR and \fIWXK_SHIFT\fR) when not using X11 backend currently.
+
+
+.RE
+.B
+\fBgetMousePosition() -> {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Returns the mouse position in screen coordinates.
+
+
+.RE
+.B
+\fBgetMouseState() -> wx:wx_wxMouseState().\fR
+
+.br
+.RS
+.PP
+Returns the current state of the mouse.
+
+.PP
+Returns a \fIwx_wxMouseState()\fR instance that contains the current position of the mouse pointer in screen coordinates, as well as boolean values indicating the up/down status of the mouse buttons and the modifier keys.
+
+
+.RE
+.B
+\fBgetOsDescription() -> unicode:charlist().\fR
+
+.br
+.RS
+.PP
+Returns the string containing the description of the current platform in a user-readable form.
+
+.PP
+For example, this function may return strings like "Windows 10 (build 10240), 64-bit edition" or "Linux 4.1.4 i386".
+
+
+.RE
+.B
+\fBgetUserId() -> unicode:charlist().\fR
+
+.br
+.RS
+.PP
+This function returns the "user id" also known as "login name" under Unix (i.e.
+
+.PP
+something like "jsmith"). It uniquely identifies the current user (on this system). Under Windows or NT, this function first looks in the environment variables USER and LOGNAME; if neither of these is found, the entry \fIUserId\fR in the \fIwxWidgets\fR section of the WIN.INI file is tried.
+
+.PP
+Return: The login name if successful or an empty string otherwise.
+
+
+.RE
+.B
+\fBisBusy() -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if between two \fIwx_misc:beginBusyCursor/1\fR and \fIwx_misc:endBusyCursor/0\fR calls.
+
+
+.RE
+.B
+\fBisPlatform64Bit() -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if the operating system the program is running under is 64 bit.
+
+.PP
+The check is performed at run-time and may differ from the value available at compile-time (at compile-time you can just check if \fIsizeof(void*) == 8\fR) since the program could be running in emulation mode or in a mixed 32/64 bit system (bi-architecture operating system).
+
+.PP
+Note: This function is not 100% reliable on some systems given the fact that there isn't always a standard way to do a reliable check on the OS architecture.
+
+
+.RE
+.B
+\fBisPlatformLittleEndian() -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if the current platform is little endian (instead of big endian).
+
+.PP
+The check is performed at run-time.
+
+
+.RE
+.B
+\fBlaunchDefaultBrowser(Url, [Option]) -> boolean()\fR
+\fB                              when\fR
+\fB                                  Url :: unicode:chardata(),\fR
+\fB                                  Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Opens the \fIurl\fR in user's default browser.
+
+.PP
+If the \fIflags\fR parameter contains \fIwxBROWSER_NEW_WINDOW\fR flag, a new window is opened for the URL (currently this is only supported under Windows).
+
+.PP
+And unless the \fIflags\fR parameter contains \fIwxBROWSER_NOBUSYCURSOR\fR flag, a busy cursor is shown while the browser is being launched (using \fIwxBusyCursor\fR (not implemented in wx)).
+
+.PP
+The parameter \fIurl\fR is interpreted as follows:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+if it has a valid scheme (e.g. \fI"file:"\fR, \fI"http:"\fR or \fI"mailto:"\fR) it is passed to the appropriate browser configured in the user system.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+if it has no valid scheme (e.g. it's a local file path without the \fI"file:"\fR prefix), then ?wxFileExists and ?wxDirExists are used to test if it's a local file/directory; if it is, then the browser is called with the \fIurl\fR parameter eventually prefixed by \fI"file:"\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+if it has no valid scheme and it's not a local file/directory, then \fI"http:"\fR is prepended and the browser is called.
+
+.RE
+
+.PP
+Returns true if the application was successfully launched.
+
+.PP
+Note: For some configurations of the running user, the application which is launched to open the given URL may be URL-dependent (e.g. a browser may be used for local URLs while another one may be used for remote URLs).
+
+
+.RE
+.B
+\fBnewId() -> integer().\fR
+
+.br
+.RS
+.PP
+Deprecated:
+
+.PP
+Ids generated by it can conflict with the Ids defined by the user code, use \fIwxID_ANY\fR to assign ids which are guaranteed to not conflict with the user-defined ids for the controls and menu items you create instead of using this function.
+
+.PP
+Generates an integer identifier unique to this run of the program.
+
+
+.RE
+.B
+\fBregisterId(Id) -> ok when Id :: integer().\fR
+
+.br
+.RS
+.PP
+Ensures that Ids subsequently generated by \fIwx_misc:newId/0\fR do not clash with the given \fIid\fR.
+
+
+.RE
+.B
+\fBsetCursor(Cursor) -> ok when Cursor :: wxCursor:wxCursor().\fR
+
+.br
+.RS
+.PP
+Globally sets the cursor; only has an effect on Windows, Mac and GTK+.
+
+.PP
+You should call this function with wxNullCursor to restore the system cursor.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCursor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow:setCursor/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetDetectableAutoRepeat(Flag) -> boolean() when Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Don't synthesize KeyUp events holding down a key and producing KeyDown events with autorepeat.
+
+.PP
+On by default and always on in wxMSW.
+
+
+.RE
+.B
+\fBshell([Option]) -> boolean()\fR
+\fB               when Option :: {command, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Executes a command in an interactive shell window.
+
+.PP
+If no command is specified, then just the shell is spawned.
+
+.PP
+See: Examples
+
+
+.RE
+.B
+\fBshutdown([Option]) -> boolean() when Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+This function shuts down or reboots the computer depending on the value of the \fIflags\fR.
+
+.PP
+Note: Note that performing the shutdown requires the corresponding access rights (superuser under Unix, SE_SHUTDOWN privilege under Windows) and that this function is only implemented under Unix and MSW.
+
+.PP
+Return: true on success, false if an error occurred.
+
+
+.RE

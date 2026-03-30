@@ -1,0 +1,106 @@
+.TH wxMaximizeEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMaximizeEvent \- An event being sent when a top level window is maximized.
+
+.SH DESCRIPTION
+.PP
+Notice that it is not sent when the window is restored to its original size after it had been maximized, only a normal \fIwxSizeEvent\fR is generated in this case.
+
+.PP
+Currently this event is only generated in wxMSW, wxGTK and wxOSX/Cocoa ports so portable programs should only rely on receiving \fIwxEVT_SIZE\fR and not necessarily this event when the window is maximized.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow:maximize/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow:isMaximized/1\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMaximizeEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxMaximizeEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMaximize() :: #wxMaximize{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxMaximizeEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxMaximizeEventType() :: maximize.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP

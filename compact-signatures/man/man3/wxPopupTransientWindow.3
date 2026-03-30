@@ -1,0 +1,132 @@
+.TH wxPopupTransientWindow 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPopupTransientWindow \- A \fIwxPopupWindow\fR which disappears automatically when the user clicks mouse outside it or if it loses focus in any other way.
+
+.SH DESCRIPTION
+.PP
+This window can be useful for implementing custom combobox-like controls for example.
+
+.PP
+See: \fIwxPopupWindow\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPopupWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPopupTransientWindow
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPopupTransientWindow() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxPopupTransientWindow()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBdismiss(This) -> ok when This :: wxPopupTransientWindow().\fR
+
+.br
+.RS
+.PP
+Hide the window.
+
+
+.RE
+.B
+\fBnew() -> wxPopupTransientWindow().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxPopupTransientWindow()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option :: {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBpopup(This, [Option]) -> ok\fR
+\fB               when\fR
+\fB                   This :: wxPopupTransientWindow(),\fR
+\fB                   Option :: {focus, wxWindow:wxWindow()}.\fR
+
+.br
+.RS
+.PP
+Popup the window (this will show it too).
+
+.PP
+If \fIfocus\fR is non-NULL, it will be kept focused while this window is shown if supported by the current platform, otherwise the popup itself will receive focus. In any case, the popup will disappear automatically if it loses focus because of a user action.
+
+.PP
+See: \fIdismiss/1\fR
+
+
+.RE

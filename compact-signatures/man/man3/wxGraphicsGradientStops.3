@@ -1,0 +1,138 @@
+.TH wxGraphicsGradientStops 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGraphicsGradientStops \- Represents a collection of wxGraphicGradientStop values for use with CreateLinearGradientBrush and CreateRadialGradientBrush.
+
+.SH DESCRIPTION
+.PP
+The stops are maintained in order of position. If two or more stops are added with the same position then the one(s) added later come later. This can be useful for producing discontinuities in the colour gradient.
+
+.PP
+Notice that this class is write-once, you can't modify the stops once they had been added.
+
+.PP
+Since: 2.9.1
+
+.PP
+wxWidgets docs: wxGraphicsGradientStops
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGraphicsGradientStops() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd(This, Col, Pos) -> ok\fR
+\fB             when\fR
+\fB                 This :: wxGraphicsGradientStops(),\fR
+\fB                 Col :: wx:wx_colour(),\fR
+\fB                 Pos :: number().\fR
+
+.br
+.RS
+.PP
+Add a new stop.
+
+
+.RE
+.B
+\fBdestroy(This :: wxGraphicsGradientStops()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetCount(This) -> integer() when This :: wxGraphicsGradientStops().\fR
+
+.br
+.RS
+.PP
+Returns the number of stops.
+
+
+.RE
+.B
+\fBgetEndColour(This) -> wx:wx_colour4()\fR
+\fB                      when This :: wxGraphicsGradientStops().\fR
+
+.br
+.RS
+.PP
+Returns the end colour.
+
+
+.RE
+.B
+\fBgetStartColour(This) -> wx:wx_colour4()\fR
+\fB                        when This :: wxGraphicsGradientStops().\fR
+
+.br
+.RS
+.PP
+Returns the start colour.
+
+
+.RE
+.B
+\fBitem(This, N) -> {wx:wx_colour4(), float()}\fR
+\fB              when This :: wxGraphicsGradientStops(), N :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the stop at the given index.
+
+
+.RE
+.B
+\fBnew([Option]) -> wxGraphicsGradientStops()\fR
+\fB             when\fR
+\fB                 Option ::\fR
+\fB                     {startCol, wx:wx_colour()} |\fR
+\fB                     {endCol, wx:wx_colour()}.\fR
+
+.br
+.RS
+.PP
+Initializes the gradient stops with the given boundary colours.
+
+.PP
+Creates a \fIwxGraphicsGradientStops\fR instance with start colour given by \fIstartCol\fR and end colour given by \fIendCol\fR.
+
+
+.RE
+.B
+\fBsetEndColour(This, Col) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxGraphicsGradientStops(),\fR
+\fB                          Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the end colour to \fIcol\fR.
+
+
+.RE
+.B
+\fBsetStartColour(This, Col) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxGraphicsGradientStops(),\fR
+\fB                            Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the start colour to \fIcol\fR.
+
+
+.RE

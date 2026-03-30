@@ -1,0 +1,551 @@
+.TH edoc 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc \- EDoc - the Erlang program documentation generator.
+
+.SH DESCRIPTION
+.PP
+This module provides the main user interface to EDoc.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIEDoc User Manual\fR
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIRunning EDoc\fR
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBedoc_module() :: xmerl_scan:xmlElement().\fR
+
+.br
+.RS
+.PP
+The EDoc documentation data for a module, expressed as an XML document in \fIXMerL\fR format. See the file \fI\fIedoc.dtd\fR\fR for details.
+
+
+.RE
+.B
+\fBentry() ::\fR
+\fB          #entry{name :: function_name() | atom(),\fR
+\fB                 args :: [atom() | list()],\fR
+\fB                 line :: integer(),\fR
+\fB                 export :: boolean(),\fR
+\fB                 data :: entry_data()}.\fR
+
+.br
+.RS
+.PP
+Module Entries (one per function, plus module header and footer).
+
+
+.RE
+.B
+\fBenv() :: #env{}.\fR
+
+.br
+.RS
+.PP
+Environment information needed by EDoc for generating references.
+
+
+.RE
+.B
+\fBmodule_meta() ::\fR
+\fB          #module{name :: [] | atom(),\fR
+\fB                  parameters :: none | [atom()],\fR
+\fB                  functions :: ordset(function_name()),\fR
+\fB                  exports :: ordset(function_name()),\fR
+\fB                  attributes :: ordset({atom(), term()}),\fR
+\fB                  records :: [{atom(), [{atom(), term()}]}],\fR
+\fB                  encoding :: epp:source_encoding(),\fR
+\fB                  file :: file:filename()}.\fR
+
+.br
+.RS
+.PP
+Module information.
+
+
+.RE
+.B
+\fBtag() ::\fR
+\fB          #tag{name :: atom(),\fR
+\fB               line :: integer(),\fR
+\fB               origin :: comment | code,\fR
+\fB               data :: term(),\fR
+\fB               form :: undefined | erl_parse:abstract_form()}.\fR
+
+.br
+.RS
+.PP
+Generic tag information. \fI#tag.form\fR is only defined if \fI#tag.origin\fR is \fIcode\fR, that is the \fI#tag{}\fR represents a code fragment, not a doc comment tag.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBapplication(atom()) -> ok.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIapplication(Application, [])\fR.
+
+
+.RE
+.B
+\fBapplication(App, Options) -> ok\fR
+\fB                     when App :: atom(), Options :: proplist().\fR
+
+.br
+.RS
+.PP
+Run EDoc on an application in its default app-directory. See \fI\fIapplication/3\fR\fR for details.
+
+.PP
+\fBSee also: \fR\fIapplication/1\fR.
+
+
+.RE
+.B
+\fBapplication(App, Dir, Options) -> ok\fR
+\fB                     when\fR
+\fB                         App :: atom(),\fR
+\fB                         Dir :: filename(),\fR
+\fB                         Options :: proplist().\fR
+
+.br
+.RS
+.PP
+Run EDoc on an application located in the specified directory. Tries to automatically set up good defaults. Unless the user specifies otherwise:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIdoc\fR subdirectory will be used as the target directory, if it exists; otherwise the application directory is used.
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The source code is assumed to be located in the \fIsrc\fR subdirectory, if it exists, or otherwise in the application directory itself.
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fI\fIsubpackages\fR\fR option is turned on. All found source files will be processed.
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIinclude\fR subdirectory is automatically added to the include path. (Only important if \fIpreprocessing\fR is turned on.)
+.RE
+
+.PP
+See \fI\fIrun/2\fR\fR for details, including options.
+
+.PP
+\fBSee also: \fR\fIapplication/2\fR.
+
+
+.RE
+.B
+\fBfile(filename()) -> ok.\fR
+
+.RS
+.LP
+Deprecated: See file/2 for details.
+.RE
+
+.br
+.RS
+.PP
+Equivalent to \fIfile(Name, [])\fR.
+
+
+.RE
+.B
+\fBfile(Name, Options) -> ok\fR
+\fB              when Name :: filename(), Options :: proplist().\fR
+
+.RS
+.LP
+Deprecated: This is part of the old interface to EDoc and is mainly kept for backwards compatibility. The preferred way of generating documentation is through one of the functions application/2 and files/2.
+.RE
+
+.br
+.RS
+.PP
+Reads a source code file and outputs formatted documentation to a corresponding file.
+
+.PP
+Options:
+
+.RS 4
+.TP
+\fB\fI{dir, \fIfilename()\fR}\fR\fR
+Specifies the output directory for the created file. (By default, the output is written to the directory of the source file.)
+.TP
+\fB\fI{source_suffix, string()}\fR\fR
+Specifies the expected suffix of the input file. The default value is \fI".erl"\fR.
+.TP
+\fB\fI{file_suffix, string()}\fR\fR
+Specifies the suffix for the created file. The default value is \fI".html"\fR.
+.RE
+
+.PP
+See \fI\fIget_doc/2\fR\fR and \fI\fIlayout/2\fR\fR for further options.
+
+.PP
+For running EDoc from a Makefile or similar, see \fI\fIedoc_run:file/1\fR\fR.
+
+.PP
+\fBSee also: \fR\fIread/2\fR.
+
+
+.RE
+.B
+\fBfiles(Files, Options) -> ok\fR
+\fB               when Files :: [filename()], Options :: proplist().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIrun(Files, Options)\fR.
+
+.PP
+Runs EDoc on a given set of source files. See \fI\fIrun/2\fR\fR for details, including options.
+
+
+.RE
+.B
+\fBget_doc(filename()) -> {module(), edoc_module()}.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIget_doc(File, [])\fR.
+
+
+.RE
+.B
+\fBget_doc(File, Options) -> R\fR
+\fB                 when\fR
+\fB                     File :: filename(),\fR
+\fB                     Options :: proplist(),\fR
+\fB                     R ::\fR
+\fB                         {module(), edoc_module()} |\fR
+\fB                         {module(), edoc_module(), [entry()]}.\fR
+
+.br
+.RS
+.PP
+Reads a source code file and extracts EDoc documentation data. Note that without an environment parameter (see \fI\fIget_doc/3\fR\fR), hypertext links may not be correct.
+
+.PP
+Options:
+
+.RS 4
+.TP
+\fB\fI{def, Macros}\fR\fR
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIMacros\fR = \fIMacro | [Macro]\fR
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIMacro\fR = \fI{Name::atom(), Text::string() | MacroFun}\fR
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIMacroFun\fR = \fIfun((MacroArgument::string(), Line :: integer(), edoc_lib:edoc_env()) -> (Text::string()))\fR
+.RE
+
+Specifies a set of user-defined EDoc macros. The text substituted for macro calls is specified as either a \fIstring()\fR or a \fIfunction()\fR. The function is called with the macro argument text, the current line number, and the current environment. The fun is to return a \fIstring()\fR. See \fIMacro expansion\fR for details.
+.TP
+\fB\fI{hidden, boolean()}\fR\fR
+If the value is \fItrue\fR, documentation of hidden functions will also be included. The default value is \fIfalse\fR.
+.TP
+\fB\fI{private, boolean()}\fR\fR
+If the value is \fItrue\fR, documentation of private functions will also be included. The default value is \fIfalse\fR.
+.TP
+\fB\fI{todo, boolean()}\fR\fR
+If the value is \fItrue\fR, To-Do notes written using \fI@todo\fR or \fI@TODO\fR tags will be included in the documentation. The default value is \fIfalse\fR.
+.RE
+
+.PP
+See \fI\fIread_source/2\fR\fR, \fI\fIread_comments/2\fR\fR and \fI\fIedoc_lib:get_doc_env/3\fR\fR for further options.
+
+.PP
+\fBSee also: \fR\fIget_doc/3\fR, \fIlayout/2\fR, \fIread/2\fR, \fIrun/2\fR, \fIedoc_extract:source/5\fR.
+
+
+.RE
+.B
+\fBget_doc(File, Env, Options) -> R\fR
+\fB                 when\fR
+\fB                     File :: filename(),\fR
+\fB                     Env :: env(),\fR
+\fB                     Options :: proplist(),\fR
+\fB                     R ::\fR
+\fB                         {module(), edoc_module()} |\fR
+\fB                         {module(), edoc_module(), [entry()]}.\fR
+
+.br
+.RS
+.PP
+Like \fI\fIget_doc/2\fR\fR, but for a given environment parameter. \fIEnv\fR is an environment created by \fI\fIedoc_lib:get_doc_env/3\fR\fR.
+
+
+.RE
+.B
+\fBlayout(edoc_module()) -> string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIlayout(Doc, [])\fR.
+
+
+.RE
+.B
+\fBlayout(Doc, Opts) -> term()\fR
+\fB                when Doc :: edoc_module(), Opts :: proplist().\fR
+
+.br
+.RS
+.PP
+Transforms EDoc module documentation data to text. The default layout creates an HTML document.
+
+.PP
+Options:
+
+.RS 4
+.TP
+\fB\fI{layout, Module::atom()}\fR\fR
+Specifies a callback module to be used for formatting. The module must export a function \fImodule(Doc, Options)\fR. The default callback module is \fI\fIedoc_layout\fR\fR; see \fI\fIedoc_layout:module/2\fR\fR for layout-specific options.
+.RE
+
+.PP
+\fBSee also: \fR\fIfile/2\fR, \fIlayout/1\fR, \fIread/2\fR, \fIrun/2\fR.
+
+
+.RE
+.B
+\fBread(filename()) -> string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIread(File, [])\fR.
+
+
+.RE
+.B
+\fBread(File, Opts) -> string()\fR
+\fB              when File :: filename(), Opts :: proplist().\fR
+
+.br
+.RS
+.PP
+Reads and processes a source file and returns the resulting EDoc-text as a string. See \fI\fIget_doc/2\fR\fR and \fI\fIlayout/2\fR\fR for options.
+
+.PP
+\fBSee also: \fR\fIfile/2\fR.
+
+
+.RE
+.B
+\fBread_comments(filename()) -> [comment()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIread_comments(File, [])\fR.
+
+
+.RE
+.B
+\fBread_comments(File, Opts) -> [comment()]\fR
+\fB                       when File :: filename(), Opts :: proplist().\fR
+
+.br
+.RS
+.PP
+Extracts comments from an Erlang source code file. See the module \fI\fI//syntax_tools/erl_comment_scan\fR\fR for details on the representation of comments. Currently, no options are available.
+
+
+.RE
+.B
+\fBread_source(filename()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIread_source(File, [])\fR.
+
+
+.RE
+.B
+\fBread_source(File, Opts) -> [syntaxTree()]\fR
+\fB                     when File :: filename(), Opts :: proplist().\fR
+
+.br
+.RS
+.PP
+Reads an Erlang source file and returns the list of "source code form" syntax trees.
+
+.PP
+Options:
+
+.RS 4
+.TP
+\fB\fI{preprocess, boolean()}\fR\fR
+.PP
+If the value is \fItrue\fR, the source file will be read via the Erlang preprocessor (\fIepp\fR). The default value is \fIfalse\fR. \fIno_preprocess\fR is an alias for \fI{preprocess, false}\fR.
+Normally, preprocessing is not necessary for EDoc to work, but if a file contains too exotic definitions or uses of macros, it will not be possible to read it without preprocessing. \fBNote: comments in included files will not be available to EDoc, even with this option enabled.\fR
+.TP
+\fB\fI{includes, Path::[string()]}\fR\fR
+Specifies a list of directory names to be searched for include files, if the \fIpreprocess\fR option is turned on. Also used with the \fI@headerfile\fR tag. The default value is the empty list. The directory of the source file is always automatically appended to the search path.
+.TP
+\fB\fI{macros, [{atom(), term()}]}\fR\fR
+Specifies a list of pre-defined Erlang preprocessor (\fIepp\fR) macro definitions, used if the \fIpreprocess\fR option is turned on. The default value is the empty list.
+.TP
+\fB\fI{report_missing_types, boolean()}\fR\fR
+If the value is \fItrue\fR, warnings are issued for missing types. The default value is \fIfalse\fR. \fIno_report_missing_types\fR is an alias for \fI{report_missing_types, false}\fR.
+.TP
+\fB\fI{link_predefined_types, boolean()}\fR\fR
+If the value is \fItrue\fR, all predefined data types will have a link to the erlang module. This option is to be used when generating documentation for the Erlang/OTP docs. The default value is \fIfalse\fR. \fIno_link_predefined_types\fR is an alias for \fI{link_predefined_types, false}\fR.
+.RE
+
+.PP
+\fBSee also: \fR\fI//syntax_tools/erl_syntax\fR, \fIget_doc/2\fR.
+
+
+.RE
+.B
+\fBrun(Files, Opts) -> ok\fR
+\fB             when Files :: [filename()], Opts :: proplist().\fR
+
+.br
+.RS
+.PP
+Runs EDoc on a given set of source files. Note that the doclet plugin module has its own particular options; see the \fIdoclet\fR option below.
+
+.PP
+Also see \fI\fIlayout/2\fR\fR for layout-related options, and \fI\fIget_doc/2\fR\fR for options related to reading source files.
+
+.PP
+Options:
+
+.RS 4
+.TP
+\fB\fI{app_default, string()}\fR\fR
+Specifies the default base URI for unknown applications.
+.TP
+\fB\fI{application, App::atom()}\fR\fR
+Specifies that the generated documentation describes the application \fIApp\fR. This mainly affects generated references.
+.TP
+\fB\fI{dir, \fIfilename()\fR}\fR\fR
+Specifies the target directory for the generated documentation.
+.TP
+\fB\fI{doc_path, [string()]}\fR\fR
+Specifies a list of file system paths pointing to directories that contain EDoc-generated documentation. All paths for applications in the code path are automatically added.
+.TP
+\fB\fI{doclet, Module::atom()}\fR\fR
+Specifies a callback module to be used for creating the documentation. The module must export a function \fIrun(Cmd, Ctxt)\fR. The default doclet module is \fI\fIedoc_doclet\fR\fR; see \fI\fIedoc_doclet:run/2\fR\fR for doclet-specific options.
+.TP
+\fB\fI{file_suffix, string()}\fR\fR
+Specifies the suffix used for output files. The default value is \fI".html"\fR. Note that this also affects generated references.
+.TP
+\fB\fI{new, boolean()}\fR\fR
+If the value is \fItrue\fR, any existing \fIedoc-info\fR file in the target directory will be ignored and overwritten. The default value is \fIfalse\fR.
+.TP
+\fB\fI{source_path, [\fIfilename()\fR]}\fR\fR
+Specifies a list of file system paths used to locate the source code for packages.
+.TP
+\fB\fI{source_suffix, string()}\fR\fR
+Specifies the expected suffix of input files. The default value is \fI".erl"\fR.
+.TP
+\fB\fI{subpackages, boolean()}\fR\fR
+.PP
+If the value is \fItrue\fR, all subpackages of specified packages will also be included in the documentation. The default value is \fIfalse\fR. \fIno_subpackages\fR is an alias for \fI{subpackages, false}\fR.
+Subpackage source files are found by recursively searching for source code files in subdirectories of the known source code root directories. (Also see the \fIsource_path\fR option.) Directory names must begin with a lowercase letter and contain only alphanumeric characters and underscore, or they will be ignored. (For example, a subdirectory named \fItest-files\fR will not be searched.)
+.RE
+
+.PP
+\fBSee also: \fR\fIapplication/2\fR, \fIfiles/2\fR.
+
+
+.RE

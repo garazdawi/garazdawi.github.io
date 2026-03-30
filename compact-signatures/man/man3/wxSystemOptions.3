@@ -1,0 +1,482 @@
+.TH wxSystemOptions 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSystemOptions \- \fIwxSystemOptions\fR stores option/value pairs that wxWidgets itself or applications can use to alter behaviour at run-time.
+
+.SH DESCRIPTION
+.PP
+It can be used to optimize behaviour that doesn't deserve a distinct API, but is still important to be able to configure.
+
+.PP
+System options can be set by the program itself using \fIsetOption/2\fR method and they also can be set from the program environment by defining an environment variable \fIwx_option\fR to set the given option for all wxWidgets applications or \fIwx_appname_option\fR to set it just for the application with the given name (as returned by \fIwxApp::GetAppName()\fR (not implemented in wx)). Notice that any characters not allowed in the environment variables names, such as periods and dashes, should be replaced with underscores. E.g. to define a system option "foo-bar" you need to define the environment variable "wx_foo_bar".
+
+.PP
+The program may use system options for its own needs but they are mostly used to control the behaviour of wxWidgets library itself.
+
+.PP
+These options are currently recognised by wxWidgets:
+
+.PP
+All platforms
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+exit-on-assert: If set to non-zero value, abort the program if an assertion fails. The default behaviour in case of assertion failure depends on the build mode and can be changed by overriding \fIwxApp::OnAssertFailure()\fR (not implemented in wx) but setting this option allows changing it without modifying the program code and also applies to asserts which may happen before the \fIwxApp\fR (not implemented in wx) object creation or after its destruction.
+
+.RE
+
+.PP
+Windows
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+no-maskblt: 1 to never use WIN32's MaskBlt function, 0 to allow it to be used where possible. Default: 0. In some circumstances the MaskBlt function can be slower than using the fallback code, especially if using DC caching. By default, MaskBlt will be used where it is implemented by the operating system and driver.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+msw.remap: If 1 (the default), \fIwxToolBar\fR bitmap colours will be remapped to the current theme's values. Set this to 0 to disable this functionality, for example if you're using more than 16 colours in your tool bitmaps.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+msw.window.no-clip-children: If 1, windows will not automatically get the WS_CLIPCHILDREN style. This restores the way windows are refreshed back to the method used in versions of wxWidgets earlier than 2.5.4, and for some complex window hierarchies it can reduce apparent refresh delays. You may still specify wxCLIP_CHILDREN for individual windows.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+msw.notebook.themed-background: If set to 0, globally disables themed backgrounds on notebook pages. Note that this won't disable the theme on the actual notebook background (noticeable only if there are no pages).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+msw.staticbox.optimized-paint: If set to 0, switches off optimized \fIwxStaticBox\fR painting. Setting this to 0 causes more flicker, but allows applications to paint graphics on the parent of a static box (the optimized refresh causes any such drawing to disappear).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+msw.font.no-proof-quality: If set to 1, use default fonts quality instead of proof quality when creating fonts. With proof quality the fonts have slightly better appearance but not all fonts are available in this quality, e.g. the Terminal font in small sizes is not and this option may be used if wider fonts selection is more important than higher quality.
+
+.RE
+
+.PP
+GTK+
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+gtk.tlw.can-set-transparent: \fIwxTopLevelWindow::CanSetTransparent()\fR (not implemented in wx) method normally tries to detect automatically whether transparency for top level windows is currently supported, however this may sometimes fail and this option allows overriding the automatic detection. Setting it to 1 makes the transparency be always available (setting it can still fail, of course) and setting it to 0 makes it always unavailable.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+gtk.desktop: This option can be set to override the default desktop environment determination. Supported values are GNOME and KDE.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+gtk.window.force-background-colour: If 1, the backgrounds of windows with the wxBG_STYLE_COLOUR background style are cleared forcibly instead of relying on the underlying GTK+ window colour. This works around a display problem when running applications under KDE with the gtk-qt theme installed (0.6 and below).
+
+.RE
+
+.PP
+Mac
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+mac.window-plain-transition: If 1, uses a plainer transition when showing a window. You can also use the symbol wxMAC_WINDOW_PLAIN_TRANSITION.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+window-default-variant: The default variant used by windows (cast to integer from the wxWindowVariant enum). Also known as wxWINDOW_DEFAULT_VARIANT.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+mac.listctrl.always_use_generic: Tells \fIwxListCtrl\fR to use the generic control even when it is capable of using the native control instead. Also known as wxMAC_ALWAYS_USE_GENERIC_LISTCTRL.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+mac.textcontrol-use-spell-checker: If 1 activates the spell checking in \fIwxTextCtrl\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+osx.openfiledialog.always-show-types: Per default a \fIwxFileDialog\fR with wxFD_OPEN does not show a types-popup on macOS but allows the selection of files from any of the supported types. Setting this to 1 shows a \fIwxChoice\fR for selection (if there is more than one supported filetype).
+
+.RE
+
+.PP
+Motif
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+motif.largebuttons: If 1, uses a bigger default size for wxButtons.
+
+.RE
+
+.PP
+The compile-time option to include or exclude this functionality is wxUSE_SYSTEM_OPTIONS.
+
+.PP
+See: \fIwxSystemSettings\fR
+
+.PP
+wxWidgets docs: wxSystemOptions
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSystemOptions() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetOption(Name) -> unicode:charlist()\fR
+\fB                   when Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Gets an option.
+
+.PP
+The function is case-insensitive to \fIname\fR. Returns empty string if the option hasn't been set.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetOption/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetOptionInt/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhasOption/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetOptionInt(Name) -> integer() when Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Gets an option as an integer.
+
+.PP
+The function is case-insensitive to \fIname\fR. If the option hasn't been set, this function returns 0.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetOption/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetOption/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhasOption/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBhasOption(Name) -> boolean() when Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Returns true if the given option is present.
+
+.PP
+The function is case-insensitive to \fIname\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetOption/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetOption/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetOptionInt/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBisFalse(Name) -> boolean() when Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Returns true if the option with the given \fIname\fR had been set to 0 value.
+
+.PP
+This is mostly useful for boolean options for which you can't use \fIGetOptionInt(name)\fR == 0 as this would also be true if the option hadn't been set at all.
+
+
+.RE
+.B
+\fBsetOption(Name, Value) -> ok\fR
+\fB                   when Name :: unicode:chardata(), Value :: integer();\fR
+\fB               (Name, Value) -> ok\fR
+\fB                   when\fR
+\fB                       Name :: unicode:chardata(),\fR
+\fB                       Value :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets an option.
+
+.PP
+The function is case-insensitive to \fIname\fR.
+
+
+.RE

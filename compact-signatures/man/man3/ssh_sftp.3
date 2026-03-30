@@ -1,0 +1,716 @@
+.TH ssh_sftp 3 "ssh 5.5.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ssh_sftp \- SFTP client.
+
+.SH DESCRIPTION
+.PP
+This module implements an SSH FTP (SFTP) client. SFTP is a secure, encrypted file transfer service available for SSH.
+
+.SH DATA TYPES
+.LP
+.B
+\fBchunk_size() :: undefined | pos_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcrypto_fun() ::\fR
+\fB          fun((TextIn :: binary(), crypto_state()) -> crypto_result()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcrypto_result() ::\fR
+\fB          {ok, TextOut :: binary(), crypto_state()} |\fR
+\fB          {ok, TextOut :: binary(), crypto_state(), chunk_size()}.\fR
+
+.br
+.RS
+.PP
+The initial \fIcrypto_state/0\fR returned from the \fIinit_fun/0\fR is folded into repeated applications of the \fIcrypto_fun/0\fR in the tar_crypto_spec. The binary returned from that fun is sent to the remote SFTP server and the new \fIcrypto_state/0\fR is used in the next call of the \fIcrypto_fun/0\fR.
+
+.PP
+If the \fIcrypto_fun/0\fR reurns a \fIchunk_size/0\fR, that value is as block size for further blocks in calls to \fIcrypto_fun/0\fR.
+
+
+.RE
+.B
+\fBcrypto_state() :: any().\fR
+
+.br
+.RS
+.PP
+The \fIinit_fun/0\fR in the tar_crypto_spec is applied once prior to any other \fIcrypto\fR operation. The intention is that this function initiates the encryption or decryption for example by calling \fIcrypto:crypto_init/4\fR or similar. The \fIcrypto_state/0\fR is the state such a function may return.
+
+.PP
+If the selected cipher needs to have the input data partitioned into blocks of a certain size, the \fIinit_fun/0\fR should return the second form of return value with the \fIchunk_size/0\fR set to the block size. If the \fIchunk_size/0\fR is \fIundefined\fR, the size of the \fIPlainBin\fRs varies, because this is intended for stream crypto, whereas a fixed \fIchunk_size/0\fR is intended for block crypto. A \fIchunk_size/0\fR can be changed in the return from the \fIcrypto_fun/0\fR. The value can be changed between \fIpos_integer/0\fR and \fIundefined\fR.
+
+
+.RE
+.B
+\fBdecrypt_spec() :: {init_fun(), crypto_fun()}.\fR
+
+.br
+.RS
+.PP
+Specifies the encryption or decryption applied to tar files when using \fIopen_tar/3\fR or \fIopen_tar/4\fR.
+
+.PP
+The encryption or decryption is applied to the generated stream of bytes prior to sending the resulting stream to the SFTP server.
+
+.PP
+For code examples see Section Example with encryption in the ssh Users Guide.
+
+
+.RE
+.B
+\fBencrypt_spec() :: {init_fun(), crypto_fun(), final_fun()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfinal_fun() ::\fR
+\fB          fun((FinalTextIn :: binary(), crypto_state()) ->\fR
+\fB                  {ok, FinalTextOut :: binary()}).\fR
+
+.br
+.RS
+.PP
+If doing encryption, the \fIfinal_fun/0\fR in the tar_crypto_spec is applied to the last piece of data. The \fIfinal_fun/0\fR is responsible for padding (if needed) and encryption of that last piece.
+
+
+.RE
+.B
+\fBinit_fun() ::\fR
+\fB          fun(() -> {ok, crypto_state()}) |\fR
+\fB          fun(() -> {ok, crypto_state(), chunk_size()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBreason() :: atom() | string() | tuple().\fR
+
+.br
+.RS
+.PP
+A description of the reason why an operation failed.
+
+.PP
+The \fIatom/0\fR value is formed from the sftp error codes in the protocol-level responses as defined in draft-ietf-secsh-filexfer-13 section 9.1. The codes are named as \fISSH_FX_*\fR which are transformed into lowercase of the star-part. E.g. the error code \fISSH_FX_NO_SUCH_FILE\fR will cause the \fIreason/0\fR to be \fIno_such_file\fR.
+
+.PP
+The \fIstring/0\fR reason is the error information from the server in case of an exit-signal. If that information is empty, the reason is the exit signal name.
+
+.PP
+The \fItuple/0\fR reason are other errors like for example \fI{exit_status,1}\fR.
+
+
+.RE
+.B
+\fBsftp_option() ::\fR
+\fB          {timeout, timeout()} |\fR
+\fB          {sftp_vsn, pos_integer()} |\fR
+\fB          {window_size, pos_integer()} |\fR
+\fB          {packet_size, pos_integer()}.\fR
+
+.br
+.RS
+.PP
+Specifies available SFTP options.
+
+
+.RE
+.B
+\fBtar_crypto_spec() :: encrypt_spec() | decrypt_spec().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBapread(ChannelPid, Handle, Position, Len) -> {async, N} | Error\fR
+\fB                when\fR
+\fB                    ChannelPid :: pid(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Position :: integer(),\fR
+\fB                    Len :: integer(),\fR
+\fB                    Error :: {error, reason()},\fR
+\fB                    N :: term().\fR
+
+.br
+.RS
+.PP
+The \fIapread/4\fR function reads from a specified position, combining the \fIposition/3\fR and \fIaread/3\fR functions.
+
+
+.RE
+.B
+\fBapwrite(ChannelPid, Handle, Position, Data) -> {async, N} | Error\fR
+\fB                 when\fR
+\fB                     ChannelPid :: pid(),\fR
+\fB                     Handle :: term(),\fR
+\fB                     Position :: integer(),\fR
+\fB                     Data :: binary(),\fR
+\fB                     Error :: {error, reason()},\fR
+\fB                     N :: term().\fR
+
+.br
+.RS
+.PP
+The \fIapwrite/4\fR function writes to a specified position, combining the \fIposition/3\fR and \fIawrite/3\fR functions.
+
+
+.RE
+.B
+\fBaread(ChannelPid, Handle, Len) -> {async, N} | Error\fR
+\fB               when\fR
+\fB                   ChannelPid :: pid(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Len :: integer(),\fR
+\fB                   Error :: {error, reason()},\fR
+\fB                   N :: term().\fR
+
+.br
+.RS
+.PP
+Reads from an open file, without waiting for the result. If the handle is valid, the function returns \fI{async, N}\fR, where \fIN\fR is a term guaranteed to be unique between calls of \fIaread\fR. The actual data is sent as a message to the calling process. This message has the form \fI{async_reply, N, Result}\fR, where \fIResult\fR is the result from the read, either \fI{ok, Data}\fR, \fIeof\fR, or \fI{error, reason()}\fR.
+
+
+.RE
+.B
+\fBawrite(ChannelPid, Handle, Data) -> {async, N} | Error\fR
+\fB                when\fR
+\fB                    ChannelPid :: pid(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Data :: binary(),\fR
+\fB                    Error :: {error, reason()},\fR
+\fB                    N :: term().\fR
+
+.br
+.RS
+.PP
+Writes to an open file, without waiting for the result. If the handle is valid, the function returns \fI{async, N}\fR, where \fIN\fR is a term guaranteed to be unique between calls of \fIawrite\fR. The result of the \fIwrite\fR operation is sent as a message to the calling process. This message has the form \fI{async_reply, N, Result}\fR, where \fIResult\fR is the result from the write, either \fIok\fR, or \fI{error, reason()}\fR.
+
+
+.RE
+.B
+\fBclose(ChannelPid, Handle, Timeout) -> ok | Error\fR
+\fB               when\fR
+\fB                   ChannelPid :: pid(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Timeout :: timeout(),\fR
+\fB                   Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Closes a handle to an open file or directory on the server.
+
+
+.RE
+.B
+\fBdel_dir(ChannelPid, Name, Timeout) -> ok | Error\fR
+\fB                 when\fR
+\fB                     ChannelPid :: pid(),\fR
+\fB                     Name :: string(),\fR
+\fB                     Timeout :: timeout(),\fR
+\fB                     Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Deletes a directory specified by \fIName\fR. The directory must be empty before it can be successfully deleted.
+
+
+.RE
+.B
+\fBdelete(ChannelPid, Name, Timeout) -> ok | Error\fR
+\fB                when\fR
+\fB                    ChannelPid :: pid(),\fR
+\fB                    Name :: string(),\fR
+\fB                    Timeout :: timeout(),\fR
+\fB                    Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Deletes the file specified by \fIName\fR.
+
+
+.RE
+.B
+\fBlist_dir(ChannelPid, Path, Timeout) -> {ok, FileNames} | Error\fR
+\fB                  when\fR
+\fB                      ChannelPid :: pid(),\fR
+\fB                      Path :: string(),\fR
+\fB                      Timeout :: timeout(),\fR
+\fB                      FileNames :: [FileName],\fR
+\fB                      FileName :: string(),\fR
+\fB                      Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Lists the given directory on the server, returning the filenames as a list of strings.
+
+
+.RE
+.B
+\fBmake_dir(ChannelPid, Name, Timeout) -> ok | Error\fR
+\fB                  when\fR
+\fB                      ChannelPid :: pid(),\fR
+\fB                      Name :: string(),\fR
+\fB                      Timeout :: timeout(),\fR
+\fB                      Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Creates a directory specified by \fIName\fR. \fIName\fR must be a full path to a new directory. The directory can only be created in an existing directory.
+
+
+.RE
+.B
+\fBmake_symlink(ChannelPid, Name, Target, Timeout) -> ok | Error\fR
+\fB                      when\fR
+\fB                          ChannelPid :: pid(),\fR
+\fB                          Name :: string(),\fR
+\fB                          Target :: string(),\fR
+\fB                          Timeout :: timeout(),\fR
+\fB                          Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Creates a symbolic link pointing to \fITarget\fR with the name \fIName\fR.
+
+
+.RE
+.B
+\fBopen(ChannelPid, Name, Mode, Timeout) -> {ok, Handle} | Error\fR
+\fB              when\fR
+\fB                  ChannelPid :: pid(),\fR
+\fB                  Name :: string(),\fR
+\fB                  Mode :: [read | write | append | binary | raw],\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Handle :: term(),\fR
+\fB                  Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a file on the server and returns a handle, which can be used for reading or writing.
+
+
+.RE
+.B
+\fBopen_tar(ChannelPid, Path, Mode, Timeout) -> {ok, Handle} | Error\fR
+\fB                  when\fR
+\fB                      ChannelPid :: pid(),\fR
+\fB                      Path :: string(),\fR
+\fB                      Mode ::\fR
+\fB                          [read | write | {crypto, tar_crypto_spec()}],\fR
+\fB                      Timeout :: timeout(),\fR
+\fB                      Handle :: term(),\fR
+\fB                      Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a handle to a tar file on the server, associated with \fIChannelPid\fR. The handle can be used for remote tar creation and extraction. The actual writing and reading is performed by calls to erl_tar:add/3,4 and \fIerl_tar:extract/2\fR. Note: The \fIerl_tar:init/3\fR function should not be called, that one is called by this open_tar function.
+
+.PP
+For code examples see Section SFTP Client with TAR Compression in the ssh Users Guide.
+
+.PP
+The \fIcrypto\fR mode option is explained in the data types section above, see Crypto operations for open_tar. Encryption is assumed if the \fIMode\fR contains \fIwrite\fR, and decryption if the \fIMode\fR contains \fIread\fR.
+
+
+.RE
+.B
+\fBopendir(ChannelPid, Path, Timeout) -> {ok, Handle} | Error\fR
+\fB                 when\fR
+\fB                     ChannelPid :: pid(),\fR
+\fB                     Path :: string(),\fR
+\fB                     Timeout :: timeout(),\fR
+\fB                     Handle :: term(),\fR
+\fB                     Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a handle to a directory on the server. The handle can be used for reading directory contents.
+
+
+.RE
+.B
+\fBposition(ChannelPid, Handle, Location, Timeout) ->\fR
+\fB                  {ok, NewPosition} | Error\fR
+\fB                  when\fR
+\fB                      ChannelPid :: pid(),\fR
+\fB                      Handle :: term(),\fR
+\fB                      Location ::\fR
+\fB                          Offset |\fR
+\fB                          {bof, Offset} |\fR
+\fB                          {cur, Offset} |\fR
+\fB                          {eof, Offset} |\fR
+\fB                          bof | cur | eof,\fR
+\fB                      Timeout :: timeout(),\fR
+\fB                      Offset :: integer(),\fR
+\fB                      NewPosition :: integer(),\fR
+\fB                      Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Sets the file position of the file referenced by \fIHandle\fR. Returns \fI{ok, NewPosition}\fR (as an absolute offset) if successful, otherwise \fI{error, reason()}\fR. \fILocation\fR is one of the following:
+
+Offset
+.RS 2
+The same as 
+\fI{bof, Offset}\fR.
+
+.RE
+
+{bof, Offset}
+.RS 2
+Absolute offset.
+
+
+.RE
+
+{cur, Offset}
+.RS 2
+Offset from the current position.
+
+
+.RE
+
+{eof, Offset}
+.RS 2
+Offset from the end of file.
+
+
+.RE
+
+bof | cur | eof
+.RS 2
+The same as eariler with 
+\fIOffset\fR 0, that is, \fI{bof, 0} | {cur, 0} | {eof, 0}\fR.
+
+.RE
+
+
+.RE
+.B
+\fBpread(ChannelPid, Handle, Position, Len, Timeout) ->\fR
+\fB               {ok, Data} | eof | Error\fR
+\fB               when\fR
+\fB                   ChannelPid :: pid(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Position :: integer(),\fR
+\fB                   Len :: integer(),\fR
+\fB                   Timeout :: timeout(),\fR
+\fB                   Data :: string() | binary(),\fR
+\fB                   Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+The \fIpread/3,4\fR function reads from a specified position, combining the \fIposition/3\fR and \fIread/3,4\fR functions.
+
+
+.RE
+.B
+\fBpwrite(ChannelPid, Handle, Position, Data, Timeout) -> ok | Error\fR
+\fB                when\fR
+\fB                    ChannelPid :: pid(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Position :: integer(),\fR
+\fB                    Data :: iolist(),\fR
+\fB                    Timeout :: timeout(),\fR
+\fB                    Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+The \fIpwrite/3,4\fR function writes to a specified position, combining the \fIposition/3\fR and \fIwrite/3,4\fR functions.
+
+
+.RE
+.B
+\fBread(ChannelPid, Handle, Len, Timeout) -> {ok, Data} | eof | Error\fR
+\fB              when\fR
+\fB                  ChannelPid :: pid(),\fR
+\fB                  Handle :: term(),\fR
+\fB                  Len :: integer(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Data :: string() | binary(),\fR
+\fB                  Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Reads \fILen\fR bytes from the file referenced by \fIHandle\fR. Returns \fI{ok, Data}\fR, \fIeof\fR, or \fI{error, reason()}\fR. If the file is opened with \fIbinary\fR, \fIData\fR is a binary, otherwise it is a string.
+
+.PP
+If the file is read past \fIeof\fR, only the remaining bytes are read and returned. If no bytes are read, \fIeof\fR is returned.
+
+
+.RE
+.B
+\fBread_file(ChannelPid, File, Timeout) -> {ok, Data} | Error\fR
+\fB                   when\fR
+\fB                       ChannelPid :: pid(),\fR
+\fB                       File :: string(),\fR
+\fB                       Data :: binary(),\fR
+\fB                       Timeout :: timeout(),\fR
+\fB                       Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Reads a file from the server, and returns the data in a binary.
+
+
+.RE
+.B
+\fBread_file_info(ChannelPid, Name, Timeout) ->\fR
+\fB                        {ok, FileInfo} | Error\fR
+\fB                        when\fR
+\fB                            ChannelPid :: pid(),\fR
+\fB                            Name :: string(),\fR
+\fB                            Timeout :: timeout(),\fR
+\fB                            FileInfo :: file:file_info(),\fR
+\fB                            Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Returns a \fIfile_info\fR record from the file system object specified by \fIName\fR or \fIHandle\fR. See \fIfile:read_file_info/2\fR for information about the record.
+
+.PP
+Depending on the underlying OS:es links might be followed and info on the final file, directory etc is returned. See \fIread_link_info/2\fR on how to get information on links instead.
+
+
+.RE
+.B
+\fBread_link(ChannelPid, Name, Timeout) -> {ok, Target} | Error\fR
+\fB                   when\fR
+\fB                       ChannelPid :: pid(),\fR
+\fB                       Name :: string(),\fR
+\fB                       Target :: string(),\fR
+\fB                       Timeout :: timeout(),\fR
+\fB                       Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Reads the link target from the symbolic link specified by \fIname\fR.
+
+
+.RE
+.B
+\fBread_link_info(ChannelPid, Name, Timeout) ->\fR
+\fB                        {ok, FileInfo} | Error\fR
+\fB                        when\fR
+\fB                            ChannelPid :: pid(),\fR
+\fB                            Name :: string(),\fR
+\fB                            FileInfo :: file:file_info(),\fR
+\fB                            Timeout :: timeout(),\fR
+\fB                            Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Returns a \fIfile_info\fR record from the symbolic link specified by \fIName\fR or \fIHandle\fR. See \fIfile:read_link_info/2\fR for information about the record.
+
+
+.RE
+.B
+\fBrename(ChannelPid, OldName, NewName, Timeout) -> ok | Error\fR
+\fB                when\fR
+\fB                    ChannelPid :: pid(),\fR
+\fB                    OldName :: string(),\fR
+\fB                    NewName :: string(),\fR
+\fB                    Timeout :: timeout(),\fR
+\fB                    Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Renames a file named \fIOldName\fR and gives it the name \fINewName\fR.
+
+
+.RE
+.B
+\fBstart_channel(ssh:open_socket(),\fR
+\fB                    [ssh:client_option() | sftp_option()]) ->\fR
+\fB                       {ok, pid(), ssh:connection_ref()} |\fR
+\fB                       {error, reason()};\fR
+\fB                   (ssh:connection_ref(),\fR
+\fB                    [ssh:client_option() | sftp_option()]) ->\fR
+\fB                       {ok, pid()} |\fR
+\fB                       {ok, pid(), ssh:connection_ref()} |\fR
+\fB                       {error, reason()};\fR
+\fB                   (ssh:host(), [ssh:client_option() | sftp_option()]) ->\fR
+\fB                       {ok, pid(), ssh:connection_ref()} |\fR
+\fB                       {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Starts new ssh channel for communicating with the SFTP server.
+
+.PP
+Starts an ssh channel when first argument is a connection reference.
+
+.PP
+Equivalent to start_channel(Host, 22, UserOptions) when first argument is recognized as network host.
+
+.PP
+Otherwise, first argument is treated as a network socket which will be used for establishing new SSH connection. New connection reference will be used for starting an SSH channel.
+
+.PP
+The returned \fIpid\fR for this process is to be used as input to all other API functions in this module.
+
+.PP
+See also (\fIstart_channel/3\fR).
+
+
+.RE
+.B
+\fBstart_channel(ssh:host(),\fR
+\fB                    inet:port_number(),\fR
+\fB                    [ssh:client_option() | sftp_option()]) ->\fR
+\fB                       {ok, pid(), ssh:connection_ref()} |\fR
+\fB                       {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Starts new ssh connection and channel for communicating with the SFTP server.
+
+.PP
+The returned \fIpid\fR for this process is to be used as input to all other API functions in this module.
+
+.PP
+Options:
+
+{timeout, timeout()}
+.RS 2
+There are two ways to set a timeout for the underlying ssh connection:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the connection timeout option \fIconnect_timeout\fR is set, that value is used also for the negotiation timeout and this option (\fItimeout\fR) is ignored.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Otherwise, this option (\fItimeout\fR) is used as the negotiation timeout only and there is no connection timeout set
+
+.RE
+
+.PP
+The value defaults to \fIinfinity\fR.
+
+
+.RE
+
+{sftp_vsn, integer()}
+.RS 2
+Desired SFTP protocol version. The actual version is the minimum of the desired version and the maximum supported versions by the SFTP server.
+
+
+.RE
+
+.PP
+All other options are directly passed to ssh:connect/3 or ignored if a connection is already provided.
+
+
+.RE
+.B
+\fBstop_channel(ChannelPid) -> ok when ChannelPid :: pid().\fR
+
+.br
+.RS
+.PP
+Stops an SFTP channel. Does not close the SSH connection. Use \fIssh:close/1\fR to close it.
+
+
+.RE
+.B
+\fBwrite(ChannelPid, Handle, Data, Timeout) -> ok | Error\fR
+\fB               when\fR
+\fB                   ChannelPid :: pid(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Data :: iodata(),\fR
+\fB                   Timeout :: timeout(),\fR
+\fB                   Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Writes \fIdata\fR to the file referenced by \fIHandle\fR. The file is to be opened with \fIwrite\fR or \fIappend\fR flag. Returns \fIok\fR if successful or \fI{error, reason()}\fR otherwise.
+
+
+.RE
+.B
+\fBwrite_file(ChannelPid, File, Data, Timeout) -> ok | Error\fR
+\fB                    when\fR
+\fB                        ChannelPid :: pid(),\fR
+\fB                        File :: string(),\fR
+\fB                        Data :: iodata(),\fR
+\fB                        Timeout :: timeout(),\fR
+\fB                        Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Writes a file to the server. The file is created if it does not exist but overwritten if it exists.
+
+
+.RE
+.B
+\fBwrite_file_info(ChannelPid, Name, FileInfo, Timeout) -> ok | Error\fR
+\fB                         when\fR
+\fB                             ChannelPid :: pid(),\fR
+\fB                             Name :: string(),\fR
+\fB                             FileInfo :: file:file_info(),\fR
+\fB                             Timeout :: timeout(),\fR
+\fB                             Error :: {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Writes file information from a \fIfile_info\fR record to the file specified by \fIName\fR. See file:write_file_info/2,3 for information about the record.
+
+
+.RE

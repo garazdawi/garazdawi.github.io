@@ -1,0 +1,837 @@
+.TH binary 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+binary \- Library for handling binary data.
+
+.SH DESCRIPTION
+.PP
+This module provides functions for manipulating byte-oriented binaries. While most of these functions could be implemented using the bit syntax, the functions in this module are highly optimized and are expected to either execute faster or consume less memory, or both, compared to equivalent implementations written in pure Erlang.
+
+.PP
+The module is provided according to EEP 31: Binary manipulation and searching module.
+
+.PP
+\fBNOTE: \fRThis module handles byte-oriented data. For bitstrings that are not binaries (does not contain whole octets of bits) a \fIbadarg\fR exception is raised from any of the functions in this module.
+
+
+.SH DATA TYPES
+.LP
+.B
+\fB-opaque cp() \fR
+
+.br
+.RS
+.PP
+Opaque data type representing a compiled search pattern.
+
+.PP
+Guaranteed to be a \fItuple/0\fR to allow programs to distinguish it from non-precompiled search patterns.
+
+
+.RE
+.B
+\fBpart() :: {Start :: non_neg_integer(), Length :: integer()}.\fR
+
+.br
+.RS
+.PP
+A representation of a part (or range) in a binary. \fIStart\fR is a zero-based offset into a \fIbinary/0\fR and \fILength\fR is the length of that part.
+
+.PP
+As input to functions in this module, a reverse part specification is allowed, constructed with a negative \fILength\fR, so that the part of the binary begins at \fIStart\fR + \fILength\fR and is -\fILength\fR long. This is useful for referencing the last \fIN\fR bytes of a binary as \fI{size(Binary), -N}\fR. The functions in this module always return \fIpart/0\fRs with positive \fILength\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBat(Subject, Pos) -> byte()\fR
+\fB            when Subject :: binary(), Pos :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the byte at position \fIPos\fR (zero-based) in binary \fISubject\fR as an integer.
+
+.PP
+If \fIPos\fR >= \fIbyte_size(Subject)\fR, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:at(<<5,19,72,33>>, 0).
+5
+2> binary:at(<<5,19,72,33>>, 1).
+19
+3> binary:at(<<5,19,72,33>>, 4).
+** exception error: bad argument
+     in function  binary:at/2
+        called as binary:at(<<5,19,72,33>>,4)
+
+.fi
+
+
+.RE
+.B
+\fBbin_to_list(Subject) -> [byte()] when Subject :: binary().\fR
+
+.br
+.RS
+.PP
+Converts \fISubject\fR to a list of \fIbyte()\fRs, each representing the value of one byte.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:bin_to_list(<<"erlang",0>>).
+[101,114,108,97,110,103,0]
+
+.fi
+
+
+.RE
+.B
+\fBbin_to_list(Subject, Pos, Len) -> [byte()]\fR
+\fB                     when\fR
+\fB                         Subject :: binary(),\fR
+\fB                         Pos :: non_neg_integer(),\fR
+\fB                         Len :: integer().\fR
+
+.br
+.RS
+.PP
+Converts part of \fISubject\fR to a list of \fIbyte/0\fRs, each representing the value of one byte.
+
+.PP
+\fIPos\fR and \fILen\fR denote which part of the \fISubject\fR binary to convert.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:bin_to_list(<<"erlang">>, 1, 3).
+"rla"
+%% or [114,108,97] in list notation.
+2> binary:bin_to_list(<<"erlang">>, 5, 3).
+** exception error: bad argument
+     in function  binary:bin_to_list/3
+        called as binary:bin_to_list(<<"erlang">>,5,3)
+        *** argument 3: out of range
+
+.fi
+
+.PP
+If \fIPos\fR and \fILen\fR reference outside the binary in any way, a \fIbadarg\fR exception is raised.
+
+
+.RE
+.B
+\fBcompile_pattern(Pattern) -> cp()\fR
+\fB                         when\fR
+\fB                             Pattern ::\fR
+\fB                                 PatternBinary | [PatternBinary, ...],\fR
+\fB                             PatternBinary :: nonempty_binary().\fR
+
+.br
+.RS
+.PP
+Builds an internal structure representing a compilation of a search pattern, later to be used in functions \fImatch/3\fR, \fImatches/3\fR, \fIsplit/3\fR, or \fIreplace/4\fR.
+
+.PP
+The \fIcp/0\fR returned is guaranteed to be a \fItuple/0\fR to allow programs to distinguish it from non-precompiled search patterns.
+
+.PP
+When a list of binaries is specified, it denotes a set of alternative binaries to search for. For example, if \fI[<<"functional">>,<<"programming">>]\fR is specified as \fIPattern\fR, this means either \fI<<"functional">>\fR or \fI<<"programming">>\fR". The pattern is a set of alternatives; when only a single binary is specified, the set has only one element. The order of alternatives in a pattern is not significant.
+
+.PP
+The list of binaries used for search alternatives must be flat, proper, and non-empty.
+
+.PP
+If \fIPattern\fR is not a binary or a flat proper non-empty list of binaries with length greater than 0, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Pat = binary:compile_pattern(~"rain").
+2> binary:match(~"the rain in spain", Pat).
+{4,4}
+
+.fi
+
+
+.RE
+.B
+\fBcopy(Subject) -> binary() when Subject :: binary().\fR
+
+.br
+.RS
+.PP
+Creates a copy of \fISubject\fR.
+
+.PP
+Using \fIcopy/1\fR on a binary that references a larger binary can potentially free up the larger binary for garbage collection.
+
+.PP
+\fBNOTE: \fRDeliberately copying a single binary to avoid referencing a larger binary does not necessarily free up the larger binary for garbage collection. Instead, it can lead to the creation of significantly more binary data than needed. In general, sharing binary data is beneficial. Only in special cases — when small parts reference large binaries and the large binaries are no longer used in any process — can deliberate copying be beneficial.
+
+
+.SS "Examples"
+
+.IP
+.nf
+1> HugeBinary = <<0:100_000/unit:8>>.
+2> byte_size(HugeBinary).
+100000
+3> Part = binary:part(HugeBinary, 0, 5).
+<<0,0,0,0,0>>
+4> Copy = binary:copy(Part).
+<<0,0,0,0,0>>
+
+.fi
+
+
+.RE
+.B
+\fBcopy(Subject, N) -> binary()\fR
+\fB              when Subject :: binary(), N :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Creates a binary with the content of \fISubject\fR duplicated \fIN\fR times.
+
+.PP
+This function always creates a new binary, even when \fIN\fR is \fI1\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:copy(~"-", 10).
+<<"----------">>
+
+.fi
+
+
+.RE
+.B
+\fBdecode_hex(Bin) -> Bin2 when Bin :: <<_:_*16>>, Bin2 :: binary().\fR
+
+.br
+.RS
+.PP
+Decodes a hex-encoded binary into a binary.
+
+.PP
+An exception is raised if the size of the binary is not evenly divisble by two, or if the binary contains any characters that do not represent hex digits.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:decode_hex(<<"666f6f">>).
+<<"foo">>
+2> binary:decode_hex(<<"A">>).
+** exception error: bad argument
+     in function  binary:decode_hex/1
+        called as binary:decode_hex(<<"A">>)
+        *** argument 1: must contain an even number of bytes
+
+.fi
+
+
+.RE
+.B
+\fBdecode_unsigned(Subject, Endianness) -> Unsigned\fR
+\fB                         when\fR
+\fB                             Subject :: binary(),\fR
+\fB                             Endianness :: big | little,\fR
+\fB                             Unsigned :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Converts the binary digit representation, in big endian or little endian, of a positive integer in \fISubject\fR to an Erlang \fIinteger/0\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:decode_unsigned(<<7>>).
+7
+2> binary:decode_unsigned(<<1,0>>).
+256
+3> binary:decode_unsigned(<<169,138,199>>).
+11111111
+4> binary:decode_unsigned(<<169,138,199>>, big).
+11111111
+5> binary:decode_unsigned(<<169,138,199>>, little).
+13077161
+
+.fi
+
+
+.RE
+.B
+\fBencode_hex(Bin, Case) -> Bin2\fR
+\fB                    when\fR
+\fB                        Bin :: binary(),\fR
+\fB                        Case :: lowercase | uppercase,\fR
+\fB                        Bin2 :: <<_:_*16>>.\fR
+
+.br
+.RS
+.PP
+Encodes a binary into a hex-encoded binary using the specified case for the hexadecimal digits "a" to "f".
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:encode_hex(<<"foo">>, uppercase).
+<<"666F6F">>
+2> binary:encode_hex(<<"/">>, uppercase).
+<<"2F">>
+3> binary:encode_hex(<<"/">>, lowercase).
+<<"2f">>
+
+.fi
+
+
+.RE
+.B
+\fBencode_unsigned(Unsigned, Endianness) -> binary()\fR
+\fB                         when\fR
+\fB                             Unsigned :: non_neg_integer(),\fR
+\fB                             Endianness :: big | little.\fR
+
+.br
+.RS
+.PP
+Converts a non-negative integer into the smallest possible unsigned binary representation, using either big-endian or little-endian format.
+
+.PP
+If \fIUnsigned\fR is not a non-negative integer, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:encode_unsigned(0, big).
+<<0>>
+2> binary:encode_unsigned(255, big).
+<<255>>
+3> binary:encode_unsigned(256, big).
+<<1,0>>
+4> binary:encode_unsigned(256, little).
+<<0,1>>
+5> binary:encode_unsigned(11111111, big).
+<<169,138,199>>
+6> binary:encode_unsigned(11111111, little).
+<<199,138,169>>
+
+.fi
+
+
+.RE
+.B
+\fBfirst(Subject) -> byte() when Subject :: binary().\fR
+
+.br
+.RS
+.PP
+Returns the first byte of binary \fISubject\fR as an integer.
+
+.PP
+If the size of \fISubject\fR is zero, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:first(<<42,99,100>>).
+42
+2> binary:first(<<>>).
+** exception error: bad argument
+     in function  binary:first/1
+        called as binary:first(<<>>)
+        *** argument 1: a zero-sized binary is not allowed
+
+.fi
+
+
+.RE
+.B
+\fBjoin([binary()], binary()) -> binary().\fR
+
+.br
+.RS
+.PP
+Joins a list of binaries together by a specified \fISeparator\fR.
+
+.PP
+Equivalent to \fIiolist_to_binary(lists:join(Separator, Binaries))\fR, but faster.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:join([<<"a">>, <<"b">>, <<"c">>], <<", ">>).
+<<"a, b, c">>
+
+.fi
+
+
+.RE
+.B
+\fBlast(Subject) -> byte() when Subject :: binary().\fR
+
+.br
+.RS
+.PP
+Returns the last byte of binary \fISubject\fR as an integer.
+
+.PP
+If the size of \fISubject\fR is zero, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:last(<<42,99,100>>).
+100
+2> binary:last(<<>>).
+** exception error: bad argument
+     in function  binary:last/1
+        called as binary:last(<<>>)
+        *** argument 1: a zero-sized binary is not allowed
+
+.fi
+
+
+.RE
+.B
+\fBlist_to_bin(ByteList) -> binary() when ByteList :: iolist().\fR
+
+.br
+.RS
+.PP
+Works exactly as \fIerlang:list_to_binary/1\fR.
+
+.PP
+This function is provided for completeness.
+
+
+.RE
+.B
+\fBlongest_common_prefix(Binaries) -> non_neg_integer()\fR
+\fB                               when Binaries :: [binary(), ...].\fR
+
+.br
+.RS
+.PP
+Returns the length of the longest common prefix of the binaries in list \fIBinaries\fR.
+
+.PP
+If \fIBinaries\fR is not a flat non-empty list of binaries, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:longest_common_prefix([<<"erlang">>, <<"ergonomy">>]).
+2
+2> binary:longest_common_prefix([<<"erlang">>, <<"perl">>]).
+0
+
+.fi
+
+
+.RE
+.B
+\fBlongest_common_suffix(Binaries) -> non_neg_integer()\fR
+\fB                               when Binaries :: [binary(), ...].\fR
+
+.br
+.RS
+.PP
+Returns the length of the longest common suffix of the binaries in list \fIBinaries\fR.
+
+.PP
+If \fIBinaries\fR is not a flat non-empty list of binaries, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:longest_common_suffix([<<"erlang">>, <<"fang">>]).
+3
+2> binary:longest_common_suffix([<<"erlang">>, <<"perl">>]).
+0
+
+.fi
+
+
+.RE
+.B
+\fBmatch(Subject, Pattern, Options) -> Found | nomatch\fR
+\fB               when\fR
+\fB                   Subject :: binary(),\fR
+\fB                   Pattern ::\fR
+\fB                       PatternBinary | [PatternBinary, ...] | cp(),\fR
+\fB                   PatternBinary :: nonempty_binary(),\fR
+\fB                   Found :: part(),\fR
+\fB                   Options :: [Option],\fR
+\fB                   Option :: {scope, part()}.\fR
+
+.br
+.RS
+.PP
+Searches for the first occurrence of \fIPattern\fR in \fISubject\fR and returns the position and length.
+
+.PP
+The function returns \fI{Pos, Length}\fR for the binary in \fIPattern\fR, starting at the lowest position in \fISubject\fR.
+
+.PP
+Summary of the options:
+
+{scope, {Start, Length}}
+.RS 2
+Only the specified part is searched. Return values still have offsets from the beginning of 
+\fISubject\fR. A negative \fILength\fR is allowed as described in Types.
+
+.RE
+
+.PP
+If none of the strings in \fIPattern\fR is found, the atom \fInomatch\fR is returned.
+
+.PP
+For a description of \fIPattern\fR, see \fIcompile_pattern/1\fR.
+
+.PP
+If \fI{scope, {Start,Length}}\fR is specified in the options such that \fIStart\fR > size of \fISubject\fR, \fIStart\fR + \fILength\fR < 0 or \fIStart\fR + \fILength\fR > size of \fISubject\fR, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:match(<<"abcde">>, [<<"bcde">>, <<"cd">>], []).
+{1,4}
+
+.fi
+
+.PP
+Even though \fI<<"cd">>\fR ends before \fI<<"bcde">>\fR, \fI<<"bcde">>\fR begins first and is therefore the first match. If two overlapping matches begin at the same position, the longest is returned.
+
+.IP
+.nf
+1> binary:match(~"the rain in spain", ~"ain", []).
+{5,3}
+
+.fi
+
+
+.RE
+.B
+\fBmatches(Subject, Pattern, Options) -> Found\fR
+\fB                 when\fR
+\fB                     Subject :: binary(),\fR
+\fB                     Pattern ::\fR
+\fB                         PatternBinary | [PatternBinary, ...] | cp(),\fR
+\fB                     PatternBinary :: nonempty_binary(),\fR
+\fB                     Found :: [part()],\fR
+\fB                     Options :: [Option],\fR
+\fB                     Option :: {scope, part()}.\fR
+
+.br
+.RS
+.PP
+As \fImatch/2\fR, but \fISubject\fR is searched until exhausted and a list of all non-overlapping parts matching \fIPattern\fR is returned (in order).
+
+.PP
+The first and longest match is preferred to a shorter, which is illustrated by the following example:
+
+.IP
+.nf
+1> binary:matches(<<"abcde">>,
+                  [<<"bcde">>,<<"bc">>,<<"de">>],
+                  []).
+[{1,4}]
+
+.fi
+
+.PP
+The result shows that <<"bcde">> is selected instead of the shorter match <<"bc">> (which would have resulted in one more match, <<"de">>). This corresponds to the behavior of POSIX regular expressions (and programs such as \fIawk\fR), but is not consistent with alternative matches in \fIre\fR (and Perl), where lexical ordering in the search pattern determines which string matches.
+
+.PP
+If none of the strings in a pattern is found, an empty list is returned.
+
+.PP
+For a description of \fIPattern\fR, see \fIcompile_pattern/1\fR. For a description of available options, see \fImatch/3\fR.
+
+.PP
+If \fI{scope, {Start,Length}}\fR is specified in the options such that \fIStart\fR > size of \fISubject\fR, \fIStart + Length\fR < 0 or \fIStart + Length\fR is > size of \fISubject\fR, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:matches(~"the rain in spain", ~"ai", []).
+[{5,2},{14,2}]
+
+.fi
+
+
+.RE
+.B
+\fBpart(Subject, Pos, Len) -> binary()\fR
+\fB              when\fR
+\fB                  Subject :: binary(),\fR
+\fB                  Pos :: non_neg_integer(),\fR
+\fB                  Len :: integer().\fR
+
+.br
+.RS
+.PP
+Extracts the part of binary \fISubject\fR described by \fIPosLen\fR.
+
+.PP
+A negative length can be used to extract bytes at the end of a binary.
+
+.PP
+\fBNOTE: \fR\fIpart/2\fR and \fIpart/3\fR are also available in the \fIerlang\fR module under the names \fIbinary_part/2\fR and \fIbinary_part/3\fR. Those BIFs are allowed in guard tests.
+
+
+.PP
+If \fIPos\fR and \fILen\fR in any way references outside the binary, a \fIbadarg\fR exception is raised.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Bin = <<1,2,3,4,5,6,7,8,9,10>>.
+2> binary:part(Bin, 1, 3).
+<<2,3,4>>
+3> binary:part(Bin, byte_size(Bin), -5).
+<<6,7,8,9,10>>
+
+.fi
+
+
+.RE
+.B
+\fBreferenced_byte_size(Binary) -> non_neg_integer()\fR
+\fB                              when Binary :: binary().\fR
+
+.br
+.RS
+.PP
+Get the size of the underlying binary referenced by \fIBinary\fR.
+
+.PP
+If a binary references a larger binary (often called a subbinary), it can be useful to determine the size of the referenced binary. This function can be used to decide when to trigger \fIcopy/1\fR. Copying a binary can help eliminate the reference to the original, potentially large, binary that the smaller binary depends on.
+
+.PP
+\fBNOTE: \fRBinary data is shared among processes. If another process still references the larger binary, copying only the part used by this process will consume more memory without freeing the larger binary for garbage collection. Use these intrusive functions with extreme care, and only when a real problem has been identified.
+
+
+.SS "Examples"
+
+.IP
+.nf
+store(Binary, GBSet) ->
+    NewBin =
+        case binary:referenced_byte_size(Binary) of
+            Large when Large > 2 * byte_size(Binary) ->
+                binary:copy(Binary);
+            _ ->
+                Binary
+        end,
+    gb_sets:insert(NewBin, GBSet).
+
+.fi
+
+.PP
+In this example, we choose to copy the binary content before inserting it into \fIgb_sets:set()\fR if it references a binary more than twice the size of the data we want to retain. Naturally, different rules apply when copying in different applications.
+
+.PP
+Binary sharing occurs whenever binaries are taken apart. This is the fundamental reason why binaries are efficient; decomposition always has \fIO(1)\fR complexity. However, in rare circumstances this data sharing is undesirable. In such situations, this function, along with \fIcopy/1\fR can be useful for optimizing memory usage.
+
+.IP
+.nf
+1> A = binary:copy(<<1>>, 1000).
+<<1,1,1,1,1,_/binary>>
+2> byte_size(A).
+1000
+3> binary:referenced_byte_size(A).
+1000
+4> <<B:10/binary, C/binary>> = A.
+5> {byte_size(B), binary:referenced_byte_size(B)}.
+{10,10}
+6> {byte_size(C), binary:referenced_byte_size(C)}.
+{990,1000}
+
+.fi
+
+.PP
+In the above example, the small binary \fIB\fR was copied, while the larger binary \fIC\fR still references binary \fIA\fR.
+
+
+.RE
+.B
+\fBreplace(Subject, Pattern, Replacement, Options) -> Result\fR
+\fB                 when\fR
+\fB                     Subject :: binary(),\fR
+\fB                     Pattern ::\fR
+\fB                         PatternBinary | [PatternBinary, ...] | cp(),\fR
+\fB                     PatternBinary :: nonempty_binary(),\fR
+\fB                     Replacement ::\fR
+\fB                         binary() | fun((binary()) -> binary()),\fR
+\fB                     Options :: [Option],\fR
+\fB                     Option ::\fR
+\fB                         global |\fR
+\fB                         {scope, part()} |\fR
+\fB                         {insert_replaced, InsPos},\fR
+\fB                     InsPos :: OnePos | [OnePos],\fR
+\fB                     OnePos :: non_neg_integer(),\fR
+\fB                     Result :: binary().\fR
+
+.br
+.RS
+.PP
+Constructs a new binary by replacing the parts in \fISubject\fR matching \fIPattern\fR with \fIReplacement\fR if given as a literal \fIbinary/0\fR or with the result of applying \fIReplacement\fR to a matching subpart if given as a \fIfun\fR.
+
+.PP
+If \fIReplacement\fR is given as a \fIbinary/0\fR and the matching subpart of \fISubject\fR giving rise to the replacement is to be inserted in the result, option \fI{insert_replaced, InsPos}\fR inserts the matching part into \fIReplacement\fR at the specified position (or positions) before inserting \fIReplacement\fR into \fISubject\fR. If \fIReplacement\fR is given as a \fIfun\fR instead, this option is ignored.
+
+.PP
+If any position specified in \fIInsPos\fR is greater than the size of the replacement binary, a \fIbadarg\fR exception is raised.
+
+.PP
+Options \fIglobal\fR and \fI{scope, part()}\fR work as for \fIsplit/3\fR. The return type is always \fIbinary/0\fR.
+
+.PP
+For a description of \fIPattern\fR, see \fIcompile_pattern/1\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:replace(<<"abcde">>, [<<"b">>, <<"d">>], <<"X">>, []).
+<<"aXcde">>
+
+2> binary:replace(<<"abcde">>, [<<"b">>, <<"d">>], <<"X">>, [global]).
+<<"aXcXe">>
+
+3> binary:replace(<<"abcde">>, <<"b">>, <<"[]">>, [{insert_replaced, 1}]).
+<<"a[b]cde">>
+
+4> binary:replace(<<"abcde">>, [<<"b">>, <<"d">>], <<"[]">>, [global,{insert_replaced,1}]).
+<<"a[b]c[d]e">>
+
+5> binary:replace(<<"abcde">>, [<<"b">>, <<"d">>], <<"[]">>, [global,{insert_replaced,[1,1]}]).
+<<"a[bb]c[dd]e">>
+
+6> binary:replace(<<"abcde">>, [<<"b">>, <<"d">>], <<"[-]">>, [global,{insert_replaced,[1,2]}]).
+<<"a[b-b]c[d-d]e">>
+
+7> binary:replace(<<"abcde">>, [<<"b">>, <<"d">>], fun(M) -> <<$[, M/binary, $]>> end, []).
+<<"a[b]cde">>
+
+8> binary:replace(<<"abcde">>, [<<"b">>, <<"d">>], fun(M) -> <<$[, M/binary, $]>> end, [global]).
+<<"a[b]c[d]e">>
+
+.fi
+
+
+.RE
+.B
+\fBsplit(Subject, Pattern, Options) -> Parts\fR
+\fB               when\fR
+\fB                   Subject :: binary(),\fR
+\fB                   Pattern ::\fR
+\fB                       PatternBinary | [PatternBinary, ...] | cp(),\fR
+\fB                   PatternBinary :: nonempty_binary(),\fR
+\fB                   Options :: [Option],\fR
+\fB                   Option :: {scope, part()} | trim | global | trim_all,\fR
+\fB                   Parts :: [binary()].\fR
+
+.br
+.RS
+.PP
+Splits \fISubject\fR into a list of binaries based on \fIPattern\fR.
+
+.PP
+If option \fIglobal\fR is not specified, only the first occurrence of \fIPattern\fR in \fISubject\fR gives rise to a split.
+
+.PP
+The parts of \fIPattern\fR found in \fISubject\fR are not included in the result.
+
+.PP
+Summary of options:
+
+{scope, part()}
+.RS 2
+Works as in 
+\fImatch/3\fR and \fImatches/3\fR. Note that this only defines the scope of the search for matching strings; it does not cut the binary before splitting. The bytes before and after the scope are kept in the result. See the example below.
+
+.RE
+
+trim
+.RS 2
+Removes trailing empty parts of the result (as does 
+\fItrim\fR in \fIre:split/3\fR).
+
+.RE
+
+trim_all
+.RS 2
+Removes all empty parts of the result.
+
+
+.RE
+
+global
+.RS 2
+Repeats the split until 
+\fISubject\fR is exhausted. Conceptually option \fIglobal\fR makes split work on the positions returned by \fImatches/3\fR, while it normally works on the position returned by \fImatch/3\fR.
+
+.RE
+
+.PP
+Example of the difference between a scope and taking the binary apart before splitting:
+
+.IP
+.nf
+1> binary:split(<<"banana">>, [<<"a">>], [{scope,{2,3}}]).
+[<<"ban">>,<<"na">>]
+2> binary:split(binary:part(<<"banana">>,{2,3}), [<<"a">>], []).
+[<<"n">>,<<"n">>]
+
+.fi
+
+.PP
+The return type is always a list of binaries that are all referencing \fISubject\fR. This means that the data in \fISubject\fR is not copied to new binaries, and that \fISubject\fR cannot be garbage collected until the results of the split are no longer referenced.
+
+.PP
+For a description of \fIPattern\fR, see \fIcompile_pattern/1\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> binary:split(~"the quick brown fox", ~" ", []).
+[<<"the">>,<<"quick brown fox">>]
+2> binary:split(~"the quick brown fox", ~" ", [global]).
+[<<"the">>,<<"quick">>,<<"brown">>,<<"fox">>]
+3> binary:split(<<1,255,4,0,0,0,2,3>>, [<<0,0,0>>,<<2>>], []).
+[<<1,255,4>>, <<2,3>>]
+4> binary:split(<<0,1,0,0,4,255,255,9>>, [<<0,0>>, <<255,255>>], [global]).
+[<<0,1>>,<<4>>,<<9>>]
+
+.fi
+
+
+.RE

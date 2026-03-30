@@ -1,0 +1,42 @@
+.TH tftp_logger 3 "tftp 1.2.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+tftp_logger \- Trivial FTP logger.
+
+.SH DESCRIPTION
+.PP
+A \fItftp_logger\fR callback module is to be implemented as a \fItftp_logger\fR behavior and export the following functions:
+
+.SH FUNCTIONS
+.LP
+.SH CALLBACKS
+.LP
+.B
+\fBerror_msg(Format, Args)\fR
+
+.br
+.RS
+.PP
+Logs an error message. See \fIlogger:error/2\fR for details.
+
+
+.RE
+.B
+\fBinfo_msg(Format, Args)\fR
+
+.br
+.RS
+.PP
+Logs an info message. See \fIlogger:info/2\fR for details.
+
+
+.RE
+.B
+\fBwarning_msg(Format, Args)\fR
+
+.br
+.RS
+.PP
+Logs a warning message. See \fIlogger:warning/2\fR for details.
+
+
+.RE

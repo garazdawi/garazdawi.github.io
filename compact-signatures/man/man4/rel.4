@@ -1,0 +1,98 @@
+.TH rel 4 "sasl 4.3.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+rel \- Release resource file
+.SH DESCRIPTION
+.PP
+The \fIrelease resource file\fR specifies which applications are included in a release (system) based on Erlang/OTP.
+
+.PP
+This file is used by the functions in \fIsystools\fR when generating start scripts (\fI.script\fR, \fI.boot\fR) and release upgrade files (\fIrelup\fR).
+
+.SS "File Syntax"
+
+.PP
+The release resource file is to be called \fIName.rel\fR.
+
+.PP
+The \fI.rel\fR file contains one single Erlang term, which is called a \fIrelease specification\fR. The file has the following syntax:
+
+.IP
+.nf
+{release, {RelName,Vsn}, {erts, EVsn},
+  [{Application, AppVsn} |
+   {Application, AppVsn, Type} |
+   {Application, AppVsn, IncApps} |
+   {Application, AppVsn, Type, IncApps}]}.
+
+.fi
+
+RelName = string()
+.RS 2
+Release name.
+
+
+.RE
+
+Vsn = string()
+.RS 2
+Release version.
+
+
+.RE
+
+EVsn = string()
+.RS 2
+ERTS version the release is intended for.
+
+
+.RE
+
+Application = atom()
+.RS 2
+Name of an application included in the release.
+
+
+.RE
+
+AppVsn = string()
+.RS 2
+Version of an application included in the release.
+
+
+.RE
+
+Type = permanent | transient | temporary | load | none
+.RS 2
+Start type of an application included in the release.
+
+.PP
+If \fIType = permanent | transient | temporary\fR, the application is loaded and started in the corresponding way, see \fIapplication\fR.
+
+.PP
+If \fIType = load\fR, the application is only loaded.
+
+.PP
+If \fIType = none\fR, the application is not loaded and not started, although the code for its modules is loaded.
+
+.PP
+Defaults to \fIpermanent\fR
+
+
+.RE
+
+IncApps = [atom()]
+.RS 2
+A list of applications that are included by an application included in the release. The list must be a subset of the included applications specified in the application resource file (
+\fIApplication.app\fR) and overrides this value. Defaults to the same value as in the application resource file.
+
+.RE
+
+.PP
+\fBNOTE: \fRThe list of applications must contain the Kernel and STDLIB applications.
+
+
+.SS "See Also"
+
+.PP
+\fIapplication\fR, \fIrelup(4)\fR, \fIsystools\fR
+

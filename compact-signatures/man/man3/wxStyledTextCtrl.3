@@ -1,0 +1,5566 @@
+.TH wxStyledTextCtrl 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxStyledTextCtrl \- A wxWidgets implementation of the Scintilla source code editing component.
+
+.SH DESCRIPTION
+.PP
+As well as features found in standard text editing components, Scintilla includes features especially useful when editing and debugging source code. These include support for syntax styling, error indicators, code completion and call tips.
+
+.PP
+The selection margin can contain markers like those used in debuggers to indicate breakpoints and the current line. Styling choices are more open than with many editors, allowing the use of proportional fonts, bold and italics, multiple foreground and background colours and multiple fonts.
+
+.PP
+\fIwxStyledTextCtrl\fR is a 1 to 1 mapping of "raw" scintilla interface, whose documentation can be found in the Scintilla website (http://www.scintilla.org/).
+
+.PP
+Please see \fIwxStyledTextEvent\fR for the documentation of all event types you can use with \fIwxStyledTextCtrl\fR.
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxStyledTextCtrl
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxStyledTextCtrl() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddText(This, Text) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxStyledTextCtrl(),\fR
+\fB                     Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Add text to the document at current position.
+
+
+.RE
+.B
+\fBaddTextRaw(This, Text, [Option]) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        Text :: binary(),\fR
+\fB                        Option :: {length, integer()}.\fR
+
+.br
+.RS
+.PP
+Add text to the document at current position.
+
+
+.RE
+.B
+\fBallocate(This, Bytes) -> ok\fR
+\fB                  when This :: wxStyledTextCtrl(), Bytes :: integer().\fR
+
+.br
+.RS
+.PP
+Enlarge the document to a particular size of text bytes.
+
+
+.RE
+.B
+\fBappendText(This, Text) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Append a string to the end of the document without changing the selection.
+
+
+.RE
+.B
+\fBappendTextRaw(This, Text, [Option]) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Text :: binary(),\fR
+\fB                           Option :: {length, integer()}.\fR
+
+.br
+.RS
+.PP
+Append a string to the end of the document without changing the selection.
+
+
+.RE
+.B
+\fBautoCompActive(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is there an auto-completion list visible?
+
+
+.RE
+.B
+\fBautoCompCancel(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Remove the auto-completion list from the screen.
+
+
+.RE
+.B
+\fBautoCompComplete(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+User has selected an item so remove the list and insert the selection.
+
+
+.RE
+.B
+\fBautoCompGetAutoHide(This) -> boolean()\fR
+\fB                             when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve whether or not autocompletion is hidden automatically when nothing matches.
+
+
+.RE
+.B
+\fBautoCompGetCancelAtStart(This) -> boolean()\fR
+\fB                                  when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve whether auto-completion cancelled by backspacing before start.
+
+
+.RE
+.B
+\fBautoCompGetChooseSingle(This) -> boolean()\fR
+\fB                                 when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve whether a single item auto-completion list automatically choose the item.
+
+
+.RE
+.B
+\fBautoCompGetCurrent(This) -> integer()\fR
+\fB                            when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get currently selected item position in the auto-completion list.
+
+
+.RE
+.B
+\fBautoCompGetDropRestOfWord(This) -> boolean()\fR
+\fB                                   when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve whether or not autocompletion deletes any word characters after the inserted text upon completion.
+
+
+.RE
+.B
+\fBautoCompGetIgnoreCase(This) -> boolean()\fR
+\fB                               when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve state of ignore case flag.
+
+
+.RE
+.B
+\fBautoCompGetMaxHeight(This) -> integer()\fR
+\fB                              when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Set the maximum height, in rows, of auto-completion and user lists.
+
+
+.RE
+.B
+\fBautoCompGetMaxWidth(This) -> integer()\fR
+\fB                             when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the maximum width, in characters, of auto-completion and user lists.
+
+
+.RE
+.B
+\fBautoCompGetSeparator(This) -> integer()\fR
+\fB                              when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the auto-completion list separator character.
+
+
+.RE
+.B
+\fBautoCompGetTypeSeparator(This) -> integer()\fR
+\fB                                  when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the auto-completion list type-separator character.
+
+
+.RE
+.B
+\fBautoCompPosStart(This) -> integer()\fR
+\fB                          when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the position of the caret when the auto-completion list was displayed.
+
+
+.RE
+.B
+\fBautoCompSelect(This, Select) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            Select :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Select the item in the auto-completion list that starts with a string.
+
+
+.RE
+.B
+\fBautoCompSetAutoHide(This, AutoHide) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxStyledTextCtrl(),\fR
+\fB                                 AutoHide :: boolean().\fR
+
+.br
+.RS
+.PP
+Set whether or not autocompletion is hidden automatically when nothing matches.
+
+
+.RE
+.B
+\fBautoCompSetCancelAtStart(This, Cancel) -> ok\fR
+\fB                                  when\fR
+\fB                                      This :: wxStyledTextCtrl(),\fR
+\fB                                      Cancel :: boolean().\fR
+
+.br
+.RS
+.PP
+Should the auto-completion list be cancelled if the user backspaces to a position before where the box was created.
+
+
+.RE
+.B
+\fBautoCompSetChooseSingle(This, ChooseSingle) -> ok\fR
+\fB                                 when\fR
+\fB                                     This :: wxStyledTextCtrl(),\fR
+\fB                                     ChooseSingle :: boolean().\fR
+
+.br
+.RS
+.PP
+Should a single item auto-completion list automatically choose the item.
+
+
+.RE
+.B
+\fBautoCompSetDropRestOfWord(This, DropRestOfWord) -> ok\fR
+\fB                                   when\fR
+\fB                                       This :: wxStyledTextCtrl(),\fR
+\fB                                       DropRestOfWord :: boolean().\fR
+
+.br
+.RS
+.PP
+Set whether or not autocompletion deletes any word characters after the inserted text upon completion.
+
+
+.RE
+.B
+\fBautoCompSetFillUps(This, CharacterSet) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                CharacterSet :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Define a set of characters that when typed will cause the autocompletion to choose the selected item.
+
+
+.RE
+.B
+\fBautoCompSetIgnoreCase(This, IgnoreCase) -> ok\fR
+\fB                               when\fR
+\fB                                   This :: wxStyledTextCtrl(),\fR
+\fB                                   IgnoreCase :: boolean().\fR
+
+.br
+.RS
+.PP
+Set whether case is significant when performing auto-completion searches.
+
+
+.RE
+.B
+\fBautoCompSetMaxHeight(This, RowCount) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  RowCount :: integer().\fR
+
+.br
+.RS
+.PP
+Set the maximum height, in rows, of auto-completion and user lists.
+
+.PP
+The default is 5 rows.
+
+
+.RE
+.B
+\fBautoCompSetMaxWidth(This, CharacterCount) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxStyledTextCtrl(),\fR
+\fB                                 CharacterCount :: integer().\fR
+
+.br
+.RS
+.PP
+Set the maximum width, in characters, of auto-completion and user lists.
+
+.PP
+Set to 0 to autosize to fit longest item, which is the default.
+
+
+.RE
+.B
+\fBautoCompSetSeparator(This, SeparatorCharacter) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  SeparatorCharacter :: integer().\fR
+
+.br
+.RS
+.PP
+Change the separator character in the string setting up an auto-completion list.
+
+.PP
+Default is space but can be changed if items contain space.
+
+
+.RE
+.B
+\fBautoCompSetTypeSeparator(This, SeparatorCharacter) -> ok\fR
+\fB                                  when\fR
+\fB                                      This :: wxStyledTextCtrl(),\fR
+\fB                                      SeparatorCharacter :: integer().\fR
+
+.br
+.RS
+.PP
+Change the type-separator character in the string setting up an auto-completion list.
+
+.PP
+Default is '?' but can be changed if items contain '?'.
+
+
+.RE
+.B
+\fBautoCompShow(This, LengthEntered, ItemList) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          LengthEntered :: integer(),\fR
+\fB                          ItemList :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Display a auto-completion list.
+
+.PP
+The lengthEntered parameter indicates how many characters before the caret should be used to provide context.
+
+
+.RE
+.B
+\fBautoCompStops(This, CharacterSet) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           CharacterSet :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Define a set of character that when typed cancel the auto-completion list.
+
+
+.RE
+.B
+\fBbackTab(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Dedent the selected lines.
+
+
+.RE
+.B
+\fBbeginUndoAction(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Start a sequence of actions that is undone and redone as a unit.
+
+.PP
+May be nested.
+
+
+.RE
+.B
+\fBbraceBadLight(This, Pos) -> ok\fR
+\fB                       when This :: wxStyledTextCtrl(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Highlight the character at a position indicating there is no matching brace.
+
+
+.RE
+.B
+\fBbraceHighlight(This, PosA, PosB) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            PosA :: integer(),\fR
+\fB                            PosB :: integer().\fR
+
+.br
+.RS
+.PP
+Highlight the characters at two positions.
+
+
+.RE
+.B
+\fBbraceMatch(This, Pos) -> integer()\fR
+\fB                    when This :: wxStyledTextCtrl(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Find the position of a matching brace or wxSTC_INVALID_POSITION if no match.
+
+
+.RE
+.B
+\fBcallTipActive(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is there an active call tip?
+
+
+.RE
+.B
+\fBcallTipCancel(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Remove the call tip from the screen.
+
+
+.RE
+.B
+\fBcallTipPosAtStart(This) -> integer()\fR
+\fB                           when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the position where the caret was before displaying the call tip.
+
+.PP
+Since: 3.1.0
+
+
+.RE
+.B
+\fBcallTipSetBackground(This, Back) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  Back :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the background colour for the call tip.
+
+
+.RE
+.B
+\fBcallTipSetForeground(This, Fore) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the foreground colour for the call tip.
+
+
+.RE
+.B
+\fBcallTipSetForegroundHighlight(This, Fore) -> ok\fR
+\fB                                       when\fR
+\fB                                           This :: wxStyledTextCtrl(),\fR
+\fB                                           Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the foreground colour for the highlighted part of the call tip.
+
+
+.RE
+.B
+\fBcallTipSetHighlight(This, HighlightStart, HighlightEnd) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxStyledTextCtrl(),\fR
+\fB                                 HighlightStart :: integer(),\fR
+\fB                                 HighlightEnd :: integer().\fR
+
+.br
+.RS
+.PP
+Highlight a segment of the definition.
+
+
+.RE
+.B
+\fBcallTipShow(This, Pos, Definition) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         Pos :: integer(),\fR
+\fB                         Definition :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Show a call tip containing a definition near position pos.
+
+
+.RE
+.B
+\fBcallTipUseStyle(This, TabSize) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             TabSize :: integer().\fR
+
+.br
+.RS
+.PP
+Enable use of wxSTC_STYLE_CALLTIP and set call tip tab size in pixels.
+
+
+.RE
+.B
+\fBcanPaste(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Will a paste succeed?
+
+
+.RE
+.B
+\fBcanRedo(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Are there any redoable actions in the undo history?
+
+
+.RE
+.B
+\fBcanUndo(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Are there any undoable actions in the undo history?
+
+
+.RE
+.B
+\fBcancel(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Cancel any modes such as call tip or auto-completion list display.
+
+
+.RE
+.B
+\fBcharLeft(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret left one character.
+
+
+.RE
+.B
+\fBcharLeftExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret left one character extending selection to new caret position.
+
+
+.RE
+.B
+\fBcharLeftRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret left one character, extending rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBcharRight(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret right one character.
+
+
+.RE
+.B
+\fBcharRightExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret right one character extending selection to new caret position.
+
+
+.RE
+.B
+\fBcharRightRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret right one character, extending rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBchooseCaretX(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Set the last x chosen value to be the caret x position.
+
+
+.RE
+.B
+\fBclear(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Clear the selection.
+
+
+.RE
+.B
+\fBclearAll(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete all text in the document.
+
+
+.RE
+.B
+\fBclearDocumentStyle(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Set all style bytes to 0, remove all folding information.
+
+
+.RE
+.B
+\fBclearRegisteredImages(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Clear all the registered images.
+
+
+.RE
+.B
+\fBcmdKeyAssign(This, Key, Modifiers, Cmd) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Key :: integer(),\fR
+\fB                          Modifiers :: integer(),\fR
+\fB                          Cmd :: integer().\fR
+
+.br
+.RS
+.PP
+When key+modifier combination keyDefinition is pressed perform sciCommand.
+
+.PP
+The second argument should be a bit list containing one or more of the ?wxSTC_KEYMOD_* constants and the third argument should be one of the ?wxSTC_CMD_* constants.
+
+
+.RE
+.B
+\fBcmdKeyClear(This, Key, Modifiers) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         Key :: integer(),\fR
+\fB                         Modifiers :: integer().\fR
+
+.br
+.RS
+.PP
+When key+modifier combination keyDefinition is pressed do nothing.
+
+.PP
+The second argument should be a bit list containing one or more of the ?wxSTC_KEYMOD_* constants.
+
+
+.RE
+.B
+\fBcmdKeyClearAll(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Drop all key mappings.
+
+
+.RE
+.B
+\fBcmdKeyExecute(This, Cmd) -> ok\fR
+\fB                       when This :: wxStyledTextCtrl(), Cmd :: integer().\fR
+
+.br
+.RS
+.PP
+Perform one of the operations defined by the wxSTC_CMD_* constants.
+
+
+.RE
+.B
+\fBcolourise(This, Start, End) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxStyledTextCtrl(),\fR
+\fB                       Start :: integer(),\fR
+\fB                       End :: integer().\fR
+
+.br
+.RS
+.PP
+Colourise a segment of the document using the current lexing language.
+
+
+.RE
+.B
+\fBconvertEOLs(This, EolMode) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         EolMode :: integer().\fR
+
+.br
+.RS
+.PP
+Convert all line endings in the document to one mode.
+
+
+.RE
+.B
+\fBcopy(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Copy the selection to the clipboard.
+
+
+.RE
+.B
+\fBcopyRange(This, Start, End) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxStyledTextCtrl(),\fR
+\fB                       Start :: integer(),\fR
+\fB                       End :: integer().\fR
+
+.br
+.RS
+.PP
+Copy a range of text to the clipboard.
+
+.PP
+Positions are clipped into the document.
+
+
+.RE
+.B
+\fBcopyText(This, Length, Text) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxStyledTextCtrl(),\fR
+\fB                      Length :: integer(),\fR
+\fB                      Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Copy argument text to the clipboard.
+
+
+.RE
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxStyledTextCtrl(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option ::\fR
+\fB                        {id, integer()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Create the UI elements for a STC that was created with the default ctor.
+
+.PP
+(For 2-phase create.)
+
+
+.RE
+.B
+\fBcut(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Cut the selection to the clipboard.
+
+
+.RE
+.B
+\fBdelLineLeft(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete back from the current position to the start of the line.
+
+
+.RE
+.B
+\fBdelLineRight(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete forwards from the current position to the end of the line.
+
+
+.RE
+.B
+\fBdelWordLeft(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete the word to the left of the caret.
+
+
+.RE
+.B
+\fBdelWordRight(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete the word to the right of the caret.
+
+
+.RE
+.B
+\fBdeleteBack(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete the selection or if no selection, the character before the caret.
+
+
+.RE
+.B
+\fBdeleteBackNotLine(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete the selection or if no selection, the character before the caret.
+
+.PP
+Will not delete the character before at the start of a line.
+
+
+.RE
+.B
+\fBdestroy(This :: wxStyledTextCtrl()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBdoDragOver(This, X, Y, DefaultRes) -> wx:wx_enum()\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        X :: integer(),\fR
+\fB                        Y :: integer(),\fR
+\fB                        DefaultRes :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Allow for simulating a DnD DragOver.
+
+
+.RE
+.B
+\fBdoDropText(This, X, Y, Data) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        X :: integer(),\fR
+\fB                        Y :: integer(),\fR
+\fB                        Data :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Allow for simulating a DnD DropText.
+
+
+.RE
+.B
+\fBdocLineFromVisible(This, DisplayLine) -> integer()\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                DisplayLine :: integer().\fR
+
+.br
+.RS
+.PP
+Find the document line of a display line taking hidden lines into account.
+
+
+.RE
+.B
+\fBdocumentEnd(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to last position in document.
+
+
+.RE
+.B
+\fBdocumentEndExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to last position in document extending selection to new caret position.
+
+
+.RE
+.B
+\fBdocumentStart(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to first position in document.
+
+
+.RE
+.B
+\fBdocumentStartExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to first position in document extending selection to new caret position.
+
+
+.RE
+.B
+\fBeditToggleOvertype(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Switch from insert to overtype mode or the reverse.
+
+
+.RE
+.B
+\fBemptyUndoBuffer(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete the undo history.
+
+
+.RE
+.B
+\fBendUndoAction(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+End a sequence of actions that is undone and redone as a unit.
+
+
+.RE
+.B
+\fBensureCaretVisible(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Ensure the caret is visible.
+
+
+.RE
+.B
+\fBensureVisible(This, Line) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Ensure a particular line is visible by expanding any header line hiding it.
+
+
+.RE
+.B
+\fBensureVisibleEnforcePolicy(This, Line) -> ok\fR
+\fB                                    when\fR
+\fB                                        This :: wxStyledTextCtrl(),\fR
+\fB                                        Line :: integer().\fR
+
+.br
+.RS
+.PP
+Ensure a particular line is visible by expanding any header line hiding it.
+
+.PP
+Use the currently set visibility policy to determine which range to display.
+
+
+.RE
+.B
+\fBfindColumn(This, Line, Column) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        Line :: integer(),\fR
+\fB                        Column :: integer().\fR
+
+.br
+.RS
+.PP
+Find the position of a column on a line taking into account tabs and multi-byte characters.
+
+.PP
+If beyond end of line, return line end position.
+
+
+.RE
+.B
+\fBfindText(This, MinPos, MaxPos, Text, [Option]) -> integer()\fR
+\fB                  when\fR
+\fB                      This :: wxStyledTextCtrl(),\fR
+\fB                      MinPos :: integer(),\fR
+\fB                      MaxPos :: integer(),\fR
+\fB                      Text :: unicode:chardata(),\fR
+\fB                      Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+\fI Find some text in the document. @param minPos The position (starting from zero) in the document at which to begin the search @param maxPos The last position (starting from zero) in the document to which the search will be restricted. @param text The text to search for. @param flags (Optional) The search flags. This should be a bit list containing one or more of the @link wxStyledTextCtrl::wxSTC_FIND_WHOLEWORD wxSTC_FIND_* @endlink constants. \fR
+
+.PP
+Return: The position (starting from zero) in the document at which the text was found or wxSTC_INVALID_POSITION if the search fails.
+
+.PP
+Remark: A backwards search can be performed by setting minPos to be greater than maxPos.
+
+
+.RE
+.B
+\fBformFeed(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Insert a Form Feed character.
+
+
+.RE
+.B
+\fBformatRange(This, DoDraw, StartPos, EndPos, Draw, Target,\fR
+\fB                  RenderRect, PageRect) ->\fR
+\fB                     integer()\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         DoDraw :: boolean(),\fR
+\fB                         StartPos :: integer(),\fR
+\fB                         EndPos :: integer(),\fR
+\fB                         Draw :: wxDC:wxDC(),\fR
+\fB                         Target :: wxDC:wxDC(),\fR
+\fB                         RenderRect ::\fR
+\fB                             {X :: integer(),\fR
+\fB                              Y :: integer(),\fR
+\fB                              W :: integer(),\fR
+\fB                              H :: integer()},\fR
+\fB                         PageRect ::\fR
+\fB                             {X :: integer(),\fR
+\fB                              Y :: integer(),\fR
+\fB                              W :: integer(),\fR
+\fB                              H :: integer()}.\fR
+
+.br
+.RS
+.PP
+On Windows, will draw the document into a display context such as a printer.
+
+
+.RE
+.B
+\fBgetAnchor(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the position of the opposite end of the selection to the caret.
+
+
+.RE
+.B
+\fBgetBackSpaceUnIndents(This) -> boolean()\fR
+\fB                               when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Does a backspace pressed when caret is within indentation unindent?
+
+
+.RE
+.B
+\fBgetBufferedDraw(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is drawing done first into a buffer or direct to the screen?
+
+
+.RE
+.B
+\fBgetCaretForeground(This) -> wx:wx_colour4()\fR
+\fB                            when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the foreground colour of the caret.
+
+
+.RE
+.B
+\fBgetCaretLineBackAlpha(This) -> integer()\fR
+\fB                               when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the background alpha of the caret line.
+
+
+.RE
+.B
+\fBgetCaretLineBackground(This) -> wx:wx_colour4()\fR
+\fB                                when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the colour of the background of the line containing the caret.
+
+
+.RE
+.B
+\fBgetCaretLineVisible(This) -> boolean()\fR
+\fB                             when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is the background of the line containing the caret in a different colour?
+
+
+.RE
+.B
+\fBgetCaretPeriod(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the time in milliseconds that the caret is on and off.
+
+
+.RE
+.B
+\fBgetCaretSticky(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Can the caret preferred x position only be changed by explicit movement commands?
+
+.PP
+The return value will be one of the ?wxSTC_CARETSTICKY_* constants.
+
+
+.RE
+.B
+\fBgetCaretWidth(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the width of the insert mode caret.
+
+
+.RE
+.B
+\fBgetCharAt(This, Pos) -> integer()\fR
+\fB                   when This :: wxStyledTextCtrl(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the character byte at the position.
+
+
+.RE
+.B
+\fBgetCodePage(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the code page used to interpret the bytes of the document as characters.
+
+
+.RE
+.B
+\fBgetColumn(This, Pos) -> integer()\fR
+\fB                   when This :: wxStyledTextCtrl(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the column number of a position, taking tab width into account.
+
+
+.RE
+.B
+\fBgetControlCharSymbol(This) -> integer()\fR
+\fB                              when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the way control characters are displayed.
+
+
+.RE
+.B
+\fBgetCurLine(This) -> Result\fR
+\fB                    when\fR
+\fB                        Result ::\fR
+\fB                            {Res :: unicode:charlist(),\fR
+\fB                             LinePos :: integer()},\fR
+\fB                        This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the text of the line containing the caret.
+
+.PP
+linePos can optionally be passed in to receive the index of the caret on the line.
+
+
+.RE
+.B
+\fBgetCurLineRaw(This) -> Result\fR
+\fB                       when\fR
+\fB                           Result ::\fR
+\fB                               {Res :: binary(), LinePos :: integer()},\fR
+\fB                           This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the text of the line containing the caret.
+
+.PP
+Returns the index of the caret on the line.
+
+
+.RE
+.B
+\fBgetCurrentLine(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the line number of the line with the caret.
+
+
+.RE
+.B
+\fBgetCurrentPos(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the position of the caret.
+
+
+.RE
+.B
+\fBgetEOLMode(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the current end of line mode - one of wxSTC_EOL_CRLF, wxSTC_EOL_CR, or wxSTC_EOL_LF.
+
+
+.RE
+.B
+\fBgetEdgeColour(This) -> wx:wx_colour4()\fR
+\fB                       when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the colour used in edge indication.
+
+
+.RE
+.B
+\fBgetEdgeColumn(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the column number which text should be kept within.
+
+
+.RE
+.B
+\fBgetEdgeMode(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the edge highlight mode.
+
+.PP
+The return value will be one of the ?wxSTC_EDGE_* constants.
+
+
+.RE
+.B
+\fBgetEndAtLastLine(This) -> boolean()\fR
+\fB                          when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve whether the maximum scroll position has the last line at the bottom of the view.
+
+
+.RE
+.B
+\fBgetEndStyled(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the position of the last correctly styled character.
+
+
+.RE
+.B
+\fBgetFirstVisibleLine(This) -> integer()\fR
+\fB                             when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the display line at the top of the display.
+
+
+.RE
+.B
+\fBgetFoldExpanded(This, Line) -> boolean()\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             Line :: integer().\fR
+
+.br
+.RS
+.PP
+Is a header line expanded?
+
+
+.RE
+.B
+\fBgetFoldLevel(This, Line) -> integer()\fR
+\fB                      when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the fold level of a line.
+
+
+.RE
+.B
+\fBgetFoldParent(This, Line) -> integer()\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Find the parent line of a child line.
+
+
+.RE
+.B
+\fBgetHighlightGuide(This) -> integer()\fR
+\fB                           when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the highlighted indentation guide column.
+
+
+.RE
+.B
+\fBgetIndent(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve indentation size.
+
+
+.RE
+.B
+\fBgetIndentationGuides(This) -> integer()\fR
+\fB                              when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Are the indentation guides visible?
+
+.PP
+The return value will be one of the ?wxSTC_IV_* constants.
+
+
+.RE
+.B
+\fBgetLastChild(This, Line, Level) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Line :: integer(),\fR
+\fB                          Level :: integer().\fR
+
+.br
+.RS
+.PP
+Find the last child line of a header line.
+
+
+.RE
+.B
+\fBgetLastKeydownProcessed(This) -> boolean()\fR
+\fB                                 when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Can be used to prevent the EVT_CHAR handler from adding the char.
+
+
+.RE
+.B
+\fBgetLayoutCache(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the degree of caching of layout information.
+
+.PP
+The return value will be one of the ?wxSTC_CACHE_* constants.
+
+
+.RE
+.B
+\fBgetLength(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the number of bytes in the document.
+
+
+.RE
+.B
+\fBgetLexer(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the lexing language of the document.
+
+.PP
+The return value will be one of the ?wxSTC_LEX_* constants.
+
+
+.RE
+.B
+\fBgetLine(This, Line) -> unicode:charlist()\fR
+\fB                 when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the contents of a line.
+
+
+.RE
+.B
+\fBgetLineCount(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the number of lines in the document.
+
+.PP
+There is always at least one.
+
+
+.RE
+.B
+\fBgetLineEndPosition(This, Line) -> integer()\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Line :: integer().\fR
+
+.br
+.RS
+.PP
+Get the position after the last visible characters on a line.
+
+
+.RE
+.B
+\fBgetLineIndentPosition(This, Line) -> integer()\fR
+\fB                               when\fR
+\fB                                   This :: wxStyledTextCtrl(),\fR
+\fB                                   Line :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the position before the first non indentation character on a line.
+
+
+.RE
+.B
+\fBgetLineIndentation(This, Line) -> integer()\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Line :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the number of columns that a line is indented.
+
+
+.RE
+.B
+\fBgetLineRaw(This, Line) -> binary()\fR
+\fB                    when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the contents of a line.
+
+
+.RE
+.B
+\fBgetLineState(This, Line) -> integer()\fR
+\fB                      when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the extra styling information for a line.
+
+
+.RE
+.B
+\fBgetLineVisible(This, Line) -> boolean()\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            Line :: integer().\fR
+
+.br
+.RS
+.PP
+Is a line visible?
+
+
+.RE
+.B
+\fBgetMarginLeft(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the size in pixels of the left margin.
+
+
+.RE
+.B
+\fBgetMarginMask(This, Margin) -> integer()\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Margin :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the marker mask of a margin.
+
+
+.RE
+.B
+\fBgetMarginRight(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the size in pixels of the right margin.
+
+
+.RE
+.B
+\fBgetMarginSensitive(This, Margin) -> boolean()\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Margin :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the mouse click sensitivity of a margin.
+
+
+.RE
+.B
+\fBgetMarginType(This, Margin) -> integer()\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Margin :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the type of a margin.
+
+.PP
+The return value will be one of the ?wxSTC_MARGIN_* constants.
+
+
+.RE
+.B
+\fBgetMarginWidth(This, Margin) -> integer()\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            Margin :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the width of a margin in pixels.
+
+
+.RE
+.B
+\fBgetMaxLineState(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the last line number that has line state.
+
+
+.RE
+.B
+\fBgetModEventMask(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get which document modification events are sent to the container.
+
+.PP
+The return value will wxSTC_MODEVENTMASKALL if all changes generate events. Otherwise it will be a bit list containing one or more of the ?wxSTC_MOD_* constants, the ?wxSTC_PERFORMED_* constants, wxSTC_STARTACTION, wxSTC_MULTILINEUNDOREDO, wxSTC_MULTISTEPUNDOREDO, and wxSTC_LASTSTEPINUNDOREDO.
+
+
+.RE
+.B
+\fBgetModify(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is the document different from when it was last saved?
+
+
+.RE
+.B
+\fBgetMouseDownCaptures(This) -> boolean()\fR
+\fB                              when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get whether mouse gets captured.
+
+
+.RE
+.B
+\fBgetMouseDwellTime(This) -> integer()\fR
+\fB                           when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the time the mouse must sit still to generate a mouse dwell event.
+
+.PP
+The return value will be a time in milliseconds or wxSTC_TIME_FOREVER.
+
+
+.RE
+.B
+\fBgetOvertype(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns true if overtype mode is active otherwise false is returned.
+
+
+.RE
+.B
+\fBgetPasteConvertEndings(This) -> boolean()\fR
+\fB                                when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get convert-on-paste setting.
+
+
+.RE
+.B
+\fBgetPrintColourMode(This) -> integer()\fR
+\fB                            when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the print colour mode.
+
+.PP
+The return value will be one of the ?wxSTC_PRINT_* constants.
+
+
+.RE
+.B
+\fBgetPrintMagnification(This) -> integer()\fR
+\fB                               when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the print magnification.
+
+
+.RE
+.B
+\fBgetPrintWrapMode(This) -> integer()\fR
+\fB                          when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is printing line wrapped?
+
+.PP
+The return value will be one of the ?wxSTC_WRAP_* constants.
+
+
+.RE
+.B
+\fBgetProperty(This, Key) -> unicode:charlist()\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         Key :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Retrieve a "property" value previously set with SetProperty.
+
+
+.RE
+.B
+\fBgetReadOnly(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+In read-only mode?
+
+
+.RE
+.B
+\fBgetSTCCursor(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get cursor type.
+
+.PP
+The return value will be one of the ?wxSTC_CURSOR* constants.
+
+
+.RE
+.B
+\fBgetSTCFocus(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get internal focus flag.
+
+
+.RE
+.B
+\fBgetScrollWidth(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the document width assumed for scrolling.
+
+
+.RE
+.B
+\fBgetSearchFlags(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the search flags used by SearchInTarget.
+
+.PP
+The return value will be a bit list containing one or more of the ?wxSTC_FIND_* constants.
+
+
+.RE
+.B
+\fBgetSelAlpha(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the alpha of the selection.
+
+
+.RE
+.B
+\fBgetSelectedText(This) -> unicode:charlist()\fR
+\fB                         when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the selected text.
+
+
+.RE
+.B
+\fBgetSelectedTextRaw(This) -> binary()\fR
+\fB                            when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the selected text.
+
+
+.RE
+.B
+\fBgetSelection(This) -> {From :: integer(), To :: integer()}\fR
+\fB                      when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Gets the current selection span.
+
+.PP
+If the returned values are equal, there was no selection. Please note that the indices returned may be used with the other \fIwxTextCtrl\fR methods but don't necessarily represent the correct indices into the string returned by \fIwxComboBox:getValue/1\fR for multiline controls under Windows (at least,) you should use \fIwxTextCtrl:getStringSelection/1\fR to get the selected text.
+
+
+.RE
+.B
+\fBgetSelectionEnd(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the position at the end of the selection.
+
+
+.RE
+.B
+\fBgetSelectionMode(This) -> integer()\fR
+\fB                          when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the mode of the current selection.
+
+.PP
+The return value will be one of the ?wxSTC_SEL_* constants.
+
+
+.RE
+.B
+\fBgetSelectionStart(This) -> integer()\fR
+\fB                           when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the position at the start of the selection.
+
+
+.RE
+.B
+\fBgetStatus(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get error status.
+
+.PP
+The return value will be one of the ?wxSTC_STATUS_* constants.
+
+
+.RE
+.B
+\fBgetStyleAt(This, Pos) -> integer()\fR
+\fB                    when This :: wxStyledTextCtrl(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the style byte at the position.
+
+
+.RE
+.B
+\fBgetStyleBits(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve number of bits in style bytes used to hold the lexical state.
+
+.PP
+Deprecated:
+
+
+.RE
+.B
+\fBgetStyleBitsNeeded(This) -> integer()\fR
+\fB                            when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the number of bits the current lexer needs for styling.
+
+.PP
+Deprecated:
+
+
+.RE
+.B
+\fBgetTabIndents(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Does a tab pressed when caret is within indentation indent?
+
+
+.RE
+.B
+\fBgetTabWidth(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the visible size of a tab.
+
+
+.RE
+.B
+\fBgetTargetEnd(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the position that ends the target.
+
+
+.RE
+.B
+\fBgetTargetStart(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the position that starts the target.
+
+
+.RE
+.B
+\fBgetText(This) -> unicode:charlist()\fR
+\fB                 when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve all the text in the document.
+
+
+.RE
+.B
+\fBgetTextLength(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the number of characters in the document.
+
+
+.RE
+.B
+\fBgetTextRange(This, StartPos, EndPos) -> unicode:charlist()\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          StartPos :: integer(),\fR
+\fB                          EndPos :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve a range of text.
+
+
+.RE
+.B
+\fBgetTextRangeRaw(This, StartPos, EndPos) -> binary()\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             StartPos :: integer(),\fR
+\fB                             EndPos :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve a range of text.
+
+
+.RE
+.B
+\fBgetTextRaw(This) -> binary() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve all the text in the document.
+
+
+.RE
+.B
+\fBgetTwoPhaseDraw(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is drawing done in two phases with backgrounds drawn before foregrounds?
+
+
+.RE
+.B
+\fBgetUndoCollection(This) -> boolean()\fR
+\fB                           when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is undo history being collected?
+
+
+.RE
+.B
+\fBgetUseAntiAliasing(This) -> boolean()\fR
+\fB                            when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the current UseAntiAliasing setting.
+
+
+.RE
+.B
+\fBgetUseHorizontalScrollBar(This) -> boolean()\fR
+\fB                                   when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is the horizontal scroll bar visible?
+
+
+.RE
+.B
+\fBgetUseTabs(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve whether tabs will be used in indentation.
+
+
+.RE
+.B
+\fBgetUseVerticalScrollBar(This) -> boolean()\fR
+\fB                                 when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is the vertical scroll bar visible?
+
+
+.RE
+.B
+\fBgetViewEOL(This) -> boolean() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Are the end of line characters visible?
+
+
+.RE
+.B
+\fBgetViewWhiteSpace(This) -> integer()\fR
+\fB                           when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Are white space characters currently visible? Returns one of wxSTC_WS_* constants.
+
+
+.RE
+.B
+\fBgetWrapMode(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve whether text is word wrapped.
+
+.PP
+The return value will be one of the ?wxSTC_WRAP_* constants.
+
+
+.RE
+.B
+\fBgetWrapStartIndent(This) -> integer()\fR
+\fB                            when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the start indent for wrapped lines.
+
+
+.RE
+.B
+\fBgetWrapVisualFlags(This) -> integer()\fR
+\fB                            when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the display mode of visual flags for wrapped lines.
+
+.PP
+The return value will be a bit list containing one or more of the ?wxSTC_WRAPVISUALFLAG_* constants.
+
+
+.RE
+.B
+\fBgetWrapVisualFlagsLocation(This) -> integer()\fR
+\fB                                    when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the location of visual flags for wrapped lines.
+
+.PP
+The return value will be a bit list containing one or more of the ?wxSTC_WRAPVISUALFLAGLOC_* constants.
+
+
+.RE
+.B
+\fBgetXOffset(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Get the xOffset (ie, horizontal scroll position).
+
+
+.RE
+.B
+\fBgetZoom(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieve the zoom level.
+
+
+.RE
+.B
+\fBgotoLine(This, Line) -> ok\fR
+\fB                  when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Set caret to start of a line and ensure it is visible.
+
+
+.RE
+.B
+\fBgotoPos(This, Caret) -> ok\fR
+\fB                 when This :: wxStyledTextCtrl(), Caret :: integer().\fR
+
+.br
+.RS
+.PP
+Set caret to a position and ensure it is visible.
+
+
+.RE
+.B
+\fBhideLines(This, LineStart, LineEnd) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxStyledTextCtrl(),\fR
+\fB                       LineStart :: integer(),\fR
+\fB                       LineEnd :: integer().\fR
+
+.br
+.RS
+.PP
+Make a range of lines invisible.
+
+
+.RE
+.B
+\fBhideSelection(This, Hide) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(), Hide :: boolean().\fR
+
+.br
+.RS
+.PP
+Draw the selection in normal style or with selection highlighted.
+
+
+.RE
+.B
+\fBhome(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to first position on line.
+
+
+.RE
+.B
+\fBhomeDisplay(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to first position on display line.
+
+
+.RE
+.B
+\fBhomeDisplayExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to first position on display line extending selection to new caret position.
+
+
+.RE
+.B
+\fBhomeExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to first position on line extending selection to new caret position.
+
+
+.RE
+.B
+\fBhomeRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to first position on line, extending rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBhomeWrapExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Like HomeExtend but when word-wrap is enabled extends first to start of display line HomeDisplayExtend, then to start of document line HomeExtend.
+
+
+.RE
+.B
+\fBindicatorGetForeground(This, Indicator) -> wx:wx_colour4()\fR
+\fB                                when\fR
+\fB                                    This :: wxStyledTextCtrl(),\fR
+\fB                                    Indicator :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the foreground colour of an indicator.
+
+
+.RE
+.B
+\fBindicatorGetStyle(This, Indicator) -> integer()\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Indicator :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the style of an indicator.
+
+.PP
+The return value will be one of the ?wxSTC_INDIC_* constants.
+
+
+.RE
+.B
+\fBindicatorSetForeground(This, Indicator, Fore) -> ok\fR
+\fB                                when\fR
+\fB                                    This :: wxStyledTextCtrl(),\fR
+\fB                                    Indicator :: integer(),\fR
+\fB                                    Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the foreground colour of an indicator.
+
+
+.RE
+.B
+\fBindicatorSetStyle(This, Indicator, IndicatorStyle) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Indicator :: integer(),\fR
+\fB                               IndicatorStyle :: integer().\fR
+
+.br
+.RS
+.PP
+Set an indicator to plain, squiggle or TT.
+
+.PP
+The second argument should be one of the ?wxSTC_INDIC_* constants.
+
+
+.RE
+.B
+\fBinsertText(This, Pos, Text) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        Pos :: integer(),\fR
+\fB                        Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Insert string at a position.
+
+
+.RE
+.B
+\fBinsertTextRaw(This, Pos, Text) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Pos :: integer(),\fR
+\fB                           Text :: binary().\fR
+
+.br
+.RS
+.PP
+Insert string at a position.
+
+
+.RE
+.B
+\fBlineCopy(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Copy the line containing the caret.
+
+
+.RE
+.B
+\fBlineCut(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Cut the line containing the caret.
+
+
+.RE
+.B
+\fBlineDelete(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Delete the line containing the caret.
+
+
+.RE
+.B
+\fBlineDown(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret down one line.
+
+
+.RE
+.B
+\fBlineDownExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret down one line extending selection to new caret position.
+
+
+.RE
+.B
+\fBlineDownRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret down one line, extending rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBlineDuplicate(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Duplicate the current line.
+
+
+.RE
+.B
+\fBlineEnd(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to last position on line.
+
+
+.RE
+.B
+\fBlineEndDisplay(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to last position on display line.
+
+
+.RE
+.B
+\fBlineEndDisplayExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to last position on display line extending selection to new caret position.
+
+
+.RE
+.B
+\fBlineEndExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to last position on line extending selection to new caret position.
+
+
+.RE
+.B
+\fBlineEndRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to last position on line, extending rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBlineEndWrap(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Like LineEnd but when word-wrap is enabled goes first to end of display line LineEndDisplay, then to start of document line LineEnd.
+
+
+.RE
+.B
+\fBlineEndWrapExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Like LineEndExtend but when word-wrap is enabled extends first to end of display line LineEndDisplayExtend, then to start of document line LineEndExtend.
+
+
+.RE
+.B
+\fBlineFromPosition(This, Pos) -> integer()\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the line containing a position.
+
+
+.RE
+.B
+\fBlineLength(This, Line) -> integer()\fR
+\fB                    when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+How many characters are on a line, including end of line characters?
+
+
+.RE
+.B
+\fBlineScroll(This, Columns, Lines) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        Columns :: integer(),\fR
+\fB                        Lines :: integer().\fR
+
+.br
+.RS
+.PP
+Scroll horizontally and vertically.
+
+
+.RE
+.B
+\fBlineScrollDown(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Scroll the document down, keeping the caret visible.
+
+
+.RE
+.B
+\fBlineScrollUp(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Scroll the document up, keeping the caret visible.
+
+
+.RE
+.B
+\fBlineTranspose(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Switch the current line with the previous.
+
+
+.RE
+.B
+\fBlineUp(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret up one line.
+
+
+.RE
+.B
+\fBlineUpExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret up one line extending selection to new caret position.
+
+
+.RE
+.B
+\fBlineUpRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret up one line, extending rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBlinesJoin(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Join the lines in the target.
+
+
+.RE
+.B
+\fBlinesOnScreen(This) -> integer() when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieves the number of lines completely visible.
+
+
+.RE
+.B
+\fBlinesSplit(This, PixelWidth) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        PixelWidth :: integer().\fR
+
+.br
+.RS
+.PP
+Split the lines in the target into lines that are less wide than pixelWidth where possible.
+
+
+.RE
+.B
+\fBloadFile(This, Filename) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxStyledTextCtrl(),\fR
+\fB                      Filename :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Load the contents of filename into the editor.
+
+
+.RE
+.B
+\fBlowerCase(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Transform the selection to lower case.
+
+
+.RE
+.B
+\fBmarkerAdd(This, Line, MarkerNumber) -> integer()\fR
+\fB                   when\fR
+\fB                       This :: wxStyledTextCtrl(),\fR
+\fB                       Line :: integer(),\fR
+\fB                       MarkerNumber :: integer().\fR
+
+.br
+.RS
+.PP
+Add a marker to a line, returning an ID which can be used to find or delete the marker.
+
+
+.RE
+.B
+\fBmarkerAddSet(This, Line, MarkerSet) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Line :: integer(),\fR
+\fB                          MarkerSet :: integer().\fR
+
+.br
+.RS
+.PP
+Add a set of markers to a line.
+
+
+.RE
+.B
+\fBmarkerDefine(This, MarkerNumber, MarkerSymbol, [Option]) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          MarkerNumber :: integer(),\fR
+\fB                          MarkerSymbol :: integer(),\fR
+\fB                          Option ::\fR
+\fB                              {foreground, wx:wx_colour()} |\fR
+\fB                              {background, wx:wx_colour()}.\fR
+
+.br
+.RS
+.PP
+Set the symbol used for a particular marker number, and optionally the fore and background colours.
+
+.PP
+The second argument should be one of the ?wxSTC_MARK_* constants.
+
+
+.RE
+.B
+\fBmarkerDefineBitmap(This, MarkerNumber, Bmp) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                MarkerNumber :: integer(),\fR
+\fB                                Bmp :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Define a marker with a \fIwxBitmap\fR.
+
+
+.RE
+.B
+\fBmarkerDelete(This, Line, MarkerNumber) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Line :: integer(),\fR
+\fB                          MarkerNumber :: integer().\fR
+
+.br
+.RS
+.PP
+Delete a marker from a line.
+
+
+.RE
+.B
+\fBmarkerDeleteAll(This, MarkerNumber) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             MarkerNumber :: integer().\fR
+
+.br
+.RS
+.PP
+Delete all markers with a particular number from all lines.
+
+
+.RE
+.B
+\fBmarkerDeleteHandle(This, MarkerHandle) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                MarkerHandle :: integer().\fR
+
+.br
+.RS
+.PP
+Delete a marker.
+
+
+.RE
+.B
+\fBmarkerGet(This, Line) -> integer()\fR
+\fB                   when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Get a bit mask of all the markers set on a line.
+
+
+.RE
+.B
+\fBmarkerLineFromHandle(This, MarkerHandle) -> integer()\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  MarkerHandle :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the line number at which a particular marker is located.
+
+
+.RE
+.B
+\fBmarkerNext(This, LineStart, MarkerMask) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        LineStart :: integer(),\fR
+\fB                        MarkerMask :: integer().\fR
+
+.br
+.RS
+.PP
+Find the next line at or after lineStart that includes a marker in mask.
+
+.PP
+Return -1 when no more lines.
+
+
+.RE
+.B
+\fBmarkerPrevious(This, LineStart, MarkerMask) -> integer()\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            LineStart :: integer(),\fR
+\fB                            MarkerMask :: integer().\fR
+
+.br
+.RS
+.PP
+Find the previous line before lineStart that includes a marker in mask.
+
+
+.RE
+.B
+\fBmarkerSetAlpha(This, MarkerNumber, Alpha) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            MarkerNumber :: integer(),\fR
+\fB                            Alpha :: integer().\fR
+
+.br
+.RS
+.PP
+Set the alpha used for a marker that is drawn in the text area, not the margin.
+
+
+.RE
+.B
+\fBmarkerSetBackground(This, MarkerNumber, Back) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxStyledTextCtrl(),\fR
+\fB                                 MarkerNumber :: integer(),\fR
+\fB                                 Back :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the background colour used for a particular marker number.
+
+
+.RE
+.B
+\fBmarkerSetForeground(This, MarkerNumber, Fore) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxStyledTextCtrl(),\fR
+\fB                                 MarkerNumber :: integer(),\fR
+\fB                                 Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the foreground colour used for a particular marker number.
+
+
+.RE
+.B
+\fBmoveCaretInsideView(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move the caret inside current view if it's not there already.
+
+
+.RE
+.B
+\fBnew() -> wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxStyledTextCtrl()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {id, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Ctor.
+
+
+.RE
+.B
+\fBnewLine(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Insert a new line, may use a CRLF, CR or LF depending on EOL mode.
+
+
+.RE
+.B
+\fBpageDown(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret one page down.
+
+
+.RE
+.B
+\fBpageDownExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret one page down extending selection to new caret position.
+
+
+.RE
+.B
+\fBpageDownRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret one page down, extending rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBpageUp(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret one page up.
+
+
+.RE
+.B
+\fBpageUpExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret one page up extending selection to new caret position.
+
+
+.RE
+.B
+\fBpageUpRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret one page up, extending rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBparaDownExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Extend selection down one paragraph (delimited by empty lines).
+
+
+.RE
+.B
+\fBparaUp(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret up one paragraph (delimited by empty lines).
+
+
+.RE
+.B
+\fBparaUpExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Extend selection up one paragraph (delimited by empty lines).
+
+
+.RE
+.B
+\fBpaste(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Paste the contents of the clipboard into the document replacing the selection.
+
+
+.RE
+.B
+\fBpointFromPosition(This, Pos) -> {X :: integer(), Y :: integer()}\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the point in the window where a position is displayed.
+
+
+.RE
+.B
+\fBpositionAfter(This, Pos) -> integer()\fR
+\fB                       when This :: wxStyledTextCtrl(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Given a valid document position, return the next position taking code page into account.
+
+.PP
+Maximum value returned is the last position in the document.
+
+
+.RE
+.B
+\fBpositionBefore(This, Pos) -> integer()\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Given a valid document position, return the previous position taking code page into account.
+
+.PP
+Returns 0 if passed 0.
+
+
+.RE
+.B
+\fBpositionFromLine(This, Line) -> integer()\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              Line :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the position at the start of a line.
+
+
+.RE
+.B
+\fBpositionFromPoint(This, Pt) -> integer()\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Find the position from a point within the window.
+
+
+.RE
+.B
+\fBpositionFromPointClose(This, X, Y) -> integer()\fR
+\fB                                when\fR
+\fB                                    This :: wxStyledTextCtrl(),\fR
+\fB                                    X :: integer(),\fR
+\fB                                    Y :: integer().\fR
+
+.br
+.RS
+.PP
+Find the position from a point within the window but return wxSTC_INVALID_POSITION if not close to text.
+
+
+.RE
+.B
+\fBredo(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Redoes the next action on the undo history.
+
+
+.RE
+.B
+\fBregisterImage(This, Type, Bmp) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Type :: integer(),\fR
+\fB                           Bmp :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Register an image for use in autocompletion lists.
+
+
+.RE
+.B
+\fBreplaceSelection(This, Text) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Replace the selected text with the argument text.
+
+
+.RE
+.B
+\fBreplaceTarget(This, Text) -> integer()\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Replace the target text with the argument text.
+
+.PP
+Text is counted so it can contain NULs. Returns the length of the replacement text.
+
+
+.RE
+.B
+\fBsaveFile(This, Filename) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxStyledTextCtrl(),\fR
+\fB                      Filename :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Write the contents of the editor to filename.
+
+
+.RE
+.B
+\fBscrollToColumn(This, Column) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            Column :: integer().\fR
+
+.br
+.RS
+.PP
+Scroll enough to make the given column visible.
+
+
+.RE
+.B
+\fBscrollToLine(This, Line) -> ok\fR
+\fB                      when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Scroll enough to make the given line visible.
+
+
+.RE
+.B
+\fBsearchAnchor(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Sets the current caret position to be the search anchor.
+
+
+.RE
+.B
+\fBsearchInTarget(This, Text) -> integer()\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Search for a counted string in the target and set the target to the found range.
+
+.PP
+Text is counted so it can contain NULs. Returns length of range or -1 for failure in which case target is not moved.
+
+
+.RE
+.B
+\fBsearchNext(This, SearchFlags, Text) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        SearchFlags :: integer(),\fR
+\fB                        Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Find some text starting at the search anchor.
+
+.PP
+Does not ensure the selection is visible.
+
+
+.RE
+.B
+\fBsearchPrev(This, SearchFlags, Text) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        SearchFlags :: integer(),\fR
+\fB                        Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Find some text starting at the search anchor and moving backwards.
+
+.PP
+Does not ensure the selection is visible.
+
+
+.RE
+.B
+\fBselectAll(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Select all the text in the document.
+
+
+.RE
+.B
+\fBselectionDuplicate(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Duplicate the selection.
+
+.PP
+If selection empty duplicate the line containing the caret.
+
+
+.RE
+.B
+\fBselectionIsRectangle(This) -> boolean()\fR
+\fB                              when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Is the selection rectangular? The alternative is the more common stream selection.
+
+
+.RE
+.B
+\fBsetAnchor(This, Anchor) -> ok\fR
+\fB                   when This :: wxStyledTextCtrl(), Anchor :: integer().\fR
+
+.br
+.RS
+.PP
+Set the selection anchor to a position.
+
+.PP
+The anchor is the opposite end of the selection from the caret.
+
+
+.RE
+.B
+\fBsetBackSpaceUnIndents(This, BsUnIndents) -> ok\fR
+\fB                               when\fR
+\fB                                   This :: wxStyledTextCtrl(),\fR
+\fB                                   BsUnIndents :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets whether a backspace pressed when caret is within indentation unindents.
+
+
+.RE
+.B
+\fBsetBufferedDraw(This, Buffered) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             Buffered :: boolean().\fR
+
+.br
+.RS
+.PP
+If drawing is buffered then each line of text is drawn into a bitmap buffer before drawing it to the screen to avoid flicker.
+
+
+.RE
+.B
+\fBsetCaretForeground(This, Fore) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the foreground colour of the caret.
+
+
+.RE
+.B
+\fBsetCaretLineBackAlpha(This, Alpha) -> ok\fR
+\fB                               when\fR
+\fB                                   This :: wxStyledTextCtrl(),\fR
+\fB                                   Alpha :: integer().\fR
+
+.br
+.RS
+.PP
+Set background alpha of the caret line.
+
+
+.RE
+.B
+\fBsetCaretLineBackground(This, Back) -> ok\fR
+\fB                                when\fR
+\fB                                    This :: wxStyledTextCtrl(),\fR
+\fB                                    Back :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the colour of the background of the line containing the caret.
+
+
+.RE
+.B
+\fBsetCaretLineVisible(This, Show) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxStyledTextCtrl(),\fR
+\fB                                 Show :: boolean().\fR
+
+.br
+.RS
+.PP
+Display the background of the line containing the caret in a different colour.
+
+
+.RE
+.B
+\fBsetCaretPeriod(This, PeriodMilliseconds) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            PeriodMilliseconds :: integer().\fR
+
+.br
+.RS
+.PP
+Get the time in milliseconds that the caret is on and off.
+
+.PP
+0 = steady on.
+
+
+.RE
+.B
+\fBsetCaretSticky(This, UseCaretStickyBehaviour) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            UseCaretStickyBehaviour :: integer().\fR
+
+.br
+.RS
+.PP
+Stop the caret preferred x position changing when the user types.
+
+.PP
+The input should be one of the ?wxSTC_CARETSTICKY_* constants.
+
+
+.RE
+.B
+\fBsetCaretWidth(This, PixelWidth) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           PixelWidth :: integer().\fR
+
+.br
+.RS
+.PP
+Set the width of the insert mode caret.
+
+
+.RE
+.B
+\fBsetCharsDefault(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Reset the set of characters for whitespace and word characters to the defaults.
+
+
+.RE
+.B
+\fBsetCodePage(This, CodePage) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         CodePage :: integer().\fR
+
+.br
+.RS
+.PP
+Set the code page used to interpret the bytes of the document as characters.
+
+
+.RE
+.B
+\fBsetControlCharSymbol(This, Symbol) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  Symbol :: integer().\fR
+
+.br
+.RS
+.PP
+Change the way control characters are displayed: If symbol is *< 32, keep the drawn way, else, use the given character.
+
+
+.RE
+.B
+\fBsetCurrentPos(This, Caret) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Caret :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the position of the caret.
+
+
+.RE
+.B
+\fBsetEOLMode(This, EolMode) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(), EolMode :: integer().\fR
+
+.br
+.RS
+.PP
+Set the current end of line mode.
+
+.PP
+The input should be one of the ?wxSTC_EOL_* constants.
+
+
+.RE
+.B
+\fBsetEdgeColour(This, EdgeColour) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           EdgeColour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Change the colour used in edge indication.
+
+
+.RE
+.B
+\fBsetEdgeColumn(This, Column) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Column :: integer().\fR
+
+.br
+.RS
+.PP
+Set the column number of the edge.
+
+.PP
+If text goes past the edge then it is highlighted.
+
+
+.RE
+.B
+\fBsetEdgeMode(This, EdgeMode) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         EdgeMode :: integer().\fR
+
+.br
+.RS
+.PP
+The edge may be displayed by a line (wxSTC_EDGE_LINE/wxSTC_EDGE_MULTILINE) or by highlighting text that goes beyond it (wxSTC_EDGE_BACKGROUND) or not displayed at all (wxSTC_EDGE_NONE).
+
+.PP
+The input should be one of the ?wxSTC_EDGE_* constants.
+
+
+.RE
+.B
+\fBsetFoldExpanded(This, Line, Expanded) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             Line :: integer(),\fR
+\fB                             Expanded :: boolean().\fR
+
+.br
+.RS
+.PP
+Show the children of a header line.
+
+
+.RE
+.B
+\fBsetFoldFlags(This, Flags) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(), Flags :: integer().\fR
+
+.br
+.RS
+.PP
+Set some style options for folding.
+
+.PP
+The second argument should be a bit list containing one or more of the ?wxSTC_FOLDFLAG_* constants.
+
+
+.RE
+.B
+\fBsetFoldLevel(This, Line, Level) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Line :: integer(),\fR
+\fB                          Level :: integer().\fR
+
+.br
+.RS
+.PP
+Set the fold level of a line.
+
+.PP
+This encodes an integer level along with flags indicating whether the line is a header and whether it is effectively white space.
+
+
+.RE
+.B
+\fBsetFoldMarginColour(This, UseSetting, Back) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxStyledTextCtrl(),\fR
+\fB                                 UseSetting :: boolean(),\fR
+\fB                                 Back :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set one of the colours used as a chequerboard pattern in the fold margin.
+
+
+.RE
+.B
+\fBsetFoldMarginHiColour(This, UseSetting, Fore) -> ok\fR
+\fB                               when\fR
+\fB                                   This :: wxStyledTextCtrl(),\fR
+\fB                                   UseSetting :: boolean(),\fR
+\fB                                   Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the other colour used as a chequerboard pattern in the fold margin.
+
+
+.RE
+.B
+\fBsetHScrollBar(This, Bar) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Bar :: wxScrollBar:wxScrollBar().\fR
+
+.br
+.RS
+.PP
+Set the horizontal scrollbar to use instead of the one that's built-in.
+
+
+.RE
+.B
+\fBsetHighlightGuide(This, Column) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Column :: integer().\fR
+
+.br
+.RS
+.PP
+Set the highlighted indentation guide column.
+
+.PP
+0 = no highlighted guide.
+
+
+.RE
+.B
+\fBsetHotspotActiveBackground(This, UseSetting, Back) -> ok\fR
+\fB                                    when\fR
+\fB                                        This :: wxStyledTextCtrl(),\fR
+\fB                                        UseSetting :: boolean(),\fR
+\fB                                        Back :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set a back colour for active hotspots.
+
+
+.RE
+.B
+\fBsetHotspotActiveForeground(This, UseSetting, Fore) -> ok\fR
+\fB                                    when\fR
+\fB                                        This :: wxStyledTextCtrl(),\fR
+\fB                                        UseSetting :: boolean(),\fR
+\fB                                        Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set a fore colour for active hotspots.
+
+
+.RE
+.B
+\fBsetHotspotActiveUnderline(This, Underline) -> ok\fR
+\fB                                   when\fR
+\fB                                       This :: wxStyledTextCtrl(),\fR
+\fB                                       Underline :: boolean().\fR
+
+.br
+.RS
+.PP
+Enable / Disable underlining active hotspots.
+
+
+.RE
+.B
+\fBsetHotspotSingleLine(This, SingleLine) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  SingleLine :: boolean().\fR
+
+.br
+.RS
+.PP
+Limit hotspots to single line so hotspots on two lines don't merge.
+
+
+.RE
+.B
+\fBsetIndent(This, IndentSize) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxStyledTextCtrl(),\fR
+\fB                       IndentSize :: integer().\fR
+
+.br
+.RS
+.PP
+Set the number of spaces used for one level of indentation.
+
+
+.RE
+.B
+\fBsetIndentationGuides(This, IndentView) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  IndentView :: integer().\fR
+
+.br
+.RS
+.PP
+Show or hide indentation guides.
+
+.PP
+The input should be one of the ?wxSTC_IV_* constants.
+
+
+.RE
+.B
+\fBsetKeyWords(This, KeyWordSet, KeyWords) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         KeyWordSet :: integer(),\fR
+\fB                         KeyWords :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set up the key words used by the lexer.
+
+
+.RE
+.B
+\fBsetLastKeydownProcessed(This, Val) -> ok\fR
+\fB                                 when\fR
+\fB                                     This :: wxStyledTextCtrl(),\fR
+\fB                                     Val :: boolean().\fR
+
+.br
+.RS
+.PP
+Returns the line number of the line with the caret.
+
+
+.RE
+.B
+\fBsetLayoutCache(This, CacheMode) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            CacheMode :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the degree of caching of layout information.
+
+.PP
+The input should be one of the ?wxSTC_CACHE_* constants.
+
+
+.RE
+.B
+\fBsetLexer(This, Lexer) -> ok\fR
+\fB                  when This :: wxStyledTextCtrl(), Lexer :: integer().\fR
+
+.br
+.RS
+.PP
+Set the lexing language of the document.
+
+.PP
+The input should be one of the ?wxSTC_LEX_* constants.
+
+
+.RE
+.B
+\fBsetLexerLanguage(This, Language) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              Language :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the lexing language of the document based on string name.
+
+
+.RE
+.B
+\fBsetLineIndentation(This, Line, Indentation) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Line :: integer(),\fR
+\fB                                Indentation :: integer().\fR
+
+.br
+.RS
+.PP
+Change the indentation of a line to a number of columns.
+
+
+.RE
+.B
+\fBsetLineState(This, Line, State) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Line :: integer(),\fR
+\fB                          State :: integer().\fR
+
+.br
+.RS
+.PP
+Used to hold extra styling information for each line.
+
+
+.RE
+.B
+\fBsetMarginLeft(This, PixelWidth) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           PixelWidth :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the size in pixels of the left margin.
+
+
+.RE
+.B
+\fBsetMarginMask(This, Margin, Mask) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Margin :: integer(),\fR
+\fB                           Mask :: integer().\fR
+
+.br
+.RS
+.PP
+Set a mask that determines which markers are displayed in a margin.
+
+
+.RE
+.B
+\fBsetMarginRight(This, PixelWidth) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            PixelWidth :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the size in pixels of the right margin.
+
+
+.RE
+.B
+\fBsetMarginSensitive(This, Margin, Sensitive) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Margin :: integer(),\fR
+\fB                                Sensitive :: boolean().\fR
+
+.br
+.RS
+.PP
+Make a margin sensitive or insensitive to mouse clicks.
+
+
+.RE
+.B
+\fBsetMarginType(This, Margin, MarginType) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Margin :: integer(),\fR
+\fB                           MarginType :: integer().\fR
+
+.br
+.RS
+.PP
+Set a margin to be either numeric or symbolic.
+
+.PP
+The second argument should be one of the ?wxSTC_MARGIN_* constants.
+
+
+.RE
+.B
+\fBsetMarginWidth(This, Margin, PixelWidth) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            Margin :: integer(),\fR
+\fB                            PixelWidth :: integer().\fR
+
+.br
+.RS
+.PP
+Set the width of a margin to a width expressed in pixels.
+
+
+.RE
+.B
+\fBsetMargins(This, Left, Right) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        Left :: integer(),\fR
+\fB                        Right :: integer().\fR
+
+.br
+.RS
+.PP
+Set the left and right margin in the edit area, measured in pixels.
+
+
+.RE
+.B
+\fBsetModEventMask(This, EventMask) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             EventMask :: integer().\fR
+
+.br
+.RS
+.PP
+Set which document modification events are sent to the container.
+
+.PP
+The input should be a bit list containing one or more of the ?wxSTC_MOD_* constants, the ?wxSTC_PERFORMED_* constants, wxSTC_STARTACTION, wxSTC_MULTILINEUNDOREDO, wxSTC_MULTISTEPUNDOREDO, and wxSTC_LASTSTEPINUNDOREDO. The input can also be wxSTC_MODEVENTMASKALL to indicate that all changes should generate events.
+
+
+.RE
+.B
+\fBsetMouseDownCaptures(This, Captures) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  Captures :: boolean().\fR
+
+.br
+.RS
+.PP
+Set whether the mouse is captured when its button is pressed.
+
+
+.RE
+.B
+\fBsetMouseDwellTime(This, PeriodMilliseconds) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               PeriodMilliseconds :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the time the mouse must sit still to generate a mouse dwell event.
+
+.PP
+The input should be a time in milliseconds or wxSTC_TIME_FOREVER.
+
+
+.RE
+.B
+\fBsetPasteConvertEndings(This, Convert) -> ok\fR
+\fB                                when\fR
+\fB                                    This :: wxStyledTextCtrl(),\fR
+\fB                                    Convert :: boolean().\fR
+
+.br
+.RS
+.PP
+Enable/Disable convert-on-paste for line endings.
+
+
+.RE
+.B
+\fBsetPrintColourMode(This, Mode) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Mode :: integer().\fR
+
+.br
+.RS
+.PP
+Modify colours when printing for clearer printed text.
+
+.PP
+The input should be one of the ?wxSTC_PRINT_* constants.
+
+
+.RE
+.B
+\fBsetPrintMagnification(This, Magnification) -> ok\fR
+\fB                               when\fR
+\fB                                   This :: wxStyledTextCtrl(),\fR
+\fB                                   Magnification :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the print magnification added to the point size of each style for printing.
+
+
+.RE
+.B
+\fBsetProperty(This, Key, Value) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         Key :: unicode:chardata(),\fR
+\fB                         Value :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set up a value that may be used by a lexer for some optional feature.
+
+
+.RE
+.B
+\fBsetReadOnly(This, ReadOnly) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         ReadOnly :: boolean().\fR
+
+.br
+.RS
+.PP
+Set to read only or read write.
+
+
+.RE
+.B
+\fBsetSTCCursor(This, CursorType) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          CursorType :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the cursor to one of the wxSTC_CURSOR* values.
+
+
+.RE
+.B
+\fBsetSTCFocus(This, Focus) -> ok\fR
+\fB                     when This :: wxStyledTextCtrl(), Focus :: boolean().\fR
+
+.br
+.RS
+.PP
+Change internal focus flag.
+
+
+.RE
+.B
+\fBsetSavePoint(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Remember the current position in the undo history as the position at which the document was saved.
+
+
+.RE
+.B
+\fBsetScrollWidth(This, PixelWidth) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            PixelWidth :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the document width assumed for scrolling.
+
+
+.RE
+.B
+\fBsetSearchFlags(This, SearchFlags) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            SearchFlags :: integer().\fR
+
+.br
+.RS
+.PP
+Set the search flags used by SearchInTarget.
+
+.PP
+The input should be a bit list containing one or more of the ?wxSTC_FIND_* constants.
+
+
+.RE
+.B
+\fBsetSelAlpha(This, Alpha) -> ok\fR
+\fB                     when This :: wxStyledTextCtrl(), Alpha :: integer().\fR
+
+.br
+.RS
+.PP
+Set the alpha of the selection.
+
+
+.RE
+.B
+\fBsetSelBackground(This, UseSetting, Back) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              UseSetting :: boolean(),\fR
+\fB                              Back :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the background colour of the main and additional selections and whether to use this setting.
+
+
+.RE
+.B
+\fBsetSelForeground(This, UseSetting, Fore) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              UseSetting :: boolean(),\fR
+\fB                              Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the foreground colour of the main and additional selections and whether to use this setting.
+
+
+.RE
+.B
+\fBsetSelection(This, From, To) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          From :: integer(),\fR
+\fB                          To :: integer().\fR
+
+.br
+.RS
+.PP
+Selects the text starting at the first position up to (but not including) the character at the last position.
+
+.PP
+If both parameters are equal to -1 all text in the control is selected.
+
+.PP
+Notice that the insertion point will be moved to \fIfrom\fR by this function.
+
+.PP
+See: \fIselectAll/1\fR
+
+
+.RE
+.B
+\fBsetSelectionEnd(This, Caret) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             Caret :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the position that ends the selection - this becomes the caret.
+
+
+.RE
+.B
+\fBsetSelectionMode(This, SelectionMode) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              SelectionMode :: integer().\fR
+
+.br
+.RS
+.PP
+Set the selection mode to stream (wxSTC_SEL_STREAM) or rectangular (wxSTC_SEL_RECTANGLE/wxSTC_SEL_THIN) or by lines (wxSTC_SEL_LINES).
+
+
+.RE
+.B
+\fBsetSelectionStart(This, Anchor) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Anchor :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the position that starts the selection - this becomes the anchor.
+
+
+.RE
+.B
+\fBsetStatus(This, Status) -> ok\fR
+\fB                   when This :: wxStyledTextCtrl(), Status :: integer().\fR
+
+.br
+.RS
+.PP
+Change error status - 0 = OK.
+
+.PP
+The input should be one of the ?wxSTC_STATUS_* constants.
+
+
+.RE
+.B
+\fBsetStyleBytes(This, Length) -> integer()\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Length :: integer().\fR
+
+.br
+.RS
+.PP
+Set the styles for a segment of the document.
+
+
+.RE
+.B
+\fBsetStyling(This, Length, Style) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(),\fR
+\fB                        Length :: integer(),\fR
+\fB                        Style :: integer().\fR
+
+.br
+.RS
+.PP
+Change style from current styling position for length characters to a style and move the current styling position to after this newly styled segment.
+
+
+.RE
+.B
+\fBsetTabIndents(This, TabIndents) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           TabIndents :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets whether a tab pressed when caret is within indentation indents.
+
+
+.RE
+.B
+\fBsetTabWidth(This, TabWidth) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         TabWidth :: integer().\fR
+
+.br
+.RS
+.PP
+Change the visible size of a tab to be a multiple of the width of a space character.
+
+
+.RE
+.B
+\fBsetTargetEnd(This, End) -> ok\fR
+\fB                      when This :: wxStyledTextCtrl(), End :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the position that ends the target which is used for updating the document without affecting the scroll position.
+
+
+.RE
+.B
+\fBsetTargetStart(This, Start) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            Start :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the position that starts the target which is used for updating the document without affecting the scroll position.
+
+
+.RE
+.B
+\fBsetText(This, Text) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxStyledTextCtrl(),\fR
+\fB                     Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Replace the contents of the document with the argument text.
+
+
+.RE
+.B
+\fBsetTextRaw(This, Text) -> ok\fR
+\fB                    when This :: wxStyledTextCtrl(), Text :: binary().\fR
+
+.br
+.RS
+.PP
+Replace the contents of the document with the argument text.
+
+
+.RE
+.B
+\fBsetTwoPhaseDraw(This, TwoPhase) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             TwoPhase :: boolean().\fR
+
+.br
+.RS
+.PP
+In twoPhaseDraw mode, drawing is performed in two phases, first the background and then the foreground.
+
+.PP
+This avoids chopping off characters that overlap the next run.
+
+
+.RE
+.B
+\fBsetUndoCollection(This, CollectUndo) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               CollectUndo :: boolean().\fR
+
+.br
+.RS
+.PP
+Choose between collecting actions into the undo history and discarding them.
+
+
+.RE
+.B
+\fBsetUseHorizontalScrollBar(This, Visible) -> ok\fR
+\fB                                   when\fR
+\fB                                       This :: wxStyledTextCtrl(),\fR
+\fB                                       Visible :: boolean().\fR
+
+.br
+.RS
+.PP
+Show or hide the horizontal scroll bar.
+
+
+.RE
+.B
+\fBsetUseTabs(This, UseTabs) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(), UseTabs :: boolean().\fR
+
+.br
+.RS
+.PP
+Indentation will only use space characters if useTabs is false, otherwise it will use a combination of tabs and spaces.
+
+
+.RE
+.B
+\fBsetUseVerticalScrollBar(This, Visible) -> ok\fR
+\fB                                 when\fR
+\fB                                     This :: wxStyledTextCtrl(),\fR
+\fB                                     Visible :: boolean().\fR
+
+.br
+.RS
+.PP
+Show or hide the vertical scroll bar.
+
+
+.RE
+.B
+\fBsetVScrollBar(This, Bar) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStyledTextCtrl(),\fR
+\fB                           Bar :: wxScrollBar:wxScrollBar().\fR
+
+.br
+.RS
+.PP
+Set the vertical scrollbar to use instead of the one that's built-in.
+
+
+.RE
+.B
+\fBsetViewEOL(This, Visible) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxStyledTextCtrl(), Visible :: boolean().\fR
+
+.br
+.RS
+.PP
+Make the end of line characters visible or invisible.
+
+
+.RE
+.B
+\fBsetViewWhiteSpace(This, ViewWS) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               ViewWS :: integer().\fR
+
+.br
+.RS
+.PP
+Make white space characters invisible, always visible or visible outside indentation.
+
+.PP
+The input should be one of the ?wxSTC_WS_* constants.
+
+
+.RE
+.B
+\fBsetVisiblePolicy(This, VisiblePolicy, VisibleSlop) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              VisiblePolicy :: integer(),\fR
+\fB                              VisibleSlop :: integer().\fR
+
+.br
+.RS
+.PP
+Set the way the display area is determined when a particular line is to be moved to by Find, FindNext, GotoLine, etc.
+
+.PP
+The first argument should be a bit list containing one or more of the ?wxSTC_VISIBLE_* constants.
+
+
+.RE
+.B
+\fBsetWhitespaceBackground(This, UseSetting, Back) -> ok\fR
+\fB                                 when\fR
+\fB                                     This :: wxStyledTextCtrl(),\fR
+\fB                                     UseSetting :: boolean(),\fR
+\fB                                     Back :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the background colour of all whitespace and whether to use this setting.
+
+
+.RE
+.B
+\fBsetWhitespaceChars(This, Characters) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Characters :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the set of characters making up whitespace for when moving or selecting by word.
+
+.PP
+Should be called after SetWordChars.
+
+
+.RE
+.B
+\fBsetWhitespaceForeground(This, UseSetting, Fore) -> ok\fR
+\fB                                 when\fR
+\fB                                     This :: wxStyledTextCtrl(),\fR
+\fB                                     UseSetting :: boolean(),\fR
+\fB                                     Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the foreground colour of all whitespace and whether to use this setting.
+
+
+.RE
+.B
+\fBsetWordChars(This, Characters) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Characters :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the set of characters making up words for when moving or selecting by word.
+
+.PP
+First sets defaults like SetCharsDefault.
+
+
+.RE
+.B
+\fBsetWrapMode(This, WrapMode) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxStyledTextCtrl(),\fR
+\fB                         WrapMode :: integer().\fR
+
+.br
+.RS
+.PP
+Sets whether text is word wrapped.
+
+.PP
+The input should be one of the ?wxSTC_WRAP_* constants.
+
+
+.RE
+.B
+\fBsetWrapStartIndent(This, Indent) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Indent :: integer().\fR
+
+.br
+.RS
+.PP
+Set the start indent for wrapped lines.
+
+
+.RE
+.B
+\fBsetWrapVisualFlags(This, WrapVisualFlags) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                WrapVisualFlags :: integer().\fR
+
+.br
+.RS
+.PP
+Set the display mode of visual flags for wrapped lines.
+
+.PP
+The input should be a bit list containing one or more of the ?wxSTC_WRAPVISUALFLAG_* constants.
+
+
+.RE
+.B
+\fBsetWrapVisualFlagsLocation(This, WrapVisualFlagsLocation) -> ok\fR
+\fB                                    when\fR
+\fB                                        This :: wxStyledTextCtrl(),\fR
+\fB                                        WrapVisualFlagsLocation ::\fR
+\fB                                            integer().\fR
+
+.br
+.RS
+.PP
+Set the location of visual flags for wrapped lines.
+
+.PP
+The input should be a bit list containing one or more of the ?wxSTC_WRAPVISUALFLAGLOC_* constants.
+
+
+.RE
+.B
+\fBsetXCaretPolicy(This, CaretPolicy, CaretSlop) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             CaretPolicy :: integer(),\fR
+\fB                             CaretSlop :: integer().\fR
+
+.br
+.RS
+.PP
+Set the way the caret is kept visible when going sideways.
+
+.PP
+The exclusion zone is given in pixels.
+
+.PP
+The first argument should be a bit list containing one or more of the ?wxSTC_CARET_* constants.
+
+
+.RE
+.B
+\fBsetYCaretPolicy(This, CaretPolicy, CaretSlop) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             CaretPolicy :: integer(),\fR
+\fB                             CaretSlop :: integer().\fR
+
+.br
+.RS
+.PP
+Set the way the line the caret is on is kept visible.
+
+.PP
+The exclusion zone is given in lines.
+
+.PP
+The first argument should be a bit list containing one or more of the ?wxSTC_CARET_* constants.
+
+
+.RE
+.B
+\fBsetZoom(This, ZoomInPoints) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxStyledTextCtrl(),\fR
+\fB                     ZoomInPoints :: integer().\fR
+
+.br
+.RS
+.PP
+Set the zoom level.
+
+.PP
+This number of points is added to the size of all fonts. It may be positive to magnify or negative to reduce.
+
+
+.RE
+.B
+\fBshowLines(This, LineStart, LineEnd) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxStyledTextCtrl(),\fR
+\fB                       LineStart :: integer(),\fR
+\fB                       LineEnd :: integer().\fR
+
+.br
+.RS
+.PP
+Make a range of lines visible.
+
+
+.RE
+.B
+\fBstartRecord(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Start notifying the container of all key presses and commands.
+
+
+.RE
+.B
+\fBstartStyling(This, Start) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(), Start :: integer().\fR
+
+.br
+.RS
+.PP
+Set the current styling position to start.
+
+
+.RE
+.B
+\fBstopRecord(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Stop notifying the container of all key presses and commands.
+
+
+.RE
+.B
+\fBstutteredPageDown(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to bottom of page, or one page down if already at bottom of page.
+
+
+.RE
+.B
+\fBstutteredPageDownExtend(This) -> ok\fR
+\fB                                 when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to bottom of page, or one page down if already at bottom of page, extending selection to new caret position.
+
+
+.RE
+.B
+\fBstutteredPageUp(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to top of page, or one page up if already at top of page.
+
+
+.RE
+.B
+\fBstutteredPageUpExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to top of page, or one page up if already at top of page, extending selection to new caret position.
+
+
+.RE
+.B
+\fBstyleClearAll(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Clear all the styles and make equivalent to the global default style.
+
+
+.RE
+.B
+\fBstyleResetDefault(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Reset the default style to its state at startup.
+
+
+.RE
+.B
+\fBstyleSetBackground(This, Style, Back) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Style :: integer(),\fR
+\fB                                Back :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the background colour of a style.
+
+
+.RE
+.B
+\fBstyleSetBold(This, Style, Bold) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Style :: integer(),\fR
+\fB                          Bold :: boolean().\fR
+
+.br
+.RS
+.PP
+Set a style to be bold or not.
+
+
+.RE
+.B
+\fBstyleSetCase(This, Style, CaseVisible) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Style :: integer(),\fR
+\fB                          CaseVisible :: integer().\fR
+
+.br
+.RS
+.PP
+Set a style to be mixed case, or to force upper or lower case.
+
+.PP
+The second argument should be one of the ?wxSTC_CASE_* constants.
+
+
+.RE
+.B
+\fBstyleSetCharacterSet(This, Style, CharacterSet) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  Style :: integer(),\fR
+\fB                                  CharacterSet :: integer().\fR
+
+.br
+.RS
+.PP
+Set the character set of the font in a style.
+
+.PP
+Converts the Scintilla character set values to a wxFontEncoding.
+
+
+.RE
+.B
+\fBstyleSetEOLFilled(This, Style, EolFilled) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Style :: integer(),\fR
+\fB                               EolFilled :: boolean().\fR
+
+.br
+.RS
+.PP
+Set a style to have its end of line filled or not.
+
+
+.RE
+.B
+\fBstyleSetFaceName(This, Style, FontName) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              Style :: integer(),\fR
+\fB                              FontName :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the font of a style.
+
+
+.RE
+.B
+\fBstyleSetFont(This, StyleNum, Font) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          StyleNum :: integer(),\fR
+\fB                          Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Set style size, face, bold, italic, and underline attributes from a \fIwxFont\fR's attributes.
+
+
+.RE
+.B
+\fBstyleSetFontAttr(This, StyleNum, Size, FaceName, Bold, Italic,\fR
+\fB                       Underline,\fR
+\fB                       [Option]) ->\fR
+\fB                          ok\fR
+\fB                          when\fR
+\fB                              This :: wxStyledTextCtrl(),\fR
+\fB                              StyleNum :: integer(),\fR
+\fB                              Size :: integer(),\fR
+\fB                              FaceName :: unicode:chardata(),\fR
+\fB                              Bold :: boolean(),\fR
+\fB                              Italic :: boolean(),\fR
+\fB                              Underline :: boolean(),\fR
+\fB                              Option :: {encoding, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Set all font style attributes at once.
+
+
+.RE
+.B
+\fBstyleSetFontEncoding(This, Style, Encoding) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStyledTextCtrl(),\fR
+\fB                                  Style :: integer(),\fR
+\fB                                  Encoding :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Set the font encoding to be used by a style.
+
+
+.RE
+.B
+\fBstyleSetForeground(This, Style, Fore) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                Style :: integer(),\fR
+\fB                                Fore :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set the foreground colour of a style.
+
+
+.RE
+.B
+\fBstyleSetHotSpot(This, Style, Hotspot) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             Style :: integer(),\fR
+\fB                             Hotspot :: boolean().\fR
+
+.br
+.RS
+.PP
+Set a style to be a hotspot or not.
+
+
+.RE
+.B
+\fBstyleSetItalic(This, Style, Italic) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStyledTextCtrl(),\fR
+\fB                            Style :: integer(),\fR
+\fB                            Italic :: boolean().\fR
+
+.br
+.RS
+.PP
+Set a style to be italic or not.
+
+
+.RE
+.B
+\fBstyleSetSize(This, Style, SizePoints) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          Style :: integer(),\fR
+\fB                          SizePoints :: integer().\fR
+
+.br
+.RS
+.PP
+Set the size of characters of a style.
+
+
+.RE
+.B
+\fBstyleSetSpec(This, StyleNum, Spec) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          StyleNum :: integer(),\fR
+\fB                          Spec :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Extract style settings from a spec-string which is composed of one or more of the following comma separated elements:
+
+.PP
+bold turns on bold italic turns on italics fore:[name or #RRGGBB] sets the foreground colour back:[name or #RRGGBB] sets the background colour face:[facename] sets the font face name to use size:[num] sets the font size in points eol turns on eol filling underline turns on underlining
+
+
+.RE
+.B
+\fBstyleSetUnderline(This, Style, Underline) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Style :: integer(),\fR
+\fB                               Underline :: boolean().\fR
+
+.br
+.RS
+.PP
+Set a style to be underlined or not.
+
+
+.RE
+.B
+\fBstyleSetVisible(This, Style, Visible) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             Style :: integer(),\fR
+\fB                             Visible :: boolean().\fR
+
+.br
+.RS
+.PP
+Set a style to be visible or not.
+
+
+.RE
+.B
+\fBtab(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+If selection is empty or all on one line replace the selection with a tab character.
+
+.PP
+If more than one line selected, indent the lines.
+
+
+.RE
+.B
+\fBtargetFromSelection(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Make the target range start and end be the same as the selection range start and end.
+
+
+.RE
+.B
+\fBtextHeight(This, Line) -> integer()\fR
+\fB                    when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Retrieve the height of a particular line of text in pixels.
+
+
+.RE
+.B
+\fBtextWidth(This, Style, Text) -> integer()\fR
+\fB                   when\fR
+\fB                       This :: wxStyledTextCtrl(),\fR
+\fB                       Style :: integer(),\fR
+\fB                       Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Measure the pixel width of some text in a particular style.
+
+.PP
+Does not handle tab or control characters.
+
+
+.RE
+.B
+\fBtoggleCaretSticky(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Switch between sticky and non-sticky: meant to be bound to a key.
+
+
+.RE
+.B
+\fBtoggleFold(This, Line) -> ok\fR
+\fB                    when This :: wxStyledTextCtrl(), Line :: integer().\fR
+
+.br
+.RS
+.PP
+Switch a header line between expanded and contracted.
+
+
+.RE
+.B
+\fBundo(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Undo one action in the undo history.
+
+
+.RE
+.B
+\fBupperCase(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Transform the selection to upper case.
+
+
+.RE
+.B
+\fBusePopUp(This, PopUpMode) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxStyledTextCtrl(), PopUpMode :: integer().\fR
+
+.br
+.RS
+.PP
+Set whether a pop up menu is displayed automatically when the user presses the wrong mouse button on certain areas.
+
+.PP
+The input should be one of the ?wxSTC_POPUP_* constants.
+
+.PP
+Remark: When \fIwxContextMenuEvent\fR is used to create a custom popup menu, this function should be called with wxSTC_POPUP_NEVER. Otherwise the default menu will be shown instead of the custom one.
+
+
+.RE
+.B
+\fBuserListShow(This, ListType, ItemList) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxStyledTextCtrl(),\fR
+\fB                          ListType :: integer(),\fR
+\fB                          ItemList :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Display a list of strings and send notification when user chooses one.
+
+
+.RE
+.B
+\fBvCHome(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to before first visible character on line.
+
+.PP
+If already there move to first character on line.
+
+
+.RE
+.B
+\fBvCHomeExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Like VCHome but extending selection to new caret position.
+
+
+.RE
+.B
+\fBvCHomeRectExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret to before first visible character on line.
+
+.PP
+If already there move to first character on line. In either case, extend rectangular selection to new caret position.
+
+
+.RE
+.B
+\fBvCHomeWrap(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Like VCHome but when word-wrap is enabled goes first to start of display line VCHomeDisplay, then behaves like VCHome.
+
+
+.RE
+.B
+\fBvCHomeWrapExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Like VCHomeExtend but when word-wrap is enabled extends first to start of display line VCHomeDisplayExtend, then behaves like VCHomeExtend.
+
+
+.RE
+.B
+\fBvisibleFromDocLine(This, DocLine) -> integer()\fR
+\fB                            when\fR
+\fB                                This :: wxStyledTextCtrl(),\fR
+\fB                                DocLine :: integer().\fR
+
+.br
+.RS
+.PP
+Find the display line of a document line taking hidden lines into account.
+
+
+.RE
+.B
+\fBwordEndPosition(This, Pos, OnlyWordCharacters) -> integer()\fR
+\fB                         when\fR
+\fB                             This :: wxStyledTextCtrl(),\fR
+\fB                             Pos :: integer(),\fR
+\fB                             OnlyWordCharacters :: boolean().\fR
+
+.br
+.RS
+.PP
+Get position of end of word.
+
+
+.RE
+.B
+\fBwordLeft(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret left one word.
+
+
+.RE
+.B
+\fBwordLeftEnd(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret left one word, position cursor at end of word.
+
+
+.RE
+.B
+\fBwordLeftEndExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret left one word, position cursor at end of word, extending selection to new caret position.
+
+
+.RE
+.B
+\fBwordLeftExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret left one word extending selection to new caret position.
+
+
+.RE
+.B
+\fBwordPartLeft(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move to the previous change in capitalisation.
+
+
+.RE
+.B
+\fBwordPartLeftExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move to the previous change in capitalisation extending selection to new caret position.
+
+
+.RE
+.B
+\fBwordPartRight(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move to the change next in capitalisation.
+
+
+.RE
+.B
+\fBwordPartRightExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move to the next change in capitalisation extending selection to new caret position.
+
+
+.RE
+.B
+\fBwordRight(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret right one word.
+
+
+.RE
+.B
+\fBwordRightEnd(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret right one word, position cursor at end of word.
+
+
+.RE
+.B
+\fBwordRightEndExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret right one word, position cursor at end of word, extending selection to new caret position.
+
+
+.RE
+.B
+\fBwordRightExtend(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Move caret right one word extending selection to new caret position.
+
+
+.RE
+.B
+\fBwordStartPosition(This, Pos, OnlyWordCharacters) -> integer()\fR
+\fB                           when\fR
+\fB                               This :: wxStyledTextCtrl(),\fR
+\fB                               Pos :: integer(),\fR
+\fB                               OnlyWordCharacters :: boolean().\fR
+
+.br
+.RS
+.PP
+Get position of start of word.
+
+
+.RE
+.B
+\fBwrapCount(This, DocLine) -> integer()\fR
+\fB                   when This :: wxStyledTextCtrl(), DocLine :: integer().\fR
+
+.br
+.RS
+.PP
+The number of display lines needed to wrap a document line.
+
+
+.RE
+.B
+\fBzoomIn(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Magnify the displayed text by increasing the sizes by 1 point.
+
+
+.RE
+.B
+\fBzoomOut(This) -> ok when This :: wxStyledTextCtrl().\fR
+
+.br
+.RS
+.PP
+Make the displayed text smaller by decreasing the sizes by 1 point.
+
+
+.RE

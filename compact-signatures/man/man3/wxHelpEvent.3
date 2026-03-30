@@ -1,0 +1,155 @@
+.TH wxHelpEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxHelpEvent \- A help event is sent when the user has requested context-sensitive help.
+
+.SH DESCRIPTION
+.PP
+This can either be caused by the application requesting context-sensitive help mode via \fIwxContextHelp\fR (not implemented in wx), or (on MS Windows) by the system generating a WM_HELP message when the user pressed F1 or clicked on the query button in a dialog caption.
+
+.PP
+A help event is sent to the window that the user clicked on, and is propagated up the window hierarchy until the event is processed or there are no more event handlers.
+
+.PP
+The application should call \fIwxEvent:getId/1\fR to check the identity of the clicked-on window, and then either show some suitable help or call \fIwxEvent:skip/2\fR if the identifier is unrecognised.
+
+.PP
+Calling Skip is important because it allows wxWidgets to generate further events for ancestors of the clicked-on window. Otherwise it would be impossible to show help for container windows, since processing would stop after the first window found.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxHelpEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxHelpEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxHelp() :: #wxHelp{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxHelpEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxHelpEventType() :: help | detailed_help.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetOrigin(This) -> wx:wx_enum() when This :: wxHelpEvent().\fR
+
+.br
+.RS
+.PP
+Returns the origin of the help event which is one of the \fIwxHelpEvent::Origin\fR (not implemented in wx) values.
+
+.PP
+The application may handle events generated using the keyboard or mouse differently, e.g. by using \fIwx_misc:getMousePosition/0\fR for the mouse events.
+
+.PP
+See: \fIsetOrigin/2\fR
+
+
+.RE
+.B
+\fBgetPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                     when This :: wxHelpEvent().\fR
+
+.br
+.RS
+.PP
+Returns the left-click position of the mouse, in screen coordinates.
+
+.PP
+This allows the application to position the help appropriately.
+
+
+.RE
+.B
+\fBsetOrigin(This, Origin) -> ok\fR
+\fB                   when This :: wxHelpEvent(), Origin :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Set the help event origin, only used internally by wxWidgets normally.
+
+.PP
+See: \fIgetOrigin/1\fR
+
+
+.RE
+.B
+\fBsetPosition(This, Pt) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxHelpEvent(),\fR
+\fB                         Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the left-click position of the mouse, in screen coordinates.
+
+
+.RE

@@ -1,0 +1,212 @@
+.TH wxPreviewFrame 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPreviewFrame \- This class provides the default method of managing the print preview interface.
+
+.SH DESCRIPTION
+.PP
+Member functions may be overridden to replace functionality, or the class may be used without derivation.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPreviewCanvas\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPreviewControlBar\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPrintPreview\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPreviewFrame
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPreviewFrame() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreateCanvas(This) -> ok when This :: wxPreviewFrame().\fR
+
+.br
+.RS
+.PP
+Creates a \fIwxPreviewCanvas\fR.
+
+.PP
+Override this function to allow a user-defined preview canvas object to be created.
+
+
+.RE
+.B
+\fBcreateControlBar(This) -> ok when This :: wxPreviewFrame().\fR
+
+.br
+.RS
+.PP
+Creates a \fIwxPreviewControlBar\fR.
+
+.PP
+Override this function to allow a user-defined preview control bar object to be created.
+
+
+.RE
+.B
+\fBdestroy(This :: wxPreviewFrame()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBinitialize(This) -> ok when This :: wxPreviewFrame().\fR
+
+.br
+.RS
+.PP
+Initializes the frame elements and prepares for showing it.
+
+.PP
+Calling this method is equivalent to calling \fIInitializeWithModality()\fR (not implemented in wx) with wxPreviewFrame_AppModal argument, please see its documentation for more details.
+
+.PP
+Please notice that this function is virtual mostly for backwards compatibility only, there is no real need to override it as it's never called by wxWidgets itself.
+
+
+.RE
+.B
+\fBnew(Preview, Parent, [Option]) -> wxPreviewFrame()\fR
+\fB             when\fR
+\fB                 Preview :: wxPrintPreview:wxPrintPreview(),\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {title, unicode:chardata()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Pass a print preview object plus other normal frame arguments. The print preview object will be destroyed by the frame when it closes.
+
+
+.RE
+.B
+\fBonCloseWindow(This, Event) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxPreviewFrame(),\fR
+\fB                           Event :: wxCloseEvent:wxCloseEvent().\fR
+
+.br
+.RS
+.PP
+Enables any disabled frames in the application, and deletes the print preview object, implicitly deleting any printout objects associated with the print preview object.
+
+
+.RE

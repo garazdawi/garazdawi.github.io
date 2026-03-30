@@ -1,0 +1,218 @@
+.TH disksup 3 "os_mon 2.11.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+disksup \- A Disk Supervisor Process
+
+.SH DESCRIPTION
+.PP
+\fIdisksup\fR is a process which supervises the available disk space in the system. It is part of the OS_Mon application, see os_mon(6). Available for Unix and Windows.
+
+.PP
+Periodically checks the disks. For each disk or partition which uses more than a certain amount of the available space, the alarm \fI{{disk_almost_full, MountedOn}, []}\fR is set.
+
+On Unix
+.RS 2
+All (locally) mounted disks are checked, including the swap disk if it is present.
+
+
+.RE
+
+On WIN32
+.RS 2
+All logical drives of type "FIXED_DISK" are checked.
+
+
+.RE
+
+.PP
+Alarms are reported to the SASL alarm handler, see \fIalarm_handler\fR. To set an alarm, \fIalarm_handler:set_alarm(Alarm)\fR is called where \fIAlarm\fR is the alarm specified above.
+
+.PP
+The alarms are cleared automatically when the alarm cause is no longer valid.
+
+.SS "Configuration"
+
+.PP
+The following configuration parameters can be used to change the default values for time interval and threshold:
+
+disk_space_check_interval =  time/0
+.RS 2
+The time interval for the periodic disk space check. The default is 30 minutes.
+
+
+.RE
+
+disk_almost_full_threshold = float()
+.RS 2
+The threshold, as percentage of total disk space, for how much disk can be utilized before the 
+\fIdisk_almost_full\fR alarm is set. The default is 0.80 (80%).
+
+.RE
+
+disksup_posix_only = bool()
+.RS 2
+Specifies whether the 
+\fIdisksup\fR helper process should only use POSIX conformant commands (\fItrue\fR) or not. The default is \fIfalse\fR. Setting this parameter to \fItrue\fR can be necessary on embedded systems with stripped-down versions of Unix tools like \fIdf\fR. The returned disk data and alarms can be different when using this option.
+.PP
+The parameter is ignored on platforms that are known to not be POSIX compatible (Windows and SunOS).
+
+
+.RE
+
+.PP
+See config for information about how to change the value of configuration parameters.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIalarm_handler\fR, os_mon
+
+.SH DATA TYPES
+.LP
+.B
+\fBtime() ::\fR
+\fB          pos_integer() |\fR
+\fB          {TimeUnit :: erlang:time_unit(), Time :: pos_integer()}.\fR
+
+.br
+.RS
+.PP
+Time unit used for disklog APIs.
+
+.PP
+Supported units are:
+
+integer() >= 1
+.RS 2
+The time interval in minutes.
+
+
+.RE
+
+{TimeUnit, Time}
+.RS 2
+The time interval 
+\fITime\fR in a time unit specified by \fITimeUnit\fR where \fITimeUnit\fR is of the type \fIerlang:time_unit/0\fR and \fITime\fR is a positive integer. The time interval needs to be at least one millisecond long.
+
+.RE
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBget_almost_full_threshold() -> Percent :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the threshold, in percent, for disk space utilization.
+
+
+.RE
+.B
+\fBget_check_interval() -> Milliseconds :: timer:time().\fR
+
+.br
+.RS
+.PP
+Returns the time interval, in milliseconds, for the periodic disk space check.
+
+
+.RE
+.B
+\fBget_disk_data() -> [DiskData]\fR
+\fB                       when\fR
+\fB                           DiskData :: {Id, TotalKiB, Capacity},\fR
+\fB                           Id :: string(),\fR
+\fB                           TotalKiB :: integer(),\fR
+\fB                           Capacity :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the result of the latest disk check.
+
+.PP
+\fIId\fR is a string that identifies the disk or partition. \fITotalKiB\fR is the total size of the disk or partition in kibibytes. \fICapacity\fR is the percentage of disk space used.
+
+.PP
+The function is asynchronous in the sense that it does not invoke a disk check, but returns the latest available value.
+
+.PP
+Returns \fI[{"none",0,0}]\fR if \fIdisksup\fR is not available.
+
+
+.RE
+.B
+\fBget_disk_info() -> [DiskData]\fR
+\fB                       when\fR
+\fB                           DiskData ::\fR
+\fB                               {Id, TotalKiB, AvailableKiB, Capacity},\fR
+\fB                           Id :: string(),\fR
+\fB                           TotalKiB :: integer(),\fR
+\fB                           AvailableKiB :: integer(),\fR
+\fB                           Capacity :: integer().\fR
+
+.br
+.RS
+.PP
+Immediately fetches total space, available space and capacity for local disks.
+
+.PP
+\fIId\fR is a string that identifies the disk or partition. \fITotalKiB\fR is the total size of the disk or partition in kibibytes. \fIAvailableKiB\fR is the disk space used in kibibytes. \fICapacity\fR is the percentage of disk space used.
+
+.PP
+Returns \fI[{"none",0,0,0}]\fR if \fIdisksup\fR is not available.
+
+
+.RE
+.B
+\fBget_disk_info(Path :: string()) -> [DiskData]\fR
+\fB                       when\fR
+\fB                           DiskData ::\fR
+\fB                               {Id, TotalKiB, AvailableKiB, Capacity},\fR
+\fB                           Id :: string(),\fR
+\fB                           TotalKiB :: integer(),\fR
+\fB                           AvailableKiB :: integer(),\fR
+\fB                           Capacity :: integer().\fR
+
+.br
+.RS
+.PP
+Immediately fetches total space, available space and capacity for a path.
+
+.PP
+\fIId\fR is a string that identifies the disk or partition. \fITotalKiB\fR is the total size of the disk or partition in kibibytes. \fIAvailableKiB\fR is the disk space used in kibibytes. \fICapacity\fR is the percentage of disk space used.
+
+.PP
+Returns \fI[{Path,0,0,0}]\fR if the \fIPath\fR is invalid or space can't be determined. Returns \fI[{"none",0,0,0}]\fR if \fIdisksup\fR is not available.
+
+
+.RE
+.B
+\fBset_almost_full_threshold(Float :: float()) -> ok.\fR
+
+.br
+.RS
+.PP
+Changes the threshold, given as a float (\fI0.0 =< Float =< 1.0\fR), for disk space utilization.
+
+.PP
+The change will take effect during the next disk space check and is non-persist. That is, in case of a process restart, this value is forgotten and the default value will be used. See Configuration above.
+
+
+.RE
+.B
+\fBset_check_interval(time()) -> ok.\fR
+
+.br
+.RS
+.PP
+Changes the time interval for the periodic disk space check.
+
+.PP
+The change will take effect after the next disk space check and is non-persist. That is, in case of a process restart, this value is forgotten and the default value will be used. See Configuration above.
+
+
+.RE

@@ -1,0 +1,344 @@
+.TH snmpa_mib_storage 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpa_mib_storage \- Behaviour module for the SNMP agent mib storage.
+
+.SH DESCRIPTION
+.PP
+This module defines the behaviour of the SNMP agent mib storage.
+
+.PP
+The mib storage is used by the agent to store internal mib- related information. The mib storage module is used by several entities, not just the mib-server.
+
+.PP
+A \fIsnmpa_mib_storage\fR compliant module must export the following functions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+open/5
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+close/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+read/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+write/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+delete/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+delete/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+match_object/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+match_delete/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+tab2list/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+info/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+info/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+sync/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+backup/2
+
+.RE
+
+.PP
+The semantics of them and their exact signatures are explained below.
+
+.SH DATA TYPES
+.LP
+.B
+\fBmib_storage_fields() :: [atom()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmib_storage_table_id() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmib_storage_table_type() :: set | bag.\fR
+
+.br
+.RS
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBbackup(TabId, Dir)\fR
+
+.br
+.RS
+.PP
+Perform a backup of the mib-storage table.
+
+.PP
+What this means, if anything, is implementation dependent.
+
+
+.RE
+.B
+\fBclose(TabId)\fR
+
+.br
+.RS
+.PP
+Close the mib-storage table.
+
+
+.RE
+.B
+\fBdelete(TabId)\fR
+
+.br
+.RS
+.PP
+Delete an entire mib-storage table.
+
+
+.RE
+.B
+\fBdelete(TabId, Key)\fR
+
+.br
+.RS
+.PP
+Delete a record from the mib-storage table.
+
+
+.RE
+.B
+\fBinfo(TabId)\fR
+
+.br
+.RS
+.PP
+Retrieve implementation dependent mib-storage table information.
+
+
+.RE
+.B
+\fBmatch_delete(TabId, Pattern)\fR
+
+.br
+.RS
+.PP
+Search the mib-storage table for record that match the specified pattern and then delete them. The records deleted are also returned.
+
+
+.RE
+.B
+\fBmatch_object(TabId, Pattern)\fR
+
+.br
+.RS
+.PP
+Search the mib-storage table for record that match the specified pattern.
+
+
+.RE
+.B
+\fBopen(Name, RecName, Fields, Type, Options)\fR
+
+.br
+.RS
+.PP
+Create or open a mib storage table.
+
+.PP
+Note that the \fIRecordName\fR and \fIFields\fR arguments my not be used in all implementations (they are actually only needed for mnesia-based implementations).
+
+.PP
+Note also that the \fIOptions\fR argument comes from the \fIoptions\fR config option of the mib-storage config option, and is passed on as is.
+
+
+.RE
+.B
+\fBread(TabId, Key)\fR
+
+.br
+.RS
+.PP
+Read a record from the mib-storage table.
+
+
+.RE
+.B
+\fBsync(TabId)\fR
+
+.br
+.RS
+.PP
+Synchronize the mib-storage table.
+
+.PP
+What this means, if anything, is implementation dependent.
+
+
+.RE
+.B
+\fBtab2list(TabId)\fR
+
+.br
+.RS
+.PP
+Return all records in the mib-storage table in the form of a list.
+
+
+.RE
+.B
+\fBwrite(TabId, Record)\fR
+
+.br
+.RS
+.PP
+Write a record to the mib-storage table.
+
+
+.RE

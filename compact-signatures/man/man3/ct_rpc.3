@@ -1,0 +1,129 @@
+.TH ct_rpc 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_rpc \- \fICommon Test\fR specific layer on Erlang/OTP \fIrpc\fR.
+
+.SH DESCRIPTION
+.SH FUNCTIONS
+.LP
+.B
+\fBapp_node(App, Candidates) -> CandidateNode\fR
+\fB                  when\fR
+\fB                      App :: atom(),\fR
+\fB                      Candidates :: [node()],\fR
+\fB                      CandidateNode :: node().\fR
+
+.br
+.RS
+.PP
+From a set of candidate nodes determines which of them is running the application \fIApp\fR. If none of the candidate nodes is running \fIApp\fR, the function makes the test case calling this function to fail. This function is the same as calling \fIapp_node(App, Candidates, true)\fR.
+
+
+.RE
+.B
+\fBapp_node(App, Candidates, FailOnBadRPC) -> CandidateNode\fR
+\fB                  when\fR
+\fB                      App :: atom(),\fR
+\fB                      Candidates :: [node()],\fR
+\fB                      FailOnBadRPC :: boolean(),\fR
+\fB                      CandidateNode :: node().\fR
+
+.br
+.RS
+.PP
+Same as \fIct_rpc:app_node/2\fR, except that argument \fIFailOnBadRPC\fR determines if the search for a candidate node is to stop if \fIbadrpc\fR is received at some point.
+
+
+.RE
+.B
+\fBapp_node(App, Candidates, FailOnBadRPC, Cookie) -> CandidateNode\fR
+\fB                  when\fR
+\fB                      App :: atom(),\fR
+\fB                      Candidates :: [node()],\fR
+\fB                      FailOnBadRPC :: boolean(),\fR
+\fB                      Cookie :: atom() | [],\fR
+\fB                      CandidateNode :: node().\fR
+
+.br
+.RS
+.PP
+Same as \fIct_rpc:app_node/2\fR, except that argument \fIFailOnBadRPC\fR determines if the search for a candidate node is to stop if \fIbadrpc\fR is received at some point.
+
+.PP
+The cookie on the client node is set to \fICookie\fR for this \fIrpc\fR operation (used to match the server node cookie).
+
+
+.RE
+.B
+\fBcall(Node, Module, Function, Args, TimeOut) ->\fR
+\fB              term() | {badrpc, Reason}\fR
+\fB              when\fR
+\fB                  Node :: {Function, Args} | node(),\fR
+\fB                  Module :: module(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: list(),\fR
+\fB                  TimeOut :: timeout(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on the node \fINode\fR. Returns either whatever \fIFunction\fR returns, or \fI{badrpc, Reason}\fR if the remote procedure call fails. If \fINode\fR is \fI{Fun, FunArgs}\fR, applying \fIFun\fR to \fIFunArgs\fR is to return a node name.
+
+
+.RE
+.B
+\fBcall(Node, Module, Function, Args, TimeOut, Cookie) ->\fR
+\fB              term() | {badrpc, Reason}\fR
+\fB              when\fR
+\fB                  Node :: {Function, Args} | node(),\fR
+\fB                  Module :: module(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: list(),\fR
+\fB                  TimeOut :: timeout(),\fR
+\fB                  Cookie :: atom() | [],\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on the node \fINode\fR. Returns either whatever \fIFunction\fR returns, or \fI{badrpc, Reason}\fR if the remote procedure call fails. If \fINode\fR is \fI{Fun, FunArgs}\fR, applying \fIFun\fR to \fIFunArgs\fR is to return a node name.
+
+.PP
+The cookie on the client node is set to \fICookie\fR for this \fIrpc\fR operation (used to match the server node cookie).
+
+
+.RE
+.B
+\fBcast(Node, Module, Function, Args) -> ok\fR
+\fB              when\fR
+\fB                  Node :: {Function, Args} | node(),\fR
+\fB                  Module :: module(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: list().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on the node \fINode\fR. No response is delivered and the process that makes the call is not suspended until the evaluation is completed as in the case of \fIcall/3,4\fR. If \fINode\fR is \fI{Fun, FunArgs}\fR, applying \fIFun\fR to \fIFunArgs\fR is to return a node name.
+
+
+.RE
+.B
+\fBcast(Node, Module, Function, Args, Cookie) -> ok\fR
+\fB              when\fR
+\fB                  Node :: {Function, Args} | node(),\fR
+\fB                  Module :: module(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: list(),\fR
+\fB                  Cookie :: atom() | [].\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on the node \fINode\fR. No response is delivered and the process that makes the call is not suspended until the evaluation is completed as in the case of \fIcall/3,4\fR. If \fINode\fR is \fI{Fun, FunArgs}\fR, applying \fIFun\fR to \fIFunArgs\fR is to return a node name.
+
+.PP
+The cookie on the client node is set to \fICookie\fR for this \fIrpc\fR operation (used to match the server node cookie).
+
+
+.RE

@@ -1,0 +1,340 @@
+.TH wxCheckBox 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxCheckBox \- A checkbox is a labelled box which by default is either on (checkmark is visible) or off (no checkmark).
+
+.SH DESCRIPTION
+.PP
+Optionally (when the wxCHK_3STATE style flag is set) it can have a third state, called the mixed or undetermined state. Often this is used as a "Does Not Apply" state.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCHK_2STATE: Create a 2-state checkbox. This is the default.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCHK_3STATE: Create a 3-state checkbox. Not implemented in wxGTK1.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCHK_ALLOW_3RD_STATE_FOR_USER: By default a user can't set a 3-state checkbox to the third state. It can only be done from code. Using this flags allows the user to set the checkbox to the third state by clicking.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxALIGN_RIGHT: Makes the text appear on the left of the checkbox.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxRadioButton\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxCheckBox
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_checkbox_clicked\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxCheckBox() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Label, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxCheckBox(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Label :: unicode:chardata(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Creates the checkbox for two-step construction.
+
+.PP
+See \fInew/4\fR for details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxCheckBox()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBget3StateValue(This) -> wx:wx_enum() when This :: wxCheckBox().\fR
+
+.br
+.RS
+.PP
+Gets the state of a 3-state checkbox.
+
+.PP
+Asserts when the function is used with a 2-state checkbox.
+
+
+.RE
+.B
+\fBgetValue(This) -> boolean() when This :: wxCheckBox().\fR
+
+.br
+.RS
+.PP
+Gets the state of a 2-state checkbox.
+
+.PP
+Return: Returns true if it is checked, false otherwise.
+
+
+.RE
+.B
+\fBis3State(This) -> boolean() when This :: wxCheckBox().\fR
+
+.br
+.RS
+.PP
+Returns whether or not the checkbox is a 3-state checkbox.
+
+.PP
+Return: true if this checkbox is a 3-state checkbox, false if it's a 2-state checkbox.
+
+
+.RE
+.B
+\fBis3rdStateAllowedForUser(This) -> boolean()\fR
+\fB                                  when This :: wxCheckBox().\fR
+
+.br
+.RS
+.PP
+Returns whether or not the user can set the checkbox to the third state.
+
+.PP
+Return: true if the user can set the third state of this checkbox, false if it can only be set programmatically or if it's a 2-state checkbox.
+
+
+.RE
+.B
+\fBisChecked(This) -> boolean() when This :: wxCheckBox().\fR
+
+.br
+.RS
+.PP
+This is just a maybe more readable synonym for \fIgetValue/1\fR: just as the latter, it returns true if the checkbox is checked and false otherwise.
+
+
+.RE
+.B
+\fBnew() -> wxCheckBox().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBnew(Parent, Id, Label, [Option]) -> wxCheckBox()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Label :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a checkbox.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBset3StateValue(This, State) -> ok\fR
+\fB                        when This :: wxCheckBox(), State :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the checkbox to the given state.
+
+.PP
+This does not cause a \fIwxEVT_CHECKBOX\fR event to get emitted.
+
+.PP
+Asserts when the checkbox is a 2-state checkbox and setting the state to wxCHK_UNDETERMINED.
+
+
+.RE
+.B
+\fBsetValue(This, State) -> ok\fR
+\fB                  when This :: wxCheckBox(), State :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets the checkbox to the given state.
+
+.PP
+This does not cause a \fIwxEVT_CHECKBOX\fR event to get emitted.
+
+
+.RE

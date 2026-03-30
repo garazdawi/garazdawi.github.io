@@ -1,0 +1,1527 @@
+.TH snmpm 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpm \- Interface functions to the SNMP toolkit manager
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmpm\fR contains interface functions to the SNMP manager.
+
+.SH DATA TYPES
+.LP
+.B
+\fBagent_config() ::\fR
+\fB          {engine_id, snmp:engine_id()} |\fR
+\fB          {address, inet:ip_address()} |\fR
+\fB          {port, inet:port_number()} |\fR
+\fB          {tdomain, snmp:tdomain()} |\fR
+\fB          {community, snmp:community()} |\fR
+\fB          {timeout, register_timeout()} |\fR
+\fB          {max_message_size, snmp:mms()} |\fR
+\fB          {version, snmp:version()} |\fR
+\fB          {sec_model, snmp:sec_model()} |\fR
+\fB          {sec_name, snmp:sec_name()} |\fR
+\fB          {sec_level, snmp:sec_level()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBagent_config_item() ::\fR
+\fB          engine_id | address | port | tdomain | community | timeout |\fR
+\fB          max_message_size | version | sec_model | sec_name | sec_level.\fR
+
+.br
+.RS
+.PP
+Value type depend on the item according to:
+
+engine_id
+.RS 2
+Engine ID of the agent.
+
+.PP
+Value type: engine_id()
+
+
+.RE
+
+address
+.RS 2
+The IP address of the agent.
+
+.PP
+Value type: ip_address()
+
+
+.RE
+
+port
+.RS 2
+Port number of the agent.
+
+.PP
+Value type: port_number()
+
+
+.RE
+
+tdomain
+.RS 2
+Transport domain.
+
+.PP
+Value type: tdomain()
+
+
+.RE
+
+community
+.RS 2
+Community.
+
+.PP
+Value type: community()
+
+
+.RE
+
+timeout
+.RS 2
+Registration timeout.
+
+.PP
+Value type: \fIregister_timeout/0\fR
+
+
+.RE
+
+max_message_size
+.RS 2
+Max Message Size of a message.
+
+.PP
+Value type: mms()
+
+
+.RE
+
+version
+.RS 2
+What SNMP version is used when communicating with this agent.
+
+.PP
+Value type: version()
+
+
+.RE
+
+sec_model
+.RS 2
+Security Model.
+
+.PP
+Value type: sec_model()
+
+
+.RE
+
+sec_name
+.RS 2
+Security Name.
+
+.PP
+Value type: sec_name()
+
+
+.RE
+
+sec_level
+.RS 2
+Security Level.
+
+.PP
+Value type: sec_level()
+
+
+.RE
+
+
+.RE
+.B
+\fBpdu_type() :: snmp:pdu_type() | trappdu.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBregister_timeout() :: pos_integer() | snmp:snmp_timer().\fR
+
+.br
+.RS
+.PP
+The time to complete a (agent) registration.
+
+
+.RE
+.B
+\fB-opaque request_id() \fR
+
+.br
+.RS
+.PP
+Is a unique term that identifies a request.
+
+
+.RE
+.B
+\fBsnmp_reply() ::\fR
+\fB          {snmp:error_status(), snmp:error_index(), [snmp:varbind()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsnmpm_user() :: module().\fR
+
+.br
+.RS
+.PP
+Module implementing the snmpm_user behaviour.
+
+
+.RE
+.B
+\fBtarget_name() :: string().\fR
+
+.br
+.RS
+.PP
+Is a unique \fInon-empty\fR string.
+
+
+.RE
+.B
+\fBuser_id() :: term().\fR
+
+.br
+.RS
+.PP
+Is a unique term that identifies a user.
+
+
+.RE
+.B
+\fBusm_config_item() :: sec_name | auth | auth_key | priv | priv_key.\fR
+
+.br
+.RS
+.PP
+Value type depend on the item according to:
+
+sec_name
+.RS 2
+Security Name.
+
+.PP
+Value type: \fIsnmp:sec_name()\fR
+
+
+.RE
+
+auth
+.RS 2
+Authentication protocol.
+
+.PP
+Value type: \fIsnmp:usm_auth_protocol()\fR
+
+
+.RE
+
+auth_key
+.RS 2
+Authentication key.
+
+.PP
+Value type: \fIsnmp:usm_auth_key()\fR
+
+
+.RE
+
+priv
+.RS 2
+Privacy protocol.
+
+.PP
+Value type: \fIsnmp:usm_priv_protocol()\fR
+
+
+.RE
+
+priv_key
+.RS 2
+Privacy key.
+
+.PP
+Value type: \fIsnmp:usm_priv_key()\fR
+
+
+.RE
+
+
+.RE
+.B
+\fBvalue_type() ::\fR
+\fB          o | i | u | g | s | s | b | ip | op | c32 | c64 | tt.\fR
+
+.br
+.RS
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIo - 'OBJECT IDENTIFIER'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIi - 'INTEGER'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIu - 'Unsigned32\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIg - 'Unsigned32'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIs - 'OCTET STRING'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIb - 'BITS'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIip - 'IpAddress'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIop - 'Opaque'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIc32 - 'Counter32'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIc64 - 'Counter64'\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fItt - 'TimeTicks'\fR\fR
+
+.RE
+
+
+.RE
+.B
+\fBvar_and_val() ::\fR
+\fB          {OID :: snmp:oid(),\fR
+\fB           ValueType :: value_type(),\fR
+\fB           Value :: term()} |\fR
+\fB          {OID :: snmp:oid(), Value :: term()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBagent_info(TargetName, Item) -> {ok, Value} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        TargetName :: target_name(),\fR
+\fB                        Item :: agent_config_item(),\fR
+\fB                        Value :: term(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Retrieve agent config.
+
+
+.RE
+.B
+\fBasync_get2(UserId, TargetName, Oids, SendOpts) ->\fR
+\fB                    {ok, ReqId} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        UserId :: user_id(),\fR
+\fB                        TargetName :: target_name(),\fR
+\fB                        Oids :: [snmp:oid()],\fR
+\fB                        SendOpts :: [SendOpt],\fR
+\fB                        SendOpt ::\fR
+\fB                            {context, snmp:context_name()} |\fR
+\fB                            {timeout, pos_integer()} |\fR
+\fB                            {community, snmp:community()} |\fR
+\fB                            {sec_model, snmp:sec_model()} |\fR
+\fB                            {sec_name, snmp:sec_name()} |\fR
+\fB                            {sec_level, snmp:sec_level()} |\fR
+\fB                            {max_message_size, snmp:mms()} |\fR
+\fB                            {extra, term()},\fR
+\fB                        ReqId :: request_id(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Asynchronous \fIget-request\fR.
+
+.PP
+The reply, if it arrives, will be delivered to the user through a call to the \fIsnmpm_user\fR callback function \fIhandle_pdu\fR.
+
+.PP
+The send option \fItimeout\fR specifies for how long the request is valid (after which the manager is free to delete it).
+
+.PP
+The send option \fIextra\fR specifies an opaque data structure passed on to the net-if process. The net-if process included in this application makes, with one exception, no use of this info, so the only use for it (when using the built in net-if) would be tracing. The one usage exception is: \fIAny\fR tuple with \fIsnmpm_extra_info_tag\fR as its first element is reserved for internal use.
+
+.PP
+Some of the send options (\fIcommunity\fR, \fIsec_model\fR, \fIsec_name\fR, \fIsec_level\fR and \fImax_message_size\fR) are \fIoverride options\fR. That is, for \fIthis\fR request, they override any configuration done when the agent was registered.
+
+
+.RE
+.B
+\fBasync_get_bulk2(UserId, TargetName, NonRep, MaxRep, Oids,\fR
+\fB                      SendOpts) ->\fR
+\fB                         {ok, ReqId} | {error, Reason}\fR
+\fB                         when\fR
+\fB                             UserId :: user_id(),\fR
+\fB                             TargetName :: target_name(),\fR
+\fB                             NonRep :: non_neg_integer(),\fR
+\fB                             MaxRep :: non_neg_integer(),\fR
+\fB                             Oids :: [snmp:oid()],\fR
+\fB                             SendOpts :: [SendOpt],\fR
+\fB                             SendOpt ::\fR
+\fB                                 {context, snmp:context_name()} |\fR
+\fB                                 {timeout, pos_integer()} |\fR
+\fB                                 {community, snmp:community()} |\fR
+\fB                                 {sec_model, snmp:sec_model()} |\fR
+\fB                                 {sec_name, snmp:sec_name()} |\fR
+\fB                                 {sec_level, snmp:sec_level()} |\fR
+\fB                                 {max_message_size, snmp:mms()} |\fR
+\fB                                 {extra, term()},\fR
+\fB                             ReqId :: request_id(),\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+Asynchronous \fIget-bulk-request\fR (See RFC1905).
+
+.PP
+The reply, if it arrives, will be delivered to the user through a call to the \fIsnmpm_user\fR callback function \fIhandle_pdu\fR.
+
+.PP
+The send option \fItimeout\fR specifies for how long the request is valid (after which the manager is free to delete it).
+
+.PP
+The send option \fIextra\fR specifies an opaque data structure passed on to the \fInet-if\fR process. The \fInet-if\fR process included in this application makes no use of this info, so the only use for it in such a configuration (when using the built in \fInet-if\fR) would be tracing.
+
+.PP
+Some of the send options (\fIcommunity\fR, \fIsec_model\fR, \fIsec_name\fR, \fIsec_level\fR and \fImax_message_size\fR) are \fIoverride options\fR. That is, for \fIthis\fR request, they override any configuration done when the agent was registered.
+
+
+.RE
+.B
+\fBasync_get_next2(UserId, TargetName, Oids, SendOpts) ->\fR
+\fB                         {ok, ReqId} | {error, Reason}\fR
+\fB                         when\fR
+\fB                             UserId :: user_id(),\fR
+\fB                             TargetName :: target_name(),\fR
+\fB                             Oids :: [snmp:oid()],\fR
+\fB                             SendOpts :: [SendOpt],\fR
+\fB                             SendOpt ::\fR
+\fB                                 {context, snmp:context_name()} |\fR
+\fB                                 {timeout, pos_integer()} |\fR
+\fB                                 {community, snmp:community()} |\fR
+\fB                                 {sec_model, snmp:sec_model()} |\fR
+\fB                                 {sec_name, snmp:sec_name()} |\fR
+\fB                                 {sec_level, snmp:sec_level()} |\fR
+\fB                                 {max_message_size, snmp:mms()} |\fR
+\fB                                 {extra, term()},\fR
+\fB                             ReqId :: request_id(),\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+Asynchronous \fIget-next-request\fR.
+
+.PP
+The reply, if it arrives, will be delivered to the user through a call to the \fIsnmpm_user\fR callback function \fIhandle_pdu\fR.
+
+.PP
+The send option \fItimeout\fR specifies for how long the request is valid (after which the manager is free to delete it).
+
+.PP
+The send option \fIextra\fR specifies an opaque data structure passed on to the \fInet-if\fR process. The \fInet-if\fR process included in this application makes, with one exception, no use of this info, so the only use for it (when using the built in \fInet-if\fR) would be tracing. The one usage exception is: \fIAny\fR tuple with \fIsnmpm_extra_info_tag\fR as its first element is reserved for internal use.
+
+.PP
+Some of the send options (\fIcommunity\fR, \fIsec_model\fR, \fIsec_name\fR, \fIsec_level\fR and \fImax_message_size\fR) are \fIoverride options\fR. That is, for \fIthis\fR request, they override any configuration done when the agent was registered.
+
+
+.RE
+.B
+\fBasync_set2(UserId, TargetName, VarsAndVals, SendOpts) ->\fR
+\fB                    {ok, ReqId} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        UserId :: user_id(),\fR
+\fB                        TargetName :: target_name(),\fR
+\fB                        VarsAndVals :: [var_and_val()],\fR
+\fB                        SendOpts :: [SendOpt],\fR
+\fB                        SendOpt ::\fR
+\fB                            {context, snmp:context_name()} |\fR
+\fB                            {timeout, pos_integer()} |\fR
+\fB                            {community, snmp:community()} |\fR
+\fB                            {sec_model, snmp:sec_model()} |\fR
+\fB                            {sec_name, snmp:sec_name()} |\fR
+\fB                            {sec_level, snmp:sec_level()} |\fR
+\fB                            {max_message_size, snmp:mms()} |\fR
+\fB                            {extra, term()},\fR
+\fB                        ReqId :: request_id(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Asynchronous \fIset-request\fR.
+
+.PP
+The reply will be delivered to the user through a call to the \fIsnmpm_user\fR callback function \fIhandle_pdu\fR.
+
+.PP
+The send option \fItimeout\fR specifies for how long the request is valid (after which the manager is free to delete it).
+
+.PP
+When \fIvar_and_val()\fR is \fI{oid(), value()}\fR, the manager makes an educated guess based on the loaded mibs.
+
+.PP
+The send option \fIextra\fR specifies an opaque data structure passed on to the net-if process. The net-if process included in this application makes, with one exception, no use of this info, so the only use for it (when using the built in net-if) would be tracing. The one usage exception is: \fIAny\fR tuple with \fIsnmpm_extra_info_tag\fR as its first element is reserved for internal use.
+
+.PP
+Some of the send options (\fIcommunity\fR, \fIsec_model\fR, \fIsec_name\fR, \fIsec_level\fR and \fImax_message_size\fR) are \fIoverride options\fR. That is, for \fIthis\fR request, they override any configuration done when the agent was registered.
+
+
+.RE
+.B
+\fBbackup(BackupDir) -> ok | {error, Reason}\fR
+\fB                when BackupDir :: snmp:dir(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Backup persistent data handled by the manager.
+
+.PP
+BackupDir cannot be identical to DbDir.
+
+
+.RE
+.B
+\fBcancel_async_request(UserId, ReqId) -> ok | {error, Reason}\fR
+\fB                              when\fR
+\fB                                  UserId :: user_id(),\fR
+\fB                                  ReqId :: request_id(),\fR
+\fB                                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Cancel a previous asynchronous request.
+
+
+.RE
+.B
+\fBcancel_notify_started(Pid) -> snmp:void() when Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Cancel a previous request to be notified of SNMP manager start.
+
+
+.RE
+.B
+\fBchange_log_size(NewSize) -> ok | {error, Reason}\fR
+\fB                         when\fR
+\fB                             NewSize :: snmp:log_size(),\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+Changes the log size of the Audit Trail Log. The application must be configured to use the audit trail log function. Please refer to disk_log(3) in Kernel Reference Manual for a description of how to change the log size.
+
+.PP
+The change is permanent, as long as the log is not deleted. That means, the log size is remembered across reboots.
+
+
+.RE
+.B
+\fBdemonitor(Ref) -> true when Ref :: reference().\fR
+
+.br
+.RS
+.PP
+Turn off monitoring of the SNMP manager.
+
+
+.RE
+.B
+\fBformat_reason(Prefix, Reason) -> FReason\fR
+\fB                       when\fR
+\fB                           Prefix :: non_neg_integer() | string(),\fR
+\fB                           Reason :: term(),\fR
+\fB                           FReason :: string().\fR
+
+.br
+.RS
+.PP
+This utility function is used to create a formatted (pretty printable) string of the error reason received from either:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIReason\fR returned value if any of the sync/async get/get-next/set/get-bulk functions returns \fI{error, Reason}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIReason\fR parameter in the handle_error user callback function.
+
+.RE
+
+.PP
+\fIPrefix\fR should either be an indentation string (e.g. a list of spaces) or a positive integer (which will be used to create the indentation string of that length).
+
+
+.RE
+.B
+\fBinfo() -> [{Key, Value}] when Key :: atom(), Value :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list (a dictionary) containing information about the manager. Information includes statistics counters, miscellaneous info about each process (e.g. memory allocation), and so on.
+
+
+.RE
+.B
+\fBload_mib(MibName) -> ok | {error, Reason}\fR
+\fB                  when MibName :: snmp:mib_name(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Load a \fIMib\fR into the manager. The \fIMibName\fR is the name of the Mib, including the path to where the compiled mib is found. For example,
+
+.IP
+.nf
+          Dir = code:priv_dir(my_app) ++ "/mibs/",
+          snmpm:load_mib(Dir ++ "MY-MIB").
+
+.fi
+
+
+.RE
+.B
+\fBlog_to_io(LogDir, Mibs, LogName, LogFile, Block, Start, Stop) ->\fR
+\fB                   ok | {ok, Cnt} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       LogDir :: snmp:dir(),\fR
+\fB                       Mibs :: [snmp:mib_name()],\fR
+\fB                       LogName :: string(),\fR
+\fB                       LogFile :: string(),\fR
+\fB                       Block :: boolean(),\fR
+\fB                       Start :: null | snmp:log_time(),\fR
+\fB                       Stop :: null | snmp:log_time(),\fR
+\fB                       Cnt :: {NumOK, NumERR},\fR
+\fB                       NumOK :: non_neg_integer(),\fR
+\fB                       NumERR :: pos_integer(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Converts an Audit Trail Log to a readable format and prints it on stdio. \fILogName\fR defaults to "snmpm_log". \fILogFile\fR defaults to "snmpm.log".
+
+.PP
+The \fIBlock\fR argument indicates if the log should be blocked during conversion. This could be useful when converting large logs (when otherwise the log could wrap during conversion). Defaults to \fItrue\fR.
+
+.PP
+\fIStart\fR and \fIStop\fR indicates which log entries should be converted, from when (\fIStart\fR) to when (\fIStop\fR). \fIStart = null\fR => Start from the beginning of the log. \fIStop = null\fR => Stop the conversion at the end of the log. Defaults to \fIStart = null\fR and \fIStop = null\fR (the entire log).
+
+.PP
+See \fIsnmp:log_to_io/7\fR for more info.
+
+
+.RE
+.B
+\fBlog_to_txt(LogDir :: snmp:dir(),\fR
+\fB                 Mibs :: [snmp:mib_name()],\fR
+\fB                 OutFile :: file:filename(),\fR
+\fB                 LogName :: string(),\fR
+\fB                 LogFile :: string(),\fR
+\fB                 Block :: boolean(),\fR
+\fB                 Start :: snmp:log_time(),\fR
+\fB                 Stop :: snmp:log_time()) ->\fR
+\fB                    snmp:void().\fR
+
+.br
+.RS
+.PP
+Converts an Audit Trail Log to a readable text file. \fIOutFile\fR defaults to "./snmpm_log.txt". \fILogName\fR defaults to "snmpm_log". \fILogFile\fR defaults to "snmpm.log".
+
+.PP
+The \fIBlock\fR argument indicates if the log should be blocked during conversion. This could be useful when converting large logs (when otherwise the log could wrap during conversion). Defaults to \fItrue\fR.
+
+.PP
+\fIStart\fR and \fIStop\fR indicates which log entries should be converted, from when (\fIStart\fR) to when (\fIStop\fR). \fIStart = null\fR => Start from the beginning of the log. \fIStop = null\fR => Stop the conversion at the end of the log. Defaults to \fIStart = null\fR and \fIStop = null\fR (the entire log).
+
+.PP
+See \fIsnmp:log_to_txt/8\fR for more info.
+
+
+.RE
+.B
+\fBmonitor() -> MRef when MRef :: reference().\fR
+
+.br
+.RS
+.PP
+Monitor the SNMP manager. In case of a crash, the calling (monitoring) process will get a 'DOWN' message (see the erlang module for more info).
+
+
+.RE
+.B
+\fBname_to_oid(AliasName) -> {ok, OIDs} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         AliasName :: atom(),\fR
+\fB                         OIDs :: [snmp:oid()],\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Transform a alias-name to its oid.
+
+.PP
+Note that an alias-name is only unique within the mib, so when loading several mib's into a manager, there might be several instances of the same aliasname.
+
+
+.RE
+.B
+\fBnotify_started(Timeout) -> Pid\fR
+\fB                        when Timeout :: non_neg_integer(), Pid :: pid();\fR
+\fB                    (Args) -> Pid when Args :: map(), Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Request a notification (message) when the SNMP manager has started.
+
+.PP
+The \fITimeout\fR is the time the request is valid. The value has to be greater then zero.
+
+.PP
+The \fIPid\fR is the process handling the supervision of the SNMP manager start. When the manager has started a completion message will be sent to the client from this process: \fI{snmpm_started, Pid}\fR. If the SNMP manager was not started in time, a timeout message will be sent to the client: \fI{snmpm_start_timeout, Pid}\fR.
+
+.PP
+A client application that is dependent on the SNMP manager will use this function in order to be notified of when the manager has started. There are two situations when this is useful:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+During the start of a system, when a client application \fIcould\fR start prior to the SNMP manager but is dependent upon it, and therefore has to wait for it to start.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When the SNMP manager has crashed, the dependent client application has to wait for the SNMP manager to be restarted before it can \fIreconnect\fR.
+
+.RE
+
+.PP
+The function returns the pid() of a handler process, that does the supervision on behalf of the client application. Note that the client application is linked to this handler.
+
+.PP
+This function is used in conjunction with the monitor function.
+
+
+.RE
+.B
+\fBoid_to_name(OID) -> {ok, AliasName} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         OID :: snmp:oid(),\fR
+\fB                         AliasName :: atom(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Transform a oid to its aliasname.
+
+
+.RE
+.B
+\fBoid_to_type(OID) -> {ok, Type} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         OID :: snmp:oid(),\fR
+\fB                         Type :: atom(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Retrieve the type (asn1 bertype) of an oid.
+
+
+.RE
+.B
+\fBregister_agent(UserId, TargetName, Config) -> ok | {error, Reason}\fR
+\fB                        when\fR
+\fB                            UserId :: user_id(),\fR
+\fB                            TargetName :: target_name(),\fR
+\fB                            Config :: [ConfigEntry],\fR
+\fB                            ConfigEntry :: {Item, Value},\fR
+\fB                            Item :: agent_config_item(),\fR
+\fB                            Value :: term(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+Explicitly instruct the manager to handle this agent, with \fIUserId\fR as the responsible user.
+
+.PP
+Called to instruct the manager that this agent shall be handled. This function is used when the user knows in advance which agents the manager shall handle. Note that there is an alternate way to do the same thing: Add the agent to the manager config files (see agents.conf).
+
+.PP
+\fITargetName\fR is a non-empty string, uniquely identifying the agent.
+
+.PP
+The type of \fIVal\fR depends on \fIItem\fR:
+
+.IP
+.nf
+[mandatory] engine_id = engine_id()
+[mandatory] address = inet:ip_address()  % Depends on tdomain
+[optional]  port = inet:port_number()
+[optional]  tdomain = snmp:tdomain()
+[optional]  community = snmp:community()
+[optional]  timeout = register_timeout()
+[optional]  max_message_size = snmp:mms()
+[optional]  version = snmp:version()
+[optional]  sec_model = snmp:sec_model()
+[optional]  sec_name = snmp:sec_name()
+[optional]  sec_level = snmp:sec_level()
+
+.fi
+
+.PP
+Note that if no \fItdomain\fR is given, the default value, \fItransportDomainUdpIpv4\fR, is used.
+
+.PP
+Note that if no \fIport\fR is given and if \fItaddress\fR does not contain a port number, the default value is used.
+
+
+.RE
+.B
+\fBregister_user(UserId, Module, Data, DefaultAgentConfig) ->\fR
+\fB                       ok | {error, Reason}\fR
+\fB                       when\fR
+\fB                           UserId :: user_id(),\fR
+\fB                           Module :: snmpm_user(),\fR
+\fB                           Data :: term(),\fR
+\fB                           DefaultAgentConfig :: [DefaultConfigEntry],\fR
+\fB                           DefaultConfigEntry :: {Item, Value},\fR
+\fB                           Item :: agent_config_item(),\fR
+\fB                           Value :: term(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Register the manager entity (=user) responsible for specific agent(s).
+
+.PP
+\fIModule\fR is the callback module (\fIsnmpm_user\fR behaviour) which will be called whenever something happens (detected agent, incoming reply or incoming trap/notification).
+
+.PP
+\fIData\fR is an opaque data structure, not inspected by the manager, that will be included in all callback calls to the \fIModule\fR callback module (\fIsnmpm_user\fR behaviour).
+
+.PP
+The argument \fIDefaultAgentConfig\fR is used as default values when this user register agents.
+
+.PP
+Note that this operation (register user) could have already been done as a consequence of the node config. (see users.conf).
+
+
+.RE
+.B
+\fBregister_user_monitor(UserId, Module, Data, DefaultAgentConfig) ->\fR
+\fB                               ok | {error, Reason}\fR
+\fB                               when\fR
+\fB                                   UserId :: user_id(),\fR
+\fB                                   Module :: snmpm_user(),\fR
+\fB                                   Data :: term(),\fR
+\fB                                   DefaultAgentConfig ::\fR
+\fB                                       [DefaultConfigEntry],\fR
+\fB                                   DefaultConfigEntry :: {Item, Value},\fR
+\fB                                   Item :: agent_config_item(),\fR
+\fB                                   Value :: term(),\fR
+\fB                                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+Register the monitored manager entity (=user) responsible for specific agent(s).
+
+.PP
+The process performing the registration will be monitored. Which means that if that process should die, all agents registered by that user process will be unregistered. All outstanding requests will be canceled.
+
+.PP
+\fIModule\fR is the callback module (\fIsnmpm_user\fR behaviour) which will be called whenever something happens (detected agent, incoming reply or incoming trap/notification).
+
+.PP
+\fIData\fR is an opaque data structure, not inspected by the manager, that will be included in all callback calls to the \fIModule\fR callback module (\fIsnmpm_user\fR behaviour).
+
+.PP
+The argument \fIDefaultAgentConfig\fR is used as default values when this user register agents.
+
+
+.RE
+.B
+\fBregister_usm_user(EngineID, UserName, Config) ->\fR
+\fB                           ok | {error, Reason}\fR
+\fB                           when\fR
+\fB                               EngineID :: snmp:engine_id(),\fR
+\fB                               UserName :: snmp:usm_name(),\fR
+\fB                               Config :: [ConfigEntry],\fR
+\fB                               ConfigEntry :: {Item, Value},\fR
+\fB                               Item :: usm_config_item(),\fR
+\fB                               Value :: term(),\fR
+\fB                               Reason :: term().\fR
+
+.br
+.RS
+.PP
+Explicitly instruct the manager to handle this USM user. Note that there is an alternate way to do the same thing: Add the usm user to the manager config files (see usm.conf).
+
+
+.RE
+.B
+\fBrestart(What) -> snmp:void() when What :: net_if.\fR
+
+.br
+.RS
+.PP
+Restart the indicated process (\fIWhat\fR). Note that its not without risk to restart a process, and should therefore be used with care.
+
+
+.RE
+.B
+\fBset_log_type(NewType) -> {ok, OldType} | {error, Reason}\fR
+\fB                      when\fR
+\fB                          NewType :: snmp:atl_type(),\fR
+\fB                          OldType :: snmp:atl_type(),\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+Changes the run-time Audit Trail log type.
+
+.PP
+Note that this has no effect on the application configuration as defined by configuration files, so a node restart will revert the config to whatever is in those files.
+
+.PP
+This function is primarily useful in testing/debugging scenarios.
+
+
+.RE
+.B
+\fBsync_get2(UserId, TargetName, Oids, SendOpts) ->\fR
+\fB                   {ok, SnmpReply, Remaining} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       UserId :: user_id(),\fR
+\fB                       TargetName :: target_name(),\fR
+\fB                       Oids :: [snmp:oid()],\fR
+\fB                       SendOpts :: [SendOpt],\fR
+\fB                       SendOpt ::\fR
+\fB                           {context, snmp:context_name()} |\fR
+\fB                           {timeout, pos_integer()} |\fR
+\fB                           {community, snmp:community()} |\fR
+\fB                           {sec_model, snmp:sec_model()} |\fR
+\fB                           {sec_name, snmp:sec_name()} |\fR
+\fB                           {sec_level, snmp:sec_level()} |\fR
+\fB                           {max_message_size, snmp:mms()} |\fR
+\fB                           {extra, term()},\fR
+\fB                       SnmpReply :: snmp_reply(),\fR
+\fB                       Remaining :: non_neg_integer(),\fR
+\fB                       Reason ::\fR
+\fB                           {send_failed, ReqId, ActualReason} |\fR
+\fB                           {invalid_sec_info, SecInfo, SnmpInfo} |\fR
+\fB                           term(),\fR
+\fB                       ReqId :: request_id(),\fR
+\fB                       ActualReason :: term(),\fR
+\fB                       SecInfo :: {SecTag, ExpectedValue, ReceivedValue},\fR
+\fB                       SecTag :: atom(),\fR
+\fB                       ExpectedValue :: term(),\fR
+\fB                       ReceivedValue :: term(),\fR
+\fB                       SnmpInfo :: term().\fR
+
+.br
+.RS
+.PP
+Synchronous \fIget-request\fR.
+
+.PP
+\fIRemaining\fR is the remaining time of the given (or default) timeout time.
+
+.PP
+When \fIReason\fR is \fI{send_failed, ...}\fR it means that the \fInet-if\fR process failed to send the (\fIget-request\fR ) message. This could happen because of any number of reasons, i.e. encoding error. \fIActualReason\fR is the actual reason in this case.
+
+.PP
+The send option \fIextra\fR specifies an opaque data structure passed on to the \fInet-if\fR process. The \fInet-if\fR process included in this application makes, with one exception, no use of this info, so the only use for it (when using the built in \fInet-if\fR) would be tracing. The one usage exception is: \fIAny\fR tuple with \fIsnmpm_extra_info_tag\fR as its first element is reserved for internal use.
+
+.PP
+Some of the send options (\fIcommunity\fR, \fIsec_model\fR, \fIsec_name\fR, \fIsec_level\fR and \fImax_message_size\fR) are \fIoverride options\fR. That is, for \fIthis\fR request, they override any configuration done when the agent was registered.
+
+.PP
+For \fISnmpInfo\fR, see the user callback function handle_report.
+
+
+.RE
+.B
+\fBsync_get_bulk2(UserId, TargetName, NonRep, MaxRep, Oids, SendOpts) ->\fR
+\fB                        {ok, SnmpReply, Remaining} | {error, Reason}\fR
+\fB                        when\fR
+\fB                            UserId :: user_id(),\fR
+\fB                            TargetName :: target_name(),\fR
+\fB                            NonRep :: non_neg_integer(),\fR
+\fB                            MaxRep :: non_neg_integer(),\fR
+\fB                            Oids :: [snmp:oid()],\fR
+\fB                            SendOpts :: [SendOpt],\fR
+\fB                            SendOpt ::\fR
+\fB                                {context, snmp:context_name()} |\fR
+\fB                                {timeout, pos_integer()} |\fR
+\fB                                {community, snmp:community()} |\fR
+\fB                                {sec_model, snmp:sec_model()} |\fR
+\fB                                {sec_name, snmp:sec_name()} |\fR
+\fB                                {sec_level, snmp:sec_level()} |\fR
+\fB                                {max_message_size, snmp:mms()} |\fR
+\fB                                {extra, term()},\fR
+\fB                            ReqId :: request_id(),\fR
+\fB                            SnmpReply :: snmp_reply(),\fR
+\fB                            Remaining :: non_neg_integer(),\fR
+\fB                            Reason ::\fR
+\fB                                {send_failed, ReqId, ActualReason} |\fR
+\fB                                {invalid_sec_info, SecInfo, SnmpInfo} |\fR
+\fB                                term(),\fR
+\fB                            ReqId :: request_id(),\fR
+\fB                            ActualReason :: term(),\fR
+\fB                            SecInfo ::\fR
+\fB                                {SecTag, ExpectedValue, ReceivedValue},\fR
+\fB                            SecTag :: atom(),\fR
+\fB                            ExpectedValue :: term(),\fR
+\fB                            ReceivedValue :: term(),\fR
+\fB                            SnmpInfo :: term().\fR
+
+.br
+.RS
+.PP
+Synchronous \fIget-bulk-request\fR (See RFC1905).
+
+.PP
+\fIRemaining\fR is the remaining time of the given (or default) timeout time.
+
+.PP
+When \fIReason\fR is \fI{send_failed, ...}\fR it means that the \fInet-if\fR process failed to send the message. This could happen because of any number of reasons, i.e. encoding error. \fIActualReason\fR is the actual reason in this case.
+
+.PP
+The send option \fIextra\fR specifies an opaque data structure passed on to the \fInet-if\fR process. The \fInet-if\fR process included in this application makes, with one exception, no use of this info, so the only use for it (when using the built in \fInet-if\fR) would be tracing. The one usage exception is: \fIAny\fR tuple with \fIsnmpm_extra_info_tag\fR as its first element is reserved for internal use.
+
+.PP
+Some of the send options (\fIcommunity\fR, \fIsec_model\fR, \fIsec_name\fR, \fIsec_level\fR and \fImax_message_size\fR) are \fIoverride options\fR. That is, for \fIthis\fR request, they override any configuration done when the agent was registered.
+
+.PP
+For \fISnmpInfo\fR, see the user callback function \fIsnmpm_user:handle_report/3\fR.
+
+
+.RE
+.B
+\fBsync_get_next2(UserId, TargetName, Oids, SendOpts) ->\fR
+\fB                        {ok, SnmpReply, Remaining} | {error, Reason}\fR
+\fB                        when\fR
+\fB                            UserId :: user_id(),\fR
+\fB                            TargetName :: target_name(),\fR
+\fB                            Oids :: [snmp:oid()],\fR
+\fB                            SendOpts :: [SendOpt],\fR
+\fB                            SendOpt ::\fR
+\fB                                {context, snmp:context_name()} |\fR
+\fB                                {timeout, pos_integer()} |\fR
+\fB                                {community, snmp:community()} |\fR
+\fB                                {sec_model, snmp:sec_model()} |\fR
+\fB                                {sec_name, snmp:sec_name()} |\fR
+\fB                                {sec_level, snmp:sec_level()} |\fR
+\fB                                {max_message_size, snmp:mms()} |\fR
+\fB                                {extra, term()},\fR
+\fB                            SnmpReply :: snmp_reply(),\fR
+\fB                            Remaining :: non_neg_integer(),\fR
+\fB                            Reason ::\fR
+\fB                                {send_failed, ReqId, ActualReason} |\fR
+\fB                                {invalid_sec_info, SecInfo, SnmpInfo} |\fR
+\fB                                term(),\fR
+\fB                            ReqId :: request_id(),\fR
+\fB                            ActualReason :: term(),\fR
+\fB                            SecInfo ::\fR
+\fB                                {SecTag, ExpectedValue, ReceivedValue},\fR
+\fB                            SecTag :: atom(),\fR
+\fB                            ExpectedValue :: term(),\fR
+\fB                            ReceivedValue :: term(),\fR
+\fB                            SnmpInfo :: term().\fR
+
+.br
+.RS
+.PP
+Synchronous \fIget-next-request\fR.
+
+.PP
+\fIRemaining\fR is the remaining time of the given (or default) timeout time.
+
+.PP
+When \fIReason\fR is \fI{send_failed, ...}\fR it means that the \fInet-if\fR process failed to send the message. This could happen because of any number of reasons, i.e. encoding error. \fIActualReason\fR is the actual reason in this case.
+
+.PP
+The send option \fIextra\fR specifies an opaque data structure passed on to the \fInet-if\fR process. The \fInet-if\fR process included in this application makes, with one exception, no use of this info, so the only use for it (when using the built in \fInet-if\fR) would be tracing. The one usage exception is: \fIAny\fR tuple with \fIsnmpm_extra_info_tag\fR as its first element is reserved for internal use.
+
+.PP
+Some of the send options (\fIcommunity\fR, \fIsec_model\fR, \fIsec_name\fR, \fIsec_level\fR and \fImax_message_size\fR) are \fIoverride options\fR. That is, for \fIthis\fR request, they override any configuration done when the agent was registered.
+
+.PP
+For \fISnmpInfo\fR, see the user callback function handle_report.
+
+
+.RE
+.B
+\fBsync_set2(UserId, TargetName, VarsAndVals, SendOpts) ->\fR
+\fB                   {ok, SnmpReply, Remaining} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       UserId :: user_id(),\fR
+\fB                       TargetName :: target_name(),\fR
+\fB                       VarsAndVals :: [var_and_val()],\fR
+\fB                       SendOpts :: [SendOpt],\fR
+\fB                       SendOpt ::\fR
+\fB                           {context, snmp:context_name()} |\fR
+\fB                           {timeout, pos_integer()} |\fR
+\fB                           {community, snmp:community()} |\fR
+\fB                           {sec_model, snmp:sec_model()} |\fR
+\fB                           {sec_name, snmp:sec_name()} |\fR
+\fB                           {sec_level, snmp:sec_level()} |\fR
+\fB                           {max_message_size, snmp:mms()} |\fR
+\fB                           {extra, term()},\fR
+\fB                       SnmpReply :: snmp_reply(),\fR
+\fB                       Remaining :: non_neg_integer(),\fR
+\fB                       Reason ::\fR
+\fB                           {send_failed, ReqId, ActualReason} |\fR
+\fB                           {invalid_sec_info, SecInfo, SnmpInfo} |\fR
+\fB                           term(),\fR
+\fB                       ReqId :: request_id(),\fR
+\fB                       ActualReason :: term(),\fR
+\fB                       SecInfo :: {SecTag, ExpectedValue, ReceivedValue},\fR
+\fB                       SecTag :: atom(),\fR
+\fB                       ExpectedValue :: term(),\fR
+\fB                       ReceivedValue :: term(),\fR
+\fB                       SnmpInfo :: term().\fR
+
+.br
+.RS
+.PP
+Synchronous \fIset-request\fR.
+
+.PP
+\fIRemaining\fR is the remaining time of the given (or default) timeout time.
+
+.PP
+When \fIReason\fR is \fI{send_failed, ...}\fR it means that the \fInet-if\fR process failed to send the message. This could happen because of any number of reasons, i.e. encoding error. \fIActualReason\fR is the actual reason in this case.
+
+.PP
+When \fIvar_and_val()\fR is \fI{oid(), value()}\fR, the manager makes an educated guess based on the loaded mibs.
+
+.PP
+The send option \fIextra\fR specifies an opaque data structure passed on to the \fInet-if\fR process. The \fInet-if\fR process included in this application makes, with one exception, no use of this info, so the only use for it (when using the built in \fInet-if\fR) would be tracing. The one usage exception is: \fIAny\fR tuple with \fIsnmpm_extra_info_tag\fR as its first element is reserved for internal use.
+
+.PP
+Some of the send options (\fIcommunity\fR, \fIsec_model\fR, \fIsec_name\fR, \fIsec_level\fR and \fImax_message_size\fR) are \fIoverride options\fR. That is, for \fIthis\fR request, they override any configuration done when the agent was registered.
+
+.PP
+For \fISnmpInfo\fR, see the user callback function \fIsnmpm_user:handle_report/3\fR.
+
+
+.RE
+.B
+\fBunload_mib(MibName) -> ok | {error, Reason}\fR
+\fB                    when MibName :: snmp:mib_name(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Unload a \fIMib\fR from the manager. The \fIMibName\fR is the name of the Mib, including the path to where the compiled mib is found. For example,
+
+.IP
+.nf
+          Dir = code:priv_dir(my_app) ++ "/mibs/",
+          snmpm:unload_mib(Dir ++ "MY-MIB").
+
+.fi
+
+
+.RE
+.B
+\fBunregister_agent(UserId, TargetName) -> ok | {error, Reason}\fR
+\fB                          when\fR
+\fB                              UserId :: user_id(),\fR
+\fB                              TargetName :: target_name(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Unregister the agent.
+
+
+.RE
+.B
+\fBunregister_user(UserId) -> ok | {error, Reason}\fR
+\fB                         when UserId :: user_id(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Unregister the user.
+
+
+.RE
+.B
+\fBunregister_usm_user(EngineID, UserName) -> ok | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 EngineID :: snmp:engine_id(),\fR
+\fB                                 UserName :: snmp:usm_name(),\fR
+\fB                                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Unregister this USM user.
+
+
+.RE
+.B
+\fBupdate_agent_info(UserId, TargetName, Info) ->\fR
+\fB                           ok | {error, Reason}\fR
+\fB                           when\fR
+\fB                               UserId :: user_id(),\fR
+\fB                               TargetName :: target_name(),\fR
+\fB                               Info :: [{Item, Value}],\fR
+\fB                               Item :: agent_config_item(),\fR
+\fB                               Value :: term(),\fR
+\fB                               Reason :: term().\fR
+
+.br
+.RS
+.PP
+Update agent config.
+
+.PP
+This function, \fIupdate_agent_info/3\fR, should be used when several values needs to be updated atomically.
+
+.PP
+See function \fIregister_agent/3\fR for more info about what kind of items are allowed.
+
+
+.RE
+.B
+\fBupdate_agent_info(UserId, TargetName, Item, Value) ->\fR
+\fB                           ok | {error, Reason}\fR
+\fB                           when\fR
+\fB                               UserId :: user_id(),\fR
+\fB                               TargetName :: target_name(),\fR
+\fB                               Item :: agent_config_item(),\fR
+\fB                               Value :: term(),\fR
+\fB                               Reason :: term().\fR
+
+.br
+.RS
+.PP
+Update agent config.
+
+.PP
+See function \fIregister_agent/3\fR for more info about what kind of items are allowed.
+
+
+.RE
+.B
+\fBupdate_usm_user_info(EngineID, UserName, Item, Value) ->\fR
+\fB                              ok | {error, Reason}\fR
+\fB                              when\fR
+\fB                                  EngineID :: snmp:engine_id(),\fR
+\fB                                  UserName :: snmp:usm_name(),\fR
+\fB                                  Item :: usm_config_item(),\fR
+\fB                                  Value :: term(),\fR
+\fB                                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Update usm user config.
+
+
+.RE
+.B
+\fBusm_user_info(EngineID, UserName, Item) ->\fR
+\fB                       {ok, Value} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           EngineID :: snmp:engine_id(),\fR
+\fB                           UserName :: snmp:usm_name(),\fR
+\fB                           Item :: usm_config_item(),\fR
+\fB                           Value :: term(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Retrieve usm user config.
+
+
+.RE
+.B
+\fBverbosity(Target, Verbosity) -> snmp:void()\fR
+\fB                   when\fR
+\fB                       Target ::\fR
+\fB                           config | server | net_if | note_store | all,\fR
+\fB                       Verbosity :: snmp:verbosity().\fR
+
+.br
+.RS
+.PP
+Sets verbosity for the designated process. For the lowest verbosity \fIsilence\fR, nothing is printed. The higher the verbosity, the more is printed.
+
+
+.RE
+.B
+\fBwhich_agents(UserId) -> Agents\fR
+\fB                      when\fR
+\fB                          UserId :: user_id(), Agents :: [target_name()].\fR
+
+.br
+.RS
+.PP
+Get a list of all registered agents or all agents registered by a specific user.
+
+
+.RE
+.B
+\fBwhich_mibs() -> Mibs\fR
+\fB                    when\fR
+\fB                        Mibs :: [{MibName, MibFile}],\fR
+\fB                        MibName :: snmp:mib_name(),\fR
+\fB                        MibFile :: string().\fR
+
+.br
+.RS
+.PP
+Get a list of all the mib's loaded into the manager.
+
+
+.RE
+.B
+\fBwhich_users() -> Users when Users :: [user_id()].\fR
+
+.br
+.RS
+.PP
+Get a list of the identities of all registered users.
+
+
+.RE
+.B
+\fBwhich_usm_users() -> UsmUsers\fR
+\fB                         when\fR
+\fB                             UsmUsers :: [{EngineID, UserName}],\fR
+\fB                             EngineID :: snmp:engine_id(),\fR
+\fB                             UserName :: snmp:usm_name().\fR
+
+.br
+.RS
+.PP
+Get a list of all registered usm users.
+
+
+.RE
+.B
+\fBwhich_usm_users(EngineID) -> UsmUsers\fR
+\fB                         when\fR
+\fB                             EngineID :: snmp:engine_id(),\fR
+\fB                             UsmUsers :: [UserName],\fR
+\fB                             UserName :: snmp:usm_name().\fR
+
+.br
+.RS
+.PP
+Get a list of all registered usm users with engine-id \fIEngineID\fR.
+
+
+.RE

@@ -1,0 +1,20 @@
+.TH eunit_surefire 3 "eunit 2.10.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+eunit_surefire \- Surefire reports for EUnit (Format used by Maven and Atlassian Bamboo for example to integrate test results). Based on initial code from Paul Guyot.
+
+.SH DESCRIPTION
+.PP
+Example: Generate XML result file in the current directory:
+
+.IP
+.nf
+     eunit:test([fib, eunit_examples],
+                [{report,{eunit_surefire,[{dir,"."}]}}]).
+
+.fi
+
+.PP
+\fISee also: \fR\fIeunit\fR.
+
+.SH FUNCTIONS
+.LP

@@ -1,0 +1,82 @@
+.TH system_information 3 "runtime_tools 2.3.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+system_information \- System Information
+
+.SH DESCRIPTION
+.SH FUNCTIONS
+.LP
+.B
+\fBsanity_check() -> ok | {failed, Failures}\fR
+\fB                      when\fR
+\fB                          Application :: atom(),\fR
+\fB                          ApplicationVersion :: string(),\fR
+\fB                          MissingRuntimeDependencies ::\fR
+\fB                              {missing_runtime_dependencies,\fR
+\fB                               ApplicationVersion,\fR
+\fB                               [ApplicationVersion]},\fR
+\fB                          InvalidApplicationVersion ::\fR
+\fB                              {invalid_application_version,\fR
+\fB                               ApplicationVersion},\fR
+\fB                          InvalidAppFile ::\fR
+\fB                              {invalid_app_file, Application},\fR
+\fB                          Failure ::\fR
+\fB                              MissingRuntimeDependencies |\fR
+\fB                              InvalidApplicationVersion | InvalidAppFile,\fR
+\fB                          Failures :: [Failure].\fR
+
+.br
+.RS
+.PP
+Performs a sanity check on the system.
+
+.PP
+If no issues were found, \fIok\fR is returned. If issues were found, \fI{failed, Failures}\fR is returned. All failures found will be part of the \fIFailures\fR list. Currently defined \fIFailure\fR elements in the \fIFailures\fR list:
+
+InvalidAppFile
+.RS 2
+An application has an invalid 
+\fI.app\fR file. The second element identifies the application which has the invalid \fI.app\fR file.
+
+.RE
+
+InvalidApplicationVersion
+.RS 2
+An application has an invalid application version. The second element identifies the application version that is invalid.
+
+
+.RE
+
+MissingRuntimeDependencies
+.RS 2
+An application is missing runtime dependencies. The second element identifies the application (with version) that has missing dependencies. The third element contains the missing dependencies.
+
+.PP
+Note that this check use application versions that are loaded, or will be loaded when used. You might have application versions that satisfies all dependencies installed in the system, but if those are not loaded this check will fail. Of course, the system will also fail when used like this. This can happen when you have multiple branched versions of the same application installed in the system, but there does not exist a boot script identifying the correct application version.
+
+
+.RE
+
+.PP
+Currently the sanity check is limited to verifying runtime dependencies found in the \fI.app\fR files of all applications. More checks will be introduced in the future. This implies that the return type \fIwill\fR change in the future.
+
+.PP
+\fBNOTE: \fRAn \fIok\fR return value only means that \fIsanity_check/0\fR did not find any issues, \fInot\fR that no issues exist.
+
+
+
+.RE
+.B
+\fBto_file(FileName) -> ok | {error, Reason}\fR
+\fB                 when\fR
+\fB                     FileName :: file:name_all(),\fR
+\fB                     Reason ::\fR
+\fB                         file:posix() |\fR
+\fB                         badarg | terminated | system_limit.\fR
+
+.br
+.RS
+.PP
+Writes miscellaneous system information to file. This information will typically be requested by the Erlang/OTP team at Ericsson AB when reporting an issue.
+
+
+.RE

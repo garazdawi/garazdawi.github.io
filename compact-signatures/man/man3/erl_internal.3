@@ -1,0 +1,129 @@
+.TH erl_internal 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_internal \- Internal Erlang definitions.
+
+.SH DESCRIPTION
+.PP
+This module defines Erlang BIFs, guard tests, and operators. This module is only of interest to programmers who manipulate Erlang code.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_predefined_functions(Forms) -> UpdatedForms\fR
+\fB                                  when\fR
+\fB                                      Forms ::\fR
+\fB                                          [erl_parse:abstract_form() |\fR
+\fB                                           erl_parse:form_info()],\fR
+\fB                                      UpdatedForms ::\fR
+\fB                                          [erl_parse:abstract_form() |\fR
+\fB                                           erl_parse:form_info()].\fR
+
+.br
+.RS
+.PP
+Adds to \fIForms\fR the code for the standard pre-defined functions (such as \fImodule_info/0\fR) that are to be included in every module.
+
+
+.RE
+.B
+\fBarith_op(OpName, Arity) -> boolean()\fR
+\fB                  when OpName :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIOpName/Arity\fR is an arithmetic operator, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBbif(Name, Arity) -> boolean()\fR
+\fB             when Name :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIName/Arity\fR is an Erlang BIF that is automatically recognized by the compiler, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBbool_op(OpName, Arity) -> boolean()\fR
+\fB                 when OpName :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIOpName/Arity\fR is a Boolean operator, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBcomp_op(OpName, Arity) -> boolean()\fR
+\fB                 when OpName :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIOpName/Arity\fR is a comparison operator, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBguard_bif(Name, Arity) -> boolean()\fR
+\fB                   when Name :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIName/Arity\fR is an Erlang BIF that is allowed in guards, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBlist_op(OpName, Arity) -> boolean()\fR
+\fB                 when OpName :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIOpName/Arity\fR is a list operator, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBop_type(OpName, Arity) -> Type\fR
+\fB                 when\fR
+\fB                     OpName :: atom(),\fR
+\fB                     Arity :: arity(),\fR
+\fB                     Type :: arith | bool | comp | list | send.\fR
+
+.br
+.RS
+.PP
+Returns the \fIType\fR of operator that \fIOpName/Arity\fR belongs to, or generates a \fIfunction_clause\fR error if it is not an operator.
+
+
+.RE
+.B
+\fBsend_op(OpName, Arity) -> boolean()\fR
+\fB                 when OpName :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIOpName/Arity\fR is a send operator, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBtype_test(Name, Arity) -> boolean()\fR
+\fB                   when Name :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIName/Arity\fR is a valid Erlang type test, otherwise \fIfalse\fR.
+
+
+.RE

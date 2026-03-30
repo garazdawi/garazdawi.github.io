@@ -1,0 +1,268 @@
+.TH snmp_target_mib 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmp_target_mib \- Instrumentation Functions for SNMP-TARGET-MIB
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmp_target_mib\fR implements the instrumentation functions for the SNMP-TARGET-MIB, and functions for configuring the database.
+
+.PP
+The configuration files are described in the SNMP User's Manual.
+
+.PP
+Legacy API functions \fIadd_addr/10\fR that does not specify transport domain, and \fIadd_addr/11\fR that has got separate \fIIpAddr\fR and \fIPortNumber\fR arguments still work as before for backwards compatibility reasons.
+
+.SS "DATA TYPES"
+
+.PP
+See the data types in \fIsnmpa_conf\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBmms() :: 484..65535.\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"The maximum message size value associated with an entry in the snmpTargetAddrTable.".
+
+
+.PP
+\fIInteger32 (484..65535)\fR
+
+
+.RE
+.B
+\fBname() :: snmp_framework_mib:admin_string().\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"The locally arbitrary, but unique identifier associated with this snmpTargetAddrEntry."
+
+
+.PP
+\fISnmpAdminString (SIZE(1..32))\fR
+
+
+.RE
+.B
+\fBparams() :: snmp_framework_mib:admin_string().\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"The value of this object identifies an entry in the snmpTargetParamsTable."
+
+
+.PP
+\fISnmpAdminString (SIZE(1..32))\fR
+
+
+.RE
+.B
+\fBretry_count() :: 0..255.\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"This object specifies a default number of retries to be attempted when a response is not received for a generated message."
+
+
+.PP
+\fIInteger32 (0..255)\fR
+
+
+.RE
+.B
+\fBtag_list() :: string().\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"An octet string containing a list of tag values. Tag values are preferably in human-readable form." "To facilitate internationalization, this information is represented using the ISO/IEC IS 10646-1 character set, encoded as an octet string using the UTF-8 character encoding scheme described in RFC 2279."
+
+
+.PP
+\fIOCTET STRING (SIZE (0..255))\fR
+
+
+.RE
+.B
+\fBtag_value() :: string().\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"An octet string containing a tag value. Tag values are preferably in human-readable form."
+
+
+.PP
+\fIOCTET STRING (SIZE (0..255))\fR
+
+
+.RE
+.B
+\fBtmask() :: snmpa_conf:transportAddressMask().\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"The mask value associated with an entry in the snmpTargetAddrTable. The value of this object must have the same length as the corresponding instance of snmpTargetAddrTAddress, or must have length 0."
+
+
+.PP
+\fIOCTET STRING (SIZE (0..255))\fR
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_addr(Name, TDomain, TAddr, Timeout, Retry, TagList, Params,\fR
+\fB               EngineId, TMask, MMS) ->\fR
+\fB                  {ok, Key} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Name :: name(),\fR
+\fB                      TDomain :: snmpa_conf:transportDomain(),\fR
+\fB                      TAddr :: snmpa_conf:transportAddress(),\fR
+\fB                      Timeout :: snmp:time_interval(),\fR
+\fB                      Retry :: integer(),\fR
+\fB                      TagList :: tag_list(),\fR
+\fB                      Params :: params(),\fR
+\fB                      EngineId :: snmp_framework_mib:engine_id(),\fR
+\fB                      TMask :: tmask(),\fR
+\fB                      MMS :: snmp_framework_mib:max_message_size(),\fR
+\fB                      Key :: term(),\fR
+\fB                      Reason :: term();\fR
+\fB              (Name, Ip, Port, Timeout, Retry, TagList, Params,\fR
+\fB               EngineId, TMask, MMS) ->\fR
+\fB                  {ok, Key} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Name :: name(),\fR
+\fB                      Ip :: snmpa_conf:transportAddressWithoutPort(),\fR
+\fB                      Port :: inet:port_number(),\fR
+\fB                      Timeout :: snmp:time_interval(),\fR
+\fB                      Retry :: integer(),\fR
+\fB                      TagList :: tag_list(),\fR
+\fB                      Params :: params(),\fR
+\fB                      EngineId :: snmp_framework_mib:engine_id(),\fR
+\fB                      TMask :: tmask(),\fR
+\fB                      MMS :: snmp_framework_mib:max_message_size(),\fR
+\fB                      Key :: term(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+Adds a target address definition to the agent config. Equivalent to one line in the \fItarget_addr.conf\fR file.
+
+
+.RE
+.B
+\fBadd_params(Name, MPModel, SecModel, SecName, SecLevel) ->\fR
+\fB                    {ok, Key} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Name :: name(),\fR
+\fB                        MPModel ::\fR
+\fB                            snmp_framework_mib:message_processing_model(),\fR
+\fB                        SecModel :: snmp_framework_mib:security_model(),\fR
+\fB                        SecName :: snmp_framework_mib:admin_string(),\fR
+\fB                        SecLevel :: snmp_framework_mib:security_level(),\fR
+\fB                        Key :: term(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Adds a target parameter definition to the agent config. Equivalent to one line in the \fItarget_params.conf\fR file.
+
+
+.RE
+.B
+\fBconfigure(ConfDir) -> snmp:void() when ConfDir :: string().\fR
+
+.br
+.RS
+.PP
+This function is called from the supervisor at system start-up.
+
+.PP
+Inserts all data in the configuration files into the database and destroys all old rows with StorageType \fIvolatile\fR. The rows created from the configuration file will have StorageType \fInonVolatile\fR.
+
+.PP
+All \fIsnmp\fR counters are set to zero.
+
+.PP
+If an error is found in the configuration file, it is reported using the function \fIconfig_err/2\fR of the error report module, and the function fails with the reason \fIconfiguration_error\fR.
+
+.PP
+\fIConfDir\fR is a string which points to the directory where the configuration files are found.
+
+.PP
+The configuration files read are: \fItarget_addr.conf\fR and \fItarget_params.conf\fR.
+
+
+.RE
+.B
+\fBdelete_addr(Key) -> ok | {error, Reason}\fR
+\fB                     when Key :: term(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Delete a target address definition from the agent config.
+
+
+.RE
+.B
+\fBdelete_params(Key) -> ok | {error, Reason}\fR
+\fB                       when Key :: term(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Delete a target parameter definition from the agent config.
+
+
+.RE
+.B
+\fBreconfigure(ConfDir) -> snmp:void() when ConfDir :: string().\fR
+
+.br
+.RS
+.PP
+Inserts all data in the configuration files into the database and destroys all old data, including the rows with StorageType \fInonVolatile\fR. The rows created from the configuration file will have StorageType \fInonVolatile\fR.
+
+.PP
+Thus, the data in the SNMP-TARGET-MIB, after this function has been called, is the data from the configuration files.
+
+.PP
+All \fIsnmp\fR counters are set to zero.
+
+.PP
+If an error is found in the configuration file, it is reported using the function \fIconfig_err/2\fR of the , and the function fails with the reason \fIconfiguration_error\fR.
+
+.PP
+\fIConfDir\fR is a string which points to the directory where the configuration files are found.
+
+.PP
+The configuration files read are: \fItarget_addr.conf\fR and \fItarget_params.conf\fR.
+
+
+.RE
+.B
+\fBset_target_engine_id(TargetAddrName, EngineId) -> boolean()\fR
+\fB                              when\fR
+\fB                                  TargetAddrName :: name(),\fR
+\fB                                  EngineId ::\fR
+\fB                                      snmp_framework_mib:engine_id().\fR
+
+.br
+.RS
+.PP
+Changes the engine id for a target in the \fIsnmpTargetAddrTable\fR. If notifications are sent as Inform requests to a target, its engine id must be set.
+
+
+.RE

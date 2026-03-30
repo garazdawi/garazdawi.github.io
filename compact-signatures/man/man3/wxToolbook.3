@@ -1,0 +1,645 @@
+.TH wxToolbook 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxToolbook \- \fIwxToolbook\fR is a class similar to \fIwxNotebook\fR but which uses a \fIwxToolBar\fR to show the labels instead of the tabs.
+
+.SH DESCRIPTION
+.PP
+There is no documentation for this class yet but its usage is identical to \fIwxNotebook\fR (except for the features clearly related to tabs only), so please refer to that class documentation for now. You can also use the page_samples_notebook to see \fIwxToolbook\fR in action.
+
+.PP
+One feature of this class not supported by \fIwxBookCtrlBase\fR is the support for disabling some of the pages, see \fIEnablePage()\fR (not implemented in wx).
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTBK_BUTTONBAR: Use wxButtonToolBar-based implementation under macOS (ignored under other platforms).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTBK_HORZ_LAYOUT: Shows the text and the icons alongside, not vertically stacked (only implement under Windows and GTK 2 platforms as it relies on \fIwxTB_HORZ_LAYOUT\fR flag support). The common wxBookCtrl styles described in the overview_bookctrl are also supported.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview bookctrl
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBookCtrlBase\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxNotebook\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Examples
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBookCtrlBase\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxToolbook
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItoolbook_page_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItoolbook_page_changing\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxToolbook() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddPage(This, Page, Text, [Option]) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxToolbook(),\fR
+\fB                     Page :: wxWindow:wxWindow(),\fR
+\fB                     Text :: unicode:chardata(),\fR
+\fB                     Option ::\fR
+\fB                         {bSelect, boolean()} | {imageId, integer()}.\fR
+
+.br
+.RS
+.PP
+Adds a new page.
+
+.PP
+The page must have the book control itself as the parent and must not have been added to this control previously.
+
+.PP
+The call to this function will generate the page changing and page changed events if \fIselect\fR is true, but not when inserting the very first page (as there is no previous page selection to switch from in this case and so it wouldn't make sense to e.g. veto such event).
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: Do not delete the page, it will be deleted by the book control.
+
+.PP
+See: \fIinsertPage/5\fR
+
+
+.RE
+.B
+\fBadvanceSelection(This, [Option]) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxToolbook(),\fR
+\fB                              Option :: {forward, boolean()}.\fR
+
+.br
+.RS
+.PP
+Cycles through the tabs.
+
+.PP
+The call to this function generates the page changing events.
+
+
+.RE
+.B
+\fBassignImageList(This, ImageList) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxToolbook(),\fR
+\fB                             ImageList :: wxImageList:wxImageList().\fR
+
+.br
+.RS
+.PP
+Sets the image list for the page control and takes ownership of the list.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetImageList/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBchangeSelection(This, Page) -> integer()\fR
+\fB                         when This :: wxToolbook(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Changes the selection to the given page, returning the previous selection.
+
+.PP
+This function behaves as \fIsetSelection/2\fR but does \fInot\fR generate the page changing events.
+
+.PP
+See overview_events_prog for more information.
+
+
+.RE
+.B
+\fBcreate(This, Parent, Id, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxToolbook(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Create the tool book control that has already been constructed with the default constructor.
+
+
+.RE
+.B
+\fBdeleteAllPages(This) -> boolean() when This :: wxToolbook().\fR
+
+.br
+.RS
+.PP
+Deletes all pages.
+
+
+.RE
+.B
+\fBdestroy(This :: wxToolbook()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetCurrentPage(This) -> wxWindow:wxWindow()\fR
+\fB                        when This :: wxToolbook().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected page or NULL.
+
+
+.RE
+.B
+\fBgetImageList(This) -> wxImageList:wxImageList()\fR
+\fB                      when This :: wxToolbook().\fR
+
+.br
+.RS
+.PP
+Returns the associated image list, may be NULL.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetImageList/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetPage(This, Page) -> wxWindow:wxWindow()\fR
+\fB                 when This :: wxToolbook(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the window at the given page position.
+
+
+.RE
+.B
+\fBgetPageCount(This) -> integer() when This :: wxToolbook().\fR
+
+.br
+.RS
+.PP
+Returns the number of pages in the control.
+
+
+.RE
+.B
+\fBgetPageImage(This, NPage) -> integer()\fR
+\fB                      when This :: wxToolbook(), NPage :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the image index for the given page.
+
+
+.RE
+.B
+\fBgetPageText(This, NPage) -> unicode:charlist()\fR
+\fB                     when This :: wxToolbook(), NPage :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the string for the given page.
+
+
+.RE
+.B
+\fBgetSelection(This) -> integer() when This :: wxToolbook().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected page, or \fIwxNOT\\_FOUND\fR if none was selected.
+
+.PP
+Note that this method may return either the previously or newly selected page when called from the \fIEVT_BOOKCTRL_PAGE_CHANGED\fR handler depending on the platform and so \fIwxBookCtrlEvent:getSelection/1\fR should be used instead in this case.
+
+
+.RE
+.B
+\fBhitTest(This, Pt) -> Result\fR
+\fB                 when\fR
+\fB                     Result :: {Res :: integer(), Flags :: integer()},\fR
+\fB                     This :: wxToolbook(),\fR
+\fB                     Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Returns the index of the tab at the specified position or \fIwxNOT\\_FOUND\fR if none.
+
+.PP
+If \fIflags\fR parameter is non-NULL, the position of the point inside the tab is returned as well.
+
+.PP
+Return: Returns the zero-based tab index or \fIwxNOT_FOUND\fR if there is no tab at the specified position.
+
+
+.RE
+.B
+\fBinsertPage(This, Index, Page, Text, [Option]) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxToolbook(),\fR
+\fB                        Index :: integer(),\fR
+\fB                        Page :: wxWindow:wxWindow(),\fR
+\fB                        Text :: unicode:chardata(),\fR
+\fB                        Option ::\fR
+\fB                            {bSelect, boolean()} | {imageId, integer()}.\fR
+
+.br
+.RS
+.PP
+Inserts a new page at the specified position.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: Do not delete the page, it will be deleted by the book control.
+
+.PP
+See: \fIaddPage/4\fR
+
+
+.RE
+.B
+\fBnew() -> wxToolbook().\fR
+
+.br
+.RS
+.PP
+Constructs a choicebook control.
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxToolbook()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetImageList(This, ImageList) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxToolbook(),\fR
+\fB                          ImageList :: wxImageList:wxImageList().\fR
+
+.br
+.RS
+.PP
+Sets the image list to use.
+
+.PP
+It does not take ownership of the image list, you must delete it yourself.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIassignImageList/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetPageImage(This, Page, Image) -> boolean()\fR
+\fB                      when\fR
+\fB                          This :: wxToolbook(),\fR
+\fB                          Page :: integer(),\fR
+\fB                          Image :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the image index for the given page.
+
+.PP
+\fIimage\fR is an index into the image list which was set with \fIsetImageList/2\fR.
+
+
+.RE
+.B
+\fBsetPageSize(This, Size) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxToolbook(),\fR
+\fB                         Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the width and height of the pages.
+
+.PP
+Note: This method is currently not implemented for wxGTK.
+
+
+.RE
+.B
+\fBsetPageText(This, Page, Text) -> boolean()\fR
+\fB                     when\fR
+\fB                         This :: wxToolbook(),\fR
+\fB                         Page :: integer(),\fR
+\fB                         Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the text for the given page.
+
+
+.RE
+.B
+\fBsetSelection(This, Page) -> integer()\fR
+\fB                      when This :: wxToolbook(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the selection to the given page, returning the previous selection.
+
+.PP
+Notice that the call to this function generates the page changing events, use the \fIchangeSelection/2\fR function if you don't want these events to be generated.
+
+.PP
+See: \fIgetSelection/1\fR
+
+
+.RE

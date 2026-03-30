@@ -1,0 +1,207 @@
+.TH wxColourDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxColourDialog \- This class represents the colour chooser dialog.
+
+.SH DESCRIPTION
+.PP
+Starting from wxWidgets 3.1.3 and currently in the MSW port only, this dialog generates wxEVT_COLOUR_CHANGED events while it is being shown, i.e. from inside its \fIwxDialog:showModal/1\fR method, that notify the program about the change of the currently selected colour and allow it to e.g. preview the effect of selecting this colour. Note that if you react to this event, you should also correctly revert to the previously selected colour if the dialog is cancelled by the user.
+
+.PP
+Example of using this class with dynamic feedback for the selected colour:
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwx_color()\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxColourData\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxGetColourFromUser()
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxColourDialog
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxColourDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxColourDialog(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option :: {data, wxColourData:wxColourData()}.\fR
+
+.br
+.RS
+.PP
+Same as \fInew/2\fR.
+
+
+.RE
+.B
+\fBdestroy(This :: wxColourDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetColourData(This) -> wxColourData:wxColourData()\fR
+\fB                       when This :: wxColourDialog().\fR
+
+.br
+.RS
+.PP
+Returns the colour data associated with the colour dialog.
+
+
+.RE
+.B
+\fBnew() -> wxColourDialog().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxColourDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option :: {data, wxColourData:wxColourData()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Pass a parent window, and optionally a pointer to a block of colour data, which will be copied to the colour dialog's colour data.
+
+.PP
+Custom colours from colour data object will be used in the dialog's colour palette. Invalid entries in custom colours list will be ignored on some platforms(GTK) or replaced with white colour on platforms where custom colours palette has fixed size (MSW).
+
+.PP
+See: \fIwxColourData\fR
+
+
+.RE

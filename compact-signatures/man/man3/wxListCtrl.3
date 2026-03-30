@@ -1,0 +1,2034 @@
+.TH wxListCtrl 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxListCtrl \- A list control presents lists in a number of formats: list view, report view, icon view and small icon view.
+
+.SH DESCRIPTION
+.PP
+In any case, elements are numbered from zero. For all these modes, the items are stored in the control and must be added to it using \fIinsertItem/4\fR method.
+
+.PP
+A special case of report view quite different from the other modes of the list control is a virtual control in which the items data (including text, images and attributes) is managed by the main program and is requested by the control itself only when needed which allows having controls with millions of items without consuming much memory. To use virtual list control you must use \fIsetItemCount/2\fR first and override at least \fIwxListCtrl::OnGetItemText\fR (not implemented in wx) (and optionally \fIwxListCtrl::OnGetItemImage\fR (not implemented in wx) or \fIwxListCtrl::OnGetItemColumnImage\fR (not implemented in wx) and \fIwxListCtrl::OnGetItemAttr\fR (not implemented in wx)) to return the information about the items when the control requests it.
+
+.PP
+Virtual list control can be used as a normal one except that no operations which can take time proportional to the number of items in the control happen - this is required to allow having a practically infinite number of items. For example, in a multiple selection virtual list control, the selections won't be sent when many items are selected at once because this could mean iterating over all the items.
+
+.PP
+Using many of \fIwxListCtrl\fR features is shown in the corresponding sample.
+
+.PP
+To intercept events from a list control, use the event table macros described in \fIwxListEvent\fR.
+
+.PP
+\fIwxMac Note\fR: Starting with wxWidgets 2.8, \fIwxListCtrl\fR uses a native implementation for report mode, and uses a generic implementation for other modes. You can use the generic implementation for report mode as well by setting the \fImac.listctrl.always_use_generic\fR system option (see \fIwxSystemOptions\fR) to 1.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_LIST: Multicolumn list view, with optional small icons. Columns are computed automatically, i.e. you don't set columns as in \fIwxLC_REPORT\fR. In other words, the list wraps, unlike a \fIwxListBox\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_REPORT: Single or multicolumn report view, with optional header.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_VIRTUAL: The application provides items text on demand. May only be used with \fIwxLC_REPORT\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_ICON: Large icon view, with optional labels.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_SMALL_ICON: Small icon view, with optional labels.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_ALIGN_TOP: Icons align to the top. Win32 default, Win32 only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_ALIGN_LEFT: Icons align to the left.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_AUTOARRANGE: Icons arrange themselves. Win32 only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_EDIT_LABELS: Labels are editable: the application will be notified when editing starts.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_NO_HEADER: No header in report mode.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_SINGLE_SEL: Single selection (default is multiple).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_SORT_ASCENDING: Sort in ascending order. (You must still supply a comparison callback in \fIsortItems/2\fR.)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_SORT_DESCENDING: Sort in descending order. (You must still supply a comparison callback in \fIsortItems/2\fR.)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_HRULES: Draws light horizontal rules between rows in report mode.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLC_VRULES: Draws light vertical rules between columns in report mode.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview listctrl
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListView\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListBox\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTreeCtrl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListItem\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxListCtrl
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_begin_drag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_begin_rdrag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_begin_label_edit\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_end_label_edit\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_delete_item\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_delete_all_items\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_item_selected\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_item_deselected\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_item_activated\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_item_focused\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_item_middle_click\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_item_right_click\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_key_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_insert_item\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_col_click\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_col_right_click\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_col_begin_drag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_col_dragging\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_col_end_drag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_list_cache_hint\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxListCtrl() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBarrange(This, [Option]) -> boolean()\fR
+\fB                 when This :: wxListCtrl(), Option :: {flag, integer()}.\fR
+
+.br
+.RS
+.PP
+Arranges the items in icon or small icon view.
+
+.PP
+This only has effect on Win32. \fIflag\fR is one of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_ALIGN_DEFAULT: Default alignment.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_ALIGN_LEFT: Align to the left side of the control.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_ALIGN_TOP: Align to the top side of the control.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_ALIGN_SNAP_TO_GRID: Snap to grid.
+
+.RE
+
+
+.RE
+.B
+\fBassignImageList(This, ImageList, Which) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxListCtrl(),\fR
+\fB                             ImageList :: wxImageList:wxImageList(),\fR
+\fB                             Which :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the image list associated with the control and takes ownership of it (i.e.
+
+.PP
+the control will, unlike when using \fIsetImageList/3\fR, delete the list when destroyed). \fIwhich\fR is one of \fIwxIMAGE_LIST_NORMAL\fR, \fIwxIMAGE_LIST_SMALL\fR, \fIwxIMAGE_LIST_STATE\fR (the last is unimplemented).
+
+.PP
+See: \fIsetImageList/3\fR
+
+
+.RE
+.B
+\fBclearAll(This) -> ok when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Deletes all items and all columns.
+
+.PP
+Note: This sends an event of type \fIwxEVT_LIST_DELETE_ALL_ITEMS\fR under all platforms.
+
+
+.RE
+.B
+\fBdeleteAllItems(This) -> boolean() when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Deletes all items in the list control.
+
+.PP
+This function does \fInot\fR send the \fIwxEVT_LIST_DELETE_ITEM\fR event because deleting many items from the control would be too slow then (unlike \fIdeleteItem/2\fR) but it does send the special \fIwxEVT_LIST_DELETE_ALL_ITEMS\fR event if the control was not empty. If it was already empty, nothing is done and no event is sent.
+
+.PP
+Return: true if the items were successfully deleted or if the control was already empty, false if an error occurred while deleting the items.
+
+
+.RE
+.B
+\fBdeleteColumn(This, Col) -> boolean()\fR
+\fB                      when This :: wxListCtrl(), Col :: integer().\fR
+
+.br
+.RS
+.PP
+Deletes a column.
+
+
+.RE
+.B
+\fBdeleteItem(This, Item) -> boolean()\fR
+\fB                    when This :: wxListCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Deletes the specified item.
+
+.PP
+This function sends the \fIwxEVT_LIST_DELETE_ITEM\fR event for the item being deleted.
+
+.PP
+See: \fIdeleteAllItems/1\fR
+
+
+.RE
+.B
+\fBdestroy(This :: wxListCtrl()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBeditLabel(This, Item) -> wxTextCtrl:wxTextCtrl()\fR
+\fB                   when This :: wxListCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Starts editing the label of the given item.
+
+.PP
+This function generates a \fIEVT_LIST_BEGIN_LABEL_EDIT\fR event which can be vetoed so that no text control will appear for in-place editing.
+
+.PP
+If the user changed the label (i.e. s/he does not press ESC or leave the text control without changes, a \fIEVT_LIST_END_LABEL_EDIT\fR event will be sent which can be vetoed as well.
+
+
+.RE
+.B
+\fBensureVisible(This, Item) -> boolean()\fR
+\fB                       when This :: wxListCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Ensures this item is visible.
+
+
+.RE
+.B
+\fBfindItem(This, Start, Str, [Option]) -> integer()\fR
+\fB                  when\fR
+\fB                      This :: wxListCtrl(),\fR
+\fB                      Start :: integer(),\fR
+\fB                      Str :: unicode:chardata(),\fR
+\fB                      Option :: {partial, boolean()};\fR
+\fB              (This, Start, Pt, Direction) -> integer()\fR
+\fB                  when\fR
+\fB                      This :: wxListCtrl(),\fR
+\fB                      Start :: integer(),\fR
+\fB                      Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                      Direction :: integer().\fR
+
+.br
+.RS
+.PP
+Find an item nearest this position in the specified direction, starting from \fIstart\fR or the beginning if \fIstart\fR is -1.
+
+.PP
+Return: The next matching item if any or \fI-1\fR (wxNOT_FOUND) otherwise.
+
+
+.RE
+.B
+\fBgetColumn(This, Col, Item) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxListCtrl(),\fR
+\fB                       Col :: integer(),\fR
+\fB                       Item :: wxListItem:wxListItem().\fR
+
+.br
+.RS
+.PP
+Gets information about this column.
+
+.PP
+See \fIsetItem/5\fR for more information.
+
+
+.RE
+.B
+\fBgetColumnCount(This) -> integer() when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the number of columns.
+
+
+.RE
+.B
+\fBgetColumnWidth(This, Col) -> integer()\fR
+\fB                        when This :: wxListCtrl(), Col :: integer().\fR
+
+.br
+.RS
+.PP
+Gets the column width (report view only).
+
+
+.RE
+.B
+\fBgetCountPerPage(This) -> integer() when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Gets the number of items that can fit vertically in the visible area of the list control (list or report view) or the total number of items in the list control (icon or small icon view).
+
+
+.RE
+.B
+\fBgetEditControl(This) -> wxTextCtrl:wxTextCtrl()\fR
+\fB                        when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the edit control being currently used to edit a label.
+
+.PP
+Returns NULL if no label is being edited.
+
+.PP
+Note: It is currently only implemented for wxMSW and the generic version, not for the native macOS version.
+
+
+.RE
+.B
+\fBgetImageList(This, Which) -> wxImageList:wxImageList()\fR
+\fB                      when This :: wxListCtrl(), Which :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the specified image list.
+
+.PP
+\fIwhich\fR may be one of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxIMAGE_LIST_NORMAL: The normal (large icon) image list.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxIMAGE_LIST_SMALL: The small icon image list.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxIMAGE_LIST_STATE: The user-defined state image list (unimplemented).
+
+.RE
+
+
+.RE
+.B
+\fBgetItem(This, Info) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxListCtrl(),\fR
+\fB                     Info :: wxListItem:wxListItem().\fR
+
+.br
+.RS
+.PP
+Gets information about the item.
+
+.PP
+See \fIsetItem/5\fR for more information.
+
+.PP
+You must call \fIinfo.SetId()\fR to set the ID of item you're interested in before calling this method, and \fIinfo.SetMask()\fR with the flags indicating what fields you need to retrieve from \fIinfo\fR.
+
+
+.RE
+.B
+\fBgetItemBackgroundColour(This, Item) -> wx:wx_colour4()\fR
+\fB                                 when\fR
+\fB                                     This :: wxListCtrl(),\fR
+\fB                                     Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the colour for this item.
+
+.PP
+If the item has no specific colour, returns an invalid colour (and not the default background control of the control itself).
+
+.PP
+See: \fIgetItemTextColour/2\fR
+
+
+.RE
+.B
+\fBgetItemCount(This) -> integer() when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the number of items in the list control.
+
+
+.RE
+.B
+\fBgetItemData(This, Item) -> integer()\fR
+\fB                     when This :: wxListCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Gets the application-defined data associated with this item.
+
+
+.RE
+.B
+\fBgetItemFont(This, Item) -> wxFont:wxFont()\fR
+\fB                     when This :: wxListCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the item's font.
+
+
+.RE
+.B
+\fBgetItemPosition(This, Item) -> Result\fR
+\fB                         when\fR
+\fB                             Result ::\fR
+\fB                                 {Res :: boolean(),\fR
+\fB                                  Pos ::\fR
+\fB                                      {X :: integer(), Y :: integer()}},\fR
+\fB                             This :: wxListCtrl(),\fR
+\fB                             Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the position of the item, in icon or small icon view.
+
+
+.RE
+.B
+\fBgetItemRect(This, Item, [Option]) -> Result\fR
+\fB                     when\fR
+\fB                         Result ::\fR
+\fB                             {Res :: boolean(),\fR
+\fB                              Rect ::\fR
+\fB                                  {X :: integer(),\fR
+\fB                                   Y :: integer(),\fR
+\fB                                   W :: integer(),\fR
+\fB                                   H :: integer()}},\fR
+\fB                         This :: wxListCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Option :: {code, integer()}.\fR
+
+.br
+.RS
+.PP
+Returns the rectangle representing the item's size and position, in physical coordinates.
+
+.PP
+\fIcode\fR is one of wxLIST_RECT_BOUNDS, wxLIST_RECT_ICON, wxLIST_RECT_LABEL.
+
+
+.RE
+.B
+\fBgetItemSpacing(This) -> {W :: integer(), H :: integer()}\fR
+\fB                        when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Retrieves the spacing between icons in pixels: horizontal spacing is returned as \fIx\fR component of the {Width,Height} object and the vertical spacing as its \fIy\fR component.
+
+
+.RE
+.B
+\fBgetItemState(This, Item, StateMask) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxListCtrl(),\fR
+\fB                          Item :: integer(),\fR
+\fB                          StateMask :: integer().\fR
+
+.br
+.RS
+.PP
+Gets the item state.
+
+.PP
+For a list of state flags, see \fIsetItem/5\fR. The \fIstateMask\fR indicates which state flags are of interest.
+
+
+.RE
+.B
+\fBgetItemText(This, Item, [Option]) -> unicode:charlist()\fR
+\fB                     when\fR
+\fB                         This :: wxListCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Option :: {col, integer()}.\fR
+
+.br
+.RS
+.PP
+Gets the item text for this item.
+
+
+.RE
+.B
+\fBgetItemTextColour(This, Item) -> wx:wx_colour4()\fR
+\fB                           when This :: wxListCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the colour for this item.
+
+.PP
+If the item has no specific colour, returns an invalid colour (and not the default foreground control of the control itself as this wouldn't allow distinguishing between items having the same colour as the current control foreground and items with default colour which, hence, have always the same colour as the control).
+
+
+.RE
+.B
+\fBgetNextItem(This, Item, [Option]) -> integer()\fR
+\fB                     when\fR
+\fB                         This :: wxListCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Option ::\fR
+\fB                             {geometry, integer()} | {state, integer()}.\fR
+
+.br
+.RS
+.PP
+Searches for an item with the given geometry or state, starting from \fIitem\fR but excluding the \fIitem\fR itself.
+
+.PP
+If \fIitem\fR is -1, the first item that matches the specified flags will be returned. Returns the first item with given state following \fIitem\fR or -1 if no such item found. This function may be used to find all selected items in the control like this:
+
+.PP
+\fIgeometry\fR can be one of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_NEXT_ABOVE: Searches for an item above the specified item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_NEXT_ALL: Searches for subsequent item by index.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_NEXT_BELOW: Searches for an item below the specified item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_NEXT_LEFT: Searches for an item to the left of the specified item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_NEXT_RIGHT: Searches for an item to the right of the specified item.
+
+.RE
+
+.PP
+Note: this parameter is only supported by wxMSW currently and ignored on other platforms.
+
+.PP
+\fIstate\fR can be a bitlist of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_DONTCARE: Don't care what the state is.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_DROPHILITED: The item indicates it is a drop target.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_FOCUSED: The item has the focus.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_SELECTED: The item is selected.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_CUT: The item is selected as part of a cut and paste operation.
+
+.RE
+
+
+.RE
+.B
+\fBgetSelectedItemCount(This) -> integer() when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the number of selected items in the list control.
+
+
+.RE
+.B
+\fBgetTextColour(This) -> wx:wx_colour4() when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Gets the text colour of the list control.
+
+
+.RE
+.B
+\fBgetTopItem(This) -> integer() when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Gets the index of the topmost visible item when in list or report view.
+
+
+.RE
+.B
+\fBgetViewRect(This) ->\fR
+\fB                     {X :: integer(),\fR
+\fB                      Y :: integer(),\fR
+\fB                      W :: integer(),\fR
+\fB                      H :: integer()}\fR
+\fB                     when This :: wxListCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the rectangle taken by all items in the control.
+
+.PP
+In other words, if the controls client size were equal to the size of this rectangle, no scrollbars would be needed and no free space would be left.
+
+.PP
+Note that this function only works in the icon and small icon views, not in list or report views (this is a limitation of the native Win32 control).
+
+
+.RE
+.B
+\fBhitTest(This, Point) -> Result\fR
+\fB                 when\fR
+\fB                     Result ::\fR
+\fB                         {Res :: integer(),\fR
+\fB                          Flags :: integer(),\fR
+\fB                          PtrSubItem :: integer()},\fR
+\fB                     This :: wxListCtrl(),\fR
+\fB                     Point :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Determines which item (if any) is at the specified point, giving details in \fIflags\fR.
+
+.PP
+Returns index of the item or \fIwxNOT_FOUND\fR if no item is at the specified point.
+
+.PP
+\fIflags\fR will be a combination of the following flags:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_ABOVE: Above the control's client area.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_BELOW: Below the control's client area.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_TOLEFT: To the left of the control's client area.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_TORIGHT: To the right of the control's client area.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_NOWHERE: Inside the control's client area but not over an item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_ONITEMICON: Over an item's icon.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_ONITEMLABEL: Over an item's text.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_ONITEMSTATEICON: Over the checkbox of an item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_HITTEST_ONITEM: Combination of \fIwxLIST_HITTEST_ONITEMICON\fR, \fIwxLIST_HITTEST_ONITEMLABEL\fR, \fIwxLIST_HITTEST_ONITEMSTATEICON\fR.
+
+.RE
+
+.PP
+If \fIptrSubItem\fR is not NULL and the \fIwxListCtrl\fR is in the report mode the subitem (or column) number will also be provided. This feature is only available in version 2.7.0 or higher and is currently only implemented under wxMSW and requires at least comctl32.dll of version 4.70 on the host system or the value stored in \fIptrSubItem\fR will be always -1. To compile this feature into wxWidgets library you need to have access to commctrl.h of version 4.70 that is provided by Microsoft.
+
+
+.RE
+.B
+\fBinsertColumn(This, Col, Heading) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxListCtrl(),\fR
+\fB                          Col :: integer(),\fR
+\fB                          Heading :: unicode:chardata();\fR
+\fB                  (This, Col, Info) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxListCtrl(),\fR
+\fB                          Col :: integer(),\fR
+\fB                          Info :: wxListItem:wxListItem().\fR
+
+.br
+.RS
+.PP
+For report view mode (only), inserts a column.
+
+.PP
+For more details, see \fIsetItem/5\fR. Also see \fIinsertColumn/4\fR overload for a usually more convenient alternative to this method and the description of how the item width is interpreted by this method.
+
+
+.RE
+.B
+\fBinsertColumn(This, Col, Heading, [Option]) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxListCtrl(),\fR
+\fB                          Col :: integer(),\fR
+\fB                          Heading :: unicode:chardata(),\fR
+\fB                          Option ::\fR
+\fB                              {format, integer()} | {width, integer()}.\fR
+
+.br
+.RS
+.PP
+For report view mode (only), inserts a column.
+
+.PP
+Insert a new column in the list control in report view mode at the given position specifying its most common attributes.
+
+.PP
+Notice that to set the image for the column you need to use \fIinsertColumn/4\fR overload and specify ?wxLIST_MASK_IMAGE in the item mask.
+
+.PP
+Return: The index of the inserted column or -1 if adding it failed.
+
+
+.RE
+.B
+\fBinsertItem(This, Info) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxListCtrl(),\fR
+\fB                        Info :: wxListItem:wxListItem().\fR
+
+.br
+.RS
+.PP
+Inserts an item, returning the index of the new item if successful, -1 otherwise.
+
+
+.RE
+.B
+\fBinsertItem(This, Index, ImageIndex) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxListCtrl(),\fR
+\fB                        Index :: integer(),\fR
+\fB                        ImageIndex :: integer();\fR
+\fB                (This, Index, Label) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxListCtrl(),\fR
+\fB                        Index :: integer(),\fR
+\fB                        Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Insert a string item.
+
+
+.RE
+.B
+\fBinsertItem(This, Index, Label, ImageIndex) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxListCtrl(),\fR
+\fB                        Index :: integer(),\fR
+\fB                        Label :: unicode:chardata(),\fR
+\fB                        ImageIndex :: integer().\fR
+
+.br
+.RS
+.PP
+Insert an image/string item.
+
+
+.RE
+.B
+\fBrefreshItem(This, Item) -> ok\fR
+\fB                     when This :: wxListCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Redraws the given \fIitem\fR.
+
+.PP
+This is only useful for the virtual list controls as without calling this function the displayed value of the item doesn't change even when the underlying data does change.
+
+.PP
+See: \fIrefreshItems/3\fR
+
+
+.RE
+.B
+\fBrefreshItems(This, ItemFrom, ItemTo) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxListCtrl(),\fR
+\fB                          ItemFrom :: integer(),\fR
+\fB                          ItemTo :: integer().\fR
+
+.br
+.RS
+.PP
+Redraws the items between \fIitemFrom\fR and \fIitemTo\fR.
+
+.PP
+The starting item must be less than or equal to the ending one.
+
+.PP
+Just as \fIrefreshItem/2\fR this is only useful for virtual list controls.
+
+
+.RE
+.B
+\fBscrollList(This, Dx, Dy) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxListCtrl(),\fR
+\fB                        Dx :: integer(),\fR
+\fB                        Dy :: integer().\fR
+
+.br
+.RS
+.PP
+Scrolls the list control.
+
+.PP
+If in icon, small icon or report view mode, \fIdx\fR specifies the number of pixels to scroll. If in list view mode, \fIdx\fR specifies the number of columns to scroll. \fIdy\fR always specifies the number of pixels to scroll vertically.
+
+.PP
+Note: This method is currently only implemented in the Windows version.
+
+
+.RE
+.B
+\fBsetBackgroundColour(This, Col) -> boolean()\fR
+\fB                             when\fR
+\fB                                 This :: wxListCtrl(),\fR
+\fB                                 Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the background colour.
+
+.PP
+Note that the \fIwxWindow:getBackgroundColour/1\fR function of \fIwxWindow\fR base class can be used to retrieve the current background colour.
+
+
+.RE
+.B
+\fBsetColumn(This, Col, Item) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxListCtrl(),\fR
+\fB                       Col :: integer(),\fR
+\fB                       Item :: wxListItem:wxListItem().\fR
+
+.br
+.RS
+.PP
+Sets information about this column.
+
+.PP
+See \fIsetItem/5\fR for more information.
+
+
+.RE
+.B
+\fBsetColumnWidth(This, Col, Width) -> boolean()\fR
+\fB                        when\fR
+\fB                            This :: wxListCtrl(),\fR
+\fB                            Col :: integer(),\fR
+\fB                            Width :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the column width.
+
+.PP
+\fIwidth\fR can be a width in pixels or \fIwxLIST_AUTOSIZE\fR (-1) or \fIwxLIST_AUTOSIZE_USEHEADER\fR (-2).
+
+.PP
+\fIwxLIST_AUTOSIZE\fR will resize the column to the length of its longest item.
+
+.PP
+\fIwxLIST_AUTOSIZE_USEHEADER\fR will resize the column to the length of the header (Win32) or 80 pixels (other platforms).
+
+.PP
+In small or normal icon view, \fIcol\fR must be -1, and the column width is set for all columns.
+
+
+.RE
+.B
+\fBsetImageList(This, ImageList, Which) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxListCtrl(),\fR
+\fB                          ImageList :: wxImageList:wxImageList(),\fR
+\fB                          Which :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the image list associated with the control.
+
+.PP
+\fIwhich\fR is one of \fIwxIMAGE_LIST_NORMAL\fR, \fIwxIMAGE_LIST_SMALL\fR, \fIwxIMAGE_LIST_STATE\fR (the last is unimplemented).
+
+.PP
+This method does not take ownership of the image list, you have to delete it yourself.
+
+.PP
+See: \fIassignImageList/3\fR
+
+
+.RE
+.B
+\fBsetItem(This, Info) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxListCtrl(),\fR
+\fB                     Info :: wxListItem:wxListItem().\fR
+
+.br
+.RS
+.PP
+Sets the data of an item.
+
+.PP
+Using the \fIwxListItem\fR's mask and state mask, you can change only selected attributes of a \fIwxListCtrl\fR item.
+
+.PP
+Return: true if the item was successfully updated or false if the update failed for some reason (e.g. an invalid item index).
+
+
+.RE
+.B
+\fBsetItem(This, Index, Column, Label, [Option]) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxListCtrl(),\fR
+\fB                     Index :: integer(),\fR
+\fB                     Column :: integer(),\fR
+\fB                     Label :: unicode:chardata(),\fR
+\fB                     Option :: {imageId, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets an item string field at a particular column.
+
+.PP
+Return: true if the item was successfully updated or false if the update failed for some reason (e.g. an invalid item index).
+
+
+.RE
+.B
+\fBsetItemBackgroundColour(This, Item, Col) -> ok\fR
+\fB                                 when\fR
+\fB                                     This :: wxListCtrl(),\fR
+\fB                                     Item :: integer(),\fR
+\fB                                     Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the background colour for this item.
+
+.PP
+This function only works in report view mode. The colour can be retrieved using \fIgetItemBackgroundColour/2\fR.
+
+
+.RE
+.B
+\fBsetItemColumnImage(This, Item, Column, Image) -> boolean()\fR
+\fB                            when\fR
+\fB                                This :: wxListCtrl(),\fR
+\fB                                Item :: integer(),\fR
+\fB                                Column :: integer(),\fR
+\fB                                Image :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the image associated with the item.
+
+.PP
+In report view, you can specify the column. The image is an index into the image list associated with the list control.
+
+
+.RE
+.B
+\fBsetItemCount(This, Count) -> ok\fR
+\fB                      when This :: wxListCtrl(), Count :: integer().\fR
+
+.br
+.RS
+.PP
+This method can only be used with virtual list controls.
+
+.PP
+It is used to indicate to the control the number of items it contains. After calling it, the main program should be ready to handle calls to various item callbacks (such as \fIwxListCtrl::OnGetItemText\fR (not implemented in wx)) for all items in the range from 0 to \fIcount\fR.
+
+.PP
+Notice that the control is not necessarily redrawn after this call as it may be undesirable if an item which is not visible on the screen anyhow was added to or removed from a control displaying many items, if you do need to refresh the display you can just call \fIwxWindow:refresh/2\fR manually.
+
+
+.RE
+.B
+\fBsetItemData(This, Item, Data) -> boolean()\fR
+\fB                     when\fR
+\fB                         This :: wxListCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Data :: integer().\fR
+
+.br
+.RS
+.PP
+Associates application-defined data with this item.
+
+.PP
+Notice that this function cannot be used to associate pointers with the control items, use \fISetItemPtrData()\fR (not implemented in wx) instead.
+
+
+.RE
+.B
+\fBsetItemFont(This, Item, Font) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxListCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the item's font.
+
+
+.RE
+.B
+\fBsetItemImage(This, Item, Image, [Option]) -> boolean()\fR
+\fB                      when\fR
+\fB                          This :: wxListCtrl(),\fR
+\fB                          Item :: integer(),\fR
+\fB                          Image :: integer(),\fR
+\fB                          Option :: {selImage, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the unselected and selected images associated with the item.
+
+.PP
+The images are indices into the image list associated with the list control.
+
+
+.RE
+.B
+\fBsetItemPosition(This, Item, Pos) -> boolean()\fR
+\fB                         when\fR
+\fB                             This :: wxListCtrl(),\fR
+\fB                             Item :: integer(),\fR
+\fB                             Pos :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the position of the item, in icon or small icon view.
+
+.PP
+Windows only.
+
+
+.RE
+.B
+\fBsetItemState(This, Item, State, StateMask) -> boolean()\fR
+\fB                      when\fR
+\fB                          This :: wxListCtrl(),\fR
+\fB                          Item :: integer(),\fR
+\fB                          State :: integer(),\fR
+\fB                          StateMask :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the item state.
+
+.PP
+The \fIstateMask\fR is a combination of \fIwxLIST_STATE_XXX\fR constants described in \fIwxListItem\fR documentation. For each of the bits specified in \fIstateMask\fR, the corresponding state is set or cleared depending on whether \fIstate\fR argument contains the same bit or not.
+
+.PP
+So to select an item you can use while to deselect it you should use
+
+.PP
+Consider using \fIwxListView\fR if possible to avoid dealing with this error-prone and confusing method.
+
+.PP
+Also notice that contrary to the usual rule that only user actions generate events, this method does generate wxEVT_LIST_ITEM_SELECTED event when it is used to select an item.
+
+
+.RE
+.B
+\fBsetItemText(This, Item, Text) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxListCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the item text for this item.
+
+
+.RE
+.B
+\fBsetItemTextColour(This, Item, Col) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxListCtrl(),\fR
+\fB                               Item :: integer(),\fR
+\fB                               Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the colour for this item.
+
+.PP
+This function only works in report view. The colour can be retrieved using \fIgetItemTextColour/2\fR.
+
+
+.RE
+.B
+\fBsetSingleStyle(This, Style, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxListCtrl(),\fR
+\fB                            Style :: integer(),\fR
+\fB                            Option :: {add, boolean()}.\fR
+
+.br
+.RS
+.PP
+Adds or removes a single window style.
+
+
+.RE
+.B
+\fBsetTextColour(This, Col) -> ok\fR
+\fB                       when This :: wxListCtrl(), Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the text colour of the list control.
+
+
+.RE
+.B
+\fBsetWindowStyleFlag(This, Style) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxListCtrl(), Style :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the whole window style, deleting all items.
+
+
+.RE

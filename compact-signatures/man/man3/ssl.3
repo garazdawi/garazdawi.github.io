@@ -1,0 +1,3876 @@
+.TH ssl 3 "ssl 11.5.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ssl \- Interface functions for TLS (Transport Layer Security) and DTLS (Datagram Transport Layer Security).
+
+.SH DESCRIPTION
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+The application's name is still SSL because the first versions of the TLS protocol were named SSL (Secure Socket Layer). However, no version of the old SSL protocol is supported by this application.
+
+.PP
+Example:
+
+.IP
+.nf
+1> ssl:start(), ssl:connect("google.com", 443, [{verify, verify_peer},
+    {cacerts, public_key:cacerts_get()}]).
+{ok,{sslsocket, [...]}}
+
+.fi
+
+.PP
+See Examples for detailed usage and more examples of this API.
+
+.PP
+Special Erlang node configuration for the application can be found in SSL Application.
+
+.SH DATA TYPES
+.LP
+.B
+\fBactive_msgs() ::\fR
+\fB          {ssl, sslsocket(), Data :: binary() | list()} |\fR
+\fB          {ssl_closed, sslsocket()} |\fR
+\fB          {ssl_error,\fR
+\fB           sslsocket(),\fR
+\fB           Alert :: error_alert() | (Reason :: any())} |\fR
+\fB          {ssl_passive, sslsocket()}.\fR
+
+.br
+.RS
+.PP
+The type for the messages that are delivered to the owner of a TLS/DTLS socket in active mode.
+
+.PP
+The \fIssl_error\fR reason may convey a TLS protocol alert if such an event occurs after the connection has been established. The most common case when this will happen is on the client side when a TLS-1.3 server requests a client certificate and the provided certificate is not accepted by the server, as it will be verified after the server has sent its last handshake message.
+
+.PP
+The \fIssl_passive\fR message is sent only when the socket is in \fI{active, N}\fR mode and the counter has dropped to 0. It indicates that the socket has transitioned to passive (\fI{active, false}\fR) mode.
+
+
+.RE
+.B
+\fBanchor_fun() :: fun().\fR
+
+.br
+.RS
+.PP
+Claim an intermediate CA in the chain as trusted.
+
+.IP
+.nf
+fun(Chain::[public_key:der_encoded()]) ->
+      {trusted_ca, DerCert::public_key:der_encoded()} | unknown_ca.
+
+.fi
+
+.PP
+TLS then uses \fIpublic_key:pkix_path_validation/3\fR with the selected CA as the trusted anchor and verifies the rest of the chain.
+
+
+.RE
+.B
+\fBcert_key_conf() ::\fR
+\fB          #{cert =>\fR
+\fB                public_key:der_encoded() | [public_key:der_encoded()],\fR
+\fB            key => key(),\fR
+\fB            certfile => file:filename(),\fR
+\fB            keyfile => file:filename(),\fR
+\fB            password => iodata() | fun(() -> iodata())}.\fR
+
+.br
+.RS
+.PP
+Configuration of the entity certificate and its corresponding key.
+
+.PP
+A certificate (or possibly a list including the certificate and its chain certificates, where the entity certificate must be the first element in the list or the first entry in the file) and its associated key. For the PEM file format, there can also be a password associated with the file containing the key.
+
+.PP
+For maximum interoperability, the certificates in the chain should be in the correct order, as the chain will be sent as-is to the peer. If chain certificates are not provided, certificates from the configured trusted CA certificates will be used to construct the chain. See \fIclient_option_cert()\fR and \fIserver_option_cert()\fR for more information.
+
+
+.RE
+.B
+\fBcipher() ::\fR
+\fB          aes_256_gcm | aes_128_gcm | aes_256_ccm | aes_128_ccm |\fR
+\fB          chacha20_poly1305 | aes_256_ccm_8 | aes_128_ccm_8 |\fR
+\fB          aes_128_cbc | aes_256_cbc |\fR
+\fB          legacy_cipher().\fR
+
+.br
+.RS
+.PP
+Cipher algorithms that can be used for payload encryption.
+
+
+.RE
+.B
+\fBcipher_filters() ::\fR
+\fB          [{key_exchange | cipher | mac | prf,\fR
+\fB            fun((kex_algo() | cipher() | hash() | aead | default_prf) ->\fR
+\fB                    true | false)}].\fR
+
+.br
+.RS
+.PP
+Filter that allows you to customize cipher suite list.
+
+
+.RE
+.B
+\fBcipher_suites() :: ciphers().\fR
+
+.br
+.RS
+.PP
+A list of cipher suites that should be supported.
+
+.PP
+Function ssl:cipher_suites/2  can be used to find all cipher suites that are supported by default and all cipher suites that can be configured.
+
+.PP
+If you compose your own \fIcipher_suites/0\fR make sure they are filtered for crypto library support using ssl:filter_cipher_suites/2 .
+
+.PP
+The following function can help creating customized cipher suite lists:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssl:append_cipher_suites/2 
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssl:prepend_cipher_suites/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssl:suite_to_str/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssl:str_to_suite/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssl:suite_to_openssl_str/1
+
+.RE
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+Note that TLS-1.3 and TLS-1.2 use different sets of cipher suites. To support both versions, cipher suites from both sets need to be included. If the supplied list does not comply with the configured versions or crypto library, that is, resulting in an empty list, the option will fall back to its appropriate default value for the configured versions.
+
+.PP
+Non-default cipher suites, including anonymous cipher suites (prior to TLS 1.3), are supported for interoperability and testing purposes. These can be used by adding them to your cipher suite list. Note that they also need to be supported and enabled by the peer to be actually used, and they may require additional configuration; see \fIsrp_param_type()\fR.
+
+
+.RE
+.B
+\fBciphers() :: [erl_cipher_suite()] | string().\fR
+
+.br
+.RS
+.PP
+Cipher suite formats.
+
+.PP
+For backwards compatibility, cipher suites can be configured as a colon-separated string of cipher suite RFC names (or even old OpenSSL names). However, a more flexible approach is to use utility functions together with \fIcipher_filters()\fR if a customized cipher suite option is needed.
+
+
+.RE
+.B
+\fBclient_option() ::\fR
+\fB          client_option_cert() |\fR
+\fB          common_option_cert() |\fR
+\fB          {psk_groups, [group()]} |\fR
+\fB          {alpn_advertised_protocols,\fR
+\fB           AppProtocols :: [AppProto :: binary()]} |\fR
+\fB          {max_fragment_length,\fR
+\fB           MaxLen :: undefined | 512 | 1024 | 2048 | 4096} |\fR
+\fB          client_option_tls13() |\fR
+\fB          common_option_tls13() |\fR
+\fB          client_option_pre_tls13() |\fR
+\fB          common_option_pre_tls13() |\fR
+\fB          common_option_dtls() |\fR
+\fB          client_option_legacy() |\fR
+\fB          common_option_legacy().\fR
+
+.br
+.RS
+.PP
+The following options are specific to the client side, or have different semantics for the client and server:
+
+{psk_groups, Groups}
+.RS 2
+key exchange groups that the client will send pre share keys for, defaults to first group in supported_groups. Must be a subset of supported_groups and will be sent in the same order as they appear in supported_groups.
+
+
+.RE
+
+{alpn_advertised_protocols, AppProtocols}
+.RS 2
+Application layer protocol
+
+.PP
+The list of protocols supported by the client to be sent to the server to be used for an Application-Layer Protocol Negotiation (ALPN). If the server supports ALPN, it will choose a protocol from this list; otherwise it will fail the connection with a \fIno_application_protocol\fR alert. A server that does not support ALPN will ignore this value. The list of protocols must not contain an empty binary.
+
+
+.RE
+
+{max_fragment_length, MaxLen}
+.RS 2
+Max fragment length extension
+
+.PP
+Specifies the maximum fragment length the client is prepared to accept from the server. See RFC 6066.
+
+
+.RE
+
+
+.RE
+.B
+\fBclient_option_cert() ::\fR
+\fB          {verify, Verify :: verify_peer | verify_none} |\fR
+\fB          {cacerts,\fR
+\fB           CACerts ::\fR
+\fB               [public_key:der_encoded()] | [public_key:combined_cert()]} |\fR
+\fB          {cacertfile, CACertFile :: file:filename()} |\fR
+\fB          {server_name_indication, SNI :: inet:hostname() | disable} |\fR
+\fB          {customize_hostname_check, HostNameCheckOpts :: list()} |\fR
+\fB          {certificate_authorities, boolean()} |\fR
+\fB          {stapling, Stapling :: staple | no_staple | map()}.\fR
+
+.br
+.RS
+.PP
+Certificate-related options specific to the client side, or with different semantics for the client and server.
+
+{verify, Verify}
+.RS 2
+Verification of certificates
+
+.PP
+This option specifies whether certificates are to be verified.
+
+.PP
+If \fIVerify\fR is \fIverify_peer\fR, which is the default, it is required to also provide one of the options \fIcacerts\fR or \fIcacertfile\fR in order for the certificate verification to succeed. For example, an HTTPS client can use option \fI{cacerts, public_key:cacerts_get()}\fR to use the trusted CA certificates provided by the operating system.
+
+.PP
+If \fIVerify\fR is \fIverify_none\fR, all X.509-certificate path validation errors will be ignored.
+
+.PP
+\fBCHANGE: \fRThe default for \fIVerify\fR was changed to \fIverify_peer\fR in Erlang/OTP 26.
+
+
+
+.RE
+
+{cacerts, CACerts}
+.RS 2
+Trusted certificates
+
+.PP
+The DER-encoded trusted certificates. If this option is supplied it overrides option \fIcacertfile\fR.
+
+.PP
+Function \fIpublic_key:cacerts_get/0\fR can be used to retrieve to the trusted CA certificates provided by the operating system.
+
+
+.RE
+
+{cacertfile, CertFile}
+.RS 2
+End entity certificate
+
+.PP
+Path to a file containing PEM-encoded CA certificates. The CA certificates are used during server authentication and when building the client certificate chain.
+
+.PP
+\fBNOTE: \fRWhen PEM caching is enabled, files provided with this option will be checked for updates at fixed time intervals specified by the ssl_pem_cache_clean environment parameter.
+
+
+
+.RE
+
+{server_name_indication, SNI}
+.RS 2
+Server Name Indication extension
+
+.PP
+Specify the hostname to be used in TLS Server Name Indication extension. If not specified it will default to the \fIHost\fR argument of connect/3,4 unless it is of type \fIinet:ip_address()\fR. The hostname will also be used in the hostname verification of the peer certificate using \fIpublic_key:pkix_verify_hostname/2\fR. The special value \fIdisable\fR prevents the Server Name Indication extension from being sent and disables the hostname verification check.
+
+
+.RE
+
+{customize_hostname_check, HostNameCheckOpts}
+.RS 2
+Customization option
+
+.PP
+Customizes the hostname verification of the peer certificate, as various protocols that use TLS, such as HTTP or LDAP, may require different approaches. For example, here is how to use standard hostname checking for HTTPS implemented in Public_Key:
+
+.IP
+.nf
+{customize_hostname_check, [{match_fun, public_key:pkix_verify_hostname_match_fun(https)}]}
+
+.fi
+
+.PP
+For futher description of the customize options, see \fIpublic_key:pkix_verify_hostname/3\fR.
+
+
+.RE
+
+{client_certificate_authorities, UseCertAuth}
+.RS 2
+Inter-op hint option
+
+.PP
+If \fIUseCertAuth\fR is set to \fItrue\fR, sends the certificate authorities extension in the TLS-1.3 client hello. The default is \fIfalse\fR. Note that setting \fIUseCertAuth\fR to \fItrue\fR can result in a significant overhead if there exists many trusted CA certificates. (Since Erlang/OTP 24.3.)
+
+
+.RE
+
+{stapling, Stapling}
+.RS 2
+Certificate revocation check option
+
+.PP
+If \fIStapling\fR is atom \fIstaple\fR or a map, OCSP stapling will be enabled, meaning that an extension of type "status_request" will be included in the client hello to indicate the desire to receive certificate status information.
+
+.PP
+If \fIStapling\fR is set to \fIno_staple\fR (the default), OCSP stapling will be disabled.
+
+.PP
+\fBNOTE: \fREven if requested by the client, the OCSP response might not be provided by the server. In such event, SSL will proceed with the handshake and generate a \fI{missing, stapling_response}\fR logger event.
+
+
+.PP
+When \fIStapling\fR is given as a map, boolean \fIocsp_nonce\fR key can indicate whether an OCSP nonce should be requested by the client (default is \fIfalse\fR).
+
+.PP
+\fBNOTE: \fRThe OCSP response can be provided without a nonce value — even if it was requested by the client. In such cases SSL will proceed with the handshake and generate a \fI{missing, ocsp_nonce}\fR logger event.
+
+
+
+.RE
+
+
+.RE
+.B
+\fBclient_option_legacy() ::\fR
+\fB          {client_preferred_next_protocols,\fR
+\fB           NextAppProtocols ::\fR
+\fB               {Precedence :: server | client,\fR
+\fB                ClientPrefs :: [AppProto :: binary()]} |\fR
+\fB               {Precedence :: server | client,\fR
+\fB                ClientPrefs :: [AppProto :: binary()],\fR
+\fB                Default :: (AppProto :: binary())}}.\fR
+
+.br
+.RS
+.PP
+Legacy client options.
+
+{client_preferred_next_protocols, NextAppProtocols}
+.RS 2
+Next Protocol Negotiation
+
+.PP
+ALPN (Application-Layer Protocol Negotiation) deprecates NPN (Next Protocol Negotiation) and this option.
+
+.PP
+Indicates that the client wants to perform Next Protocol Negotiation.
+
+.PP
+If \fIPrecedence\fR is \fIserver\fR, the negotiated protocol is the first protocol to be shown on the server advertised list that is also on the client preference list.
+
+.PP
+If \fIPrecedence\fR is \fIclient\fR, the negotiated protocol is the first protocol to be shown on the client preference list that is also on the server advertised list.
+
+.PP
+If the client does not support any of the server advertised protocols or the server does not advertise any protocols, the client falls back to the first protocol in its list or to the default protocol (if a default is supplied). If the server does not support Next Protocol Negotiation, the connection terminates if no default protocol is supplied.
+
+
+.RE
+
+
+.RE
+.B
+\fBclient_option_pre_tls13() ::\fR
+\fB          {reuse_session,\fR
+\fB           SessionRef ::\fR
+\fB               session_id() | {session_id(), SessionData :: binary()}} |\fR
+\fB          {reuse_sessions, Reuse :: boolean() | save} |\fR
+\fB          {psk_identity, PskID :: string()} |\fR
+\fB          {srp_identity,\fR
+\fB           SrpID :: {Username :: string(), Password :: string()}} |\fR
+\fB          {fallback, LegacyFallback :: boolean()}.\fR
+
+.br
+.RS
+.PP
+Options only relevant to TLS versions prior to TLS-1.3.
+
+{reuse_session, SessionRef}
+.RS 2
+Explicit session reuse
+
+.PP
+Reuses a specific session.
+
+.PP
+Since Erlang/OTP 21.3, if the session was saved earlier using option \fI{reuse_sessions, save}\fR, the session can be referred by its session ID.
+
+.PP
+Since Erlang/OTP 22.3, the session can be explicitly specified by its session ID and associated data.
+
+.PP
+See also SSL User's Guide, Session Reuse pre TLS 1.3.
+
+
+.RE
+
+{reuse_sessions, Reuse}
+.RS 2
+Enables later session reuse
+
+.PP
+When \fIReuse\fR is set to \fIsave\fR, a new connection will be negotiated and saved for later reuse. The session ID can be fetched with \fIconnection_information/2\fR and used with the client option \fIreuse_session\fR.
+
+.PP
+When \fIReuse\fR is set to \fItrue\fR, automated session reuse will be performed, if possible. If a new session is created, and is unique in regard to previous stored sessions, it will be saved for possible later reuse.
+
+.PP
+Since: OTP 21.3.
+
+
+.RE
+
+{psk_identity, PskID}
+.RS 2
+Option for use with PSK cipher suites
+
+.PP
+Specifies the identity the client presents to the server. The matching secret is found by the fun given in the \fIuser_lookup_fun\fR option.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{srp_identity, SrpID}\fR\fR  - Option for use SRP cipher suites
+
+.PP
+Specifies the username and password to use to authenticate to the server.
+
+.RE
+
+{fallback, LegacyFallback}
+.RS 2
+Inter-op legacy client option
+
+.PP
+Send special cipher suite TLS_FALLBACK_SCSV to avoid an undesired TLS version downgrade. Defaults to \fIfalse\fR.
+
+.PP
+\fBWARNING: \fRThis option is not needed in normal TLS usage and must not be used to implement new clients. However, legacy clients that retries connections in the following manner: \fIssl:connect(Host, Port, [...{versions, ['tlsv2', 'tlsv1.1', 'tlsv1']}])\fR \fIssl:connect(Host, Port, [...{versions, [tlsv1.1', 'tlsv1']}, {fallback, true}])\fR \fIssl:connect(Host, Port, [...{versions, ['tlsv1']}, {fallback, true}])\fR can use it to avoid undesired TLS version downgrade. Note that TLS_FALLBACK_SCSV must also be supported by the server for the prevention to work.
+
+
+
+.RE
+
+
+.RE
+.B
+\fBclient_option_tls13() ::\fR
+\fB          {session_tickets, SessionTickets :: disabled | manual | auto} |\fR
+\fB          {use_ticket, Tickets :: [session_ticket()]} |\fR
+\fB          {early_data, binary()} |\fR
+\fB          {middlebox_comp_mode, MiddleBoxMode :: boolean()}.\fR
+
+.br
+.RS
+.PP
+Options only relevant for TLS-1.3.
+
+{session_tickets, SessionTickets}
+.RS 2
+Use of session tickets
+
+.PP
+Configures the session ticket functionality. Allowed values are \fIdisabled\fR, \fImanual\fR, and \fIauto\fR. If it is set to \fImanual\fR the client will send the ticket information to user process in a 3-tuple:
+
+.IP
+.nf
+{ssl, session_ticket, `Ticket::`(`t:session_ticket/0`)}
+
+.fi
+
+.PP
+where \fITicket\fR is a map with information about the created TLS-1.3 session ticket. The only key that the user needs to consider is \fIsni\fR key to be able to provide it as a value in the use_ticket option list of possible tickets to use it to attempt session resumption to a server identified by the server name indication in \fImanual\fR session ticket mode.
+
+.PP
+If it is set to \fIauto\fR, the client automatically handles received tickets and tries to use them when making new TLS connections (session resumption with pre-shared keys).
+
+.PP
+Ticket lifetime, the number of tickets sent by the server, and the maximum number of tickets stored by the server in stateful mode are configured by application variables.
+
+.PP
+See also SSL User's Guide, Session Tickets and Session Resumption in TLS 1.3.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{use_ticket, Tickets}\fR\fR
+
+.PP
+Configures the session tickets to be used for session resumption. It is a mandatory option in \fImanual\fR mode (\fI{session_tickets, manual}\fR).
+
+.PP
+\fBNOTE: \fRSession tickets are only sent to the user if option \fIsession_tickets\fR is set to \fImanual\fR This option is supported by TLS-1.3. See also SSL User's Guide, Session Tickets and Session Resumption in TLS 1.3.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{early_data, EarlyData}\fR\fR
+
+.PP
+Configures the early data to be sent by the client.
+
+.PP
+To verify that the server has the intention to process the early data, the following tuple is sent to the user process:
+
+.IP
+.nf
+{ssl, SslSocket, {early_data, Result}}
+
+.fi
+
+.PP
+where \fIResult\fR is either \fIaccepted\fR or \fIrejected\fR.
+
+.PP
+\fBWARNING: \fRIt is the responsibility of the user to handle rejected \fIEarlyData\fR and to resend when appropriate.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{middlebox_comp_mode, MiddleBoxMode}\fR\fR
+
+.PP
+Configures the middlebox compatibility mode for a TLS-1.3 connection.
+
+.PP
+A significant number of middleboxes misbehave when a TLS-1.3 connection is negotiated. Implementations can increase the chance of making connections through those middleboxes by adapting the TLS-1.3 handshake to resemble that of a TLS-1.2 handshake.
+
+.PP
+The middlebox compatibility mode is enabled (\fItrue\fR) by default.
+
+.RE
+
+
+.RE
+.B
+\fBcommon_option() ::\fR
+\fB          {protocol, tls | dtls} |\fR
+\fB          {handshake, hello | full} |\fR
+\fB          {ciphers, cipher_suites()} |\fR
+\fB          {signature_algs, signature_algs()} |\fR
+\fB          {signature_algs_cert, [sign_scheme()]} |\fR
+\fB          {keep_secrets,\fR
+\fB           KeepSecrets ::\fR
+\fB               boolean() |\fR
+\fB               {keylog_hs, fun((Info :: keylog_info()) -> any())} |\fR
+\fB               {keylog, fun((Info :: keylog_info()) -> any())}} |\fR
+\fB          {max_handshake_size, HandshakeSize :: pos_integer()} |\fR
+\fB          {versions, [protocol_version()]} |\fR
+\fB          {log_level, Level :: logger:level() | none | all} |\fR
+\fB          {hibernate_after, HibernateTimeout :: timeout()} |\fR
+\fB          {receiver_spawn_opts,\fR
+\fB           SpawnOpts :: [erlang:spawn_opt_option()]} |\fR
+\fB          {sender_spawn_opts, SpawnOpts :: [erlang:spawn_opt_option()]}.\fR
+
+.br
+.RS
+.PP
+Options common to both client and server side.
+
+{protocol, Protocol}
+.RS 2
+Choose TLS or DTLS protocol for the transport layer security.
+
+.PP
+Defaults to \fItls\fR.
+
+
+.RE
+
+{handshake, Completion}
+.RS 2
+Possibly pause handshake at hello stage.
+
+.PP
+Defaults to \fIfull\fR. If \fIhello\fR is specified the handshake will pause after the hello message, allowing the user to make decisions based on hello extensions before continuing or aborting the handshake by calling \fIhandshake_continue/3\fR or \fIhandshake_cancel/1\fR.
+
+
+.RE
+
+{keep_secrets, KeepSecrets}
+.RS 2
+Configures a TLS connection for keylogging.
+
+.PP
+In order to be able retrieve all keylog information on a TLS connection, it must be configured in advance.
+
+.PP
+\fBWARNING: \fRThe keylog information defeats the purpose of the protocol and enabling it makes the user responsible for the information not ending up compromising security, it is intended for debugging.
+
+
+.PP
+The \fIkeep_secrets\fR functionality is disabled (\fIfalse\fR) by default. If set to legacy value \fItrue\fR keylog information can be retrieved from the connection using connection_information/2.
+
+.PP
+Added in OTP 23.2.
+
+.PP
+\fBNOTE: \fRNote that having to ask the connection has some drawbacks as for instance you can not get keylog information for failed connections, and other keylog items have to be retrieved in a polling manner and are not correctly formatted for key_updates.
+
+
+.PP
+Since OTP 27.3.1 you may instead of true provide a callback fun providing keylog information for either just failing handshakes or for entire connections, by setting \fIkeep_secrets\fR option to {keylog_hs, fun()} or {keylog, fun()}.  The fun is of arity one and will be called with keylog information \fIkeylog_info()\fR as an argument. \fIkeylog_hs fun\fR will only be called if the handshake fails, and is only relevant for \fITLS-1.3\fR that has encrypted messages before the first handshake is complete.\fIkeylog fun\fR will be called every time some secrets are updated and provide keylog for that update that is during the connection establishment and after that at \fIrenegotiation\fR or \fIkey update\fR (depending on TLS protocol version).  When a fun is used the connection_information/2 can not be used to retrieve key log information.  For more information see NSS keylog.
+
+
+.RE
+
+{max_handshake_size, HandshakeSize}
+.RS 2
+Limit the acceptable handshake packet size.
+
+.PP
+Used to limit the size of valid TLS handshake packets to avoid DoS attacks.
+
+.PP
+Integer (24 bits, unsigned). Defaults to \fI256*1024\fR before OTP-26 or if SLH-DSA algorithms are configured, otherwise the default is \fI256*1024\fR/2.
+
+
+.RE
+
+{hibernate_after, HibernateTimeout}
+.RS 2
+Hibernate inactive connection processes.
+
+.PP
+When an integer-value is specified, the TLS/DTLS connection goes into hibernation after the specified number of milliseconds of inactivity, thus reducing its memory footprint. When not specified the process never goes into hibernation.
+
+
+.RE
+
+{log_level, Level}
+.RS 2
+Specifies the log level for a TLS/DTLS connection.
+
+.PP
+Alerts are logged on \fInotice\fR level, which is the default level. The level \fIdebug\fR triggers verbose logging of TLS/DTLS protocol messages. See also SSL Application
+
+
+.RE
+
+{receiver|sender_spawn_opts, SpawnOpts}
+.RS 2
+Configure erlang spawn opts.
+
+.PP
+Configures spawn options of TLS sender and receiver processes.
+
+.PP
+Setting up garbage collection options can be helpful for trade-offs between CPU usage and memory usage. See \fIerlang:spawn_opt/2\fR.
+
+.PP
+For connections using Erlang distribution, the default sender option is \fI[...{priority, max}]\fR; this priority option cannot be changed. For all connections, \fI...link\fR is added to receiver and cannot be changed.
+
+
+.RE
+
+
+.RE
+.B
+\fBcommon_option_cert() ::\fR
+\fB          {certs_keys, CertsKeys :: [cert_key_conf()]} |\fR
+\fB          {depth, AllowedCertChainLen :: pos_integer()} |\fR
+\fB          {verify_fun,\fR
+\fB           Verify :: {Verifyfun :: fun(), InitialUserState :: any()}} |\fR
+\fB          {cert_policy_opts,\fR
+\fB           PolicyOpts ::\fR
+\fB               [{policy_set, [public_key:oid()]} |\fR
+\fB                {explicit_policy, boolean()} |\fR
+\fB                {inhibit_policy_mapping, boolean()} |\fR
+\fB                {inhibit_any_policy, boolean()}]} |\fR
+\fB          {allow_any_ca_purpose, Allow :: boolean()} |\fR
+\fB          {crl_check, Check :: boolean() | peer | best_effort} |\fR
+\fB          {crl_cache, crl_cache_opts()} |\fR
+\fB          {partial_chain, anchor_fun()}.\fR
+
+.br
+.RS
+.PP
+Common certificate related options to both client and server.
+
+{certs_keys, CertsKeys}
+.RS 2
+At least one certificate and key pair.
+
+.PP
+A list of a certificate (or possible a certificate and its chain) and the associated key of the certificate that can be used to authenticate the client or the server. The certificate key pair that is considered best and matches negotiated parameters for the connection will be selected.
+
+.PP
+The different signature algorithms are prioritized in the following order: \fIeddsa\fR, \fIecdsa\fR, \fIrsa_pss_pss\fR, \fIrsa\fR, and \fIdsa\fR. If more than one key is supplied for the same signature algorithm, they will be prioritized by strength (except for \fIengine keys\fR; see the next paragraph). This offers flexibility to, for instance, configure a newer certificate that is expected to be used in most cases, and an older but acceptable certificate that will only be used to communicate with legacy systems. Note that there is a trade off between the induced overhead and the flexibility; thus, alternatives should be chosen for good reasons.
+
+.PP
+\fIEngine keys\fR will be favored over other keys. As engine keys cannot be inspected, supplying more than one engine key makes no sense.
+
+.PP
+When this option is specified it overrides all single certificate and key options. For examples, see the User's Guide.
+
+.PP
+\fBNOTE: \fR\fIeddsa\fR certificates are only supported by TLS-1.3 implementations that do not support \fIdsa\fR certificates. \fIrsa_pss_pss\fR (RSA certificates using Probabilistic Signature Scheme) are supported in TLS-1.2 and TLS-1.3, but some TLS-1.2 implementations do not support \fIrsa_pss_pss\fR.
+
+
+
+.RE
+
+{depth, AllowedCertChainLen}
+.RS 2
+Limits the accepted number of certificates in the certificate chain.
+
+.PP
+Maximum number of non-self-issued intermediate certificates that can follow the peer certificate in a valid certification path. So, if depth is 0 the PEER must be signed by the trusted ROOT-CA directly; if 1 the path can be PEER, CA, ROOT-CA; if 2 the path can be PEER, CA, CA, ROOT-CA, and so on. The default value is 10. Used to mitigate DoS attack possibilities.
+
+
+.RE
+
+{verify_fun,  Verify}
+.RS 2
+Customize certificate path validation
+
+.PP
+The verification fun is to be defined as follows:
+
+.IP
+.nf
+fun(OtpCert :: #'OTPCertificate'{},
+    Event, InitialUserState :: term()) ->
+	{valid, UserState :: term()} |
+	{fail, Reason :: term()} | {unknown, UserState :: term()}.
+
+fun(OtpCert :: #'OTPCertificate'{}, DerCert :: public_key:der_encoded(),
+    Event, InitialUserState :: term()) ->
+	{valid, UserState :: term()} |
+	{fail, Reason :: term()} | {unknown, UserState :: term()}.
+
+Types:
+      Event = {bad_cert, Reason :: atom() |
+              {revoked, atom()}} |
+		{extension, #'Extension'{}} |
+              valid |
+              valid_peer
+
+.fi
+
+.PP
+The verification fun is called during the X.509-path validation when an error occurs or an extension unknown to the SSL application is encountered. It is also called when a certificate is considered valid by the path validation to allow access to each certificate in the path to the user application. It differentiates between the peer certificate and the CA certificates by using \fIvalid_peer\fR or \fIvalid\fR as \fIEvent\fR argument to the verification fun. See the Public_Key User's Guide for definition of \fI#'OTPCertificate'{}\fR and \fI#'Extension'{}\fR.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the verify callback fun returns \fI{fail, Reason}\fR, the verification process is immediately stopped, an alert is sent to the peer, and the TLS/DTLS handshake terminates.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the verify callback fun returns \fI{valid, UserState}\fR, the verification process continues.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the verify callback fun always returns \fI{valid, UserState}\fR, the TLS/DTLS handshake does not terminate regardless of verification failures, and the connection is established.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If called with an extension unknown to the user application, the fun is to return \fI{unknown, UserState}\fR.
+
+.RE
+
+.PP
+Note that if the fun returns \fIunknown\fR for an extension marked as critical, validation will fail.
+
+.PP
+Default option \fIverify_fun\fR in \fIverify_peer mode\fR:
+
+.IP
+.nf
+{fun(_, _, {bad_cert, _} = Reason, _) ->
+	 {fail, Reason};
+    (_, _, {extension, _}, UserState) ->
+	 {unknown, UserState};
+    (_, _, valid, UserState) ->
+	 {valid, UserState};
+    (_, _, valid_peer, UserState) ->
+       {valid, UserState}
+ end, []}
+
+.fi
+
+.PP
+Default option \fIverify_fun\fR in mode \fIverify_none\fR:
+
+.IP
+.nf
+ {fun(_, _, {bad_cert, _}, UserState) ->
+	 {valid, UserState};
+    (_, _, {extension, #'Extension'{critical = true}}, UserState) ->
+	 {valid, UserState};
+    (_, _, {extension, _}, UserState) ->
+	 {unknown, UserState};
+    (_, _, valid, UserState) ->
+	 {valid, UserState};
+    (_, _, valid_peer, UserState) ->
+       {valid, UserState}
+ end, []}
+
+.fi
+
+.PP
+The possible path validation errors are given in the form \fI{bad_cert, Reason}\fR, where \fIReason\fR is:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIunknown_ca\fR\fR
+
+.PP
+No trusted CA was found in the trusted store. The trusted CA is normally a so-called ROOT CA, which is a self-signed certificate. Trust can be claimed for an intermediate CA (the trusted anchor does not have to be self-signed according to X-509) by using option \fIpartial_chain\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIselfsigned_peer\fR\fR
+
+.PP
+The chain consisted only of one self-signed certificate.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB{invalid_ext_keyusage, [public_key:oid()]} \fR
+
+.PP
+If the peer certificate specifies the extended keyusage extension and does not include the purpose for either being a TLS server (id-kp-ServerAuth) or TLS client (id-kp-ClientAuth) depending on the peers role.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB{ca_invalid_ext_keyusage, [public_key:oid()]} \fR
+
+.PP
+If a CA certificate specifies the extended keyusage extension and does not include the purpose for either being a TLS server (id-kp-ServerAuth) or TLS client (id-kp-ClientAuth) depending on the role of the peer chained with this CA, or the option allow_any_ca_purpose is set to \fItrue\fR but the special any-value (anyExtendedKeyUsage) is not included in the CA cert purposes.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIPKIX X-509-path validation error\fR\fR
+
+.PP
+For possible reasons, see \fIpublic_key:pkix_path_validation/3\fR.
+
+.RE
+
+
+.RE
+
+{cert_policy_opts, PolicyOpts}
+.RS 2
+Handle certificate policies.
+
+.PP
+Configure X.509 certificate policy handling for the certificate path validation process; see public_key:pkix_path_validation/3 for more details.
+
+
+.RE
+
+{allow_any_ca_purpose, boolean()}
+.RS 2
+Handle certificate extended key usages extension
+
+.PP
+If a CA certificate has an extended key usage extension but it does not want to restrict the usages of the key it can include a special \fIanyExtendedKeyUsage\fR purpose. If this is option is set to \fItrue\fR all key usage purposes is automatically accepted for a CA that include that purpose, the options default to false.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{crl_check, Check}\fR\fR  - Handle certificate revocation lists.
+
+.PP
+Perform CRL (Certificate Revocation List) verification (public_key:pkix_crls_validate/3) on all the certificates during the path validation (public_key:pkix_path_validation/3) of the certificate chain. \fICheck\fR defaults to \fIfalse\fR.
+
+.PP
+The meaning of \fICheck\fR is as follows:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIfalse\fR\fR
+
+.PP
+No checks are performed.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIpeer\fR\fR
+
+.PP
+Check is only performed on the peer certificate.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIbest_effort\fR\fR
+
+.PP
+If certificate revocation status cannot be determined it will be accepted as valid.
+
+.PP
+The CA certificates specified for the connection will be used to construct the certificate chain validating the CRLs.
+
+.PP
+The CRLs will be fetched from a local or external cache. See \fIssl_crl_cache_api\fR.
+
+.RE
+
+.RE
+
+
+.RE
+.B
+\fBcommon_option_dtls() ::\fR
+\fB          {use_srtp,\fR
+\fB           UseSrtp ::\fR
+\fB               #{protection_profiles := [binary()], mki => binary()}}.\fR
+
+.br
+.RS
+.PP
+Common options to client and server only valid for DTLS.
+
+{use_srtp, UseSrtp}
+.RS 2
+Configures the 
+\fIuse_srtp\fR DTLS hello extension.
+.PP
+In order to negotiate the use of SRTP data protection, clients include an extension of type "use_srtp" in the DTLS extended client hello. This extension MUST only be used when the data being transported is RTP or RTCP.
+
+.PP
+The value is a map with a mandatory \fIprotection_profiles\fR parameter and an optional \fImki\fR parameter.
+
+.PP
+\fIprotection_profiles\fR configures the list of the client's acceptable SRTP Protection Profiles. Each profile is a 2-byte binary. Example: \fI#{protection_profiles => [<<0,2>>, <<0,5>>]}\fR
+
+.PP
+\fImki\fR configures the SRTP Master Key Identifier chosen by the client.
+
+.PP
+The \fIsrtp_mki\fR field contains the value of the SRTP MKI which is associated with the SRTP master keys derived from this handshake. Each SRTP session MUST have exactly one master key that is used to protect packets at any given time. The client MUST choose the MKI value so that it is distinct from the last MKI value that was used, and it SHOULD make these values unique for the duration of the TLS session.
+
+.PP
+\fBNOTE: \fROTP does not handle SRTP, so an external implementations of SRTP encoder/decoder and a packet demultiplexer are needed to make use of the \fIuse_srtp\fR extension. See also option transport_option.
+
+
+.PP
+Servers that receive an extended hello containing a "use_srtp" extension can agree to use SRTP by including an extension of type "use_srtp", with the chosen protection profile in the extended server hello. This extension MUST only be used when the data being transported is RTP or RTCP.
+
+
+.RE
+
+
+.RE
+.B
+\fBcommon_option_legacy() ::\fR
+\fB          {cert,\fR
+\fB           Cert :: public_key:der_encoded() | [public_key:der_encoded()]} |\fR
+\fB          {certfile, CertPem :: file:filename()} |\fR
+\fB          {key, Key :: key()} |\fR
+\fB          {keyfile, KeyPem :: file:filename()} |\fR
+\fB          {password, KeyPemPasswd :: iodata() | fun(() -> iodata())} |\fR
+\fB          {log_alert, LogAlert :: boolean()} |\fR
+\fB          {padding_check, PaddingCheck :: boolean()} |\fR
+\fB          {beast_mitigation, one_n_minus_one | zero_n | disabled} |\fR
+\fB          {ssl_imp, Imp :: new | old}.\fR
+
+.br
+.RS
+.PP
+Legacy options considered deprecated in favor of other options, insecure to use, or plainly not relevant anymore.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{cert, Certs}\fR\fR
+
+.PP
+Use option \fIcerts_keys\fR instead.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{certfile, CertPem}\fR\fR
+
+.PP
+Use option \fIcerts_keys\fR instead.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{keyfile, KeyPem}\fR\fR
+
+.PP
+Use option \fIcerts_keys\fR instead.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{password, KeyPemPasswd}\fR\fR
+
+.PP
+Use option \fIcerts_keys\fR instead.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{log_alert, LogAlert}\fR\fR
+
+.PP
+If \fILogAlert\fR is \fIfalse\fR, TLS/DTLS Alert reports are not displayed. Deprecated in OTP 22; use \fI{log_level, Level}\fR instead.
+
+.RE
+
+{padding_check, PaddingCheck}
+.RS 2
+Inter-op trade-off option
+
+.PP
+Affects TLS-1.0 connections only. If set to \fIfalse\fR, it disables the block cipher padding check to be able to interoperate with legacy software.
+
+.PP
+\fBWARNING: \fRUsing \fI{padding_check, false}\fR makes TLS vulnerable to the Poodle attack.
+
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{beast_mitigation, BeastMitigation}\fR\fR  - Inter-op trade-off option
+
+.PP
+Affects TLS-1.0 connections only. Used to change the BEAST mitigation strategy to interoperate with legacy software. Defaults to \fIone_n_minus_one\fR.
+
+.PP
+\fIone_n_minus_one\fR - Perform \fI1/n-1\fR BEAST mitigation.
+
+.PP
+\fIzero_n\fR - Perform \fI0/n\fR BEAST mitigation.
+
+.PP
+\fIdisabled\fR - Disable BEAST mitigation.
+
+.PP
+\fBWARNING: \fRUsing \fI{beast_mitigation, disabled}\fR makes TLS-1.0 vulnerable to the BEAST attack.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{ssl_imp, Imp}\fR\fR
+
+.PP
+Deprecated since OTP 17; has no effect.
+
+.RE
+
+
+.RE
+.B
+\fBcommon_option_pre_tls13() ::\fR
+\fB          {eccs, NamedCurves :: [named_curve()]} |\fR
+\fB          {secure_renegotiate, SecureRenegotiate :: boolean()} |\fR
+\fB          {user_lookup_fun, {Lookupfun :: fun(), UserState :: any()}}.\fR
+
+.br
+.RS
+.PP
+Options common to client and server side prior to TLS-1.3.
+
+{eccs, NamedCurves}
+.RS 2
+Named Elliptic Curves
+
+.PP
+Elliptic curves that can be used in pre TLS-1.3 key exchange.
+
+
+.RE
+
+{secure_renegotiate, SecureRenegotiate}
+.RS 2
+Inter-operate trade-off option
+
+.PP
+Specifies whether to reject renegotiation attempt that does not live up to RFC 5746. By default, \fISecureRenegotiate\fR is \fItrue\fR, meaning that secure renegotiation is enforced. If \fISecureRenegotiate\fR is \fIfalse\fR secure renegotiation will still be used if possible, but it falls back to insecure renegotiation if the peer does not support if RFC 5746.
+
+
+.RE
+
+{user_lookup_fun, {LookupFun, UserState}}
+.RS 2
+PSK/SRP cipher suite option
+
+.PP
+The lookup fun is to be defined as follows:
+
+.IP
+.nf
+fun(psk, PSKIdentity :: binary(), UserState :: term()) ->
+	{ok, SharedSecret :: binary()} | error;
+fun(srp, Username :: binary(), UserState :: term()) ->
+	{ok, {SRPParams :: srp_param_type(), Salt :: binary(),
+	      DerivedKey :: binary()}} | error.
+
+.fi
+
+.PP
+For Pre-Shared Key (PSK) cipher suites, the lookup fun is called by the client and server to determine the shared secret. When called by the client, \fIPSKIdentity\fR is the hint presented by the server or \fIundefined\fR. When called by the server, \fIPSKIdentity\fR is the identity presented by the client.
+
+.PP
+For Secure Remote Password (SRP), the fun is only used by the server to obtain parameters that it uses to generate its session keys. \fIDerivedKey\fR is to be derived according to RFC 2945 and RFC 5054: \fIcrypto:sha([Salt, crypto:sha([Username, <<$:>>, Password])])\fR
+
+
+.RE
+
+
+.RE
+.B
+\fBcommon_option_tls13() ::\fR
+\fB          {supported_groups, [group()]} |\fR
+\fB          {key_update_at, KeyUpdateAt :: pos_integer()}.\fR
+
+.br
+.RS
+.PP
+Common options to both client and server for TLS-1.3.
+
+{supported_groups, Groups}
+.RS 2
+Key exchange option
+
+.PP
+TLS 1.3 introduces the "supported_groups" extension, which is used for negotiating the key-exchange parameters in a TLS 1.3 handshake. Both client and server can specify a list of parameters that they are willing to use.
+
+.PP
+If not specified it will use a default list that can be obtained by calling \fIssl:groups(default).\fR that is filtered based on the installed crypto library version.
+
+
+.RE
+
+{key_update_at, KeyUpdateAt}
+.RS 2
+Session key renewal
+
+.PP
+Configures the maximum amount of bytes that can be sent on a TLS 1.3 connection before an automatic key update is performed.
+
+.PP
+There are cryptographic limits on the amount of plaintext which can be safely encrypted under a given set of keys. The current default ensures that data integrity will not be breached with probability greater than \fI1/2^57\fR. For more information see Limits on Authenticated Encryption Use in TLS.
+
+
+.RE
+
+
+.RE
+.B
+\fBconnection_info() ::\fR
+\fB          [{protocol, protocol_version()} |\fR
+\fB           {session_resumption, boolean()} |\fR
+\fB           {selected_cipher_suite, erl_cipher_suite()} |\fR
+\fB           {sni_hostname, term()} |\fR
+\fB           {ciphers, [erl_cipher_suite()]}] |\fR
+\fB          connection_info_pre_tls13() |\fR
+\fB          security_info().\fR
+
+.br
+.RS
+.PP
+Key value list convening some information about the established connection.
+
+
+.RE
+.B
+\fBconnection_info_keys() ::\fR
+\fB          [protocol | selected_cipher_suite | sni_hostname |\fR
+\fB           session_resumption | ciphers | client_random |\fR
+\fB           server_random | master_secret | keylog | session_id |\fR
+\fB           session_data | ecc | srp_username].\fR
+
+.br
+.RS
+.PP
+TLS connection keys for which information can be retrieved.
+
+
+.RE
+.B
+\fBconnection_info_pre_tls13() ::\fR
+\fB          [{session_id, session_id()} |\fR
+\fB           {session_data, binary()} |\fR
+\fB           {ecc, {named_curve, term()}} |\fR
+\fB           {srp_username, term()}].\fR
+
+.br
+.RS
+.PP
+TLS connection information relevant prior to TLS-1.3.
+
+
+.RE
+.B
+\fBcrl_cache_opts() ::\fR
+\fB          {Module :: atom(),\fR
+\fB           {DbHandle :: internal | term(), Args :: list()}}.\fR
+
+.br
+.RS
+.PP
+Options for using built-in CRL cache support.
+
+.PP
+Specify how to perform lookup and caching of certificate revocation lists (CRLs). \fIModule\fR defaults to \fIssl_crl_cache\fR with \fIDbHandle\fR being \fIinternal\fR, and \fIArgs\fR being \fI[]\fR.
+
+.PP
+There are two implementations available:
+
+ssl_crl_cache
+.RS 2
+Implementation 1
+
+.PP
+This module maintains a cache of CRLs. CRLs can be added to the cache using \fIssl_crl_cache:insert/1\fR, and can optionally be automatically fetched through HTTP if the following argument is specified:
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{http, timeout()}\fR\fR
+
+.PP
+Enables fetching of CRLs specified as http URIs in X.509 certificate extensions. Requires the Inets application.
+
+.RE
+
+ssl_crl_hash_dir
+.RS 2
+Implementation 2
+
+.PP
+This module makes use of a directory where CRLs are stored in files named by the hash of the issuer name.
+
+.PP
+The file names consist of eight hexadecimal digits followed by \fI.rN\fR, where \fIN\fR is an integer, for example \fI1a2b3c4d.r0\fR. For the first version of the CRL, \fIN\fR starts at zero, and for each new version, \fIN\fR is incremented by one. The OpenSSL utility \fIc_rehash\fR creates symlinks according to this pattern.
+
+.PP
+For a given hash value, this module finds all consecutive \fI.r*\fR files starting from zero, and those files taken together make up the revocation list. CRL files with \fInextUpdate\fR fields in the past or issued by a different CA that happens to have the same name hash are excluded.
+
+.PP
+The following argument is required:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{dir, string()}\fR\fR
+
+.RE
+
+.PP
+Specifies the directory in which the CRLs can be found.
+
+
+.RE
+
+
+.RE
+.B
+\fBdtls_legacy_version() :: dtlsv1.\fR
+
+.br
+.RS
+.PP
+A DTLS protocol version that are no longer supported by default for security reasons.
+
+
+.RE
+.B
+\fBdtls_version() :: 'dtlsv1.2' | dtls_legacy_version().\fR
+
+.br
+.RS
+.PP
+DTLS protocol version.
+
+
+.RE
+.B
+\fBerl_cipher_suite() ::\fR
+\fB          #{key_exchange := kex_algo(),\fR
+\fB            cipher := cipher(),\fR
+\fB            mac := hash() | aead,\fR
+\fB            prf := hash() | default_prf}.\fR
+
+.br
+.RS
+.PP
+Erlang cipher suite representation
+
+.RS 4
+.PP
+\fBWarning \fR
+
+.RE
+
+.PP
+Enabling cipher suites using RSA as a key exchange algorithm is strongly discouraged (only available prior to TLS-1.3). For some configurations software preventions may exist, and can make them usable if they work, but relying on them to work is risky. There exists more reliable cipher suites that can be used instead.
+
+
+.RE
+.B
+\fBerror_alert() ::\fR
+\fB          {tls_alert, {tls_alert(), Description :: string()}}.\fR
+
+.br
+.RS
+.PP
+If a TLS connection fails a TLS protocol ALERT will be sent/received.
+
+.PP
+An atom reflecting the raised alert, according to the TLS protocol, and a description string with some further details will be returned.
+
+
+.RE
+.B
+\fBgroup() ::\fR
+\fB          x25519 | x448 | secp256r1 | secp384r1 | secp521r1 |\fR
+\fB          ffdhe2048 | ffdhe3072 | ffdhe4096 | ffdhe6144 | ffdhe8192.\fR
+
+.br
+.RS
+.PP
+TLS-1.3 key exchange configuration.
+
+
+.RE
+.B
+\fBhash() :: sha2() | legacy_hash().\fR
+
+.br
+.RS
+.PP
+Hash algorithms used together with signing and encryption functions.
+
+
+.RE
+.B
+\fBhost() :: inet:hostname() | inet:ip_address().\fR
+
+.br
+.RS
+.PP
+A name or address to a host.
+
+
+.RE
+.B
+\fBkex_algo() ::\fR
+\fB          ecdhe_ecdsa | ecdh_ecdsa | ecdh_rsa | rsa | dhe_rsa |\fR
+\fB          dhe_dss | srp_rsa | srp_dss | dhe_psk | rsa_psk | psk |\fR
+\fB          ecdh_anon | dh_anon | srp_anon | any.\fR
+
+.br
+.RS
+.PP
+Cipher Suite Key Exchange Algorithm will be \fIany\fR in TLS-1.3 as key exchange is no longer part of cipher suite configuration in TLS-1.3.
+
+
+.RE
+.B
+\fBkey() ::\fR
+\fB          {'RSAPrivateKey' | 'DSAPrivateKey' | 'ECPrivateKey' |\fR
+\fB           'PrivateKeyInfo',\fR
+\fB           public_key:der_encoded()} |\fR
+\fB          #{algorithm := sign_algo(),\fR
+\fB            engine := crypto:engine_ref(),\fR
+\fB            key_id := crypto:key_id(),\fR
+\fB            password => crypto:password()} |\fR
+\fB          #{algorithm := sign_algo(),\fR
+\fB            sign_fun := fun(),\fR
+\fB            sign_opts => list(),\fR
+\fB            encrypt_fun => fun(),\fR
+\fB            encrypt_opts => list()}.\fR
+
+.br
+.RS
+.PP
+The user's private key.
+
+.PP
+The key can be provided either directly as a DER-encoded entity, indirectly using a crypto engine/provider (with key reference information), or as an Erlang fun (with possible custom options). The latter two options can be used for customized signing with hardware security modules (HSM) or trusted platform modules (TPM).
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+DER encoded key will need to specify the ASN-1 type used to create the encoding.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An engine/provider needs to specify specific information to support this concept and can optionally be password protected; see also crypto:engine_load/3  and Crypto User's Guide.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+fun option should include a fun that mimics \fIpublic_key:sign/4\fR and possibly public_key:private_encrypt/4 if legacy versions TLS-1.0 and TLS-1.1 must be supported.
+
+.RE
+
+
+.RE
+.B
+\fBkeylog_info() ::\fR
+\fB          #{items => [keylog_item()], client_random => binary()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBkeylog_item() :: unicode:chardata().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlegacy_cipher() :: '3des_ede_cbc' | des_cbc | rc4_128.\fR
+
+.br
+.RS
+.PP
+Cipher algorithms that are no longer supported by default for security reasons.
+
+
+.RE
+.B
+\fBlegacy_hash() :: sha224 | sha | md5.\fR
+
+.br
+.RS
+.PP
+Hash algorithms that are no longer supported by default for security reasons.
+
+
+.RE
+.B
+\fBlegacy_named_curve() ::\fR
+\fB          sect571r1 | sect571k1 | sect409k1 | sect409r1 | sect283k1 |\fR
+\fB          sect283r1 | secp256k1 | sect239k1 | sect233k1 | sect233r1 |\fR
+\fB          secp224k1 | secp224r1 | sect193r1 | sect193r2 | secp192k1 |\fR
+\fB          secp192r1 | sect163k1 | sect163r1 | sect163r2 | secp160k1 |\fR
+\fB          secp160r1 | secp160r2.\fR
+
+.br
+.RS
+.PP
+Key exchange configuration prior to TLS-1.3.
+
+.PP
+These curves have been deprecated by RFC 8422.
+
+
+.RE
+.B
+\fBlegacy_sign_algo() :: dsa.\fR
+
+.br
+.RS
+.PP
+Signature algorithms that are no longer supported by default for security reasons.
+
+
+.RE
+.B
+\fBlegacy_sign_scheme() ::\fR
+\fB          rsa_pkcs1_sha512 | rsa_pkcs1_sha384 | rsa_pkcs1_sha256 |\fR
+\fB          ecdsa_sha1 | rsa_pkcs1_sha1.\fR
+
+.br
+.RS
+.PP
+This is only used for certificate signatures if TLS-1.2 is negotiated, meaning that the peer only supports TLS-1.2, but we also support TLS-1.3.
+
+
+.RE
+.B
+\fBnamed_curve() ::\fR
+\fB          x25519 | x448 | secp521r1 | brainpoolP512r1 |\fR
+\fB          brainpoolP384r1 | secp384r1 | brainpoolP256r1 | secp256r1 |\fR
+\fB          legacy_named_curve().\fR
+
+.br
+.RS
+.PP
+Key exchange configuration prior to TLS-1.3.
+
+
+.RE
+.B
+\fBold_cipher_suite() ::\fR
+\fB          {kex_algo(), cipher(), hash()} |\fR
+\fB          {kex_algo(), cipher(), hash() | aead, hash()}.\fR
+
+.br
+.RS
+.PP
+For backwards compatibility only; do not use.
+
+
+.RE
+.B
+\fBpost_quantum_schemes() :: crypto:mldsa() | crypto:slh_dsa().\fR
+
+.br
+.RS
+.PP
+Supported in TLS-1.3 only. ML-DSA since 28.1, SLH-DSA since 28.3.
+
+
+.RE
+.B
+\fBprf_random() :: client_random | server_random.\fR
+
+.RS
+.LP
+Deprecated: the type ssl:prf_random() is deprecated; Only used in deprecated function prf/5 and will no longer be needed.
+.RE
+
+.br
+.RS
+
+.RE
+.B
+\fBprotocol_extensions() ::\fR
+\fB          #{renegotiation_info => binary(),\fR
+\fB            signature_algs => signature_algs(),\fR
+\fB            alpn => binary(),\fR
+\fB            srp => binary(),\fR
+\fB            next_protocol => binary(),\fR
+\fB            max_frag_enum => 1..4,\fR
+\fB            ec_point_formats => [0..2],\fR
+\fB            elliptic_curves => [public_key:oid()],\fR
+\fB            sni => inet:hostname()}.\fR
+
+.br
+.RS
+.PP
+Client hello extensions.
+
+
+.RE
+.B
+\fBprotocol_version() :: tls_version() | dtls_version().\fR
+
+.br
+.RS
+.PP
+TLS or DTLS protocol version.
+
+
+.RE
+.B
+\fBreason() :: term().\fR
+
+.br
+.RS
+.PP
+Error reason for debug purposes.
+
+.PP
+Not to be matched.
+
+
+.RE
+.B
+\fBrsassa_pss_scheme() ::\fR
+\fB          rsa_pss_rsae_sha512 | rsa_pss_rsae_sha384 |\fR
+\fB          rsa_pss_rsae_sha256 | rsa_pss_pss_sha512 |\fR
+\fB          rsa_pss_pss_sha384 | rsa_pss_pss_sha256.\fR
+
+.br
+.RS
+.PP
+Supported in TLS-1.3 and TLS-1.2.
+
+
+.RE
+.B
+\fBsecurity_info() ::\fR
+\fB          [{client_random, binary()} |\fR
+\fB           {server_random, binary()} |\fR
+\fB           {master_secret, binary()} |\fR
+\fB           {keylog, [keylog_item()]}].\fR
+
+.br
+.RS
+.PP
+TLS connection information that can be used for NSS key logging.
+
+
+.RE
+.B
+\fBserver_option() ::\fR
+\fB          server_option_cert() |\fR
+\fB          common_option_cert() |\fR
+\fB          {alpn_preferred_protocols, AppProtocols :: [binary()]} |\fR
+\fB          {sni_hosts,\fR
+\fB           SNIHosts ::\fR
+\fB               [{inet:hostname(), [server_option() | common_option()]}]} |\fR
+\fB          {sni_fun,\fR
+\fB           SNIFun ::\fR
+\fB               fun((string()) ->\fR
+\fB                       [server_option() | common_option()] |\fR
+\fB                       unrecognized | undefined)} |\fR
+\fB          server_option_pre_tls13() |\fR
+\fB          common_option_pre_tls13() |\fR
+\fB          server_option_tls13() |\fR
+\fB          common_option_tls13() |\fR
+\fB          common_option_dtls() |\fR
+\fB          server_option_legacy() |\fR
+\fB          common_option_legacy().\fR
+
+.br
+.RS
+.PP
+Options specific to the server side, or with different semantics for the client and server.
+
+{alpn_preferred_protocols, AppProtocols}
+.RS 2
+Application Layer Protocol Negotiation
+
+.PP
+Indicates that the server will try to perform Application-Layer Protocol Negotiation (ALPN).
+
+.PP
+The list of protocols is in order of preference. The protocol negotiated will be the first in the list that matches one of the protocols advertised by the client. If no protocol matches, the server will fail the connection with a \fIno_application_protocol\fR alert.
+
+.PP
+The negotiated protocol can be retrieved using the \fInegotiated_protocol/1\fR function.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{sni_fun, SNIFun}\fR\fR
+
+.PP
+If the server receives a SNI (Server Name Indication) from the client, the given fun \fISNIFun\fR will be called to retrieve \fIserver_option()\fR for the indicated server. These options will override previously specified server options. The sni_fun can indicate that it does not recognize the server name by returning \fIunrecognized\fR in which case the connection will be closed with an \fIunrecognized_name\fR alert. If the sni_fun returns \fIundefined\fR the connection will be attempted with the default options supplied to \fIlisten/2\fR or  \fIhandshake/2,3\fR.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+The options \fIsni_fun\fR and \fIsni_hosts\fR are mutually exclusive.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{sni_hosts, SNIHosts}\fR\fR
+
+.PP
+If the server receives a SNI (Server Name Indication) from the client matching a host listed in the \fIsni_hosts\fR option, the specific options for that host will override previously specified options. If no match is found it behaves as option sni_fun that returns \fIundefined\fR.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+The options \fIsni_fun\fR and \fIsni_hosts\fR are mutually exclusive.
+
+.RE
+
+
+.RE
+.B
+\fBserver_option_cert() ::\fR
+\fB          {cacerts,\fR
+\fB           CACerts ::\fR
+\fB               [public_key:der_encoded()] | [public_key:combined_cert()]} |\fR
+\fB          {cacertfile, CACertFile :: file:filename()} |\fR
+\fB          {verify, Verify :: verify_none | verify_peer} |\fR
+\fB          {fail_if_no_peer_cert, FailNoPeerCert :: boolean()} |\fR
+\fB          {certificate_authorities, ServerCertAuth :: boolean()}.\fR
+
+.br
+.RS
+.PP
+Certificate related options for a server.
+
+{cacerts, CACerts}
+.RS 2
+Trusted certificates.
+
+.PP
+The DER-encoded trusted certificates. If this option is supplied, it overrides the \fIcacertfile\fR option.
+
+
+.RE
+
+{verify, Verify}
+.RS 2
+Verify certificates.
+
+.PP
+Client certificates are an optional part of the TLS protocol. A server performs X.509 certificate path validation only in \fIverify_peer\fR mode. By default the server is in \fIverify_none\fR mode and, hence, will not send an certificate request to the client. When using \fIverify_peer\fR you may also want to specify the options \fIfail_if_no_peer_cert\fR and \fIcertificate_authorities\fR.
+
+
+.RE
+
+{fail_if_no_peer_cert, FailNoPeerCert}
+.RS 2
+Legacy trade-off option
+
+.PP
+Used together with \fI{verify, verify_peer}\fR by an TLS/DTLS server. If set to \fItrue\fR, the server fails if the client does not have a certificate to send, that is, sends an empty certificate. If set to \fIfalse\fR, it fails only if the client sends an invalid certificate (an empty certificate is considered valid). Defaults to \fItrue\fR, the default value was changed in OTP-26.0.
+
+
+.RE
+
+{certificate_authorities, ServerCertAuth}
+.RS 2
+Inter-operate hint option
+
+.PP
+Determines whether a TLS-1.3 server should include the authorities extension in its certificate request message that is sent when the option \fIverify\fR is set to \fIverify_peer\fR. Defaults to \fItrue\fR.
+
+.PP
+If set to \fIfalse\fR for older TLS versions its corresponding certificate authorities definition in its certificate request will be set to the empty list instead of including the appropriate certificate authorities. This has the same affect as excluding the TLS-1.3 extension.
+
+.PP
+A reason to exclude the extension would be if the server wants to communicate with clients incapable of sending complete certificate chains that adhere to the extension, but the server still has the capability to recreate a chain that it can verify.
+
+
+.RE
+
+
+.RE
+.B
+\fBserver_option_legacy() ::\fR
+\fB          {next_protocols_advertised, NextAppProtocols :: [binary()]}.\fR
+
+.br
+.RS
+.PP
+Legacy server options.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{next_protocols_advertised, NextAppProtocols}\fR\fR
+
+.PP
+ALPN (Application-Layer Protocol Negotiation) deprecates NPN (Next Protocol Negotiation) described here.
+
+.PP
+List of protocols to send to the client if the client indicates that it supports the Next Protocol extension. The client can select a protocol that is not on this list. The list of protocols must not contain an empty binary. If the server negotiates a Next Protocol, it can be accessed using the \fInegotiated_protocol/1\fR method.
+
+.RE
+
+
+.RE
+.B
+\fBserver_option_pre_tls13() ::\fR
+\fB          {client_renegotiation, ClientRengotiation :: boolean()} |\fR
+\fB          {reuse_sessions, ReuseSessions :: boolean()} |\fR
+\fB          {reuse_session, ReuseSession :: fun()} |\fR
+\fB          {honor_cipher_order, HonorServerCipherOrder :: boolean()} |\fR
+\fB          {honor_ecc_order, HonorServerECCOrder :: boolean()} |\fR
+\fB          {dh, DHDer :: public_key:der_encoded()} |\fR
+\fB          {dhfile, DhFile :: file:filename()} |\fR
+\fB          {psk_identity, PSKHint :: string()}.\fR
+
+.br
+.RS
+.PP
+Options only relevant to TLS versions prior to TLS-1.3.
+
+{client_renegotiation, ClientRengotiation}
+.RS 2
+DoS attack avoidance option
+
+.PP
+In protocols that support client-initiated renegotiation, the resource cost of such an operation is higher for the server than the client. This can act as a vector for denial-of-service (DoS) attacks. The SSL application already takes measures to counter-act such attempts, but client-initiated renegotiation can be completely disabled by setting this option to \fIfalse\fR. The default value is \fItrue\fR. Note that disabling renegotiation can result in long-lived connections becoming unusable due to limits on the number of messages the underlying cipher suite can encipher.
+
+
+.RE
+
+{reuse_sessions, ReuseSessions}
+.RS 2
+Enable session reuse
+
+.PP
+The boolean value \fItrue\fR specifies that the server will agree to reuse sessions. Setting it to \fIfalse\fR will result in an empty session table, meaning that no sessions will be reused.
+
+
+.RE
+
+{reuse_session, ReuseSession}
+.RS 2
+Local server reuse policy
+
+.PP
+Enables the TLS/DTLS server to have a local policy for deciding whether a session is to be reused. Meaningful only if \fIreuse_sessions\fR is set to \fItrue\fR.
+
+.PP
+\fIReuseSession\fR should be a fun:
+
+.PP
+\fIfun(SuggestedSessionId, PeerCert, Compression, CipherSuite)\fR
+
+.PP
+\fISuggestedSessionId\fR is a \fIbinary()\fR, \fIPeerCert\fR is a DER-encoded certificate, \fICompression\fR is an enumeration integer, and \fICipherSuite\fR is of type \fIerl_cipher_suite()\fR.
+
+
+.RE
+
+{psk_identity, PSKHint}
+.RS 2
+Inter-operate hint option
+
+.PP
+Specifies the server identity hint that the server presents to the client.
+
+
+.RE
+
+{honor_cipher_order, HonorServerCipherOrder}
+.RS 2
+Trade-off option alters protocol defined behavior
+
+.PP
+If \fItrue\fR, use the server's preference for ECC curve selection. If \fIfalse\fR (the default), use the client's preference.
+
+
+.RE
+
+{honor_ecc_order, HonorServerECCOrder}
+.RS 2
+Trade-off option alters protocol defined behavior
+
+.PP
+If \fItrue\fR, use the server's preference for ECC curve selection. If \fIfalse\fR (the default), use the client's preference.
+
+
+.RE
+
+{dh, DHder}
+.RS 2
+Affects DH key exchange cipher suites
+
+.PP
+The DER-encoded Diffie-Hellman parameters. If specified, it overrides option \fIdhfile\fR.
+
+
+.RE
+
+{dh_file, DHfile}
+.RS 2
+Affects DH key exchange cipher suites
+
+.PP
+Path to a file containing PEM-encoded Diffie Hellman parameters to be used by the server if a cipher suite using Diffie Hellman key exchange is negotiated. If not specified, default parameters are used.
+
+
+.RE
+
+
+.RE
+.B
+\fBserver_option_tls13() ::\fR
+\fB          {session_tickets,\fR
+\fB           SessionTickets ::\fR
+\fB               disabled | stateful | stateless | stateful_with_cert |\fR
+\fB               stateless_with_cert} |\fR
+\fB          {stateless_tickets_seed, TicketSeed :: binary()} |\fR
+\fB          {anti_replay,\fR
+\fB           '10k' | '100k' |\fR
+\fB           {BloomFilterWindowSize :: pos_integer(),\fR
+\fB            BloomFilterHashFunctions :: pos_integer(),\fR
+\fB            BloomFilterBits :: pos_integer()}} |\fR
+\fB          {cookie, Cookie :: boolean()} |\fR
+\fB          {early_data, EarlyData :: enabled | disabled}.\fR
+
+.br
+.RS
+.PP
+Options only relevant for TLS-1.3.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{session_tickets, SessionTickets}\fR\fR
+
+.PP
+Configures the session ticket functionality. Allowed values for \fISessionTickets\fR are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdisabled\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstateful\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstateless\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstateful_with_cert\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstateless_with_cert\fR
+
+.RE
+
+.PP
+If \fISessionTickets\fR is not set to \fIdisabled\fR, session resumption with pre-shared keys is enabled and the server will send stateful or stateless session tickets to the client after successful connections.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+In pre-shared key session ticket resumption, there is no certificate exchange involved. Therefore, \fIssl:peercert/1\fR will not return the peer certificate, as it is only communicated during the initial handshake. To associate the client certificate from the original handshake with the tickets it issues, the server options \fIstateful_with_cert\fR or \fIstateless_with_cert\fR can be used.
+
+.PP
+A stateful session ticket is a database reference to internal state information. A stateless session ticket is a self-encrypted binary that contains both cryptographic keying material and state data.
+
+.RS 4
+.PP
+\fBWarning \fR
+
+.RE
+
+.PP
+When \fISessionTickets\fR is set to \fIstateful_with_cert\fR, the client certificate is stored along with the internal state information, leading to increased memory consumption. Conversely, when it is set to \fIstateless_with_cert\fR, the client certificate is encoded in the self-encrypted binary sent to the client, resulting in an increase in payload size.
+
+.PP
+See also SSL User's Guide, Session Tickets and Session Resumption in TLS 1.3.
+
+.RE
+
+{stateless_tickets_seed, TicketSeed}
+.RS 2
+Option for statless tickets
+
+.PP
+Configures the seed used for the encryption of stateless session tickets. Allowed values are any randomly generated \fIbinary/0\fR. If this option is not configured, an encryption seed will be randomly generated.
+
+.PP
+\fBWARNING: \fRReusing the ticket encryption seed between multiple server instances enables stateless session tickets to work across multiple server instances, but it breaks anti-replay protection across instances. Inaccurate time synchronization between server instances can also affect session ticket freshness checks, potentially causing false negatives as well as false positives.
+
+
+
+.RE
+
+{anti_replay, AntiReplay}
+.RS 2
+Option for statless tickets
+
+.PP
+Configures the server's built-in anti replay feature based on Bloom filters.
+
+.PP
+Allowed values for \fIAntiReplay\fR are the pre-defined \fI'10k'\fR, \fI'100k'\fR, or a custom 3-tuple that defines the properties of the bloom filters: \fI{WindowSize, HashFunctions, Bits}\fR. \fIWindowSize\fR is the number of seconds after the current Bloom filter is rotated and also the window size used for freshness checks of ClientHello. \fIHashFunctions\fR is the number hash functions and \fIBits\fR is the number of bits in the bit vector. \fI'10k'\fR and \fI'100k'\fR are simple defaults with the following properties:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI'10k'\fR: Bloom filters can hold 10000 elements with 3% probability of false positives. \fIWindowSize\fR: 10, \fIHashFunctions\fR: 5, \fIBits:\fR 72985 (8.91 KiB).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI'100k'\fR: Bloom filters can hold 100000 elements with 3% probability of false positives. \fIWindowSize\fR: 10, \fIHashFunctions\fR: 5, \fIBits\fR: 729845 (89.09 KiB).
+
+.RE
+
+.PP
+See also SSL User's Guide, Anti-Replay Protection in TLS 1.3.
+
+
+.RE
+
+{cookie, Cookie}
+.RS 2
+Option for 
+\fIHelloRetryRequest\fR behavior
+.PP
+If \fICookie\fR is \fItrue\fR, which is the default, the server sends a cookie extension in its \fIHelloRetryRequest\fR messages.
+
+.PP
+The cookie extension has two main purposes. It allows the server to force the client to demonstrate reachability at their apparent network address (thus providing a measure of DoS protection). This is primarily useful for non-connection-oriented transports. It also allows offloading the server's state to the client. The cookie extension is enabled by default as it is a mandatory extension in RFC8446.
+
+
+.RE
+
+{early_data, EarlyData}
+.RS 2
+Option for accepting or rejecting Early Data
+
+.PP
+Configures if the server accepts (\fIenabled\fR) or rejects (\fIdisabled\fR) early data sent by a client. The default value is \fIdisabled\fR.
+
+
+.RE
+
+
+.RE
+.B
+\fBsession_id() :: binary().\fR
+
+.br
+.RS
+.PP
+Identifies a TLS session prior to TLS-1.3.
+
+
+.RE
+.B
+\fBsession_ticket()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsha2() :: sha512 | sha384 | sha256.\fR
+
+.br
+.RS
+.PP
+SHA2 hash algorithms.
+
+
+.RE
+.B
+\fBsign_algo() :: eddsa | ecdsa | rsa | legacy_sign_algo().\fR
+
+.br
+.RS
+.PP
+Signature algorithms.
+
+
+.RE
+.B
+\fBsign_scheme() ::\fR
+\fB          eddsa_ed25519 | eddsa_ed448 | ecdsa_secp521r1_sha512 |\fR
+\fB          ecdsa_secp384r1_sha384 | ecdsa_secp256r1_sha256 |\fR
+\fB          ecdsa_brainpoolP512r1tls13_sha512 |\fR
+\fB          ecdsa_brainpoolP384r1tls13_sha384 |\fR
+\fB          ecdsa_brainpoolP256r1tls13_sha256 |\fR
+\fB          post_quantum_schemes() |\fR
+\fB          rsassa_pss_scheme() |\fR
+\fB          legacy_sign_scheme().\fR
+
+.br
+.RS
+.PP
+Signature schemes, defined by TLS-1.3, and replacing signature algorithms from TLS-1.2.
+
+.PP
+Explicitly list acceptable signature schemes in the preferred order.
+
+.PP
+Overrides the algorithms supplied in \fIsignature_algs\fR option for certificates. In addition to the \fIsignature_algorithms\fR extension from TLS 1.2, TLS 1.3 (RFC 5246 Section 4.2.3) adds the \fIsignature_algorithms_cert\fR extension which enables having special requirements on the signatures used in the certificates that differs from the requirements on digital signatures as a whole. If this is not required this extension is not needed.
+
+.PP
+The client will send a \fIsignature_algorithms_cert\fR extension (in the client hello message), if TLS version 1.2 (back-ported to TLS 1.2 in 24.1) or later is used, and the signature_algs_cert option is explicitly specified.  By default, only the signature_algs extension is sent with the exception of when signature_algs option is not explicitly specified, in which case it will append the rsa_pkcs1_sha1 algorithm to the default value of signature_algs and use it as value for signature_algs_cert to allow certificates to have this signature but still disallow sha1 use in the TLS protocol, since 27.0.1 and 26.2.5.2.
+
+.PP
+\fBNOTE: \fRNote that supported signature schemes for TLS-1.2 are
+
+
+.PP
+\fIlegacy_sign_scheme()\fR
+
+.RS 4
+.PP
+and \fIrsassa_pss_scheme()\fR.
+
+.RE
+
+
+.RE
+.B
+\fBsignature_algs() :: [{hash(), sign_algo()} | sign_scheme()].\fR
+
+.br
+.RS
+.PP
+Explicitly list acceptable signature algorithms for certificates and handshake messages in the preferred order.
+
+.PP
+The client will send its list as the client hello \fIsignature_algorithm\fR extension introduced in TLS-1.2; see Section 7.4.1.4.1 in RFC 5246. Before TLS-1.2, these algorithms where implicitly chosen and partly derived from the cipher suite.
+
+.PP
+In TLS-1.2 a somewhat more explicit negotiation is made possible using a list of \fI{HashAlgo, SignAlgo}\fR tuples.
+
+.PP
+In TLS-1.3, these algorithm pairs are replaced by signature schemes that are completely decoupled from the cipher suite.
+
+.PP
+Signature algorithms used for certificates can be overridden by the signature schemes supplied by the \fIsignature_algs_cert\fR option.
+
+.PP
+The TLS-1.2 default is \fIDefault_TLS_12_Alg_Pairs\fR interleaved with \fIrsa_pss_schemes\fR since ssl-11.0 (Erlang/OTP 25). \fIpss_pss\fR is preferred over \fIpss_rsae\fR, which in turn is preferred over \fIrsa\fR.
+
+.PP
+The list for \fIDefault_TLS_12_Alg_Pairs\fR is defined as follows:
+
+.IP
+.nf
+[
+{sha512, ecdsa},
+{sha512, rsa},
+{sha384, ecdsa},
+{sha384, rsa},
+{sha256, ecdsa},
+{sha256, rsa}
+]
+
+.fi
+
+.RS 4
+.PP
+\fBChange \fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Support for \fI{md5, rsa}\fR was removed from the TLS-1.2 default in ssl-8.0 (Erlang/OTP 22).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Support for \fI{sha, _}\fR (SHA1) and \fI{sha224, _}\fR was removed from the TLS-1.2 default in ssl-11.0 (Erlang/OTP 26).
+
+.RE
+
+.RE
+
+.PP
+The list for \fIrsa_pss_schemes\fR is defined as follows:
+
+.IP
+.nf
+[rsa_pss_pss_sha512,
+rsa_pss_pss_sha384,
+rsa_pss_pss_sha256,
+rsa_pss_rsae_sha512,
+rsa_pss_rsae_sha384,
+rsa_pss_rsae_sha256]
+
+.fi
+
+.PP
+The list of \fITLS_13_Legacy_Schemes\fR is defined as follows:
+
+.IP
+.nf
+[
+%% Legacy algorithms only applicable to certificate signatures
+rsa_pkcs1_sha512, %% Corresponds to {sha512, rsa}
+rsa_pkcs1_sha384, %% Corresponds to {sha384, rsa}
+rsa_pkcs1_sha256, %% Corresponds to {sha256, rsa}
+]
+
+.fi
+
+.PP
+The list of \fIDefault_TLS_13_Schemes\fR is defined as follows:
+
+.IP
+.nf
+[
+%% EDDSA
+eddsa_ed25519,
+eddsa_ed448
+
+%% ECDSA
+ecdsa_secp521r1_sha512,
+ecdsa_secp384r1_sha384,
+ecdsa_secp256r1_sha256] ++
+
+%% RSASSA-PSS
+rsa_pss_schemes()
+
+.fi
+
+.PP
+\fBCHANGE: \fREDDSA was made highest priority in ssl-10.8 (Erlang/OTP 25).
+
+
+.PP
+The TLS-1.3 default is \fIDefault_TLS_13_Schemes\fR.
+
+.PP
+If both TLS-1.3 and TLS-1.2 are supported the default is:
+
+.IP
+.nf
+Default_TLS_13_Schemes ++ TLS_13_Legacy_Schemes ++
+Default_TLS_12_Alg_Pairs %% not represented in TLS_13_Legacy_Schemes
+
+.fi
+
+.PP
+to ensure that appropriate algorithms can be chosen for the negotiated version.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+TLS-1.2 algorithms will not be negotiated for TLS-1.3, but the TLS-1.3 RSASSA-PSS (\fIrsassa_pss_scheme()\fR) signature schemes can be negotiated also for TLS-1.2 from Erlang/OTP 24.1 (fully working from Erlang/OTP 24.1.3). However, if both TLS 1.3 and TLS 1.2 are supported using defaults, and TLS 1.3 is negotiated, the corresponding TLS 1.2 algorithms for TLS 1.3 legacy signature schemes will be treated as legacy schemes and applied only to certificate signatures.
+
+
+.RE
+.B
+\fBsocket() :: gen_tcp:socket() | socket:socket().\fR
+
+.br
+.RS
+.PP
+A socket that can be used to perform a so-called "START-TLS", which means using an already connected socket previously used for plain TCP traffic and upgrading it to use TLS.
+
+.PP
+Both sides needs to agree on the upgrade.
+
+
+.RE
+.B
+\fBsocket_option() ::\fR
+\fB          gen_tcp:connect_option() |\fR
+\fB          gen_tcp:listen_option() |\fR
+\fB          gen_udp:option().\fR
+
+.br
+.RS
+.PP
+Options for the transport socket.
+
+.PP
+The default socket options are \fI[{mode, list}, {packet, 0}, {header, 0}, {active, true}]\fR.
+
+.PP
+For valid options, see \fIinet\fR, \fIgen_tcp\fR, and \fIgen_udp\fR in Kernel. Note that stream-oriented options such as \fIpacket\fR are only relevant for TLS and not DTLS.
+
+
+.RE
+.B
+\fBsrp_param_type() ::\fR
+\fB          srp_8192 | srp_6144 | srp_4096 | srp_3072 | srp_2048 |\fR
+\fB          srp_1536 | srp_1024.\fR
+
+.br
+.RS
+.PP
+SRP cipher suite configuration prior to TLS-1.3.
+
+
+.RE
+.B
+\fBsslsocket() :: any().\fR
+
+.br
+.RS
+.PP
+An opaque reference to the TLS/DTLS connection.
+
+.PP
+Note that despite being opaque, matching \fIsslsocket()\fR instances is allowed.
+
+
+.RE
+.B
+\fBtls_alert() ::\fR
+\fB          close_notify | unexpected_message | bad_record_mac |\fR
+\fB          record_overflow | handshake_failure | bad_certificate |\fR
+\fB          unsupported_certificate | certificate_revoked |\fR
+\fB          certificate_expired | certificate_unknown |\fR
+\fB          illegal_parameter | unknown_ca | access_denied |\fR
+\fB          decode_error | decrypt_error | export_restriction |\fR
+\fB          protocol_version | insufficient_security | internal_error |\fR
+\fB          inappropriate_fallback | user_canceled | no_renegotiation |\fR
+\fB          unsupported_extension | certificate_unobtainable |\fR
+\fB          unrecognized_name | bad_certificate_status_response |\fR
+\fB          bad_certificate_hash_value | unknown_psk_identity |\fR
+\fB          no_application_protocol.\fR
+
+.br
+.RS
+.PP
+TLS Alert Protocol reasons.
+
+
+.RE
+.B
+\fBtls_client_option() ::\fR
+\fB          client_option() |\fR
+\fB          common_option() |\fR
+\fB          socket_option() |\fR
+\fB          transport_option().\fR
+
+.br
+.RS
+.PP
+An option that can be supplied to a TLS client.
+
+
+.RE
+.B
+\fBtls_legacy_version() :: tlsv1 | 'tlsv1.1'.\fR
+
+.br
+.RS
+.PP
+A TLS protocol version that are no longer supported by default for security reasons.
+
+
+.RE
+.B
+\fBtls_option() :: tls_client_option() | tls_server_option().\fR
+
+.br
+.RS
+.PP
+An option related to the TLS/DTLS protocol.
+
+
+.RE
+.B
+\fBtls_server_option() ::\fR
+\fB          server_option() |\fR
+\fB          common_option() |\fR
+\fB          socket_option() |\fR
+\fB          transport_option().\fR
+
+.br
+.RS
+.PP
+An option that can be supplied to a TLS server.
+
+
+.RE
+.B
+\fBtls_version() :: 'tlsv1.2' | 'tlsv1.3' | tls_legacy_version().\fR
+
+.br
+.RS
+.PP
+TLS protocol version.
+
+
+.RE
+.B
+\fBtransport_option() ::\fR
+\fB          {cb_info,\fR
+\fB           {CallbackModule :: atom(),\fR
+\fB            DataTag :: atom(),\fR
+\fB            ClosedTag :: atom(),\fR
+\fB            ErrTag :: atom()}} |\fR
+\fB          {cb_info,\fR
+\fB           {CallbackModule :: atom(),\fR
+\fB            DataTag :: atom(),\fR
+\fB            ClosedTag :: atom(),\fR
+\fB            ErrTag :: atom(),\fR
+\fB            PassiveTag :: atom()}}.\fR
+
+.br
+.RS
+.PP
+Transport option defines a callback module and message tags to handle the underlying transport socket.
+
+.PP
+Can be used to customize the transport layer. The tag values should be the values used by the underlying transport in its active mode messages.
+
+.PP
+Defaults to \fI{gen_tcp, tcp, tcp_closed, tcp_error, tcp_passive}\fR for TLS.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+For backward compatibility a tuple of size four will be converted to a tuple of size five, where \fIPassiveTag\fR is the \fIDataTag\fR element with \fI_passive\fR appended.
+
+.PP
+For TLS the callback module must implement a reliable transport protocol, behave as \fIgen_tcp\fR, and have functions corresponding to \fIinet:setopts/2\fR, \fIinet:getopts/2\fR, \fIinet:peername/1\fR, \fIinet:sockname/1\fR, and \fIinet:port/1\fR. The callback \fIgen_tcp\fR is treated specially and calls \fIinet\fR directly. For DTLS this feature is considered experimental.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBappend_cipher_suites(Deferred, Suites) -> ciphers()\fR
+\fB                              when\fR
+\fB                                  Deferred ::\fR
+\fB                                      ciphers() | cipher_filters(),\fR
+\fB                                  Suites :: ciphers().\fR
+
+.br
+.RS
+.PP
+Make \fIDeferred\fR suites become the least preferred suites.
+
+.PP
+The \fIDeferred\fR suites will be put at the end of the cipher suite list \fISuites\fR after removing them from \fISuites\fR if present. \fIDeferred\fR can be a list of cipher suites or a list of filters in which case the filters are used on \fISuites\fR to extract the deferred cipher list.
+
+
+.RE
+.B
+\fBcipher_suites(Description, Version) -> ciphers()\fR
+\fB                       when\fR
+\fB                           Description ::\fR
+\fB                               default | all | exclusive | anonymous |\fR
+\fB                               exclusive_anonymous,\fR
+\fB                           Version :: protocol_version().\fR
+
+.br
+.RS
+.PP
+Lists all available cipher suites corresponding to \fIDescription\fR.
+
+.PP
+The \fIexclusive\fR and \fIexclusive_anonymous\fR option will exclusively list cipher suites first supported in \fIVersion\fR, whereas the other options are inclusive from the lowest possible version to \fIVersion\fR. The \fIall\fR option includes all suites except anonymous suites. No anonymous suites are supported by default.
+
+.PP
+\fBNOTE: \fRTLS-1.3 has no overlapping cipher suites with previous TLS versions, meaning that the result of \fIcipher_suites(all, 'tlsv1.3')\fR contains a separate set of suites that can be used with TLS-1.3 and another set that can be used if a lower version is negotiated. The so-called \fIPSK\fR and \fISRP\fR suites (prior to TLS-1.3) need extra configuration to work; namely the option \fIuser_lookup_function\fR. No anonymous suites are supported by TLS-1.3. Also note that the cipher suites returned by this function are the cipher suites that the OTP SSL application can support provided that they are supported by the crypto library linked with the OTP Crypto application. Use \fIssl:filter_cipher_suites(Suites, [])\fR to filter the list for the current crypto library. Note that cipher suites may be filtered out because they are too old or too new depending on the crypto library.
+
+
+
+.RE
+.B
+\fBcipher_suites(Description, Version, StringType) -> [string()]\fR
+\fB                       when\fR
+\fB                           Description ::\fR
+\fB                               default | all | exclusive | anonymous,\fR
+\fB                           Version :: protocol_version(),\fR
+\fB                           StringType :: rfc | openssl.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIcipher_suites/2\fR, but lists RFC or OpenSSL string names instead of \fIerl_cipher_suite()\fR.
+
+
+.RE
+.B
+\fBclear_pem_cache() -> ok.\fR
+
+.br
+.RS
+.PP
+Clears the PEM cache.
+
+.PP
+PEM files, used by SSL API-functions, are cached for performance reasons. The cache is automatically checked at regular intervals to determine whether any cache entries should be invalidated.
+
+.PP
+This function provides a way to unconditionally clear the entire cache, thereby forcing a reload of previously cached PEM files.
+
+
+.RE
+.B
+\fBclose(SslSocket) -> ok | {error, Reason}\fR
+\fB               when SslSocket :: sslsocket(), Reason :: any().\fR
+
+.br
+.RS
+.PP
+Closes a TLS/DTLS connection.
+
+
+.RE
+.B
+\fBclose(SslSocket, How) ->\fR
+\fB               ok | {ok, port()} | {ok, port(), Data} | {error, Reason}\fR
+\fB               when\fR
+\fB                   SslSocket :: sslsocket(),\fR
+\fB                   How ::\fR
+\fB                       timeout() | {NewController :: pid(), timeout()},\fR
+\fB                   Data :: binary(),\fR
+\fB                   Reason :: any().\fR
+
+.br
+.RS
+.PP
+Closes or downgrades a TLS connection.
+
+.PP
+In the latter case the transport connection will be handed over to the \fINewController\fR process after receiving the TLS close alert from the peer. The returned transport socket will have the following options set: \fI[{active, false}, {packet, 0}, {mode, binary}]\fR.
+
+.PP
+In case of downgrade, the close function might return some binary data that should be treated by the user as the first bytes received on the downgraded connection.
+
+
+.RE
+.B
+\fBconnect(TCPSocketOrHost, TLSOptionsOrPort, TimeoutOrTLSOptions) ->\fR
+\fB                 {ok, sslsocket()} |\fR
+\fB                 {ok, sslsocket(), Ext :: protocol_extensions()} |\fR
+\fB                 {error, Reason}\fR
+\fB                 when\fR
+\fB                     TCPSocketOrHost :: socket() | host(),\fR
+\fB                     TLSOptionsOrPort ::\fR
+\fB                         [tls_client_option()] | inet:port_number(),\fR
+\fB                     TimeoutOrTLSOptions ::\fR
+\fB                         [tls_client_option()] | timeout(),\fR
+\fB                     Reason ::\fR
+\fB                         closed | timeout |\fR
+\fB                         {options, any()} |\fR
+\fB                         error_alert() |\fR
+\fB                         reason().\fR
+
+.br
+.RS
+.PP
+Opens a TLS/DTLS connection.
+
+.IP
+.nf
+connect(TCPSocket, TLSOptions, Timeout).
+
+.fi
+
+.PP
+Upgrades a \fIgen_tcp\fR (or equivalent) connected socket to a TLS socket by performing the client-side TLS handshake.
+
+.IP
+.nf
+connect(Host, Port, TLSOptions).
+
+.fi
+
+.PP
+Opens a TLS/DTLS connection to \fIHost\fR, \fIPort\fR. This call is equivalent to:
+
+.IP
+.nf
+connect(Host, Port, TLSOptions, infinity).
+
+.fi
+
+
+.RE
+.B
+\fBconnect(Host, Port, TLSOptions, Timeout) ->\fR
+\fB                 {ok, sslsocket()} |\fR
+\fB                 {ok, sslsocket(), Ext :: protocol_extensions()} |\fR
+\fB                 {error, Reason}\fR
+\fB                 when\fR
+\fB                     Host :: host(),\fR
+\fB                     Port :: inet:port_number(),\fR
+\fB                     TLSOptions :: [tls_client_option()],\fR
+\fB                     Timeout :: timeout(),\fR
+\fB                     Reason ::\fR
+\fB                         closed | timeout |\fR
+\fB                         {options, any()} |\fR
+\fB                         error_alert() |\fR
+\fB                         reason().\fR
+
+.br
+.RS
+.PP
+Opens a TLS/DTLS connection to \fIHost\fR, \fIPort\fR.
+
+.PP
+When the \fIverify\fR option is set to \fIverify_peer\fR, the \fIpublic_key:pkix_verify_hostname/2\fR check will be performed in addition to the usual X.509-path validation checks. If the check fails, the error \fI{bad_cert, hostname_check_failed}\fR will be propagated to the path validation fun, where it is possible to do customized checks by using the full possibilities of the \fIpublic_key:pkix_verify_hostname/3\fR API. When the \fIserver_name_indication\fR option is provided, its value (the DNS name) will be used as \fIReferenceID\fR to \fIpublic_key:pkix_verify_hostname/2\fR. When no \fIserver_name_indication\fR option is given, the \fIHost\fR argument will be used as Server Name Indication extension. The \fIHost\fR argument will also be used for the \fIpublic_key:pkix_verify_hostname/2\fR check. If the \fIHost\fR argument is an \fIinet:ip_address()\fR the \fIReferenceID\fR used for the check will be \fI{ip, Host}\fR; otherwise \fIdns_id\fR will be assumed with a fallback to \fIip\fR if that fails.
+
+.PP
+\fBNOTE: \fRAccording to good practices, certificates should not use IP addresses as "server names", especially outside a closed network.
+
+
+.PP
+If the \fI{handshake, hello}\fR option is used, the handshake is paused after receiving the server hello message and the success response is \fI{ok, SslSocket, Ext}\fR instead of \fI{ok, SslSocket}\fR. Thereafter the handshake is continued or canceled by calling \fIhandshake_continue/3\fR or \fIhandshake_cancel/1\fR.
+
+.PP
+If the \fIactive\fR option is set to \fIonce\fR, \fItrue\fR, or an integer value, the process owning the SSL socket will receive messages of type \fIactive_msgs()\fR.
+
+
+.RE
+.B
+\fBconnection_information(SslSocket) ->\fR
+\fB                                {ok, Result} | {error, reason()}\fR
+\fB                                when\fR
+\fB                                    SslSocket :: sslsocket(),\fR
+\fB                                    Result :: connection_info().\fR
+
+.br
+.RS
+.PP
+Returns the most relevant information about the connection.
+
+.PP
+Some items that are undefined will be filtered out. No values that affect the security of the connection will be returned.
+
+.PP
+\fBNOTE: \fRThe legacy \fIcipher_suite\fR item was removed in OTP 23. Previously it returned the cipher suite in its (undocumented) legacy format. It is replaced by \fIselected_cipher_suite\fR.
+
+
+
+.RE
+.B
+\fBconnection_information(SslSocket, Items) ->\fR
+\fB                                {ok, Result} | {error, reason()}\fR
+\fB                                when\fR
+\fB                                    SslSocket :: sslsocket(),\fR
+\fB                                    Items :: connection_info_keys(),\fR
+\fB                                    Result :: connection_info().\fR
+
+.br
+.RS
+.PP
+Returns the requested information items about the connection if they are defined.
+
+.PP
+Note that the values for \fIclient_random\fR, \fIserver_random\fR, \fImaster_secret\fR, and \fIkeylog\fR affect the security of connection.
+
+.PP
+In order to retrieve \fIkeylog\fR information from a TLS connection, the \fIkeep_secrets\fR option must be configured in advance.
+
+.PP
+\fBNOTE: \fRIf only undefined options are requested the resulting list can be empty.
+
+
+
+.RE
+.B
+\fBcontrolling_process(SslSocket, NewController) ->\fR
+\fB                             ok | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 SslSocket :: sslsocket(),\fR
+\fB                                 NewController :: pid(),\fR
+\fB                                 Reason :: any().\fR
+
+.br
+.RS
+.PP
+Assigns a new controlling process to the SSL socket.
+
+.PP
+A controlling process is the owner of an SSL socket and receives all messages from the socket.
+
+
+.RE
+.B
+\fBeccs() -> NamedCurves when NamedCurves :: [named_curve()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all supported elliptic curves, including legacy curves, for all TLS/DTLS versions prior to TLS-1.3.
+
+
+.RE
+.B
+\fBeccs(Version) -> NamedCurves\fR
+\fB              when\fR
+\fB                  Version ::\fR
+\fB                      'tlsv1.2' | 'tlsv1.1' | tlsv1 | 'dtlsv1.2' |\fR
+\fB                      dtlsv1,\fR
+\fB                  NamedCurves :: [named_curve()].\fR
+
+.br
+.RS
+.PP
+Returns the elliptic curves supported by default for \fIVersion\fR.
+
+.PP
+This is a subset of what \fIeccs/0\fR returns.
+
+
+.RE
+.B
+\fBexport_key_materials(SslSocket, Labels, Contexts, WantedLengths,\fR
+\fB                           ConsumeSecret) ->\fR
+\fB                              {ok, ExportKeyMaterials} |\fR
+\fB                              {error,\fR
+\fB                               exporter_master_secret_already_consumed |\fR
+\fB                               bad_input}\fR
+\fB                              when\fR
+\fB                                  SslSocket :: sslsocket(),\fR
+\fB                                  Labels :: [binary()],\fR
+\fB                                  Contexts :: [binary() | no_context],\fR
+\fB                                  WantedLengths :: [non_neg_integer()],\fR
+\fB                                  ConsumeSecret :: boolean(),\fR
+\fB                                  ExportKeyMaterials :: [binary()].\fR
+
+.br
+.RS
+.PP
+Uses a Pseudo-Random Function (PRF prior to TLS-1.3) or a Key Derivation Function (HKDF in TLS-1.3) for a TLS connection to generate and export keying materials.
+
+.PP
+In TLS-1.3, using \fIno_context\fR is equivalent to specifying an empty context (an empty binary). Prior to TLS-1.3, \fIno_context\fR and an empty context will produce different results.
+
+.PP
+The \fIConsumeSecret\fR argument is relevant only in TLS-1.3, causing the TLS-1.3 \fIexporter_master_secret\fR to be consumed, thereby making it unavailable and increasing security. Further attempts to call this function will fail.
+
+
+.RE
+.B
+\fBfilter_cipher_suites(Suites, Filters) -> Ciphers\fR
+\fB                              when\fR
+\fB                                  Suites :: ciphers(),\fR
+\fB                                  Filters :: cipher_filters(),\fR
+\fB                                  Ciphers :: ciphers().\fR
+
+.br
+.RS
+.PP
+Removes cipher suites if any of the filter functions returns \fIfalse\fR for any part of the cipher suite.
+
+.PP
+If no filter function is supplied for some part, the default behavior treats it as a filter function that returns \fItrue\fR. For examples, see Customizing cipher suites . Additionally, this function also filters the cipher suites to exclude cipher suites not supported by the crypto library used by the OTP Crypto application, meaning that \fIssl:filter_cipher_suites(Suites, [])\fR is equivalent to applying only the filters for crypto library support.
+
+
+.RE
+.B
+\fBformat_error(Error) -> ReasonStr\fR
+\fB                      when\fR
+\fB                          Error :: {error, reason()} | reason(),\fR
+\fB                          ReasonStr :: string().\fR
+
+.br
+.RS
+.PP
+Presents the error returned by an SSL function as a printable string.
+
+
+.RE
+.B
+\fBgetopts(SslSocket, OptionNames) ->\fR
+\fB                 {ok, [gen_tcp:option()]} | {error, reason()}\fR
+\fB                 when\fR
+\fB                     SslSocket :: sslsocket(),\fR
+\fB                     OptionNames :: [gen_tcp:option_name()].\fR
+
+.br
+.RS
+.PP
+Gets the values of the specified socket options.
+
+
+.RE
+.B
+\fBgetstat(SslSocket) -> {ok, OptionValues} | {error, inet:posix()}\fR
+\fB                 when\fR
+\fB                     SslSocket :: sslsocket(),\fR
+\fB                     OptionValues :: [{inet:stat_option(), integer()}].\fR
+
+.br
+.RS
+.PP
+Get statistics for the underlying socket.
+
+
+.RE
+.B
+\fBgetstat(SslSocket, Options) ->\fR
+\fB                 {ok, OptionValues} | {error, inet:posix()}\fR
+\fB                 when\fR
+\fB                     SslSocket :: sslsocket(),\fR
+\fB                     Options :: [inet:stat_option()],\fR
+\fB                     OptionValues :: [{inet:stat_option(), integer()}].\fR
+
+.br
+.RS
+.PP
+Get one or more statistic values for the underlying socket.
+
+.PP
+See \fIinet:getstat/2\fR for further details.
+
+
+.RE
+.B
+\fBgroups() -> [group()].\fR
+
+.br
+.RS
+.PP
+Returns all supported groups in TLS 1.3.
+
+.PP
+Existed since OTP 22.0; documented as of OTP 27.
+
+
+.RE
+.B
+\fBgroups(Description) -> [group()] when Description :: default.\fR
+
+.br
+.RS
+.PP
+Returns default supported groups in TLS 1.3.
+
+.PP
+Existed since OTP 22.0; documented as of OTP 27.
+
+
+.RE
+.B
+\fBhandshake(HsSocket, OptionsOrTimeout) ->\fR
+\fB                   {ok, SslSocket} |\fR
+\fB                   {ok, SslSocket, Ext} |\fR
+\fB                   {error, Reason}\fR
+\fB                   when\fR
+\fB                       HsSocket :: sslsocket(),\fR
+\fB                       OptionsOrTimeout :: timeout() | [server_option()],\fR
+\fB                       SslSocket :: sslsocket(),\fR
+\fB                       Ext :: protocol_extensions(),\fR
+\fB                       Reason :: closed | timeout | error_alert().\fR
+
+.br
+.RS
+.PP
+Performs the TLS/DTLS server-side handshake.
+
+.PP
+If the second argument is a timeout value:
+
+.IP
+.nf
+handshake(HsSocket, Timeout).
+
+.fi
+
+.PP
+this call is equivalent to:
+
+.IP
+.nf
+handshake(HsSocket, [], Timeout).
+
+.fi
+
+.PP
+Otherwise, if the second argument is a list of options:
+
+.IP
+.nf
+handshake(HsSocket, Options).
+
+.fi
+
+.PP
+this call is equivalent to:
+
+.IP
+.nf
+handshake(HsSocket, Options, infinity).
+
+.fi
+
+
+.RE
+.B
+\fBhandshake(Socket, Options, Timeout) ->\fR
+\fB                   {ok, SslSocket} |\fR
+\fB                   {ok, SslSocket, Ext} |\fR
+\fB                   {error, Reason}\fR
+\fB                   when\fR
+\fB                       Socket :: socket() | sslsocket(),\fR
+\fB                       SslSocket :: sslsocket(),\fR
+\fB                       Options :: [server_option() | common_option()],\fR
+\fB                       Timeout :: timeout(),\fR
+\fB                       Ext :: protocol_extensions(),\fR
+\fB                       Reason ::\fR
+\fB                           closed | timeout |\fR
+\fB                           {options, any()} |\fR
+\fB                           error_alert().\fR
+
+.br
+.RS
+.PP
+Performs the TLS/DTLS server-side handshake.
+
+.PP
+Returns a new TLS/DTLS socket if the handshake is successful.
+
+.PP
+If \fISocket\fR is a ordinary \fIsocket()\fR, upgrades a \fIgen_tcp\fR or equivalent socket to an SSL socket by performing the TLS server-side handshake and returning a TLS socket.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+The ordinary \fISocket\fR must be in passive mode (\fI{active, false}\fR) before calling this function and before the client tries to connect with TLS; otherwise, the behavior of this function is undefined. The best way to ensure this is to create the ordinary listen socket in passive mode.
+
+.PP
+If \fISocket\fR is an \fIsslsocket()\fR, provides extra TLS/DTLS options to those specified in \fIlisten/2\fR and then performs the TLS/DTLS handshake. Returns a new TLS/DTLS socket if the handshake is successful.
+
+.RS 4
+.PP
+\fBWarning \fR
+
+.RE
+
+.PP
+Not setting the timeout makes the server more vulnerable to Denial of Service (DoS) attacks.
+
+.PP
+If option \fI{handshake, hello}\fR is specified the handshake is paused after receiving the client hello message and the success response is \fI{ok, SslSocket, Ext}\fR instead of \fI{ok, SslSocket}\fR. Thereafter the handshake is continued or canceled by calling \fIhandshake_continue/3\fR or \fIhandshake_cancel/1\fR.
+
+.PP
+If option \fIactive\fR is set to \fIonce\fR, \fItrue\fR, or an integer value, the process owning the \fIsslsocket()\fR will receive messages of type \fIactive_msgs()\fR.
+
+
+.RE
+.B
+\fBhandshake_cancel(#sslsocket{}) -> any().\fR
+
+.br
+.RS
+.PP
+Cancel the handshake with a fatal \fIUSER_CANCELED\fR alert.
+
+
+.RE
+.B
+\fBhandshake_continue(HsSocket, Options, Timeout) ->\fR
+\fB                            {ok, SslSocket} | {error, Reason}\fR
+\fB                            when\fR
+\fB                                HsSocket :: sslsocket(),\fR
+\fB                                Options ::\fR
+\fB                                    [client_option() |\fR
+\fB                                     server_option() |\fR
+\fB                                     common_option()],\fR
+\fB                                Timeout :: timeout(),\fR
+\fB                                SslSocket :: sslsocket(),\fR
+\fB                                Reason ::\fR
+\fB                                    closed | timeout | error_alert().\fR
+
+.br
+.RS
+.PP
+Continue the TLS handshake, possibly with new, additional, or changed options.
+
+
+.RE
+.B
+\fBlisten(Port, Options) -> {ok, ListenSocket} | {error, Reason}\fR
+\fB                when\fR
+\fB                    Port :: inet:port_number(),\fR
+\fB                    Options :: [tls_server_option()],\fR
+\fB                    ListenSocket :: sslsocket(),\fR
+\fB                    Reason :: {options, any()} | reason().\fR
+
+.br
+.RS
+.PP
+Creates an SSL listen socket.
+
+
+.RE
+.B
+\fBnegotiated_protocol(SslSocket) -> {ok, Protocol} | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 SslSocket :: sslsocket(),\fR
+\fB                                 Protocol :: binary(),\fR
+\fB                                 Reason ::\fR
+\fB                                     protocol_not_negotiated | closed.\fR
+
+.br
+.RS
+.PP
+Returns the protocol negotiated through ALPN or NPN extensions.
+
+
+.RE
+.B
+\fBpeercert(SslSocket) -> {ok, Cert} | {error, reason()}\fR
+\fB                  when\fR
+\fB                      SslSocket :: sslsocket(),\fR
+\fB                      Cert :: public_key:der_encoded().\fR
+
+.br
+.RS
+.PP
+The peer certificate is returned as a DER-encoded binary.
+
+.PP
+The certificate can be decoded with \fIpublic_key:pkix_decode_cert/2\fR. Suggested further reading about certificates is Public_Key User's Guide and SSL User's Guide.
+
+
+.RE
+.B
+\fBpeername(SslSocket) -> {ok, {Address, Port}} | {error, reason()}\fR
+\fB                  when\fR
+\fB                      SslSocket :: sslsocket(),\fR
+\fB                      Address :: inet:ip_address(),\fR
+\fB                      Port :: inet:port_number().\fR
+
+.br
+.RS
+.PP
+Returns the address and port number of the peer.
+
+
+.RE
+.B
+\fBprepend_cipher_suites(Preferred, Suites) -> ciphers()\fR
+\fB                               when\fR
+\fB                                   Preferred ::\fR
+\fB                                       ciphers() | cipher_filters(),\fR
+\fB                                   Suites :: ciphers().\fR
+
+.br
+.RS
+.PP
+Make \fIPreferred\fR suites become the most preferred suites.
+
+.PP
+The \fIPreferred\fR suites will be put at the head of the cipher suite list \fISuites\fR after removing them from \fISuites\fR if present. \fIPreferred\fR can be a list of cipher suites or a list of filters in which case the filters are used on \fISuites\fR to extract the preferred cipher list.
+
+
+.RE
+.B
+\fBprf(SslSocket, Secret, Label, Seed, WantedLength) ->\fR
+\fB             {ok, binary()} | {error, reason()}\fR
+\fB             when\fR
+\fB                 SslSocket :: sslsocket(),\fR
+\fB                 Secret :: binary() | master_secret,\fR
+\fB                 Label :: binary(),\fR
+\fB                 Seed :: [binary() | prf_random()],\fR
+\fB                 WantedLength :: non_neg_integer().\fR
+
+.RS
+.LP
+Deprecated: ssl:prf/5 is deprecated; Use export_key_materials/4 instead. Note that in OTP 28 the 'testing' way of calling this function will no longer be supported.
+.RE
+
+.br
+.RS
+.PP
+Uses the Pseudo-Random Function (PRF) of a TLS session to generate extra key material.
+
+.PP
+It either takes user-generated values for \fISecret\fR and \fISeed\fR or atoms directing it to use a specific value from the session security parameters.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+This function is replaced by \fIexport_key_materials/4\fR, the officially documented API function since OTP 27, which is equivalent to \fIprf(TLSSocket, master_secret, Label, [client_random, server_random, Context], WantedLength)\fR](\fIprf/5\fR). Other ways of calling this function were for testing purposes only and has no use case. When called in a TLS-1.3 context it will now behave as [\fIexport_key_materials(TLSSocket, [Label], [Context], [WantedLength])\fR.
+
+
+.RE
+.B
+\fBrecv(SslSocket, Length, Timeout) -> {ok, Data} | {error, reason()}\fR
+\fB              when\fR
+\fB                  SslSocket :: sslsocket(),\fR
+\fB                  Length :: non_neg_integer(),\fR
+\fB                  Data :: binary() | list() | HttpPacket,\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  HttpPacket :: any().\fR
+
+.br
+.RS
+.PP
+Receives a packet from a socket in passive mode.
+
+.PP
+A closed socket is indicated by return value \fI{error, closed}\fR. Argument \fILength\fR is meaningful only when the socket is in mode \fIraw\fR and denotes the number of bytes to read. If \fILength\fR is zero, all available bytes are returned. If \fILength\fR is greater than zero, exactly \fILength\fR bytes are returned, or an error; possibly discarding less than \fILength\fR bytes of data when the socket gets closed from the other side.
+
+.PP
+Optional argument \fITimeout\fR specifies a time-out in milliseconds. The default value is \fIinfinity\fR.
+
+
+.RE
+.B
+\fBrenegotiate(SslSocket) -> ok | {error, reason()}\fR
+\fB                     when SslSocket :: sslsocket().\fR
+
+.br
+.RS
+.PP
+Initiates a new handshake.
+
+.PP
+A notable return value is \fI{error, renegotiation_rejected}\fR indicating that the peer refused to go through with the renegotiation, but the connection is still active using the previously negotiated session.
+
+.PP
+TLS-1.3 has removed the renegotiation feature from earlier TLS versions and instead adds a new feature called key update, which replaces the most important part of renegotiation: the refreshing of session keys. This is triggered automatically after reaching a plaintext limit and can be configured using the \fIkey_update_at\fR option in \fIcommon_option_tls13/0\fR.
+
+
+.RE
+.B
+\fBsend(SslSocket, Data) -> ok | {error, reason()}\fR
+\fB              when SslSocket :: sslsocket(), Data :: iodata().\fR
+
+.br
+.RS
+.PP
+Writes \fIData\fR to \fISslSocket\fR.
+
+.PP
+A notable return value is \fI{error, closed}\fR indicating that the socket is closed.
+
+
+.RE
+.B
+\fBsetopts(SslSocket, Options) -> ok | {error, reason()}\fR
+\fB                 when\fR
+\fB                     SslSocket :: sslsocket(),\fR
+\fB                     Options :: [gen_tcp:option()].\fR
+
+.br
+.RS
+.PP
+Sets options according to \fIOptions\fR for socket \fISslSocket\fR.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+Note that setting low level transport protocol specific options may or may not work in a TLS-environment. And even if they work it may make your code platform specific, or stop working in later version of this application. Such options could make sense for some special corner cases although it is not a general viable option. Such trade-offs must be carefully considered by the user that need to fully understand the consequences of setting such options.
+
+
+.RE
+.B
+\fBshutdown(SslSocket, How) -> ok | {error, reason()}\fR
+\fB                  when\fR
+\fB                      SslSocket :: sslsocket(),\fR
+\fB                      How :: read | write | read_write.\fR
+
+.br
+.RS
+.PP
+Immediately closes a socket in one or two directions.
+
+.PP
+\fIHow == write\fR means closing the socket for writing, but reading from it is still possible.
+
+.PP
+To handle siutations where the peer has performed a shutdown on the write side, option \fI{exit_on_close, false}\fR is useful.
+
+
+.RE
+.B
+\fBsignature_algs(Description, Version) -> signature_algs()\fR
+\fB                        when\fR
+\fB                            Description :: default | all | exclusive,\fR
+\fB                            Version :: protocol_version().\fR
+
+.br
+.RS
+.PP
+Lists all available signature algorithms corresponding to \fIDescription\fR.
+
+.PP
+The \fIexclusive\fR option will exclusively list algorithms or algorithm schemes for that protocol version, whereas the \fIdefault\fR and \fIall\fR options lists the combined list to support the range of protocols from (D)TLS-1.2, the first version to support configuration of the signature algorithms, to \fIVersion\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> ssl:signature_algs(default, 'tlsv1.3').
+[eddsa_ed25519,eddsa_ed448,ecdsa_secp521r1_sha512,
+ ecdsa_secp384r1_sha384,ecdsa_secp256r1_sha256,
+ ecdsa_brainpoolP512r1tls13_sha512,
+ ecdsa_brainpoolP384r1tls13_sha384,
+ ecdsa_brainpoolP256r1tls13_sha256,rsa_pss_pss_sha512,
+ rsa_pss_pss_sha384,rsa_pss_pss_sha256,rsa_pss_rsae_sha512,
+ rsa_pss_rsae_sha384,rsa_pss_rsae_sha256,mldsa44,mldsa65,
+ mldsa87,rsa_pkcs1_sha512,rsa_pkcs1_sha384,rsa_pkcs1_sha256,
+ {sha512,ecdsa},
+ {sha384,ecdsa},
+ {sha256,ecdsa}]
+
+2> ssl:signature_algs(all, 'tlsv1.3').
+[eddsa_ed25519,eddsa_ed448,ecdsa_secp521r1_sha512,ecdsa_secp384r1_sha384,
+ ecdsa_secp256r1_sha256,ecdsa_brainpoolP512r1tls13_sha512,
+ ecdsa_brainpoolP384r1tls13_sha384,ecdsa_brainpoolP256r1tls13_sha256,
+ rsa_pss_pss_sha512,rsa_pss_pss_sha384,rsa_pss_pss_sha256,rsa_pss_rsae_sha512,
+ rsa_pss_rsae_sha384,rsa_pss_rsae_sha256,mldsa44,mldsa65,mldsa87,
+ rsa_pkcs1_sha512,rsa_pkcs1_sha384,rsa_pkcs1_sha256,
+ {sha512,ecdsa},
+ {sha384,ecdsa},
+ {sha256,ecdsa},
+ slh_dsa_shake_256f,slh_dsa_shake_256s,slh_dsa_sha2_256f,slh_dsa_sha2_256s,
+ slh_dsa_shake_192f,slh_dsa_shake_192s,slh_dsa_sha2_192f,slh_dsa_sha2_192s,
+ slh_dsa_shake_128f,slh_dsa_shake_128s,slh_dsa_sha2_128f,slh_dsa_sha2_128s,
+ ecdsa_sha1,rsa_pkcs1_sha1,
+ {sha224,ecdsa},
+ {sha224,rsa},
+ {sha,dsa}]
+
+3> [ssl:signature_algs(exclusive, 'tlsv1.3').
+[eddsa_ed25519,eddsa_ed448,ecdsa_secp521r1_sha512,ecdsa_secp384r1_sha384,
+ ecdsa_secp256r1_sha256,ecdsa_brainpoolP512r1tls13_sha512,
+ ecdsa_brainpoolP384r1tls13_sha384,ecdsa_brainpoolP256r1tls13_sha256,
+ rsa_pss_pss_sha512,rsa_pss_pss_sha384,rsa_pss_pss_sha256,rsa_pss_rsae_sha512,
+ rsa_pss_rsae_sha384,rsa_pss_rsae_sha256,mldsa44,mldsa65,mldsa87,
+ rsa_pkcs1_sha512,rsa_pkcs1_sha384,rsa_pkcs1_sha256,slh_dsa_shake_256f,
+ slh_dsa_shake_256s,slh_dsa_sha2_256f,slh_dsa_sha2_256s,slh_dsa_shake_192f,
+ slh_dsa_shake_192s,slh_dsa_sha2_192f,slh_dsa_sha2_192s,slh_dsa_shake_128f,
+ slh_dsa_shake_128s,slh_dsa_sha2_128f,slh_dsa_sha2_128s]
+
+.fi
+
+.PP
+\fBNOTE: \fRSome TLS-1-3 scheme names overlap with TLS-1.2 algorithm-tuple-pair-names and then TLS-1.3 names will be used, for example \fIrsa_pkcs1_sha256\fR instead of \fI{sha256, rsa}\fR. These are legacy algorithms in TLS-1.3 that apply only to certificate signatures in this version of the protocol.
+
+
+
+.RE
+.B
+\fBsockname(SslSocket) -> {ok, {Address, Port}} | {error, reason()}\fR
+\fB                  when\fR
+\fB                      SslSocket :: sslsocket(),\fR
+\fB                      Address :: inet:ip_address(),\fR
+\fB                      Port :: inet:port_number().\fR
+
+.br
+.RS
+.PP
+Returns the local address and port number of socket \fISslSocket\fR.
+
+
+.RE
+.B
+\fBstart(permanent | transient | temporary) -> ok | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Starts the SSL application.
+
+
+.RE
+.B
+\fBstop() -> ok.\fR
+
+.br
+.RS
+.PP
+Stops the SSL application.
+
+
+.RE
+.B
+\fBstr_to_suite(CipherSuiteName) ->\fR
+\fB                      erl_cipher_suite() |\fR
+\fB                      {error, {not_recognized, CipherSuiteName}}\fR
+\fB                      when CipherSuiteName :: string().\fR
+
+.br
+.RS
+.PP
+Converts an RFC or OpenSSL name string to an \fIerl_cipher_suite/0\fR
+
+.PP
+Returns an error if the cipher suite is not supported or the name is not a valid cipher suite name.
+
+
+.RE
+.B
+\fBsuite_to_openssl_str(CipherSuite) -> string()\fR
+\fB                              when CipherSuite :: erl_cipher_suite().\fR
+
+.br
+.RS
+.PP
+Converts an \fIerl_cipher_suite()\fR value to an OpenSSL name string.
+
+.PP
+PRE TLS-1.3 these names differ for RFC names
+
+
+.RE
+.B
+\fBsuite_to_str(CipherSuite) -> string()\fR
+\fB                      when CipherSuite :: erl_cipher_suite().\fR
+
+.br
+.RS
+.PP
+Converts an \fIerl_cipher_suite()\fR value to an RFC name string.
+
+
+.RE
+.B
+\fBtransport_accept(ListenSocket, Timeout) ->\fR
+\fB                          {ok, SslSocket} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              ListenSocket :: sslsocket(),\fR
+\fB                              Timeout :: timeout(),\fR
+\fB                              SslSocket :: sslsocket(),\fR
+\fB                              Reason :: reason().\fR
+
+.br
+.RS
+.PP
+Accepts an incoming connection request on a listen socket.
+
+.PP
+\fIListenSocket\fR must be a socket returned from \fIlisten/2\fR. The socket returned is to be passed to \fIhandshake/1,2,3\fR to complete the handshake and establish the TLS/DTLS connection.
+
+.PP
+\fBWARNING: \fRMost API functions require that the TLS/DTLS connection is established to work as expected.
+
+
+.PP
+The accepted socket inherits the options set for \fIListenSocket\fR in \fIlisten/2\fR.
+
+.PP
+The default value for \fITimeout\fR is \fIinfinity\fR. If \fITimeout\fR is specified and no connection is accepted within the given time, \fI{error, timeout}\fR is returned.
+
+
+.RE
+.B
+\fBupdate_keys(SslSocket, Type) -> ok | {error, reason()}\fR
+\fB                     when\fR
+\fB                         SslSocket :: sslsocket(),\fR
+\fB                         Type :: write | read_write.\fR
+
+.br
+.RS
+.PP
+Create new session keys.
+
+.PP
+There are cryptographic limits on the amount of plaintext which can be safely encrypted under a given set of keys. If the amount of data surpasses those limits, a key update is triggered and a new set of keys are installed. See also the \fIkey_update_at\fR option in \fIcommon_option_tls13/0\fR.
+
+.PP
+This function can be used to explicitly start a key update on a TLS-1.3 connection. There are two types of key updates: if \fIType\fR is \fIwrite\fR, only the writing key is updated; if \fIType\fR is \fIread_write\fR, both the reading and writing keys are updated.
+
+
+.RE
+.B
+\fBversions() -> [VersionInfo]\fR
+\fB                  when\fR
+\fB                      VersionInfo ::\fR
+\fB                          {ssl_app, string()} |\fR
+\fB                          {supported | available | implemented,\fR
+\fB                           [tls_version()]} |\fR
+\fB                          {supported_dtls | available_dtls |\fR
+\fB                           implemented_dtls,\fR
+\fB                           [dtls_version()]}.\fR
+
+.br
+.RS
+.PP
+Lists information, mainly concerning TLS/DTLS versions, in runtime for debugging and testing purposes.
+
+app_vsn
+.RS 2
+The application version of the SSL application.
+
+
+.RE
+
+supported
+.RS 2
+TLS versions supported with current application environment and crypto library configuration. Overridden by a version option on 
+\fIconnect/2,3,4\fR, \fIlisten/2\fR, and \fIhandshake/2,3\fR. For the negotiated TLS version, see \fIconnection_information/1\fR.
+
+.RE
+
+supported_dtls
+.RS 2
+DTLS versions supported with current application environment and crypto library configuration. Overridden by a version option on 
+\fIconnect/2,3,4\fR, \fIlisten/2\fR, and \fIhandshake/2,3\fR. For the negotiated DTLS version, see \fIconnection_information/1\fR.
+
+.RE
+
+available
+.RS 2
+All TLS versions supported with the linked crypto library.
+
+
+.RE
+
+available_dtls
+.RS 2
+All DTLS versions supported with the linked crypto library.
+
+
+.RE
+
+implemented
+.RS 2
+All TLS versions supported by the SSL application if linked with a crypto library with the necessary support.
+
+
+.RE
+
+implemented_dtls
+.RS 2
+All DTLS versions supported by the SSL application if linked with a crypto library with the necessary support.
+
+
+.RE
+
+
+.RE

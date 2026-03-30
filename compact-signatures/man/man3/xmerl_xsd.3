@@ -1,0 +1,268 @@
+.TH xmerl_xsd 3 "xmerl 2.1.9" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+xmerl_xsd \- Interface module for XML Schema validation.
+
+.SH DESCRIPTION
+.PP
+It handles the W3.org specifications of XML Schema second edition 28 october 2004.  For an introduction to XML Schema please study part 0.
+
+.PP
+An XML structure is validated by \fIxmerl_xsd:validate/[2,3]\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBfilename() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBglobal_state() :: xsd_state().\fR
+
+.br
+.RS
+.PP
+The global state of the validator.
+
+.PP
+It is represented by the \fI#xsd_state{}\fR record.
+
+
+.RE
+.B
+\fBoption_list() :: [{xsdbase, filename()} | {atom(), term()}].\fR
+
+.br
+.RS
+.PP
+Options that allow to customize the behaviour of the validation.
+
+.PP
+Possible options are :
+
+.PP
+<dl> <dt><code>{tab2file,boolean()}</code></dt>
+
+.IP
+.nf
+ <dd>Enables saving of abstract structure on file for debugging
+    purpose.</dd>
+
+.fi
+
+.PP
+<dt><code>{xsdbase,filename()}</code></dt>
+
+.IP
+.nf
+ <dd>XSD Base directory.</dd>
+
+.fi
+
+.PP
+<dt><code>{fetch_fun,FetchFun}</code></dt>
+
+.IP
+.nf
+ <dd>Call back function to fetch an external resource.</dd>
+
+.fi
+
+.PP
+<dt><code>{fetch_path,PathList}</code></dt>
+
+.IP
+.nf
+ <dd>PathList is a list of directories to search when fetching files.
+     If the file in question is not in the fetch_path, the URI will
+     be used as a file name.</dd>
+
+.fi
+
+.PP
+<dt><code>{state,State}</code></dt>
+
+.IP
+.nf
+ <dd>It is possible by this option to provide a state with process
+     information from an earlier validation.</dd>
+
+.fi
+
+.PP
+</dl>
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBfile2state(FileName :: string()) -> {ok, State} | {error, Reason}\fR
+\fB                    when State :: global_state(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the schema processing state from a file.
+
+.PP
+Reads the schema state with all information of the processed schema from a file created with \fIstate2file/[1,2]\fR. The format of this file is internal. The state can then be used validating an XML document.
+
+
+.RE
+.B
+\fBformat_error(Reasons) -> io_lib:chars()\fR
+\fB                      when\fR
+\fB                          Reasons ::\fR
+\fB                              [Reason :: term()] | (Reason :: term()).\fR
+
+.br
+.RS
+.PP
+Format error descriptions to human readable strings.
+
+
+.RE
+.B
+\fBprocess_schema(Schema :: string(), Options :: option_list()) ->\fR
+\fB                        {ok, State} | {error, Reasons}\fR
+\fB                        when\fR
+\fB                            State :: global_state(),\fR
+\fB                            Reasons ::\fR
+\fB                                [Reason :: term()] | (Reason :: term()).\fR
+
+.br
+.RS
+.PP
+Read an XML schema and check that it is valid.
+
+.PP
+Reads the referenced XML schema and checks that it is valid. Returns the \fIglobal_state/0\fR with schema info or an error reason. The error reason may be a list of several errors or a single error encountered during the processing.
+
+
+.RE
+.B
+\fBprocess_schemas(Schemas, Options) ->\fR
+\fB                         {ok, State} | {error, Reasons}\fR
+\fB                         when\fR
+\fB                             Schemas :: [{NameSpace, Schema}, ...],\fR
+\fB                             Options :: option_list(),\fR
+\fB                             NameSpace :: term(),\fR
+\fB                             Schema :: string(),\fR
+\fB                             State :: global_state(),\fR
+\fB                             Reasons ::\fR
+\fB                                 [Reason :: term()] | (Reason :: term()).\fR
+
+.br
+.RS
+.PP
+Read XML schemas and check that they are valid.
+
+.PP
+Reads the referenced XML schemas and controls they are valid. Returns the \fIglobal_state/0\fR with schema info or an error reason. The error reason may be a list of several errors or a single error encountered during the processing.
+
+
+.RE
+.B
+\fBprocess_validate(Schema, Element, Options) -> Result\fR
+\fB                          when\fR
+\fB                              Schema :: string(),\fR
+\fB                              Element :: xmerl:element(),\fR
+\fB                              Options :: option_list(),\fR
+\fB                              Result ::\fR
+\fB                                  {ValidElement, global_state()} |\fR
+\fB                                  {error, Reasons},\fR
+\fB                              ValidElement :: xmerl:element(),\fR
+\fB                              Reasons ::\fR
+\fB                                  [Reason :: term()] |\fR
+\fB                                  (Reason :: term()).\fR
+
+.br
+.RS
+.PP
+Validate a parsed well-formed XML element towards an XML schema.
+
+.PP
+Validates in two steps. First it processes the schema, saves the type and structure info in an ETS table and then validates the element towards the schema.
+
+.PP
+Usage example:
+
+.PP
+\fI1>{E,_} = xmerl_scan:file("my_XML_document.xml").\fR \fI2>{E2,_} = xmerl_xsd:process_validate("my_XML_Schema.xsd",E).\fR
+
+.PP
+Observe that E2 may differ from E if for instance there are default values defined in \fImy_XML_Schema.xsd\fR.
+
+
+.RE
+.B
+\fBstate2file(State :: global_state()) -> ok | {error, Reason}\fR
+\fB                    when Reason :: term().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIstate2file(State, SchemaName)\fR.
+
+.PP
+\fISchemaName\fR is the name of the schema in \fIState\fR.
+
+
+.RE
+.B
+\fBstate2file(global_state(), FileName :: string()) ->\fR
+\fB                    ok | {error, Reason}\fR
+\fB                    when Reason :: term().\fR
+
+.br
+.RS
+.PP
+Save the schema processing state to a file.
+
+.PP
+Saves the schema state with all information of the processed schema in a file. You can provide the file name for the saved state. FileName is saved with the \fI.xss\fR extension added.
+
+
+.RE
+.B
+\fBvalidate(Element, global_state(), Options) -> Result\fR
+\fB                  when\fR
+\fB                      Element :: xmerl:xmlElement(),\fR
+\fB                      Options :: option_list(),\fR
+\fB                      Result ::\fR
+\fB                          {ValidElement, global_state()} |\fR
+\fB                          {error, Reasons},\fR
+\fB                      ValidElement :: xmerl:xmlElement(),\fR
+\fB                      Reasons :: [ErrorReason] | ErrorReason,\fR
+\fB                      ErrorReason :: term().\fR
+
+.br
+.RS
+.PP
+Validate a parsed well-formed XML element (\fIElement\fR).
+
+.PP
+A call to \fIvalidate/2\fR or \fIvalidate/3\fR must provide a well formed parsed XML \fIElement :: #xmlElement{}\fR and a State, \fIglobal_state/0\fR, which holds necessary information from an already processed schema.  Thus validate enables reuse of the schema information and therefore if one shall validate several times towards the same schema it reduces time consumption.
+
+.PP
+The result, \fIValidElement\fR, is the valid element that conforms to the post-schema-validation infoset. When the validator finds an error it tries to continue and reports a list of all errors found. In those cases an unexpected error is found it may cause a single error reason.
+
+.PP
+Usage example:
+
+.IP
+.nf
+1>{E,_} = xmerl_scan:file("my_XML_document.xml").
+2>{ok,S} = xmerl_xsd:process_schema("my_XML_Schema.xsd").
+3>{E2,_} = xmerl_xsd:validate(E,S).
+
+.fi
+
+.PP
+Observe that E2 may differ from E if for instance there are default values defined in \fImy_XML_Schema.xsd\fR.
+
+
+.RE

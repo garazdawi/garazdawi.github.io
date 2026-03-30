@@ -1,0 +1,492 @@
+.TH digraph_utils 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+digraph_utils \- This module provides algorithms based on depth-first traversal of directed graphs.
+
+.SH DESCRIPTION
+.PP
+For basic functions on directed graphs, see the \fIdigraph\fR module.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdirected graph\fR (or just "digraph") is a pair (V, E) of a finite set V of \fIvertices\fR and a finite set E of \fIdirected edges\fR (or just "edges"). The set of edges E is a subset of V × V (the Cartesian product of V with itself).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Digraphs can be annotated with more information. Such information can be attached to the vertices and to the edges of the digraph. An annotated digraph is called a \fIlabeled digraph\fR, and the information attached to a vertex or an edge is called a \fIlabel\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An edge e = (v, w) is said to \fIemanate\fR from vertex v and to be \fIincident\fR on vertex w.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If an edge is emanating from v and incident on w, then w is said to be an \fIout-neighbor\fR of v, and v is said to be an \fIin-neighbor\fR of w.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpath\fR P from v[1] to v[k] in a digraph (V, E) is a non-empty sequence v[1], v[2], ..., v[k] of vertices in V such that there is an edge (v[i],v[i+1]) in E for 1 <= i < k.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIlength\fR of path P is k-1.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Path P is a \fIcycle\fR if the length of P is not zero and v[1] = v[k].
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIloop\fR is a cycle of length one.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An \fIacyclic digraph\fR is a digraph without cycles.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdepth-first traversal\fR of a directed digraph can be viewed as a process that visits all vertices of the digraph. Initially, all vertices are marked as unvisited. The traversal starts with an arbitrarily chosen vertex, which is marked as visited, and follows an edge to an unmarked vertex, marking that vertex. The search then proceeds from that vertex in the same fashion, until there is no edge leading to an unvisited vertex. At that point the process backtracks, and the traversal continues as long as there are unexamined edges. If unvisited vertices remain when all edges from the first vertex have been examined, some so far unvisited vertex is chosen, and the process is repeated.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpartial ordering\fR of a set S is a transitive, antisymmetric, and reflexive relation between the objects of S.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The problem of \fItopological sorting\fR  is to find a total ordering of S that is a superset of the partial ordering. A digraph G = (V, E) is equivalent to a relation E on V (we neglect that the version of directed graphs provided by the \fIdigraph\fR module allows multiple edges between vertices). If the digraph has no cycles of length two or more, the reflexive and transitive closure of E is a partial ordering.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsubgraph\fR G' of G is a digraph whose vertices and edges form subsets of the vertices and edges of G.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+G' is \fImaximal\fR with respect to a property P if all other subgraphs that include the vertices of G' do not have property P.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstrongly connected component\fR  is a maximal subgraph such that there is a path between each pair of vertices
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIconnected component\fR is a maximal subgraph such that there is a path between each pair of vertices, considering all edges undirected.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An \fIarborescence\fR is an acyclic digraph with a vertex V, the \fIroot\fR, such that there is a unique path from V to every other vertex of G.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItree\fR is an acyclic non-empty digraph such that there is a unique path between every pair of vertices, considering all edges undirected.
+
+.RE
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIdigraph\fR
+
+.SH FUNCTIONS
+.LP
+.B
+\fBarborescence_root(Digraph) -> no | {yes, Root}\fR
+\fB                           when\fR
+\fB                               Digraph :: digraph:graph(),\fR
+\fB                               Root :: digraph:vertex().\fR
+
+.br
+.RS
+.PP
+Returns \fI{yes, Root}\fR if \fIRoot\fR is the root of the arborescence \fIDigraph\fR, otherwise \fIno\fR.
+
+
+.RE
+.B
+\fBcomponents(Digraph) -> [Component]\fR
+\fB                    when\fR
+\fB                        Digraph :: digraph:graph(),\fR
+\fB                        Component :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of connected components. Each component is represented by its vertices. The order of the vertices and the order of the components are arbitrary. Each vertex of digraph \fIDigraph\fR occurs in exactly one component.
+
+
+.RE
+.B
+\fBcondensation(Digraph) -> CondensedDigraph\fR
+\fB                      when\fR
+\fB                          Digraph :: digraph:graph(),\fR
+\fB                          CondensedDigraph :: digraph:graph().\fR
+
+.br
+.RS
+.PP
+Creates a digraph where the vertices are the strongly connected components of \fIDigraph\fR as returned by \fIstrong_components/1\fR. If X and Y are two different strongly connected components, and vertices x and y exist in X and Y, respectively, such that there is an edge emanating from x and incident on y, then an edge emanating from X and incident on Y is created.
+
+.PP
+The created digraph has the same type as \fIDigraph\fR. All vertices and edges have the default label \fI[]\fR.
+
+.PP
+Each cycle is included in some strongly connected component, which implies that a topological ordering of the created digraph always exists.
+
+
+.RE
+.B
+\fBcyclic_strong_components(Digraph) -> [StrongComponent]\fR
+\fB                                  when\fR
+\fB                                      Digraph :: digraph:graph(),\fR
+\fB                                      StrongComponent ::\fR
+\fB                                          [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of strongly connected components. Each strongly component is represented by its vertices. The order of the vertices and the order of the components are arbitrary. Only vertices that are included in some cycle in \fIDigraph\fR are returned, otherwise the returned list is equal to that returned by \fIstrong_components/1\fR.
+
+
+.RE
+.B
+\fBis_acyclic(Digraph) -> boolean() when Digraph :: digraph:graph().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if digraph \fIDigraph\fR is acyclic.
+
+
+.RE
+.B
+\fBis_arborescence(Digraph) -> boolean()\fR
+\fB                         when Digraph :: digraph:graph().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if digraph \fIDigraph\fR is an arborescence.
+
+
+.RE
+.B
+\fBis_tree(Digraph) -> boolean() when Digraph :: digraph:graph().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if digraph \fIDigraph\fR is a tree.
+
+
+.RE
+.B
+\fBloop_vertices(Digraph) -> Vertices\fR
+\fB                       when\fR
+\fB                           Digraph :: digraph:graph(),\fR
+\fB                           Vertices :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all vertices of \fIDigraph\fR that are included in some loop.
+
+
+.RE
+.B
+\fBpostorder(Digraph) -> Vertices\fR
+\fB                   when\fR
+\fB                       Digraph :: digraph:graph(),\fR
+\fB                       Vertices :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns all vertices of digraph \fIDigraph\fR. The order is given by a depth-first traversal of the digraph, collecting visited vertices in postorder. More precisely, the vertices visited while searching from an arbitrarily chosen vertex are collected in postorder, and all those collected vertices are placed before the subsequently visited vertices.
+
+
+.RE
+.B
+\fBpreorder(Digraph) -> Vertices\fR
+\fB                  when\fR
+\fB                      Digraph :: digraph:graph(),\fR
+\fB                      Vertices :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns all vertices of digraph \fIDigraph\fR. The order is given by a depth-first traversal of the digraph, collecting visited vertices in preorder.
+
+
+.RE
+.B
+\fBreachable(Vertices, Digraph) -> Reachable\fR
+\fB                   when\fR
+\fB                       Digraph :: digraph:graph(),\fR
+\fB                       Vertices :: [digraph:vertex()],\fR
+\fB                       Reachable :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns an unsorted list of digraph vertices such that for each vertex in the list, there is a path in \fIDigraph\fR from some vertex of \fIVertices\fR to the vertex. In particular, as paths can have length zero, the vertices of \fIVertices\fR are included in the returned list.
+
+
+.RE
+.B
+\fBreachable_neighbours(Vertices, Digraph) -> Reachable\fR
+\fB                              when\fR
+\fB                                  Digraph :: digraph:graph(),\fR
+\fB                                  Vertices :: [digraph:vertex()],\fR
+\fB                                  Reachable :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns an unsorted list of digraph vertices such that for each vertex in the list, there is a path in \fIDigraph\fR of length one or more from some vertex of \fIVertices\fR to the vertex. As a consequence, only those vertices of \fIVertices\fR that are included in some cycle are returned.
+
+
+.RE
+.B
+\fBreaching(Vertices, Digraph) -> Reaching\fR
+\fB                  when\fR
+\fB                      Digraph :: digraph:graph(),\fR
+\fB                      Vertices :: [digraph:vertex()],\fR
+\fB                      Reaching :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns an unsorted list of digraph vertices such that for each vertex in the list, there is a path from the vertex to some vertex of \fIVertices\fR. In particular, as paths can have length zero, the vertices of \fIVertices\fR are included in the returned list.
+
+
+.RE
+.B
+\fBreaching_neighbours(Vertices, Digraph) -> Reaching\fR
+\fB                             when\fR
+\fB                                 Digraph :: digraph:graph(),\fR
+\fB                                 Vertices :: [digraph:vertex()],\fR
+\fB                                 Reaching :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns an unsorted list of digraph vertices such that for each vertex in the list, there is a path of length one or more from the vertex to some vertex of \fIVertices\fR. Therefore only those vertices of \fIVertices\fR that are included in some cycle are returned.
+
+
+.RE
+.B
+\fBstrong_components(Digraph) -> [StrongComponent]\fR
+\fB                           when\fR
+\fB                               Digraph :: digraph:graph(),\fR
+\fB                               StrongComponent :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of strongly connected components. Each strongly component is represented by its vertices. The order of the vertices and the order of the components are arbitrary. Each vertex of digraph \fIDigraph\fR occurs in exactly one strong component.
+
+
+.RE
+.B
+\fBsubgraph(Digraph, Vertices, Options) -> SubGraph\fR
+\fB                  when\fR
+\fB                      Digraph :: digraph:graph(),\fR
+\fB                      SubGraph :: digraph:graph(),\fR
+\fB                      Vertices :: [digraph:vertex()],\fR
+\fB                      Options ::\fR
+\fB                          [{type, SubgraphType} |\fR
+\fB                           {keep_labels, boolean()}],\fR
+\fB                      SubgraphType :: inherit | [digraph:d_type()].\fR
+
+.br
+.RS
+.PP
+Creates a maximal subgraph of \fIDigraph\fR having as vertices those vertices of \fIDigraph\fR that are mentioned in \fIVertices\fR.
+
+.PP
+If the value of option \fItype\fR is \fIinherit\fR, which is the default, the type of \fIDigraph\fR is used for the subgraph as well. Otherwise the option value of \fItype\fR is used as argument to \fIdigraph:new/1\fR.
+
+.PP
+If the value of option \fIkeep_labels\fR is \fItrue\fR, which is the default, the labels of vertices and edges of \fIDigraph\fR are used for the subgraph as well. If the value is \fIfalse\fR, default label \fI[]\fR is used for the vertices and edges of the subgroup.
+
+.PP
+\fIsubgraph(Digraph, Vertices)\fR is equivalent to \fIsubgraph(Digraph, Vertices, [])\fR.
+
+.PP
+If any of the arguments are invalid, a \fIbadarg\fR exception is raised.
+
+
+.RE
+.B
+\fBtopsort(Digraph) -> Vertices | false\fR
+\fB                 when\fR
+\fB                     Digraph :: digraph:graph(),\fR
+\fB                     Vertices :: [digraph:vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a topological ordering of the vertices of digraph \fIDigraph\fR if such an ordering exists, otherwise \fIfalse\fR. For each vertex in the returned list, no out-neighbors occur earlier in the list.
+
+
+.RE

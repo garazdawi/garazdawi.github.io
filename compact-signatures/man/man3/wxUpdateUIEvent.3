@@ -1,0 +1,431 @@
+.TH wxUpdateUIEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxUpdateUIEvent \- This class is used for pseudo-events which are called by wxWidgets to give an application the chance to update various user interface elements.
+
+.SH DESCRIPTION
+.PP
+Without update UI events, an application has to work hard to check/uncheck, enable/disable, show/hide, and set the text for elements such as menu items and toolbar buttons. The code for doing this has to be mixed up with the code that is invoked when an action is invoked for a menu item or button.
+
+.PP
+With update UI events, you define an event handler to look at the state of the application and change UI elements accordingly. wxWidgets will call your member functions in idle time, so you don't have to worry where to call this code.
+
+.PP
+In addition to being a clearer and more declarative method, it also means you don't have to worry whether you're updating a toolbar or menubar identifier. The same handler can update a menu item and toolbar button, if the identifier is the same. Instead of directly manipulating the menu or button, you call functions in the event object, such as \fIcheck/2\fR. wxWidgets will determine whether such a call has been made, and which UI element to update.
+
+.PP
+These events will work for popup menus as well as menubars. Just before a menu is popped up, \fIwxMenu::UpdateUI\fR (not implemented in wx) is called to process any UI events for the window that owns the menu.
+
+.PP
+If you find that the overhead of UI update processing is affecting your application, you can do one or both of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Call \fIsetMode/1\fR with a value of wxUPDATE_UI_PROCESS_SPECIFIED, and set the extra style wxWS_EX_PROCESS_UI_UPDATES for every window that should receive update events. No other windows will receive update events.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Call \fIsetUpdateInterval/1\fR with a millisecond value to set the delay between updates. You may need to call \fIwxWindow:updateWindowUI/2\fR at critical points, for example when a dialog is about to be shown, in case the user sees a slight delay before windows are updated.
+
+.RE
+
+.PP
+Note that although events are sent in idle time, defining a \fIwxIdleEvent\fR handler for a window does not affect this because the events are sent from \fIwxWindow::OnInternalIdle\fR (not implemented in wx) which is always called in idle time.
+
+.PP
+wxWidgets tries to optimize update events on some platforms. On Windows and GTK+, events for menubar items are only sent when the menu is about to be shown, and not in idle time.
+
+.PP
+See: Overview events
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxUpdateUIEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxUpdateUIEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxUpdateUI() :: #wxUpdateUI{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxUpdateUIEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxUpdateUIEventType() :: update_ui.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcanUpdate(Window) -> boolean() when Window :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if it is appropriate to update (send UI update events to) this window.
+
+.PP
+This function looks at the mode used (see \fIsetMode/1\fR), the wxWS_EX_PROCESS_UI_UPDATES flag in \fIwindow\fR, the time update events were last sent in idle time, and the update interval, to determine whether events should be sent to this window now. By default this will always return true because the update mode is initially wxUPDATE_UI_PROCESS_ALL and the interval is set to 0; so update events will be sent as often as possible. You can reduce the frequency that events are sent by changing the mode and/or setting an update interval.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIresetUpdateTime/0\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetUpdateInterval/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetMode/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBcheck(This, Check) -> ok\fR
+\fB               when This :: wxUpdateUIEvent(), Check :: boolean().\fR
+
+.br
+.RS
+.PP
+Check or uncheck the UI element.
+
+
+.RE
+.B
+\fBenable(This, Enable) -> ok\fR
+\fB                when This :: wxUpdateUIEvent(), Enable :: boolean().\fR
+
+.br
+.RS
+.PP
+Enable or disable the UI element.
+
+
+.RE
+.B
+\fBgetChecked(This) -> boolean() when This :: wxUpdateUIEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the UI element should be checked.
+
+
+.RE
+.B
+\fBgetEnabled(This) -> boolean() when This :: wxUpdateUIEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the UI element should be enabled.
+
+
+.RE
+.B
+\fBgetMode() -> wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Static function returning a value specifying how wxWidgets will send update events: to all windows, or only to those which specify that they will process the events.
+
+.PP
+See: \fIsetMode/1\fR
+
+
+.RE
+.B
+\fBgetSetChecked(This) -> boolean() when This :: wxUpdateUIEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the application has called \fIcheck/2\fR.
+
+.PP
+For wxWidgets internal use only.
+
+
+.RE
+.B
+\fBgetSetEnabled(This) -> boolean() when This :: wxUpdateUIEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the application has called \fIenable/2\fR.
+
+.PP
+For wxWidgets internal use only.
+
+
+.RE
+.B
+\fBgetSetShown(This) -> boolean() when This :: wxUpdateUIEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the application has called \fIshow/2\fR.
+
+.PP
+For wxWidgets internal use only.
+
+
+.RE
+.B
+\fBgetSetText(This) -> boolean() when This :: wxUpdateUIEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the application has called \fIsetText/2\fR.
+
+.PP
+For wxWidgets internal use only.
+
+
+.RE
+.B
+\fBgetShown(This) -> boolean() when This :: wxUpdateUIEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the UI element should be shown.
+
+
+.RE
+.B
+\fBgetText(This) -> unicode:charlist() when This :: wxUpdateUIEvent().\fR
+
+.br
+.RS
+.PP
+Returns the text that should be set for the UI element.
+
+
+.RE
+.B
+\fBgetUpdateInterval() -> integer().\fR
+
+.br
+.RS
+.PP
+Returns the current interval between updates in milliseconds.
+
+.PP
+The value -1 disables updates, 0 updates as frequently as possible.
+
+.PP
+See: \fIsetUpdateInterval/1\fR
+
+
+.RE
+.B
+\fBresetUpdateTime() -> ok.\fR
+
+.br
+.RS
+.PP
+Used internally to reset the last-updated time to the current time.
+
+.PP
+It is assumed that update events are normally sent in idle time, so this is called at the end of idle processing.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcanUpdate/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetUpdateInterval/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetMode/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetMode(Mode) -> ok when Mode :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Specify how wxWidgets will send update events: to all windows, or only to those which specify that they will process the events.
+
+
+.RE
+.B
+\fBsetText(This, Text) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxUpdateUIEvent(),\fR
+\fB                     Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the text for this UI element.
+
+
+.RE
+.B
+\fBsetUpdateInterval(UpdateInterval) -> ok\fR
+\fB                           when UpdateInterval :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the interval between updates in milliseconds.
+
+.PP
+Set to -1 to disable updates, or to 0 to update as frequently as possible. The default is 0.
+
+.PP
+Use this to reduce the overhead of UI update events if your application has a lot of windows. If you set the value to -1 or greater than 0, you may also need to call \fIwxWindow:updateWindowUI/2\fR at appropriate points in your application, such as when a dialog is about to be shown.
+
+
+.RE
+.B
+\fBshow(This, Show) -> ok\fR
+\fB              when This :: wxUpdateUIEvent(), Show :: boolean().\fR
+
+.br
+.RS
+.PP
+Show or hide the UI element.
+
+
+.RE

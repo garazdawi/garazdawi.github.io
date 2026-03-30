@@ -1,0 +1,276 @@
+.TH wxHtmlEasyPrinting 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxHtmlEasyPrinting \- This class provides very simple interface to printing architecture.
+
+.SH DESCRIPTION
+.PP
+It allows you to print HTML documents using only a few commands.
+
+.PP
+Note: Do not create this class on the stack only. You should create an instance on app startup and use this instance for all printing operations. The reason is that this class stores various settings in it.
+
+.PP
+wxWidgets docs: wxHtmlEasyPrinting
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxHtmlEasyPrinting() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxHtmlEasyPrinting()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetPageSetupData(This) ->\fR
+\fB                          wxPageSetupDialogData:wxPageSetupDialogData()\fR
+\fB                          when This :: wxHtmlEasyPrinting().\fR
+
+.br
+.RS
+.PP
+Returns a pointer to \fIwxPageSetupDialogData\fR instance used by this class.
+
+.PP
+You can set its parameters (via SetXXXX methods).
+
+
+.RE
+.B
+\fBgetPrintData(This) -> wxPrintData:wxPrintData()\fR
+\fB                      when This :: wxHtmlEasyPrinting().\fR
+
+.br
+.RS
+.PP
+Returns pointer to \fIwxPrintData\fR instance used by this class.
+
+.PP
+You can set its parameters (via SetXXXX methods).
+
+
+.RE
+.B
+\fBnew([Option]) -> wxHtmlEasyPrinting()\fR
+\fB             when\fR
+\fB                 Option ::\fR
+\fB                     {name, unicode:chardata()} |\fR
+\fB                     {parentWindow, wxWindow:wxWindow()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBpageSetup(This) -> ok when This :: wxHtmlEasyPrinting().\fR
+
+.br
+.RS
+.PP
+Display page setup dialog and allows the user to modify settings.
+
+
+.RE
+.B
+\fBpreviewFile(This, Htmlfile) -> boolean()\fR
+\fB                     when\fR
+\fB                         This :: wxHtmlEasyPrinting(),\fR
+\fB                         Htmlfile :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Preview HTML file.
+
+.PP
+Returns false in case of error - call \fIwxPrinter:getLastError/0\fR to get detailed information about the kind of the error.
+
+
+.RE
+.B
+\fBpreviewText(This, Htmltext, [Option]) -> boolean()\fR
+\fB                     when\fR
+\fB                         This :: wxHtmlEasyPrinting(),\fR
+\fB                         Htmltext :: unicode:chardata(),\fR
+\fB                         Option :: {basepath, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Preview HTML text (not file!).
+
+.PP
+Returns false in case of error - call \fIwxPrinter:getLastError/0\fR to get detailed information about the kind of the error.
+
+
+.RE
+.B
+\fBprintFile(This, Htmlfile) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxHtmlEasyPrinting(),\fR
+\fB                       Htmlfile :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Print HTML file.
+
+.PP
+Returns false in case of error - call \fIwxPrinter:getLastError/0\fR to get detailed information about the kind of the error.
+
+
+.RE
+.B
+\fBprintText(This, Htmltext, [Option]) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxHtmlEasyPrinting(),\fR
+\fB                       Htmltext :: unicode:chardata(),\fR
+\fB                       Option :: {basepath, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Print HTML text (not file!).
+
+.PP
+Returns false in case of error - call \fIwxPrinter:getLastError/0\fR to get detailed information about the kind of the error.
+
+
+.RE
+.B
+\fBsetFonts(This, Normal_face, Fixed_face, [Option]) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxHtmlEasyPrinting(),\fR
+\fB                      Normal_face :: unicode:chardata(),\fR
+\fB                      Fixed_face :: unicode:chardata(),\fR
+\fB                      Option :: {sizes, [integer()]}.\fR
+
+.br
+.RS
+.PP
+Sets fonts.
+
+.PP
+See \fIwxHtmlDCRenderer::SetFonts\fR (not implemented in wx) for detailed description.
+
+
+.RE
+.B
+\fBsetFooter(This, Footer, [Option]) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxHtmlEasyPrinting(),\fR
+\fB                       Footer :: unicode:chardata(),\fR
+\fB                       Option :: {pg, integer()}.\fR
+
+.br
+.RS
+.PP
+Set page footer.
+
+.PP
+The following macros can be used inside it: @DATE@ is replaced by the current date in default format @PAGENUM@ is replaced by page number @PAGESCNT@ is replaced by total number of pages @TIME@ is replaced by the current time in default format @TITLE@ is replaced with the title of the document
+
+
+.RE
+.B
+\fBsetHeader(This, Header, [Option]) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxHtmlEasyPrinting(),\fR
+\fB                       Header :: unicode:chardata(),\fR
+\fB                       Option :: {pg, integer()}.\fR
+
+.br
+.RS
+.PP
+Set page header.
+
+.PP
+The following macros can be used inside it:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+@DATE@ is replaced by the current date in default format
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+@PAGENUM@ is replaced by page number
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+@PAGESCNT@ is replaced by total number of pages
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+@TIME@ is replaced by the current time in default format
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+@TITLE@ is replaced with the title of the document
+
+.RE
+
+
+.RE

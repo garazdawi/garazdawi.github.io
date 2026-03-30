@@ -1,0 +1,23 @@
+.TH edoc_html_to_markdown 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc_html_to_markdown \- This module can convert application/html+erlang style documentation to markdown.
+
+.SH DESCRIPTION
+.SH FUNCTIONS
+.LP
+.B
+\fBconvert_html(Application :: atom(),\fR
+\fB                   Module :: module(),\fR
+\fB                   Html :: shell_docs:chunk_elements()) ->\fR
+\fB                      unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Convert \fIapplication/html+erlang\fR (\fI\fIshell_docs:chunk_element()\fR\fR) to Markdown suitable for usage with ExDoc.
+
+.PP
+The \fIApplication\fR and \fIModule\fR argument are used to correctly generate links.
+
+
+.RE

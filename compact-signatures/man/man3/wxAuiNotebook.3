@@ -1,0 +1,871 @@
+.TH wxAuiNotebook 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxAuiNotebook \- \fIwxAuiNotebook\fR is part of the wxAUI class framework, which represents a notebook control, managing multiple windows with associated tabs.
+
+.SH DESCRIPTION
+.PP
+See also overview_aui.
+
+.PP
+\fIwxAuiNotebook\fR is a notebook control which implements many features common in applications with dockable panes. Specifically, \fIwxAuiNotebook\fR implements functionality which allows the user to rearrange tab order via drag-and-drop, split the tab window into many different splitter configurations, and toggle through different themes to customize the control's look and feel.
+
+.PP
+The default theme that is used is \fIwxAuiDefaultTabArt\fR (not implemented in wx), which provides a modern, glossy look and feel. The theme can be changed by calling \fIsetArtProvider/2\fR.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_DEFAULT_STYLE: Defined as wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxAUI_NB_CLOSE_ON_ACTIVE_TAB | wxAUI_NB_MIDDLE_CLICK_CLOSE.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_TAB_SPLIT: Allows the tab control to be split by dragging a tab.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_TAB_MOVE: Allows a tab to be moved horizontally by dragging.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_TAB_EXTERNAL_MOVE: Allows a tab to be moved to another tab control.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_TAB_FIXED_WIDTH: With this style, all tabs have the same width.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_SCROLL_BUTTONS: With this style, left and right scroll buttons are displayed.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_WINDOWLIST_BUTTON: With this style, a drop-down list of windows is available.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_CLOSE_BUTTON: With this style, a close button is available on the tab bar.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_CLOSE_ON_ACTIVE_TAB: With this style, the close button is visible on the active tab.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_CLOSE_ON_ALL_TABS: With this style, the close button is visible on all tabs.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_MIDDLE_CLICK_CLOSE: With this style, middle click on a tab closes the tab.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_TOP: With this style, tabs are drawn along the top of the notebook.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_NB_BOTTOM: With this style, tabs are drawn along the bottom of the notebook.
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxAuiNotebook
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_page_close\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_page_closed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_page_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_page_changing\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_button\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_begin_drag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_end_drag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_drag_motion\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_allow_dnd\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_drag_done\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_tab_middle_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_tab_middle_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_tab_right_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_tab_right_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_auinotebook_bg_dclick\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxAuiNotebook() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddPage(This, Page, Caption, [Option]) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiNotebook(),\fR
+\fB                     Page :: wxWindow:wxWindow(),\fR
+\fB                     Caption :: unicode:chardata(),\fR
+\fB                     Option ::\fR
+\fB                         {select, boolean()} |\fR
+\fB                         {bitmap, wxBitmap:wxBitmap()}.\fR
+
+.br
+.RS
+.PP
+Adds a page.
+
+.PP
+If the \fIselect\fR parameter is true, calling this will generate a page change event.
+
+
+.RE
+.B
+\fBaddPage(This, Page, Text, Select, ImageId) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiNotebook(),\fR
+\fB                     Page :: wxWindow:wxWindow(),\fR
+\fB                     Text :: unicode:chardata(),\fR
+\fB                     Select :: boolean(),\fR
+\fB                     ImageId :: integer().\fR
+
+.br
+.RS
+.PP
+Adds a new page.
+
+.PP
+The page must have the book control itself as the parent and must not have been added to this control previously.
+
+.PP
+The call to this function may generate the page changing events.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: Do not delete the page, it will be deleted by the book control.
+
+.PP
+See: \fIinsertPage/6\fR
+
+.PP
+Since: 2.9.3
+
+
+.RE
+.B
+\fBcreate(This, Parent, Winid) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxAuiNotebook(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Winid :: integer();\fR
+\fB            (This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxAuiNotebook(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option ::\fR
+\fB                        {id, integer()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Creates the notebook window.
+
+
+.RE
+.B
+\fBcreate(This, Parent, Winid, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxAuiNotebook(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Winid :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructs the book control with the given parameters.
+
+
+.RE
+.B
+\fBdeletePage(This, Page) -> boolean()\fR
+\fB                    when This :: wxAuiNotebook(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Deletes a page at the given index.
+
+.PP
+Calling this method will generate a page change event.
+
+
+.RE
+.B
+\fBdestroy(This :: wxAuiNotebook()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetArtProvider(This) -> wxAuiTabArt:wxAuiTabArt()\fR
+\fB                        when This :: wxAuiNotebook().\fR
+
+.br
+.RS
+.PP
+Returns the associated art provider.
+
+
+.RE
+.B
+\fBgetPage(This, Page_idx) -> wxWindow:wxWindow()\fR
+\fB                 when This :: wxAuiNotebook(), Page_idx :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the page specified by the given index.
+
+
+.RE
+.B
+\fBgetPageBitmap(This, Page) -> wxBitmap:wxBitmap()\fR
+\fB                       when This :: wxAuiNotebook(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the tab bitmap for the page.
+
+
+.RE
+.B
+\fBgetPageCount(This) -> integer() when This :: wxAuiNotebook().\fR
+
+.br
+.RS
+.PP
+Returns the number of pages in the notebook.
+
+
+.RE
+.B
+\fBgetPageIndex(This, Page_wnd) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxAuiNotebook(),\fR
+\fB                          Page_wnd :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the page index for the specified window.
+
+.PP
+If the window is not found in the notebook, wxNOT_FOUND is returned.
+
+
+.RE
+.B
+\fBgetPageText(This, Page) -> unicode:charlist()\fR
+\fB                     when This :: wxAuiNotebook(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the tab label for the page.
+
+
+.RE
+.B
+\fBgetSelection(This) -> integer() when This :: wxAuiNotebook().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected page.
+
+
+.RE
+.B
+\fBinsertPage(This, Page_idx, Page, Caption, [Option]) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxAuiNotebook(),\fR
+\fB                        Page_idx :: integer(),\fR
+\fB                        Page :: wxWindow:wxWindow(),\fR
+\fB                        Caption :: unicode:chardata(),\fR
+\fB                        Option ::\fR
+\fB                            {select, boolean()} |\fR
+\fB                            {bitmap, wxBitmap:wxBitmap()}.\fR
+
+.br
+.RS
+.PP
+\fIinsertPage/6\fR is similar to AddPage, but allows the ability to specify the insert location.
+
+.PP
+If the \fIselect\fR parameter is true, calling this will generate a page change event.
+
+
+.RE
+.B
+\fBinsertPage(This, Index, Page, Text, Select, ImageId) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxAuiNotebook(),\fR
+\fB                        Index :: integer(),\fR
+\fB                        Page :: wxWindow:wxWindow(),\fR
+\fB                        Text :: unicode:chardata(),\fR
+\fB                        Select :: boolean(),\fR
+\fB                        ImageId :: integer().\fR
+
+.br
+.RS
+.PP
+Inserts a new page at the specified position.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: Do not delete the page, it will be deleted by the book control.
+
+.PP
+See: \fIaddPage/5\fR
+
+.PP
+Since: 2.9.3
+
+
+.RE
+.B
+\fBnew() -> wxAuiNotebook().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxAuiNotebook()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {id, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Creates a wxAuiNotebok control.
+
+
+.RE
+.B
+\fBremovePage(This, Page) -> boolean()\fR
+\fB                    when This :: wxAuiNotebook(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Removes a page, without deleting the window pointer.
+
+
+.RE
+.B
+\fBsetArtProvider(This, Art) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxAuiNotebook(),\fR
+\fB                            Art :: wxAuiTabArt:wxAuiTabArt().\fR
+
+.br
+.RS
+.PP
+Sets the art provider to be used by the notebook.
+
+
+.RE
+.B
+\fBsetFont(This, Font) -> boolean()\fR
+\fB                 when This :: wxAuiNotebook(), Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font for drawing the tab labels, using a bold version of the font for selected tab labels.
+
+
+.RE
+.B
+\fBsetPageBitmap(This, Page, Bitmap) -> boolean()\fR
+\fB                       when\fR
+\fB                           This :: wxAuiNotebook(),\fR
+\fB                           Page :: integer(),\fR
+\fB                           Bitmap :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Sets the bitmap for the page.
+
+.PP
+To remove a bitmap from the tab caption, pass wxNullBitmap.
+
+
+.RE
+.B
+\fBsetPageText(This, Page, Text) -> boolean()\fR
+\fB                     when\fR
+\fB                         This :: wxAuiNotebook(),\fR
+\fB                         Page :: integer(),\fR
+\fB                         Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the tab label for the page.
+
+
+.RE
+.B
+\fBsetSelection(This, New_page) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxAuiNotebook(), New_page :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the page selection.
+
+.PP
+Calling this method will generate a page change event.
+
+
+.RE
+.B
+\fBsetTabCtrlHeight(This, Height) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxAuiNotebook(),\fR
+\fB                              Height :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the tab height.
+
+.PP
+By default, the tab control height is calculated by measuring the text height and bitmap sizes on the tab captions. Calling this method will override that calculation and set the tab control to the specified height parameter. A call to this method will override any call to \fIsetUniformBitmapSize/2\fR.
+
+.PP
+Specifying -1 as the height will return the control to its default auto-sizing behaviour.
+
+
+.RE
+.B
+\fBsetUniformBitmapSize(This, Size) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxAuiNotebook(),\fR
+\fB                                  Size ::\fR
+\fB                                      {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Ensure that all tabs have the same height, even if some of them don't have bitmaps.
+
+.PP
+Passing ?wxDefaultSize as \fIsize\fR undoes the effect of a previous call to this function and instructs the control to use dynamic tab height.
+
+
+.RE

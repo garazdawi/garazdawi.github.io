@@ -1,0 +1,437 @@
+.TH snmpa_mib_data 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpa_mib_data \- Behaviour module for the SNMP agent mib-server data module.
+
+.SH DESCRIPTION
+.PP
+This module defines the behaviour of the SNMP agent mib-server data module. A \fIsnmpa_mib_data\fR compliant module must export the following functions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+new/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+close/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+sync/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+load_mib/4
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+unload_mib/4
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+lookup/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+next/3
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+register_subagent/3
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+unregister_subagent/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+which_mib/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+which_mibs/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+whereis_mib/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+dump/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+info/1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+backup/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+code_change/4
+
+.RE
+
+.PP
+The semantics of them and their exact signatures are explained below.
+
+.PP
+Note that the data extracted from the imported (loaded) mibs are stored partly by the mib-server and partly by the symbolic-store server. See the default mib-server data module, \fIsnmpa_mib_data_tttn\fR for details.
+
+.SH DATA TYPES
+.LP
+.B
+\fBfilename() :: file:filename().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmib_view() :: [mib_view_elem()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmib_view_elem() ::\fR
+\fB          {SubTree :: snmp:oid(),\fR
+\fB           Mask :: [non_neg_integer()],\fR
+\fB           Inclusion :: mib_view_inclusion()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmib_view_inclusion() :: 1 | 2.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmib_view_mask() :: [non_neg_integer()].\fR
+
+.br
+.RS
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBbackup(State, BackupDir)\fR
+
+.br
+.RS
+.PP
+Perform a backup of the mib-server data.
+
+.PP
+Note that its implementation dependent (and also dependent on mib-storage is used) if a backup is possible.
+
+
+.RE
+.B
+\fBclose(State)\fR
+
+.br
+.RS
+.PP
+Close the mib-storage.
+
+
+.RE
+.B
+\fBcode_change(Direction, Vsn, Extra, State)\fR
+
+.br
+.RS
+.PP
+Perform a code-change (upgrade or downgrade).
+
+.PP
+See \fIgen_server\fR for more info regarding the \fIVsn\fR and \fIExtra\fR arguments.
+
+
+.RE
+.B
+\fBdump(State, Destination)\fR
+
+.br
+.RS
+.PP
+Dump the mib-server data to \fIstdio\fR (Destination = \fIio\fR) or the specified file.
+
+
+.RE
+.B
+\fBinfo(State)\fR
+
+.br
+.RS
+.PP
+Retrieve misc info for the mib data.
+
+.PP
+This is a utility function used to inspect, for instance, memory usage, in a simple way.
+
+
+.RE
+.B
+\fBload_mib(State, FileName, MeOverride, TeOverride)\fR
+
+.br
+.RS
+.PP
+Load the mib specified by the \fIFilename\fR argument into the mib-server. The \fIMeOverride\fR and \fITeOverride\fR arguments specifies how the mib-server shall handle duplicate mib- and trap- entries.
+
+
+.RE
+.B
+\fBlookup(State, Oid)\fR
+
+.br
+.RS
+.PP
+Find the mib-entry corresponding to the \fIOid\fR. If it is a variable, the \fIOid\fR must be <Oid for var>.0 and if it is a table, \fIOid\fR must be
+
+
+.RE
+.B
+\fBnew(MibStorage)\fR
+
+.br
+.RS
+.PP
+Create a new mib-server data instance.
+
+
+.RE
+.B
+\fBnext(State, Oid, MibView)\fR
+
+.br
+.RS
+.PP
+Finds the lexicographically next oid.
+
+
+.RE
+.B
+\fBregister_subagent(State, Oid, Pid)\fR
+
+.br
+.RS
+.PP
+Register the subagent, process, handling part of the mib-tree.
+
+
+.RE
+.B
+\fBsync(State)\fR
+
+.br
+.RS
+.PP
+Synchronize (write to disc, if possible) the mib-server data. This depends on the \fImib_storage\fR option, and will only have an effect if the mib-storage option has an actual disc component (such as dets, or ets with a file).
+
+
+.RE
+.B
+\fBunload_mib(State, FileName, MeOverride, TeOverride)\fR
+
+.br
+.RS
+.PP
+Unload the mib specified by the \fIFilename\fR argument from the mib-server. The \fIMeOverride\fR and \fITeOverride\fR arguments specifies how the mib-server shall handle duplicate mib- and trap- entries.
+
+
+.RE
+.B
+\fBunregister_subagent(State, PidOrOid)\fR
+
+.br
+.RS
+.PP
+Unregister the subagent, handling part of the mib-tree, as specified by the \fIoid()\fR or \fIpid/0\fR (\fIPidOrOid\fR).
+
+.PP
+When unregister the subagent using an \fIoid()\fR, the \fIpid/0\fR of the process handling the sub-tree is also returned.
+
+
+.RE
+.B
+\fBwhereis_mib(State, MibName)\fR
+
+.br
+.RS
+.PP
+Retrieve the mib file for the mib.
+
+
+.RE
+.B
+\fBwhich_mib(State, Oid)\fR
+
+.br
+.RS
+.PP
+Retrieve the mib-file to which an given \fIoid()\fR belongs.
+
+
+.RE
+.B
+\fBwhich_mibs(State)\fR
+
+.br
+.RS
+.PP
+Retrieve all loaded mib-files.
+
+
+.RE

@@ -1,0 +1,30 @@
+.TH megaco_edist_compress 3 "megaco 4.8.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+megaco_edist_compress \- Megaco erlang dist compress behaviour.
+
+.SH DESCRIPTION
+.PP
+The following functions should be exported from a \fImegaco_edist_compress\fR callback module:
+
+.SH CALLBACKS
+.LP
+.B
+\fBdecode(T, Version)\fR
+
+.br
+.RS
+.PP
+Decompress a megaco component.
+
+
+.RE
+.B
+\fBencode(R, Version)\fR
+
+.br
+.RS
+.PP
+Compress a megaco component. The erlang dist encoder makes no assumption on the how or even if the component is compressed.
+
+
+.RE

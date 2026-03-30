@@ -1,0 +1,100 @@
+.TH megaco_flex_scanner 3 "megaco 4.8.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+megaco_flex_scanner \- Interface module to the flex scanner linked in driver.
+
+.SH DESCRIPTION
+.PP
+This module contains the public interface to the flex scanner linked in driver. The flex scanner performs the scanning phase of text message decoding.
+
+.PP
+The flex scanner is written using a tool called \fIflex\fR. In order to be able to compile the flex scanner driver, this tool has to be available.
+
+.PP
+By default the flex scanner reports line-number of an error. But it can be built without line-number reporting. Instead token number is used. This will speed up the scanning some 5-10%. Use \fI--disable-megaco-flex-scanner-lineno\fR when configuring the application.
+
+.PP
+The scanner will, by default, be built as a reentrant scanner \fIif\fR the flex utility supports this (it depends on the version of flex). It is possible to explicitly disable this even when flex support this. Use \fI--disable-megaco-reentrant-flex-scanner\fR when configuring the application.
+
+.SH DATA TYPES
+.LP
+.B
+\fBmegaco_ports() :: port() | tuple().\fR
+
+.br
+.RS
+.PP
+Return value of a successful (flex) scanner start.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBis_reentrant_enabled() -> boolean().\fR
+
+.br
+.RS
+.PP
+Is the flex scanner reentrant or not.
+
+
+.RE
+.B
+\fBis_scanner_port(Port, PortOrPorts) -> boolean()\fR
+\fB                         when\fR
+\fB                             Port :: port(),\fR
+\fB                             PortOrPorts :: megaco_ports().\fR
+
+.br
+.RS
+.PP
+Checks if a port is a flex scanner port or not (useful when if a port exits).
+
+
+.RE
+.B
+\fBscan(Binary, PortOrPorts) ->\fR
+\fB              {ok, Tokens, Version, LatestLine} |\fR
+\fB              {error, Reason, LatestLine}\fR
+\fB              when\fR
+\fB                  Binary :: binary(),\fR
+\fB                  PortOrPorts :: megaco_ports(),\fR
+\fB                  Tokens :: list(),\fR
+\fB                  Version :: megaco_encoder:protocol_version(),\fR
+\fB                  LatestLine :: non_neg_integer(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Scans a megaco message and generates a token list to be passed on the parser.
+
+
+.RE
+.B
+\fBstart() -> {ok, PortOrPorts} | {error, Reason}\fR
+\fB               when PortOrPorts :: megaco_ports(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+This function is used to start the flex scanner. It locates the library and loads the linked in driver.
+
+.PP
+On a single core system or if it's a non-reentrant scanner, a single port is created. On a multi-core system with a reentrant scanner, several ports will be created (one for each scheduler).
+
+.PP
+Note that the process that calls this function \fImust\fR be permanent. If it dies, the port(s) will exit and the driver unload.
+
+
+.RE
+.B
+\fBstop(PortOrPorts) -> stopped when PortOrPorts :: megaco_ports().\fR
+
+.br
+.RS
+.PP
+This function is used to stop the flex scanner. It also unloads the driver.
+
+
+.RE

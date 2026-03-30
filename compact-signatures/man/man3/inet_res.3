@@ -1,0 +1,494 @@
+.TH inet_res 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+inet_res \- A rudimentary DNS client.
+
+.SH DESCRIPTION
+.PP
+This module performs DNS name resolving towards recursive name servers.
+
+.PP
+See also ERTS User's Guide: Inet Configuration or more information about how to configure an Erlang runtime system for IP communication, and how to enable this DNS client by defining \fI'dns'\fR as a lookup method. The DNS client then acts as a backend for the resolving functions in \fIinet\fR.
+
+.PP
+This DNS client can resolve DNS records even if it is not used for normal name resolving in the node.
+
+.PP
+This is not a full-fledged resolver, only a DNS client that relies on asking trusted recursive name servers.
+
+.SS "Name Resolving"
+
+.PP
+UDP queries are used unless resolver option \fIusevc\fR is \fItrue\fR, which forces TCP queries.  If the query is too large for UDP, TCP is used instead. For regular DNS queries, 512 bytes is the size limit.
+
+.PP
+When EDNS is enabled (resolver option \fIedns\fR is set to the EDNS version (that is; \fI0\fR instead of \fIfalse\fR), resolver option \fIudp_payload_size\fR sets the payload size limit.  If a name server replies with the TC bit set (truncation), indicating that the answer is incomplete, the query is retried towards the same name server using TCP.  Resolver option \fIudp_payload_size\fR also sets the advertised size for the maximum allowed reply size, if EDNS is enabled, otherwise the name server uses the limit 512 bytes. If the reply is larger, it gets truncated, forcing a TCP requery.
+
+.PP
+For UDP queries, resolver options \fItimeout\fR and \fIretry\fR control retransmission.  Each name server in the \fInameservers\fR list is tried with a time-out of \fItimeout\fR/\fIretry\fR. Then all name servers are tried again, doubling the time-out, for a total of \fIretry\fR times.
+
+.PP
+But before all name servers are tried again, there is a (user configurable) time-out, \fIservfail_retry_timeout\fR. The point of this is to prevent the new query to be handled by a server's servfail cache (a client that is too eager will actually only get what is in the servfail cache). If there is too little time left of the resolver call's time-out to do a retry, the resolver call may return before the call's time-out has expired.
+
+.PP
+For queries not using the \fIsearch\fR list, if the query to all \fInameservers\fR results in \fI{error,nxdomain}\fR or an empty answer, the same query is tried for \fIalt_nameservers\fR.
+
+.SS "Resolver Types"
+
+.PP
+The following data types concern the resolver:
+
+.SS "DNS Types"
+
+.PP
+The following data types concern the DNS client:
+
+.SS "Example"
+
+.PP
+This access functions example shows how \fIlookup/3\fR can be implemented using \fIresolve/3\fR from outside the module:
+
+.IP
+.nf
+example_lookup(Name, Class, Type) ->
+    case inet_res:resolve(Name, Class, Type) of
+        {ok,Msg} ->
+            [inet_dns:rr(RR, data)
+             || RR <- inet_dns:msg(Msg, anlist),
+                 inet_dns:rr(RR, type) =:= Type,
+                 inet_dns:rr(RR, class) =:= Class];
+        {error,_} ->
+            []
+     end.
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBdns_class() :: in | chaos | hs | any.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdns_data() ::\fR
+\fB          dns_name() |\fR
+\fB          inet:ip4_address() |\fR
+\fB          inet:ip6_address() |\fR
+\fB          {MName :: dns_name(),\fR
+\fB           RName :: dns_name(),\fR
+\fB           Serial :: integer(),\fR
+\fB           Refresh :: integer(),\fR
+\fB           Retry :: integer(),\fR
+\fB           Expiry :: integer(),\fR
+\fB           Minimum :: integer()} |\fR
+\fB          {inet:ip4_address(), Proto :: integer(), BitMap :: binary()} |\fR
+\fB          {CpuString :: string(), OsString :: string()} |\fR
+\fB          {RM :: dns_name(), EM :: dns_name()} |\fR
+\fB          {Prio :: integer(), dns_name()} |\fR
+\fB          {Prio :: integer(),\fR
+\fB           Weight :: integer(),\fR
+\fB           Port :: integer(),\fR
+\fB           dns_name()} |\fR
+\fB          {Order :: integer(),\fR
+\fB           Preference :: integer(),\fR
+\fB           Flags :: string(),\fR
+\fB           Services :: string(),\fR
+\fB           Regexp :: string(),\fR
+\fB           dns_name()} |\fR
+\fB          [string()] |\fR
+\fB          binary().\fR
+
+.br
+.RS
+.PP
+DNS record data (content)
+
+.PP
+The basic type of each data element is specified in this type.
+
+.PP
+\fIRegexp\fR is a UTF-8 \fIstring/0\fR.  The other \fIstring/0\fRs are actually Latin-1 strings.
+
+
+.RE
+.B
+\fBdns_msg() :: term().\fR
+
+.br
+.RS
+.PP
+A DNS message.
+
+.PP
+This is the start of a hierarchy of opaque data structures that can be examined with access functions in \fIinet_dns\fR, which return lists of \fI{Field,Value}\fR tuples. The arity 2 functions return the value for a specified field.
+
+.IP
+.nf
+dns_msg() = DnsMsg
+    inet_dns:msg(DnsMsg) ->
+        [ {header, dns_header()}
+        | {qdlist, dns_query()}
+        | {anlist, dns_rr()}
+        | {nslist, dns_rr()}
+        | {arlist, dns_rr()} ]
+    inet_dns:msg(DnsMsg, header) -> dns_header() % for example
+    inet_dns:msg(DnsMsg, Field) -> Value
+
+dns_header() = DnsHeader
+    inet_dns:header(DnsHeader) ->
+        [ {id, integer()}
+        | {qr, boolean()}
+        | {opcode, query | iquery | status | integer()}
+        | {aa, boolean()}
+        | {tc, boolean()}
+        | {rd, boolean()}
+        | {ra, boolean()}
+        | {pr, boolean()}
+        | {rcode, integer(0..16)} ]
+    inet_dns:header(DnsHeader, Field) -> Value
+
+query_type() = axfr | mailb | maila | any | dns_rr_type()
+
+dns_query() = DnsQuery
+    inet_dns:dns_query(DnsQuery) ->
+        [ {domain, dns_name()}
+        | {type, query_type()}
+        | {class, dns_class()} ]
+    inet_dns:dns_query(DnsQuery, Field) -> Value
+
+dns_rr() = DnsRr
+    inet_dns:rr(DnsRr) -> DnsRrFields | DnsRrOptFields
+    DnsRrFields = [ {domain, dns_name()}
+                  | {type, dns_rr_type()}
+                  | {class, dns_class()}
+                  | {ttl, integer()}
+                  | {data, dns_data()} ]
+    DnsRrOptFields = [ {domain, dns_name()}
+                     | {type, opt}
+                     | {udp_payload_size, integer()}
+                     | {ext_rcode, integer()}
+                     | {version, integer()}
+                     | {z, integer()}
+                     | {data, dns_data()} ]
+    inet_dns:rr(DnsRr, Field) -> Value
+
+.fi
+
+.PP
+There is an information function for the types above:
+
+.IP
+.nf
+inet_dns:record_type(dns_msg()) -> msg;
+inet_dns:record_type(dns_header()) -> header;
+inet_dns:record_type(dns_query()) -> dns_query;
+inet_dns:record_type(dns_rr()) -> rr;
+inet_dns:record_type(_) -> undefined.
+
+.fi
+
+.PP
+So, \fIinet_dns:(inet_dns:record_type(X))(X)\fR converts any of these data structures into a \fI{Field,Value}\fR list.
+
+
+.RE
+.B
+\fBdns_name() :: string().\fR
+
+.br
+.RS
+.PP
+A string with no adjacent dots.
+
+
+.RE
+.B
+\fBdns_rr_type() ::\fR
+\fB          a | aaaa | caa | cname | gid | hinfo | ns | mb | md | mg |\fR
+\fB          mf | minfo | mx | naptr | null | ptr | soa | spf | srv | txt |\fR
+\fB          uid | uinfo | unspec | uri | wks.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhostent() ::\fR
+\fB          inet:hostent() |\fR
+\fB          {hostent,\fR
+\fB           H_name :: inet:hostname(),\fR
+\fB           H_aliases :: [inet:hostname()],\fR
+\fB           H_addrtype :: dns_rr_type(),\fR
+\fB           H_length :: non_neg_integer(),\fR
+\fB           H_addr_list :: [dns_data()]}.\fR
+
+.br
+.RS
+.PP
+Extended variant of \fIinet:hostent/0\fR.
+
+.PP
+Allows \fIdns_rr_type/0\fR for the \fI#hostent{}.h_addrtype\fR field, and \fI\fR[\fIdns_data/0\fR\fI]\fR for the \fI#hostent{}.h_addr_list\fR field.
+
+
+.RE
+.B
+\fBnameserver() :: {inet:ip_address(), Port :: 1..65535}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBres_error() ::\fR
+\fB          formerr | qfmterror | servfail | nxdomain | notimp | refused |\fR
+\fB          badvers | timeout.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBres_option() ::\fR
+\fB          {alt_nameservers, [nameserver()]} |\fR
+\fB          {edns, 0 | false} |\fR
+\fB          {inet6, boolean()} |\fR
+\fB          {nameservers, [nameserver()]} |\fR
+\fB          {recurse, boolean()} |\fR
+\fB          {retry, integer()} |\fR
+\fB          {timeout, integer()} |\fR
+\fB          {udp_payload_size, integer()} |\fR
+\fB          {dnssec_ok, boolean()} |\fR
+\fB          {usevc, boolean()} |\fR
+\fB          {nxdomain_reply, boolean()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetbyname(Name, Type, Opts, Timeout) ->\fR
+\fB                   {ok, Hostent} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Name :: dns_name(),\fR
+\fB                       Type :: dns_rr_type(),\fR
+\fB                       Opts :: [Opt],\fR
+\fB                       Opt :: res_option() | verbose | atom(),\fR
+\fB                       Timeout :: timeout(),\fR
+\fB                       Hostent :: inet:hostent() | hostent(),\fR
+\fB                       Reason :: inet:posix() | res_error().\fR
+
+.br
+.RS
+.PP
+Resolve a DNS query.
+
+.PP
+Resolves a DNS query of the specified \fIType\fR for the specified host, of class\fIin\fR.  Returns, on success, when resolving a \fIType = a|aaaa\fR DNS record, a \fI#hostent{}\fR record with \fI#hostent.h_addrtype = inet|inet6\fR, respectively; see \fIinet:hostent/0\fR.
+
+.PP
+When resolving other \fIType = dns_rr_type()\fR:s (of class \fIin\fR), also returns a \fI#hostent{}\fR record but with \fIdns_rr_type/0\fR in \fI#hostent.h_addrtype\fR, and the resolved \fIdns_data/0\fR in \fI#hostent.h_addr_list\fR; see \fIhostent/0\fR.
+
+.PP
+This function uses resolver option \fIsearch\fR that is a list of domain names. If the name to resolve contains no dots, it is prepended to each domain name in the search list, and they are tried in order.  If the name contains dots, it is first tried as an absolute name and if that fails, the search list is used. If the name has a trailing dot, it is supposed to be an absolute name and the search list is not used.
+
+.PP
+See \fIresolve/5\fR about \fIOpts\fR.
+
+
+.RE
+.B
+\fBgethostbyaddr(Address, Timeout) -> {ok, Hostent} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Address :: inet:ip_address(),\fR
+\fB                           Timeout :: timeout(),\fR
+\fB                           Hostent :: inet:hostent(),\fR
+\fB                           Reason :: inet:posix() | res_error().\fR
+
+.br
+.RS
+.PP
+Backend function used by \fIinet:gethostbyaddr/1\fR.
+
+
+.RE
+.B
+\fBgethostbyaddr(Address, Opts, Timeout) ->\fR
+\fB                       {ok, Hostent} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Address :: inet:ip_address(),\fR
+\fB                           Opts :: [Opt],\fR
+\fB                           Opt :: res_option() | verbose | atom(),\fR
+\fB                           Timeout :: timeout(),\fR
+\fB                           Hostent :: inet:hostent(),\fR
+\fB                           Reason :: inet:posix() | res_error().\fR
+
+.br
+.RS
+.PP
+Backend function used by \fIinet:gethostbyaddr/1\fR.
+
+
+.RE
+.B
+\fBgethostbyname(Name) -> {ok, Hostent} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Name :: dns_name(),\fR
+\fB                           Hostent :: inet:hostent(),\fR
+\fB                           Reason :: inet:posix() | res_error().\fR
+
+.br
+.RS
+.PP
+Backend functions used by \fIinet:gethostbyname/1,2\fR.
+
+.PP
+If resolver option \fIinet6\fR is \fItrue\fR, equivalent to \fIgethostbyname(Name, inet6, infinity)\fR, otherwise \fIgethostbyname(Name, inet, infinity)\fR.
+
+
+.RE
+.B
+\fBgethostbyname(Name, Family, Opts, Timeout) ->\fR
+\fB                       {ok, Hostent} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Name :: dns_name(),\fR
+\fB                           Family :: inet:address_family(),\fR
+\fB                           Opts :: [Opt],\fR
+\fB                           Opt :: res_option() | verbose | atom(),\fR
+\fB                           Timeout :: timeout(),\fR
+\fB                           Hostent :: inet:hostent(),\fR
+\fB                           Reason :: inet:posix() | res_error().\fR
+
+.br
+.RS
+.PP
+Backend functions used by \fIinet:gethostbyname/1,2\fR.
+
+.PP
+This function uses resolver option \fIsearch\fR just like \fIgetbyname/2,3\fR.
+
+
+.RE
+.B
+\fBlookup(Name, Class, Type, Opts, Timeout) -> [dns_data()]\fR
+\fB                when\fR
+\fB                    Name :: dns_name() | inet:ip_address(),\fR
+\fB                    Class :: dns_class(),\fR
+\fB                    Type :: dns_rr_type(),\fR
+\fB                    Opts :: [res_option() | verbose],\fR
+\fB                    Timeout :: timeout().\fR
+
+.br
+.RS
+.PP
+Look up DNS data.
+
+.PP
+Resolves the DNS data for the record \fIName\fR of the specified \fIType\fR and \fIClass\fR. On success, filters out the answer records with the correct \fIClass\fR and \fIType\fR, and returns a list of their data fields. So, a lookup for type \fIany\fR gives an empty answer, as the answer records have specific types that are not \fIany\fR. An empty answer or a failed lookup returns an empty list.
+
+.PP
+Calls \fIresolve/*\fR with the same arguments and filters the result, so \fIOpts\fR is described for those functions.
+
+
+.RE
+.B
+\fBnnslookup(Name, Class, Type, Nameservers, Timeout) ->\fR
+\fB                   {ok, dns_msg()} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Name :: dns_name() | inet:ip_address(),\fR
+\fB                       Class :: dns_class(),\fR
+\fB                       Type :: dns_rr_type(),\fR
+\fB                       Timeout :: timeout(),\fR
+\fB                       Nameservers :: [nameserver()],\fR
+\fB                       Reason :: inet:posix().\fR
+
+.br
+.RS
+.PP
+Resolve a DNS query.
+
+.PP
+Like \fInslookup/4\fR but calls \fIresolve/5\fR with both the arguments \fIOpts = [{nameservers, Nameservers}]\fR and \fITimeout\fR.
+
+
+.RE
+.B
+\fBnslookup(Name, Class, Type, Timeout) ->\fR
+\fB                  {ok, dns_msg()} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Name :: dns_name() | inet:ip_address(),\fR
+\fB                      Class :: dns_class(),\fR
+\fB                      Type :: dns_rr_type(),\fR
+\fB                      Timeout :: timeout(),\fR
+\fB                      Reason :: inet:posix() | res_error();\fR
+\fB              (Name, Class, Type, Nameservers) ->\fR
+\fB                  {ok, dns_msg()} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Name :: dns_name() | inet:ip_address(),\fR
+\fB                      Class :: dns_class(),\fR
+\fB                      Type :: dns_rr_type(),\fR
+\fB                      Nameservers :: [nameserver()],\fR
+\fB                      Reason :: inet:posix() | res_error().\fR
+
+.br
+.RS
+.PP
+Resolve a DNS query.
+
+.PP
+This function is a legacy wrapper to \fIresolve/5\fR that simplifies errors matching \fI{error, {Reason, _}}\fR into \fI{error, Reason}\fR or \fI{error, einval}\fR.
+
+.PP
+With argument \fITimeout\fR calls \fIresolve/5\fR with \fIOpts = []\fR.
+
+.PP
+With argument \fINameservers\fR calls \fIresolve/5\fR with \fIOpts = [{nameservers, Nameservers}]\fR and \fITimeout = infinity\fR.
+
+
+.RE
+.B
+\fBresolve(Name, Class, Type, Opts, Timeout) ->\fR
+\fB                 {ok, dns_msg()} | Error\fR
+\fB                 when\fR
+\fB                     Name :: dns_name() | inet:ip_address(),\fR
+\fB                     Class :: dns_class(),\fR
+\fB                     Type :: dns_rr_type(),\fR
+\fB                     Opts :: [Opt],\fR
+\fB                     Opt :: res_option() | verbose | atom(),\fR
+\fB                     Timeout :: timeout(),\fR
+\fB                     Error ::\fR
+\fB                         {error, Reason} | {error, {Reason, dns_msg()}},\fR
+\fB                     Reason :: inet:posix() | res_error().\fR
+
+.br
+.RS
+.PP
+Resolve a DNS query.
+
+.PP
+Resolves a DNS query for the specified \fIType\fR, \fIClass\fR, and  \fIName\fR, into a DNS message possibly containing Resource Records. The returned \fIdns_msg/0\fR can be examined using access functions in \fIinet_db\fR, as described in section in DNS Types.
+
+.PP
+If \fIName\fR is an \fIip_address()\fR, the domain name to query about is generated as the standard reverse \fI".IN-ADDR.ARPA."\fR name for an IPv4 address, or the \fI".IP6.ARPA."\fR name for an IPv6 address.  In this case, you most probably want to use \fIClass = in\fR and \fIType = ptr\fR, but it is not done automatically.
+
+.PP
+\fIOpts\fR overrides the corresponding resolver options. If option \fInameservers\fR is specified, it is assumed that it is the complete list of name serves, so resolver option \fIalt_nameserves\fR is ignored. However, if option \fIalt_nameserves\fR is also specified to this function, it is used.
+
+.PP
+Option \fIverbose\fR (or rather \fI{verbose,true}\fR) causes diagnostics printout through \fIio:format/2\fR of queries, replies, retransmissions, and so on, similar to utilities such as \fIdig\fR and \fInslookup\fR.
+
+.PP
+Option \fInxdomain_reply\fR (or rather \fI{nxdomain_reply, true}\fR) causes NXDOMAIN errors from DNS servers to be returned as \fI{error, {nxdomain, dns_msg()}}\fR. \fIdns_msg/0\fR contains the additional sections that where included by the answering server. This is mainly useful to inspect the SOA record to get the TTL for negative caching.
+
+.PP
+If \fIOpt\fR is any atom, it is interpreted as \fI{Opt,true}\fR unless the atom string starts with \fI"no"\fR, making the interpretation \fI{Opt,false}\fR. For example, \fIusevc\fR is an alias for \fI{usevc, true}\fR and \fInousevc\fR is an alias for \fI{usevc, false}\fR.
+
+.PP
+Option \fIinet6\fR has no effect on this function. You probably want to use \fIType = a | aaaa\fR instead.
+
+
+.RE

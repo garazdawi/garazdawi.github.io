@@ -1,0 +1,381 @@
+.TH net 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+net \- Network interface.
+
+.SH DESCRIPTION
+.PP
+This module provides an API for the network interface.
+
+.SH DATA TYPES
+.LP
+.B
+\fBaddress_info() ::\fR
+\fB          #{family := socket:domain(),\fR
+\fB            socktype := any | socket:type() | integer(),\fR
+\fB            protocol := socket:protocol(),\fR
+\fB            address := socket:sockaddr()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBifaddrs() ::\fR
+\fB          #{name := string(),\fR
+\fB            flags := ifaddrs_flags(),\fR
+\fB            addr => socket:sockaddr(),\fR
+\fB            netmask => socket:sockaddr(),\fR
+\fB            broadaddr => socket:sockaddr(),\fR
+\fB            dstaddr => socket:sockaddr()}.\fR
+
+.br
+.RS
+.PP
+Interface addresses and flags.
+
+.PP
+This type defines addresses and flags for an interface.
+
+.PP
+\fBNOTE: \fRNot all fields of this map has to be present. The flags field can be used to test for some of the fields. For example \fIbroadaddr\fR will only be present if the \fIbroadcast\fR flag is present in flags.
+
+
+
+.RE
+.B
+\fBifaddrs_filter() ::\fR
+\fB          all | default | inet | inet6 | packet | link | hwaddr |\fR
+\fB          ifaddrs_filter_map() |\fR
+\fB          ifaddrs_filter_fun().\fR
+
+.br
+.RS
+.PP
+Interface address filtering selector.
+
+all
+.RS 2
+All interfaces
+
+
+.RE
+
+default
+.RS 2
+Interfaces with address family 
+\fIinet\fR \fIor\fR \fIinet6\fR
+
+.RE
+
+inet | inet6 | packet | link
+.RS 2
+Interfaces with 
+\fIonly\fR the specified address family
+
+.RE
+hwaddr
+.RS 2
+Interfaces with address family 
+\fIpacket\fR \fIor\fR \fIlink\fR
+
+.RE
+
+
+.RE
+.B
+\fBifaddrs_filter_fun() :: fun((ifaddrs()) -> boolean()).\fR
+
+.br
+.RS
+.PP
+Interface address filtering selector \fIfunction/0\fR.
+
+.PP
+For each \fIifaddrs\fR entry, return either \fItrue\fR to keep the entry or \fIfalse\fR to discard the entry.
+
+.PP
+For example, to get an interface list which only contains non-\fIloopback\fR \fIinet\fR interfaces:
+
+.IP
+.nf
+net:getifaddrs(
+    fun (#{ addr  := #{family := inet},
+            flags := Flags}) ->
+          not lists:member(loopback, Flags);
+        (_) ->
+          false
+    end).
+
+.fi
+
+
+.RE
+.B
+\fBifaddrs_filter_map() ::\fR
+\fB          #{family :=\fR
+\fB                all | default | local | inet | inet6 | packet | link |\fR
+\fB                [local | inet | inet6 | packet | link],\fR
+\fB            flags := any | [ifaddrs_flag()]}.\fR
+
+.br
+.RS
+.PP
+Interface address filtering selector map.
+
+.PP
+The \fIfamily\fR field can only have the (above) specified values (and not all the values of socket:domain()). It can also be a list of values, to cover the situation when any of the specified families are accepted. For example, family can be set to \fI[inet,inet6]\fR if either \fIinet\fR or \fIinet6\fR is accepted.
+
+.PP
+The use of the \fIflags\fR field is that any flag provided must exist for the interface.
+
+.PP
+For example, if \fIfamily\fR is set to \fIinet\fR and \fIflags\fR to \fI[broadcast, multicast]\fR only interfaces with address family \fIinet\fR and the flags \fIbroadcast\fR and \fImulticast\fR will be listed.
+
+
+.RE
+.B
+\fBifaddrs_flag() ::\fR
+\fB          up | broadcast | debug | loopback | pointopoint | notrailers |\fR
+\fB          running | noarp | promisc | master | slave | multicast |\fR
+\fB          portsel | automedia | dynamic.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBifaddrs_flags() :: [ifaddrs_flag()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBname_info() :: #{host := string(), service := string()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBname_info_flag() ::\fR
+\fB          namereqd | dgram | nofqdn | numerichost | numericserv.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBname_info_flag_ext() :: idn.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBname_info_flags() :: [name_info_flag() | name_info_flag_ext()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnetwork_interface_index() :: non_neg_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnetwork_interface_name() :: string().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetaddrinfo(Host, undefined) -> {ok, Info} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Host :: string(),\fR
+\fB                         Info :: [address_info()],\fR
+\fB                         Reason :: term();\fR
+\fB                 (undefined, Service) -> {ok, Info} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Service :: string(),\fR
+\fB                         Info :: [address_info()],\fR
+\fB                         Reason :: term();\fR
+\fB                 (Host, Service) -> {ok, Info} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Host :: string(),\fR
+\fB                         Service :: string(),\fR
+\fB                         Info :: [address_info()],\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Network address and service translation.
+
+.PP
+This function is the inverse of \fIgetnameinfo\fR. It converts host and service to a corresponding socket address.
+
+.PP
+One of the \fIHost\fR and \fIService\fR may be \fIundefined\fR but \fInot\fR both.
+
+
+.RE
+.B
+\fBgethostname() -> {ok, HostName} | {error, Reason}\fR
+\fB                     when HostName :: string(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Return the name of the current host.
+
+
+.RE
+.B
+\fBgetifaddrs(Filter) -> {ok, IfAddrs} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Filter :: ifaddrs_filter(),\fR
+\fB                        IfAddrs :: [ifaddrs()],\fR
+\fB                        Reason :: term();\fR
+\fB                (Namespace) -> {ok, IfAddrs} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Namespace :: file:filename_all(),\fR
+\fB                        IfAddrs :: [ifaddrs()],\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Get interface addresses.
+
+.PP
+With argument 'Filter: get the machines interface addresses, filtered according to \fIFilter\fR.
+
+.PP
+With argument \fINamespace\fR: equivalent to \fIgetifaddrs(default, Namespace)\fR.
+
+
+.RE
+.B
+\fBgetifaddrs(Filter, Namespace) -> {ok, IfAddrs} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Filter :: ifaddrs_filter(),\fR
+\fB                        Namespace :: file:filename_all(),\fR
+\fB                        IfAddrs :: [ifaddrs()],\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Get interface addresses in a namespace.
+
+.PP
+The same as \fIgetifaddrs(Filter)\fR but in the specified \fINamespace\fR.
+
+
+.RE
+.B
+\fBgetnameinfo(SockAddr, Flags) -> {ok, Info} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         SockAddr :: socket:sockaddr(),\fR
+\fB                         Flags :: name_info_flags() | undefined,\fR
+\fB                         Info :: name_info(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Address-to-name translation in a protocol-independant manner.
+
+.PP
+This function is the inverse of \fIgetaddrinfo\fR. It converts a socket address to a corresponding host and service.
+
+
+.RE
+.B
+\fBgetservbyname(Name, Protocol) ->\fR
+\fB                       {ok, PortNumber} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Name :: atom() | string(),\fR
+\fB                           PortNumber :: socket:port_number(),\fR
+\fB                           Protocol :: any | socket:protocol(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Get service by name.
+
+.PP
+This function is used to get the port number of the specified protocol for the named service.
+
+
+.RE
+.B
+\fBgetservbyport(PortNumber, Protocol) ->\fR
+\fB                       {ok, Name} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           PortNumber :: socket:port_number(),\fR
+\fB                           Protocol :: any | socket:protocol(),\fR
+\fB                           Name :: atom() | string(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Get service by name.
+
+.PP
+This function is used to get the service name of the specified protocol for the given port number.
+
+
+.RE
+.B
+\fBif_index2name(Idx) -> {ok, Name} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Idx :: network_interface_index(),\fR
+\fB                           Name :: network_interface_name(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Mappings between network interface index and names.
+
+
+.RE
+.B
+\fBif_name2index(Name) -> {ok, Idx} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Name :: network_interface_name(),\fR
+\fB                           Idx :: network_interface_index(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Mappings between network interface names and indexes.
+
+
+.RE
+.B
+\fBif_names() -> {ok, Names} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Names :: [{Idx, If}],\fR
+\fB                      Idx :: network_interface_index(),\fR
+\fB                      If :: network_interface_name(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+Get network interface names and indexes.
+
+
+.RE

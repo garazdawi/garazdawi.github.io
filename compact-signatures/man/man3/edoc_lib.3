@@ -1,0 +1,42 @@
+.TH edoc_lib 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc_lib \- Utility functions for EDoc.
+
+.SH DESCRIPTION
+.PP
+\fBSee also: \fR\fIedoc\fR.
+
+.SH DATA TYPES
+.LP
+.SH FUNCTIONS
+.LP
+.B
+\fBget_doc_env(App, Modules, Options) -> edoc:env()\fR
+\fB                     when\fR
+\fB                         App :: atom() | no_app,\fR
+\fB                         Modules :: [module()],\fR
+\fB                         Options :: proplist().\fR
+
+.br
+.RS
+.PP
+Creates an environment data structure used by parts of EDoc for generating references, etc. See \fI\fIedoc:run/2\fR\fR for a description of the options \fIfile_suffix\fR, \fIapp_default\fR and \fIdoc_path\fR.
+
+.PP
+\fBSee also: \fR\fIedoc:get_doc/3\fR, \fIedoc_extract:source/4\fR.
+
+
+.RE
+.B
+\fBinfer_module_app(module()) -> no_app | {app, atom()}.\fR
+
+.br
+.RS
+.PP
+Infer application containing the given module.
+
+.PP
+It's expected that modules which are not preloaded and don't match the \fI<app>/ebin/<mod>.beam\fR path pattern will NOT have an app name inferred properly. \fIno_app\fR is returned in such cases.
+
+
+.RE

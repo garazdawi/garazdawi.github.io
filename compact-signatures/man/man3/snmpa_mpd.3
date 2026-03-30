@@ -1,0 +1,271 @@
+.TH snmpa_mpd 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpa_mpd \- Message Processing and Dispatch module for the SNMP agent
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmpa_mpd\fR implements the version independent Message Processing and Dispatch functionality in SNMP for the agent. It is supposed to be used from a Network Interface process (Definition of Agent Net if).
+
+.SS "DATA TYPES"
+
+.PP
+For more information, see the data types in \fIsnmpa_conf\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBacm_data() :: acm_data_cmy() | acm_data_v3().\fR
+
+.br
+.RS
+.PP
+This is the message specific data used in the SNMP message. This value is received in a \fIsend_pdu\fR or \fIsend_pdu_req\fR message from the agent (by the net-if process).
+
+
+.RE
+.B
+\fB-opaque acm_data_cmy() \fR
+
+.br
+.RS
+.PP
+This is the message specific data used in the SNMPv1 and SNMPv2c message.
+
+
+.RE
+.B
+\fB-opaque acm_data_v3() \fR
+
+.br
+.RS
+.PP
+This is the message specific data used in the SNMPv3 message.
+
+
+.RE
+.B
+\fBlogger() ::\fR
+\fB          fun((Type :: snmp_pdus:pdu_type(),\fR
+\fB               Data ::\fR
+\fB                   binary() |\fR
+\fB                   {V3Hdr :: snmp_pdus:v3_hdr(),\fR
+\fB                    ScopedPDUBytes :: binary()}) ->\fR
+\fB                  snmp:void()).\fR
+
+.br
+.RS
+.PP
+A \fIfun\fR that handles audit trail logging.
+
+
+.RE
+.B
+\fB-opaque mpd_state() \fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmsg_data() :: msg_data_cmy() | msg_data_ctx().\fR
+
+.br
+.RS
+.PP
+This is the message specific data used in the SNMP message. This value is received in a \fIsend_pdu\fR or \fIsend_pdu_req\fR message from the agent (by the net-if process).
+
+
+.RE
+.B
+\fB-opaque msg_data_cmy() \fR
+
+.br
+.RS
+.PP
+This is the message specific data used in the SNMP message. In SNMPv1 and SNMPv2c, this message data is the community string.
+
+
+.RE
+.B
+\fB-opaque msg_data_ctx() \fR
+
+.br
+.RS
+.PP
+This is the message specific data used in the SNMP message. In SNMPv3, it is the context information.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdiscarded_pdu(Variable) -> snmp:void()\fR
+\fB                       when Variable :: snmpa:name() | false.\fR
+
+.br
+.RS
+.PP
+Increments the variable associated with a discarded pdu. This function can be used when the net_if process receives a \fIdiscarded_pdu\fR message from the agent.
+
+
+.RE
+.B
+\fBgenerate_msg(Vsn, NoteStore, Pdu, MsgData, LocalEngineID, To) ->\fR
+\fB                      {ok, PacketsAndAddresses} | {discarded, Reason}\fR
+\fB                      when\fR
+\fB                          Vsn :: snmp_pdus:version(),\fR
+\fB                          NoteStore :: pid(),\fR
+\fB                          Pdu :: snmp_pdus:pdu(),\fR
+\fB                          MsgData :: msg_data(),\fR
+\fB                          LocalEngineID ::\fR
+\fB                              snmp_framework_mib:engine_id(),\fR
+\fB                          To :: [DestAddr],\fR
+\fB                          DestAddr ::\fR
+\fB                              {Domain, Address} |\fR
+\fB                              {{Domain, Address}, SecData},\fR
+\fB                          SecData :: term(),\fR
+\fB                          PacketsAndAddresses ::\fR
+\fB                              [{Domain, Address, Packet}],\fR
+\fB                          Domain :: snmpa_conf:transportDomain(),\fR
+\fB                          Address :: snmpa_conf:transportAddress(),\fR
+\fB                          Packet :: binary(),\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+Generates a possibly encrypted request packet to be sent to the network.
+
+.PP
+\fIMsgData\fR is the message specific data used in the SNMP message. This value is received in a \fIsend_pdu\fR or \fIsend_pdu_req\fR message from the agent. In SNMPv1 and SNMPv2c, this message data is the community string. In SNMPv3, it is the context information.
+
+.PP
+\fITo\fR is a list of destination addresses and their corresponding security parameters. This value is received in the same message from the agent and then transformed through \fIprocess_taddrs\fR before passed to this function.
+
+.PP
+\fBNOTE: \fRNote that the use of the LocalEngineID argument is only intended for special cases, if the agent is to "emulate" multiple EngineIDs! By default, the agent uses the value of \fISnmpEngineID\fR (see SNMP-FRAMEWORK-MIB).
+
+
+
+.RE
+.B
+\fBgenerate_response_msg(Vsn, RePdu, Type, ACMData, LocalEngineID,\fR
+\fB                            Log) ->\fR
+\fB                               {ok, Packet} | {discarded, Reason}\fR
+\fB                               when\fR
+\fB                                   Vsn :: snmp_pdus:version(),\fR
+\fB                                   RePdu :: snmp_pdus:pdu(),\fR
+\fB                                   Type :: snmp_pdus:pdu_type(),\fR
+\fB                                   ACMData :: acm_data(),\fR
+\fB                                   LocalEngineID ::\fR
+\fB                                       snmp_framework_mib:engine_id(),\fR
+\fB                                   Log :: logger(),\fR
+\fB                                   Packet :: binary(),\fR
+\fB                                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+Generates a possibly encrypted response packet to be sent to the network. \fIType\fR is the \fI#pdu.type\fR of the original request.
+
+.PP
+\fBNOTE: \fRNote that the use of the LocalEngineID argument is only intended for special cases, if the agent is to "emulate" multiple EngineIDs! By default, the agent uses the value of \fISnmpEngineID\fR (see SNMP-FRAMEWORK-MIB).
+
+
+
+.RE
+.B
+\fBinit(Vsns) -> MPDState\fR
+\fB              when Vsns :: [snmp:version()], MPDState :: mpd_state().\fR
+
+.br
+.RS
+.PP
+This function can be called from the net_if process at start-up. The options list defines which versions to use.
+
+.PP
+It also initializes some SNMP counters.
+
+
+.RE
+.B
+\fBprocess_packet(Packet, TDomain, TAddress, State, NoteStore, Log) ->\fR
+\fB                        {ok, Vsn, Pdu, PduMS, ACMData} |\fR
+\fB                        {discarded, Reason} |\fR
+\fB                        {discovery, DiscoPacket}\fR
+\fB                        when\fR
+\fB                            Packet :: binary(),\fR
+\fB                            TDomain :: snmpa_conf:transportDomain(),\fR
+\fB                            TAddress :: {IpAddr, IpPort},\fR
+\fB                            IpAddr :: inet:ip_address(),\fR
+\fB                            IpPort :: inet:port_number(),\fR
+\fB                            State :: mpd_state(),\fR
+\fB                            NoteStore :: pid(),\fR
+\fB                            Log :: logger(),\fR
+\fB                            Vsn :: snmp_pdus:version(),\fR
+\fB                            Pdu :: snmp_pdus:pdu(),\fR
+\fB                            PduMS :: pos_integer(),\fR
+\fB                            ACMData :: acm_data(),\fR
+\fB                            Reason :: term(),\fR
+\fB                            DiscoPacket :: binary();\fR
+\fB                    (Packet, From, LocalEngineID, State, NoteStore, Log) ->\fR
+\fB                        {ok, Vsn, Pdu, PduMS, ACMData} |\fR
+\fB                        {discarded, Reason} |\fR
+\fB                        {discovery, DiscoPacket}\fR
+\fB                        when\fR
+\fB                            Packet :: binary(),\fR
+\fB                            From :: {TDomain, TAddress},\fR
+\fB                            TDomain :: snmpa_conf:transportDomain(),\fR
+\fB                            TAddress :: {IpAddr, IpPort},\fR
+\fB                            IpAddr :: inet:ip_address(),\fR
+\fB                            IpPort :: inet:port_number(),\fR
+\fB                            LocalEngineID ::\fR
+\fB                                snmp_framework_mib:engine_id(),\fR
+\fB                            State :: mpd_state(),\fR
+\fB                            NoteStore :: pid(),\fR
+\fB                            Log :: logger(),\fR
+\fB                            Vsn :: snmp_pdus:version(),\fR
+\fB                            Pdu :: snmp_pdus:pdu(),\fR
+\fB                            PduMS :: pos_integer(),\fR
+\fB                            ACMData :: acm_data(),\fR
+\fB                            Reason :: term(),\fR
+\fB                            DiscoPacket :: binary().\fR
+
+.br
+.RS
+.PP
+Processes an incoming packet. Performs authentication and decryption as necessary. The return values should be passed to the agent.
+
+.PP
+\fBNOTE: \fRNote that the use of the LocalEngineID argument is only intended for special cases, if the agent is to "emulate" multiple EngineIDs! By default, the agent uses the value of \fISnmpEngineID\fR (see SNMP-FRAMEWORK-MIB).
+
+
+
+.RE
+.B
+\fBprocess_taddrs(InDests) -> OutDests\fR
+\fB                        when\fR
+\fB                            InDests :: [InDest],\fR
+\fB                            InDest ::\fR
+\fB                                {{InDomain, InAddress}, SecData} |\fR
+\fB                                {InDomain, InAddress},\fR
+\fB                            InDomain :: term(),\fR
+\fB                            InAddress :: term(),\fR
+\fB                            SecData :: term(),\fR
+\fB                            OutDests :: [OutDest],\fR
+\fB                            OutDest ::\fR
+\fB                                {{OutDomain, OutAddress}, SecData} |\fR
+\fB                                {OutDomain, OutAddress},\fR
+\fB                            OutDomain :: snmpa_conf:transportDomain(),\fR
+\fB                            OutAddress :: snmpa_conf:transportAddress().\fR
+
+.br
+.RS
+.PP
+Transforms addresses from internal MIB format to one more useful to Agent Net if.
+
+.PP
+See also \fIgenerate_msg\fR.
+
+
+.RE

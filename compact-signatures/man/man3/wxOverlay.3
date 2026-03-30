@@ -1,0 +1,83 @@
+.TH wxOverlay 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxOverlay \- Creates an overlay over an existing window, allowing for manipulations like rubberbanding, etc.
+
+.SH DESCRIPTION
+.PP
+On wxOSX the overlay is implemented with native platform APIs, on the other platforms it is simulated using \fIwxMemoryDC\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDCOverlay\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxOverlay
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxOverlay() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxOverlay()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew() -> wxOverlay().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBreset(This) -> ok when This :: wxOverlay().\fR
+
+.br
+.RS
+.PP
+Clears the overlay without restoring the former state.
+
+.PP
+To be done, for example, when the window content has been changed and repainted.
+
+
+.RE

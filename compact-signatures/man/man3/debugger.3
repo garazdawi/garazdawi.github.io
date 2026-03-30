@@ -1,0 +1,68 @@
+.TH debugger 3 "debugger 6.0.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+debugger \- The Erlang Debugger for debugging and testing of Erlang programs.
+
+.SH DESCRIPTION
+.SH FUNCTIONS
+.LP
+.B
+\fBquick(Module, Name, Args) -> term()\fR
+\fB               when Module :: atom(), Name :: atom(), Args :: [term()].\fR
+
+.br
+.RS
+.PP
+Debugs a single process.
+
+.PP
+The module \fIModule\fR is interpreted and \fIapply(Module, Name, Args)\fR is called. This opens an "Attach Process" window. For details, see the User's Guide.
+
+
+.RE
+.B
+\fBstart() -> term().\fR
+
+.br
+.RS
+.PP
+Starts Debugger.
+
+.PP
+Started by this function, Debugger interprets code on all known nodes.
+
+
+.RE
+.B
+\fBstart(Mode) -> term() when Mode :: local | global | wx;\fR
+\fB           (File) -> term() when File :: string().\fR
+
+.br
+.RS
+.PP
+Starts Debugger.
+
+.PP
+If \fIModeOrFile\fR is a string, it is assumed to be the name of a file, and Debugger tries to load its settings from this file. For details about settings, see the User's Guide.
+
+.PP
+If \fIModeOrFile\fR is atom \fIlocal\fR, Debugger interprets code only at the current node. If \fIModeOrFile\fR is \fIglobal\fR, Debugger interprets code on all known nodes.
+
+
+.RE
+.B
+\fBstart(Mode, File) -> term()\fR
+\fB               when Mode :: local | global, File :: string().\fR
+
+.br
+.RS
+.PP
+Starts Debugger.
+
+.PP
+Debugger tries to load its settings from the file named by \fIFile\fR. For details about settings, see the User's Guide.
+
+.PP
+If \fIMode\fR is \fIlocal\fR, Debugger interprets code only on the current node. If \fIMode\fR is \fIglobal\fR, Debugger interprets code on all known nodes.
+
+
+.RE

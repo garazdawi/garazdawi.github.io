@@ -1,0 +1,514 @@
+.TH wxPrintData 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPrintData \- This class holds a variety of information related to printers and printer device contexts.
+
+.SH DESCRIPTION
+.PP
+This class is used to create a \fIwxPrinterDC\fR (not implemented in wx) and a \fIwxPostScriptDC\fR. It is also used as a data member of \fIwxPrintDialogData\fR and \fIwxPageSetupDialogData\fR, as part of the mechanism for transferring data between the print dialogs and the application.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview printing
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPrintDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPageSetupDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPrintDialogData\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPageSetupDialogData\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPostScriptDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPrintData
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPrintData() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxPrintData()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetBin(This) -> wx:wx_enum() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns the current bin (papersource).
+
+.PP
+By default, the system is left to select the bin (\fIwxPRINTBIN_DEFAULT\fR is returned).
+
+.PP
+See \fIsetBin/2\fR for the full list of bin values.
+
+
+.RE
+.B
+\fBgetCollate(This) -> boolean() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns true if collation is on.
+
+
+.RE
+.B
+\fBgetColour(This) -> boolean() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns true if colour printing is on.
+
+
+.RE
+.B
+\fBgetDuplex(This) -> wx:wx_enum() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns the duplex mode.
+
+.PP
+One of wxDUPLEX_SIMPLEX, wxDUPLEX_HORIZONTAL, wxDUPLEX_VERTICAL.
+
+
+.RE
+.B
+\fBgetNoCopies(This) -> integer() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns the number of copies requested by the user.
+
+
+.RE
+.B
+\fBgetOrientation(This) -> wx:wx_enum() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Gets the orientation.
+
+.PP
+This can be wxLANDSCAPE or wxPORTRAIT.
+
+
+.RE
+.B
+\fBgetPaperId(This) -> wx:wx_enum() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns the paper size id.
+
+.PP
+See: \fIsetPaperId/2\fR
+
+
+.RE
+.B
+\fBgetPrinterName(This) -> unicode:charlist()\fR
+\fB                        when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns the printer name.
+
+.PP
+If the printer name is the empty string, it indicates that the default printer should be used.
+
+
+.RE
+.B
+\fBgetQuality(This) -> integer() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns the current print quality.
+
+.PP
+This can be a positive integer, denoting the number of dots per inch, or one of the following identifiers:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPRINT_QUALITY_HIGH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPRINT_QUALITY_MEDIUM
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPRINT_QUALITY_LOW
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPRINT_QUALITY_DRAFT
+
+.RE
+
+.PP
+On input you should pass one of these identifiers, but on return you may get back a positive integer indicating the current resolution setting.
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Returns true if the print data is valid for using in print dialogs.
+
+.PP
+This can return false on Windows if the current printer is not set, for example. On all other platforms, it returns true.
+
+
+.RE
+.B
+\fBnew() -> wxPrintData().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Data) -> wxPrintData() when Data :: wxPrintData().\fR
+
+.br
+.RS
+.PP
+Copy constructor.
+
+
+.RE
+.B
+\fBsetBin(This, Flag) -> ok\fR
+\fB                when This :: wxPrintData(), Flag :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the current bin.
+
+
+.RE
+.B
+\fBsetCollate(This, Flag) -> ok\fR
+\fB                    when This :: wxPrintData(), Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets collation to on or off.
+
+
+.RE
+.B
+\fBsetColour(This, Flag) -> ok\fR
+\fB                   when This :: wxPrintData(), Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets colour printing on or off.
+
+
+.RE
+.B
+\fBsetDuplex(This, Mode) -> ok\fR
+\fB                   when This :: wxPrintData(), Mode :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Returns the duplex mode.
+
+.PP
+One of wxDUPLEX_SIMPLEX, wxDUPLEX_HORIZONTAL, wxDUPLEX_VERTICAL.
+
+
+.RE
+.B
+\fBsetNoCopies(This, N) -> ok\fR
+\fB                     when This :: wxPrintData(), N :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the default number of copies to be printed out.
+
+
+.RE
+.B
+\fBsetOrientation(This, Orientation) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxPrintData(),\fR
+\fB                            Orientation :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the orientation.
+
+.PP
+This can be wxLANDSCAPE or wxPORTRAIT.
+
+
+.RE
+.B
+\fBsetPaperId(This, PaperId) -> ok\fR
+\fB                    when This :: wxPrintData(), PaperId :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the paper id.
+
+.PP
+This indicates the type of paper to be used. For a mapping between paper id, paper size and string name, see wxPrintPaperDatabase in \fI"paper.h"\fR (not yet documented).
+
+
+.RE
+.B
+\fBsetPrinterName(This, PrinterName) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxPrintData(),\fR
+\fB                            PrinterName :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the printer name.
+
+.PP
+This can be the empty string to indicate that the default printer should be used.
+
+
+.RE
+.B
+\fBsetQuality(This, Quality) -> ok\fR
+\fB                    when This :: wxPrintData(), Quality :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the desired print quality.
+
+.PP
+This can be a positive integer, denoting the number of dots per inch, or one of the following identifiers:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPRINT_QUALITY_HIGH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPRINT_QUALITY_MEDIUM
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPRINT_QUALITY_LOW
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPRINT_QUALITY_DRAFT
+
+.RE
+
+.PP
+On input you should pass one of these identifiers, but on return you may get back a positive integer indicating the current resolution setting.
+
+
+.RE

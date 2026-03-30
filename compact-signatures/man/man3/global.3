@@ -1,0 +1,444 @@
+.TH global 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+global \- A global name registration facility.
+
+.SH DESCRIPTION
+.PP
+This module consists of the following services:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Registration of global names
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Global locks
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Maintenance of the fully connected network
+
+.RE
+
+.PP
+As of OTP 25, \fIglobal\fR will by default prevent overlapping partitions due to network issues by actively disconnecting from nodes that reports that they have lost connections to other nodes. This will cause fully connected partitions to form instead of leaving the network in a state with overlapping partitions.
+
+.PP
+\fBWARNING: \fRPrevention of overlapping partitions can be disabled using the \fIprevent_overlapping_partitions\fR Kernel parameter, making \fIglobal\fR behave like it used to do. This is, however, problematic for all applications expecting a fully connected network to be provided, such as for example \fImnesia\fR, but also for \fIglobal\fR itself. A network of overlapping partitions might cause the internal state of \fIglobal\fR to become inconsistent. Such an inconsistency can remain even after such partitions have been brought together to form a fully connected network again. The effect on other applications that expects that a fully connected network is maintained may vary, but they might misbehave in very subtle hard to detect ways during such a partitioning. Since you might get hard to detect issues without this fix, you are \fIstrongly\fR advised \fInot\fR to disable this fix. Also note that this fix \fIhas\fR to be enabled on \fIall\fR nodes in the network in order to work properly.
+
+
+.PP
+\fBNOTE: \fRNone of the above services will be reliably delivered unless both of the kernel parameters \fIconnect_all\fR and \fIprevent_overlapping_partitions\fR are enabled. Calls to the \fIglobal\fR API will, however, \fInot\fR fail even though one or both of them are disabled. You will just get unreliable results.
+
+
+.PP
+These services are controlled through the process \fIglobal_name_server\fR that exists on every node. The global name server starts automatically when a node is started. With the term \fIglobal\fR is meant over a system consisting of many Erlang nodes.
+
+.PP
+The ability to globally register names is a central concept in the programming of distributed Erlang systems. In this module, the equivalent of the \fIregister/2\fR and \fIwhereis/1\fR BIFs (for local name registration) are provided, but for a network of Erlang nodes. A registered name is an alias for a process identifier (pid). The global name server monitors globally registered pids. If a process terminates, the name is also globally unregistered.
+
+.PP
+The registered names are stored in replica global name tables on every node. There is no central storage point. Thus, the translation of a name to a pid is fast, as it is always done locally. For any action resulting in a change to the global name table, all tables on other nodes are automatically updated.
+
+.PP
+Global locks have lock identities and are set on a specific resource. For example, the specified resource can be a pid. When a global lock is set, access to the locked resource is denied for all resources other than the lock requester.
+
+.PP
+Both the registration and lock services are atomic. All nodes involved in these actions have the same view of the information.
+
+.PP
+The global name server also performs the critical task of continuously monitoring changes in node configuration. If a node that runs a globally registered process goes down, the name is globally unregistered. To this end, the global name server subscribes to \fInodeup\fR and \fInodedown\fR messages sent from module \fInet_kernel\fR. Relevant Kernel application variables in this context are \fInet_setuptime\fR, \fInet_ticktime\fR, and \fIdist_auto_connect\fR.
+
+.PP
+The name server also maintains a fully connected network. For example, if node \fIN1\fR connects to node \fIN2\fR (which is already connected to \fIN3\fR), the global name servers on the nodes \fIN1\fR and \fIN3\fR ensure that also \fIN1\fR and \fIN3\fR are connected. In this case, the name registration service cannot be used, but the lock mechanism still works.
+
+.PP
+If the global name server fails to connect nodes (\fIN1\fR and \fIN3\fR in the example), a warning event is sent to the error logger. The presence of such an event does not exclude the nodes to connect later (you can, for example, try command \fIrpc:call(N1, net_adm, ping, [N2])\fR in the Erlang shell), but it indicates a network problem.
+
+.PP
+\fBNOTE: \fRIf the fully connected network is not set up properly, try first to increase the value of \fInet_setuptime\fR.
+
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIglobal_group\fR, \fInet_kernel\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBid() :: {ResourceId :: term(), LockRequesterId :: term()}.\fR
+
+.br
+.RS
+.PP
+A lock id used to set or delete lock \fIResourceId\fR on behalf of \fILockRequesterId\fR.
+
+
+.RE
+.B
+\fBmethod() ::\fR
+\fB          fun((Name :: term(), Pid :: pid(), Pid2 :: pid()) ->\fR
+\fB                  pid() | none).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBretries() :: non_neg_integer() | infinity.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrans_fun() :: function() | {module(), atom()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdel_lock(Id, Nodes) -> true when Id :: id(), Nodes :: [node()].\fR
+
+.br
+.RS
+.PP
+Deletes the lock \fIId\fR synchronously.
+
+
+.RE
+.B
+\fBdisconnect() -> [node()].\fR
+
+.br
+.RS
+.PP
+Disconnect from all other nodes known to \fIglobal\fR.
+
+.PP
+A list of node names (in an unspecified order) is returned which corresponds to the nodes that were disconnected. All disconnect operations performed have completed when \fIglobal:disconnect/0\fR returns.
+
+.PP
+The disconnects will be made in such a way that only the current node will be removed from the cluster of \fIglobal\fR nodes. If [\fIprevent_overlapping_partitions\fR] is enabled and you disconnect, from other nodes in the cluster of \fIglobal\fR nodes, by other means, \fIglobal\fR on the other nodes may partition the remaining nodes in order to ensure that no overlapping partitions appear. Even if [\fIprevent_overlapping_partitions\fR] is disabled, you should preferably use \fIglobal:disconnect/0\fR in order to remove current node from a cluster of \fIglobal\fR nodes, since you otherwise likely \fIwill\fR create overlapping partitions which might cause problems.
+
+.PP
+Note that if the node is going to be halted, there is \fIno\fR need to remove it from a cluster of \fIglobal\fR nodes explicitly by calling \fIglobal:disconnect/0\fR before halting it. The removal from the cluster is taken care of automatically when the node halts regardless of whether [\fIprevent_overlapping_partitions\fR] is enabled or not.
+
+.PP
+If current node has been configured to be part of a \fIglobal group\fR, only connected and/or synchronized nodes in that group are known to \fIglobal\fR, so \fIglobal:disconnect/0\fR will \fIonly\fR disconnect from those nodes. If current node is \fInot\fR part of a \fIglobal group\fR, all connected visible nodes will be known to \fIglobal\fR, so \fIglobal:disconnect/0\fR will disconnect from all those nodes.
+
+.PP
+Note that information about connected nodes does not instantaneously reach \fIglobal\fR, so the caller might see a node part of the result returned by \fInodes()\fR while it still is not known to \fIglobal\fR. The disconnect operation will, however, still not cause any overlapping partitions when [\fIprevent_overlapping_partitions\fR] is enabled. If [\fIprevent_overlapping_partitions\fR] is disabled, overlapping partitions might form in this case.
+
+.PP
+Note that when [\fIprevent_overlapping_partitions\fR] is enabled, you may see warning reports on other nodes when they detect that current node has disconnected. These are in this case completely harmless and can be ignored.
+
+.PP
+kernel_app.md#prevent_overlapping_partitions
+
+
+.RE
+.B
+\fBnotify_all_name(Name, Pid1, Pid2) -> none\fR
+\fB                         when\fR
+\fB                             Name :: term(),\fR
+\fB                             Pid1 :: pid(),\fR
+\fB                             Pid2 :: pid().\fR
+
+.br
+.RS
+.PP
+The function unregisters both pids and sends the message \fI{global_name_conflict, Name, OtherPid}\fR to both processes.
+
+.PP
+Can be used as a name resolving function for \fIregister_name/3\fR and \fIre_register_name/3\fR.
+
+
+.RE
+.B
+\fBrandom_exit_name(Name, Pid1, Pid2) -> pid()\fR
+\fB                          when\fR
+\fB                              Name :: term(),\fR
+\fB                              Pid1 :: pid(),\fR
+\fB                              Pid2 :: pid().\fR
+
+.br
+.RS
+.PP
+The function randomly selects one of the pids for registration and kills the other one.
+
+.PP
+Can be used as a name resolving function for \fIregister_name/3\fR and \fIre_register_name/3\fR.
+
+
+.RE
+.B
+\fBrandom_notify_name(Name, Pid1, Pid2) -> pid()\fR
+\fB                            when\fR
+\fB                                Name :: term(),\fR
+\fB                                Pid1 :: pid(),\fR
+\fB                                Pid2 :: pid().\fR
+
+.br
+.RS
+.PP
+The function randomly selects one of the pids for registration, and sends the message \fI{global_name_conflict, Name}\fR to the other pid.
+
+.PP
+Can be used as a name resolving function for \fIregister_name/3\fR and \fIre_register_name/3\fR.
+
+
+.RE
+.B
+\fBre_register_name(Name, Pid, Resolve) -> yes\fR
+\fB                          when\fR
+\fB                              Name :: term(),\fR
+\fB                              Pid :: pid(),\fR
+\fB                              Resolve :: method().\fR
+
+.br
+.RS
+.PP
+Atomically changes the registered name \fIName\fR on all nodes to refer to \fIPid\fR.
+
+.PP
+Function \fIResolve\fR has the same behavior as in \fIregister_name/2,3\fR.
+
+
+.RE
+.B
+\fBregister_name(Name, Pid, Resolve) -> yes | no\fR
+\fB                       when\fR
+\fB                           Name :: term(),\fR
+\fB                           Pid :: pid(),\fR
+\fB                           Resolve :: method().\fR
+
+.br
+.RS
+.PP
+Globally associates name \fIName\fR with a pid, that is, globally notifies all nodes of a new global name in a network of Erlang nodes.
+
+.PP
+When new nodes are added to the network, they are informed of the globally registered names that already exist. The network is also informed of any global names in newly connected nodes. If any name clashes are discovered, function \fIResolve\fR is called. Its purpose is to decide which pid is correct. If the function crashes, or returns anything other than one of the pids, the name is unregistered. This function is called once for each name clash.
+
+.PP
+\fBWARNING: \fRIf you plan to change code without restarting your system, you must use an external fun (\fIfun Module:Function/Arity\fR) as function \fIResolve\fR. If you use a local fun, you can never replace the code for the module that the fun belongs to.
+
+
+.PP
+Three predefined resolve functions exist: \fIrandom_exit_name/3\fR, \fIrandom_notify_name/3\fR, and \fInotify_all_name/3\fR.
+
+.PP
+This function is completely synchronous, that is, when this function returns, the name is either registered on all nodes or none.
+
+.PP
+The function returns \fIyes\fR if successful, \fIno\fR if it fails. For example, \fIno\fR is returned if an attempt is made to register an already registered process or to register a process with a name that is already in use.
+
+.PP
+\fBNOTE: \fRReleases up to and including Erlang/OTP R10 did not check if the process was already registered. The global name table could therefore become inconsistent. The old (buggy) behavior can be chosen by giving the Kernel application variable \fIglobal_multi_name_action\fR the value \fIallow\fR.
+
+
+.PP
+If a process with a registered name dies, or the node goes down, the name is unregistered on all nodes.
+
+
+.RE
+.B
+\fBregistered_names() -> [Name] when Name :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list of all globally registered names.
+
+
+.RE
+.B
+\fBsend(Name, Msg) -> Pid\fR
+\fB              when Name :: term(), Msg :: term(), Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Sends message \fIMsg\fR to the pid globally registered as \fIName\fR.
+
+.PP
+If \fIName\fR is not a globally registered name, the calling function exits with reason \fI{badarg, {Name, Msg}}\fR.
+
+
+.RE
+.B
+\fBset_lock(Id, Nodes, Retries) -> boolean()\fR
+\fB                  when\fR
+\fB                      Id :: id(),\fR
+\fB                      Nodes :: [node()],\fR
+\fB                      Retries :: retries().\fR
+
+.br
+.RS
+.PP
+Sets a lock on the specified nodes on using \fIid/0\fR.
+
+.PP
+If a lock already exists on \fIResourceId\fR for another requester than \fILockRequesterId\fR, and \fIRetries\fR is not equal to \fI0\fR, the process sleeps for a while and tries to execute the action later. When \fIRetries\fR attempts have been made, \fIfalse\fR is returned, otherwise \fItrue\fR. If \fIRetries\fR is \fIinfinity\fR, \fItrue\fR is eventually returned (unless the lock is never released).
+
+.PP
+This function is completely synchronous.
+
+.PP
+If a process that holds a lock dies, or the node goes down, the locks held by the process are deleted.
+
+.PP
+The global name server keeps track of all processes sharing the same lock, that is, if two processes set the same lock, both processes must delete the lock.
+
+.PP
+This function does not address the problem of a deadlock. A deadlock can never occur as long as processes only lock one resource at a time. A deadlock can occur if some processes try to lock two or more resources. It is up to the application to detect and rectify a deadlock.
+
+.PP
+\fBNOTE: \fRAvoid the following values of \fIResourceId\fR, otherwise Erlang/OTP does not work properly:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdist_ac\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIglobal\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImnesia_adjust_log_writes\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImnesia_table_lock\fR
+
+.RE
+
+
+
+.RE
+.B
+\fBsync() -> ok | {error, Reason :: term()}.\fR
+
+.br
+.RS
+.PP
+Synchronizes the global name server with all nodes known to this node.
+
+.PP
+These are the nodes that are returned from \fInodes()\fR. When this function returns, the global name server receives global information from all nodes. This function can be called when new nodes are added to the network.
+
+.PP
+The only possible error reason \fIReason\fR is \fI{"global_groups definition error", Error}\fR.
+
+
+.RE
+.B
+\fBtrans(Id, Fun, Nodes, Retries) -> Res | aborted\fR
+\fB               when\fR
+\fB                   Id :: id(),\fR
+\fB                   Fun :: trans_fun(),\fR
+\fB                   Nodes :: [node()],\fR
+\fB                   Retries :: retries(),\fR
+\fB                   Res :: term().\fR
+
+.br
+.RS
+.PP
+Sets a lock on \fIId\fR (using \fIset_lock/3\fR).
+
+.PP
+If this succeeds, \fIFun()\fR is evaluated and the result \fIRes\fR is returned. Returns \fIaborted\fR if the lock attempt fails. If \fIRetries\fR is set to \fIinfinity\fR, the transaction does not abort.
+
+.PP
+\fIinfinity\fR is the default setting and is used if no value is specified for \fIRetries\fR.
+
+
+.RE
+.B
+\fBunregister_name(Name) -> _ when Name :: term().\fR
+
+.br
+.RS
+.PP
+Removes the globally registered name \fIName\fR from the network of Erlang nodes.
+
+
+.RE
+.B
+\fBwhereis_name(Name) -> pid() | undefined when Name :: term().\fR
+
+.br
+.RS
+.PP
+Returns the pid with the globally registered name \fIName\fR. Returns \fIundefined\fR if the name is not globally registered.
+
+
+.RE

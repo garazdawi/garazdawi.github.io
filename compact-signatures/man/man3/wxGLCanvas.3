@@ -1,0 +1,169 @@
+.TH wxGLCanvas 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGLCanvas \- \fIwxGLCanvas\fR is a class for displaying OpenGL graphics.
+
+.SH DESCRIPTION
+.PP
+It is always used in conjunction with \fIwxGLContext\fR as the context can only be made current (i.e. active for the OpenGL commands) when it is associated to a \fIwxGLCanvas\fR.
+
+.PP
+More precisely, you first need to create a \fIwxGLCanvas\fR window and then create an instance of a \fIwxGLContext\fR that is initialized with this \fIwxGLCanvas\fR and then later use either \fIsetCurrent/2\fR with the instance of the \fIwxGLContext\fR or \fIwxGLContext:setCurrent/2\fR with the instance of the \fIwxGLCanvas\fR (which might be not the same as was used for the creation of the context) to bind the OpenGL state that is represented by the rendering context to the canvas, and then finally call \fIswapBuffers/1\fR to swap the buffers of the OpenGL canvas and thus show your current output.
+
+.PP
+Please note that \fIwxGLContext\fR always uses physical pixels, even on the platforms where \fIwxWindow\fR uses logical pixels, affected by the coordinate scaling, on high DPI displays. Thus, if you want to set the OpenGL view port to the size of entire window, you must multiply the result returned by \fIwxWindow:getClientSize/1\fR by \fIwxWindow:getContentScaleFactor/1\fR before passing it to \fIglViewport()\fR. Same considerations apply to other OpenGL functions and other coordinates, notably those retrieved from \fIwxMouseEvent\fR in the event handlers.
+
+.PP
+Notice that versions of wxWidgets previous to 2.9 used to implicitly create a \fIwxGLContext\fR inside \fIwxGLCanvas\fR itself. This is still supported in the current version but is deprecated now and will be removed in the future, please update your code to create the rendering contexts explicitly.
+
+.PP
+To set up the attributes for the canvas (number of bits for the depth buffer, number of bits for the stencil buffer and so on) you pass them in the constructor using a \fIwxGLAttributes\fR (not implemented in wx) instance. You can still use the way before 3.1.0 (setting up the correct values of the \fIattribList\fR parameter) but it's discouraged.
+
+.PP
+Note: On those platforms which use a configure script (e.g. Linux and macOS) OpenGL support is automatically enabled if the relative headers and libraries are found. To switch it on under the other platforms (e.g. Windows), you need to edit the \fIsetup.h\fR file and set \fIwxUSE_GLCANVAS\fR to \fI1\fR and then also pass \fIUSE_OPENGL=1\fR to the make utility. You may also need to add \fIopengl32.lib\fR (and \fIglu32.lib\fR for old OpenGL versions) to the list of the libraries your program is linked with.
+
+.PP
+See: \fIwxGLContext\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGLCanvas
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGLCanvas() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreateSurface(This) -> boolean() when This :: wxGLCanvas().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdestroy(This :: wxGLCanvas()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBisDisplaySupported(AttribList) -> boolean()\fR
+\fB                            when AttribList :: [integer()].\fR
+
+.br
+.RS
+.PP
+Determines if a canvas having the specified attributes is available.
+
+.PP
+This only applies for visual attributes, not rendering context attributes. Please, use the new form of this method, using \fIwxGLAttributes\fR (not implemented in wx).
+
+.PP
+Return: true if attributes are supported.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxGLCanvas()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {id, integer()} |\fR
+\fB                     {attribList, [integer()]} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {name, unicode:chardata()} |\fR
+\fB                     {palette, wxPalette:wxPalette()}.\fR
+
+.br
+.RS
+.PP
+This constructor is still available only for compatibility reasons.
+
+.PP
+Please use the constructor with \fIwxGLAttributes\fR (not implemented in wx) instead.
+
+.PP
+If \fIattribList\fR is not specified, \fIwxGLAttributes::PlatformDefaults()\fR (not implemented in wx) is used, plus some other attributes (see below).
+
+
+.RE
+.B
+\fBsetCurrent(This, Context) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxGLCanvas(),\fR
+\fB                        Context :: wxGLContext:wxGLContext().\fR
+
+.br
+.RS
+.PP
+Makes the OpenGL state that is represented by the OpenGL rendering context \fIcontext\fR current, i.e.
+
+.PP
+it will be used by all subsequent OpenGL calls.
+
+.PP
+This is equivalent to \fIwxGLContext:setCurrent/2\fR called with this window as parameter.
+
+.PP
+Note: This function may only be called when the window is shown on screen, in particular it can't usually be called from the constructor as the window isn't yet shown at this moment.
+
+.PP
+Return: false if an error occurred.
+
+
+.RE
+.B
+\fBswapBuffers(This) -> boolean() when This :: wxGLCanvas().\fR
+
+.br
+.RS
+.PP
+Swaps the double-buffer of this window, making the back-buffer the front-buffer and vice versa, so that the output of the previous OpenGL commands is displayed on the window.
+
+.PP
+Return: false if an error occurred.
+
+
+.RE

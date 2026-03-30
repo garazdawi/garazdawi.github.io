@@ -1,0 +1,422 @@
+.TH erl_eval 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_eval \- The Erlang meta interpreter.
+
+.SH DESCRIPTION
+.PP
+This module provides an interpreter for Erlang expressions. The expressions are in the abstract syntax as returned by \fIerl_parse\fR, the Erlang parser, or \fIio\fR.
+
+.SS "Local Function Handler"
+
+.PP
+During evaluation of a function, no calls can be made to local functions. An undefined function error would be generated. However, the optional argument \fILocalFunctionHandler\fR can be used to define a function that is called when there is a call to a local function. The argument can have the following formats:
+
+{value,Func}
+.RS 2
+This defines a local function handler that is called with:
+
+.IP
+.nf
+Func(Name, Arguments)
+
+.fi
+
+.PP
+\fIName\fR is the name of the local function (an atom) and \fIArguments\fR is a list of the \fIevaluated\fR arguments. The function handler returns the value of the local function. In this case, the current bindings cannot be accessed. To signal an error, the function handler calls \fIexit/1\fR with a suitable exit value.
+
+
+.RE
+
+{eval,Func}
+.RS 2
+This defines a local function handler that is called with:
+
+.IP
+.nf
+Func(Name, Arguments, Bindings)
+
+.fi
+
+.PP
+\fIName\fR is the name of the local function (an atom), \fIArguments\fR is a list of the \fIunevaluated\fR arguments, and \fIBindings\fR are the current variable bindings. The function handler returns:
+
+.IP
+.nf
+{value,Value,NewBindings}
+
+.fi
+
+.PP
+\fIValue\fR is the value of the local function and \fINewBindings\fR are the updated variable bindings. In this case, the function handler must itself evaluate all the function arguments and manage the bindings. To signal an error, the function handler calls \fIexit/1\fR with a suitable exit value.
+
+
+.RE
+
+none
+.RS 2
+There is no local function handler.
+
+
+.RE
+
+.SS "Non-Local Function Handler"
+
+.PP
+The optional argument \fINonLocalFunctionHandler\fR can be used to define a function that is called in the following cases:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+functional object (fun) is called.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+built-in function is called.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+function is called using the \fIM:F\fR syntax, where \fIM\fR and \fIF\fR are atoms or expressions.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An operator \fIOp/A\fR is called (this is handled as a call to function \fIerlang:Op/A\fR).
+
+.RE
+
+.PP
+Exceptions are calls to \fIerlang:apply/2,3\fR; neither of the function handlers are called for such calls. The argument can have the following formats:
+
+{value,Func}
+.RS 2
+This defines a non-local function handler. The function may be called with two arguments:
+
+.IP
+.nf
+Func(FuncSpec, Arguments)
+
+.fi
+
+.PP
+or three arguments:
+
+.IP
+.nf
+Func(Anno, FuncSpec, Arguments)
+
+.fi
+
+.PP
+\fIAnno\fR is the \fIerl_anno:anno()\fR of the node, \fIFuncSpec\fR is the name of the function of the form \fI{Module,Function}\fR or a fun, and \fIArguments\fR is a list of the \fIevaluated\fR arguments. The function handler returns the value of the function. To signal an error, the function handler calls \fIexit/1\fR with a suitable exit value.
+
+
+.RE
+
+none
+.RS 2
+There is no non-local function handler.
+
+
+.RE
+
+.PP
+\fBNOTE: \fRFor calls such as \fIerlang:apply(Fun, Args)\fR or \fIerlang:apply(Module, Function, Args)\fR, the call of the non-local function handler corresponding to the call to \fIerlang:apply/2,3\fR itself (\fIFunc({erlang, apply}, [Fun, Args])\fR or \fIFunc({erlang, apply}, [Module, Function, Args])\fR) never takes place. The non-local function handler \fIis\fR however called with the evaluated arguments of the call to \fIerlang:apply/2,3\fR: \fIFunc(Fun, Args)\fR or \fIFunc({Module, Function}, Args)\fR (assuming that \fI{Module, Function}\fR is not \fI{erlang, apply}\fR). Calls to functions defined by evaluating fun expressions \fI"fun ... end"\fR are also hidden from non-local function handlers.
+
+
+.PP
+The non-local function handler argument is probably not used as frequently as the local function handler argument. A possible use is to call \fIexit/1\fR on calls to functions that for some reason are not allowed to be called.
+
+.SH DATA TYPES
+.LP
+.B
+\fBbinding_struct() :: orddict:orddict() | map().\fR
+
+.br
+.RS
+.PP
+A binding structure. It is either a \fImap\fR or an \fIorddict\fR. \fIerl_eval\fR will always return the same type as the one given.
+
+
+.RE
+.B
+\fBbindings() :: [{name(), value()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexpression() :: erl_parse:abstract_expr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexpression_list() :: [expression()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexpressions() :: [erl_parse:abstract_expr()].\fR
+
+.br
+.RS
+.PP
+As returned by \fIerl_parse:parse_exprs/1\fR or \fIio:parse_erl_exprs/2\fR.
+
+
+.RE
+.B
+\fBfunc_spec() ::\fR
+\fB          {Module :: module(), Function :: atom()} | function().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlfun_eval_handler() ::\fR
+\fB          fun((Name :: atom(),\fR
+\fB               Arguments :: expression_list(),\fR
+\fB               Bindings :: binding_struct()) ->\fR
+\fB                  {value,\fR
+\fB                   Value :: value(),\fR
+\fB                   NewBindings :: binding_struct()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlfun_value_handler() ::\fR
+\fB          fun((Name :: atom(), Arguments :: [term()]) ->\fR
+\fB                  Value :: value()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlocal_function_handler() ::\fR
+\fB          {value, lfun_value_handler()} |\fR
+\fB          {eval, lfun_eval_handler()} |\fR
+\fB          none.\fR
+
+.br
+.RS
+.PP
+Further described in section Local Function Handler in this module
+
+
+.RE
+.B
+\fBname() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnlfun_handler() ::\fR
+\fB          fun((FuncSpec :: func_spec(), Arguments :: [term()]) -> term()) |\fR
+\fB          fun((Anno :: erl_anno:anno(),\fR
+\fB               FuncSpec :: func_spec(),\fR
+\fB               Arguments :: [term()]) ->\fR
+\fB                  term()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnon_local_function_handler() :: {value, nlfun_handler()} | none.\fR
+
+.br
+.RS
+.PP
+Further described in section Non-Local Function Handler in this module.
+
+
+.RE
+.B
+\fBvalue() :: term().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_binding(Name, Value, BindingStruct) -> binding_struct()\fR
+\fB                     when\fR
+\fB                         Name :: name(),\fR
+\fB                         Value :: value(),\fR
+\fB                         BindingStruct :: binding_struct().\fR
+
+.br
+.RS
+.PP
+Adds binding \fIName=Value\fR to \fIBindingStruct\fR. Returns an updated binding structure.
+
+
+.RE
+.B
+\fBbinding(Name, BindingStruct) -> {value, value()} | unbound\fR
+\fB                 when Name :: name(), BindingStruct :: binding_struct().\fR
+
+.br
+.RS
+.PP
+Returns the binding of \fIName\fR in \fIBindingStruct\fR.
+
+
+.RE
+.B
+\fBbindings(BindingStruct :: binding_struct()) -> bindings().\fR
+
+.br
+.RS
+.PP
+Returns the list of bindings contained in the binding structure.
+
+
+.RE
+.B
+\fBdel_binding(Name, BindingStruct) -> binding_struct()\fR
+\fB                     when\fR
+\fB                         Name :: name(),\fR
+\fB                         BindingStruct :: binding_struct().\fR
+
+.br
+.RS
+.PP
+Removes the binding of \fIName\fR in \fIBindingStruct\fR. Returns an updated binding structure.
+
+
+.RE
+.B
+\fBexpr(Expression, Bindings, LocalFunctionHandler,\fR
+\fB           NonLocalFunctionHandler, ReturnFormat) ->\fR
+\fB              {value, Value, NewBindings} | Value\fR
+\fB              when\fR
+\fB                  Expression :: expression(),\fR
+\fB                  Bindings :: binding_struct(),\fR
+\fB                  LocalFunctionHandler :: local_function_handler(),\fR
+\fB                  NonLocalFunctionHandler ::\fR
+\fB                      non_local_function_handler(),\fR
+\fB                  ReturnFormat :: none | value,\fR
+\fB                  Value :: value(),\fR
+\fB                  NewBindings :: binding_struct().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIExpression\fR with the set of bindings \fIBindings\fR. \fIExpression\fR is an expression in abstract syntax.
+
+.PP
+For an explanation of when and how to use arguments \fILocalFunctionHandler\fR and \fINonLocalFunctionHandler\fR, see sections Local Function Handler and Non-Local Function Handler in this module.
+
+.PP
+Returns \fI{value, Value, NewBindings}\fR by default. If \fIReturnFormat\fR is \fIvalue\fR, only \fIValue\fR is returned.
+
+
+.RE
+.B
+\fBexpr_list(ExpressionList, Bindings, LocalFunctionHandler,\fR
+\fB                NonLocalFunctionHandler) ->\fR
+\fB                   {ValueList, NewBindings}\fR
+\fB                   when\fR
+\fB                       ExpressionList :: expression_list(),\fR
+\fB                       Bindings :: binding_struct(),\fR
+\fB                       LocalFunctionHandler :: local_function_handler(),\fR
+\fB                       NonLocalFunctionHandler ::\fR
+\fB                           non_local_function_handler(),\fR
+\fB                       ValueList :: [value()],\fR
+\fB                       NewBindings :: binding_struct().\fR
+
+.br
+.RS
+.PP
+Evaluates a list of expressions in parallel, using the same initial bindings for each expression. Attempts are made to merge the bindings returned from each evaluation.
+
+.PP
+This function is useful in \fILocalFunctionHandler\fR, see section Local Function Handler in this module.
+
+.PP
+Returns \fI{ValueList, NewBindings}\fR.
+
+
+.RE
+.B
+\fBexprs(Expressions, Bindings, LocalFunctionHandler,\fR
+\fB            NonLocalFunctionHandler) ->\fR
+\fB               {value, Value, NewBindings}\fR
+\fB               when\fR
+\fB                   Expressions :: expressions(),\fR
+\fB                   Bindings :: binding_struct(),\fR
+\fB                   LocalFunctionHandler :: local_function_handler(),\fR
+\fB                   NonLocalFunctionHandler ::\fR
+\fB                       non_local_function_handler(),\fR
+\fB                   Value :: value(),\fR
+\fB                   NewBindings :: binding_struct().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIExpressions\fR with the set of bindings \fIBindings\fR, where \fIExpressions\fR is a sequence of expressions (in abstract syntax) of a type that can be returned by \fIio:parse_erl_exprs/2\fR.
+
+.PP
+For an explanation of when and how to use arguments \fILocalFunctionHandler\fR and \fINonLocalFunctionHandler\fR, see sections Local Function Handler and Non-Local Function Handler in this module.
+
+.PP
+Returns \fI{value, Value, NewBindings}\fR
+
+
+.RE
+.B
+\fBnew_bindings() -> binding_struct().\fR
+
+.br
+.RS
+.PP
+Returns an empty binding structure.
+
+
+.RE

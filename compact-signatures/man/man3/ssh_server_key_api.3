@@ -1,0 +1,46 @@
+.TH ssh_server_key_api 3 "ssh 5.5.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ssh_server_key_api \- -behaviour(ssh_server_key_api).
+
+.SH DESCRIPTION
+.PP
+Behaviour describing the API for public key handling of an SSH server. By implementing the callbacks defined in this behavior, the public key handling of an SSH server can be customized. By default the SSH application implements this behavior with help of the standard OpenSSH files, see the ssh application manual.
+
+.SH DATA TYPES
+.LP
+.B
+\fBdaemon_key_cb_options(T) ::\fR
+\fB          [{key_cb_private, [T]} | ssh:daemon_option()].\fR
+
+.br
+.RS
+.PP
+Options provided to ssh:daemon/2,3.
+
+.PP
+The option list given in the \fIkey_cb\fR option is available with the key \fIkey_cb_private\fR.
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBhost_key(Algorithm, DaemonOptions)\fR
+
+.br
+.RS
+.PP
+Fetches the private key of the host.
+
+
+.RE
+.B
+\fBis_auth_key(PublicKey, User, DaemonOptions)\fR
+
+.br
+.RS
+.PP
+Checks if the user key is authorized.
+
+
+.RE

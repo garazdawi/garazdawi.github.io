@@ -1,0 +1,877 @@
+.TH merl 3 "syntax_tools 4.0.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+merl \- Metaprogramming in Erlang.
+
+.SH DESCRIPTION
+.PP
+Merl is a user-friendly interface to the \fIerl_syntax\fR module, making it easy both to build new ASTs from scratch and to match and decompose existing ASTs. For details that are outside the scope of Merl itself, see the documentation of \fIerl_syntax\fR.
+
+.PP
+\fBQuick start\fR
+
+.PP
+To enable the full power of Merl, your module needs to include the Merl header file:
+
+.IP
+.nf
+-include_lib("syntax_tools/include/merl.hrl").
+
+.fi
+
+.PP
+Then, you can use the \fI?Q(Text)\fR macros in your code to create ASTs or match on existing ASTs. For example:
+
+.IP
+.nf
+Tuple = ?Q("{foo, 42}"),
+?Q("{foo, _@Number}") = Tuple,
+Call = ?Q("foo:bar(_@Number)")
+
+.fi
+
+.PP
+Calling \fImerl:print(Call)\fR will then print the following code:
+
+.IP
+.nf
+foo:bar(42)
+
+.fi
+
+.PP
+The \fI?Q\fR macros turn the quoted code fragments into ASTs, and lifts metavariables such as \fI_@Tuple\fR and \fI_@Number\fR to the level of your Erlang code, so you can use the corresponding Erlang variables \fITuple\fR and \fINumber\fR directly. This is the most straightforward way to use Merl, and in many cases it's all you need.
+
+.PP
+You can even write case switches using \fI?Q\fR macros as patterns. For example:
+
+.IP
+.nf
+case AST of
+    ?Q("{foo, _@Foo}") -> handle(Foo);
+    ?Q("{bar, _@Bar}") when erl_syntax:is_integer(Bar) -> handle(Bar);
+    _ -> handle_default()
+end
+
+.fi
+
+.PP
+These case switches only allow \fI?Q(...)\fR or \fI_\fR as clause patterns, and the guards may contain any expressions, not just Erlang guard expressions.
+
+.PP
+If the macro \fIMERL_NO_TRANSFORM\fR is defined before the \fImerl.hrl\fR header file is included, the parse transform used by Merl will be disabled, and in that case, the match expressions \fI?Q(...) = ...\fR, case switches using \fI?Q(...)\fR patterns, and automatic metavariables like \fI_@Tuple\fR cannot be used in your code, but the Merl macros and functions still work. To do metavariable substitution, you need to use the \fI?Q(Text, Map)\fR macro. For example:
+
+.IP
+.nf
+Tuple = ?Q("{foo, _@bar, _@baz}", [{bar, Bar}, {baz,Baz}])
+
+.fi
+
+.PP
+The text given to a \fI?Q(Text)\fR macro can be either a single string or a list of strings. The latter is useful when you need to split a long expression over multiple lines. For example:
+
+.IP
+.nf
+?Q(["case _@Expr of",
+    "  {foo, X} -> f(X);",
+    "  {bar, X} -> g(X)",
+    "  _ -> h(X)"
+"end"])
+
+.fi
+
+.PP
+If there is a syntax error somewhere in the text (like the missing semicolon in the second clause above) this allows Merl to generate an error message pointing to the exact line in your source code. (Just remember to comma-separate the strings in the list, otherwise Erlang will concatenate the string fragments as if they were a single string.)
+
+.PP
+\fBMetavariable syntax\fR
+
+.PP
+There are several ways to write a metavariable in your quoted code:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Atoms starting with \fI@\fR, for example \fI'@foo'\fR or \fI'@Foo'\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Variables starting with \fI_@\fR, for example \fI_@bar\fR or \fI_@Bar\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Strings starting with \fI"'@\fR, for example \fI"'@File"\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Integers starting with 909, for example \fI9091\fR or \fI909123\fR
+
+.RE
+
+.PP
+Following the prefix, one or more \fI_\fR or \fI0\fR characters may be used to indicate "lifting" of the variable one or more levels, and after that, a \fI@\fR or \fI9\fR character indicates a glob metavariable (matching zero or more elements in a sequence) rather than a normal metavariable. For example:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI'@_foo'\fR is lifted one level, and \fI_@__foo\fR is lifted two levels
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI_@@bar\fR is a glob variable, and \fI_@_@bar\fR is a lifted glob variable
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI90901\fR is a lifted variable,\fI90991\fR is a glob variable, and \fI9090091\fR is a glob variable lifted two levels
+
+.RE
+
+.PP
+(Note that the last character in the name is never considered to be a lift or glob marker, hence, \fI_@__\fR and \fI90900\fR are only lifted one level, not two. Also note that globs only matter for matching; when doing substitutions, a non-glob variable can be used to inject a sequence of elements, and vice versa.)
+
+.PP
+If the name after the prefix and any lift and glob markers is \fI_\fR or \fI0\fR, the variable is treated as an anonymous catch-all pattern in matches. For example, \fI_@_\fR, \fI_@@_\fR, \fI_@__\fR, or even \fI_@__@_\fR.
+
+.PP
+Finally, if the name without any prefixes or lift/glob markers begins with an uppercase character, as in \fI_@Foo\fR or \fI_@_@Foo\fR, it will become a variable on the Erlang level, and can be used to easily deconstruct and construct syntax trees:
+
+.IP
+.nf
+case Input of
+    ?Q("{foo, _@Number}") -> ?Q("foo:bar(_@Number)");
+    ...
+
+.fi
+
+.PP
+We refer to these as "automatic metavariables". If in addition the name ends with \fI@\fR, as in \fI_@Foo@\fR, the value of the variable as an Erlang term will be automatically converted to the corresponding abstract syntax tree when used to construct a larger tree. For example, in:
+
+.IP
+.nf
+Bar = {bar, 42},
+Foo = ?Q("{foo, _@Bar@}")
+
+.fi
+
+.PP
+(where Bar is just some term, not a syntax tree) the result \fIFoo\fR will be a syntax tree representing \fI{foo, {bar, 42}}\fR. This avoids the need for temporary variables in order to inject data, as in
+
+.IP
+.nf
+TmpBar = erl_syntax:abstract(Bar),
+Foo = ?Q("{foo, _@TmpBar}")
+
+.fi
+
+.PP
+If the context requires an integer rather than a variable, an atom, or a string, you cannot use the uppercase convention to mark an automatic metavariable. Instead, if the integer (without the \fI909\fR-prefix and lift/glob markers) ends in a \fI9\fR, the integer will become an Erlang-level variable prefixed with \fIQ\fR, and if it ends with \fI99\fR it will also be automatically abstracted. For example, the following will increment the arity of the exported function f:
+
+.IP
+.nf
+case Form of
+    ?Q("-export([f/90919]).") ->
+        Q2 = erl_syntax:concrete(Q1) + 1,
+        ?Q("-export([f/909299]).");
+    ...
+
+.fi
+
+.PP
+\fBWhen to use the various forms of metavariables\fR
+
+.PP
+Merl can only parse a fragment of text if it follows the basic syntactical rules of Erlang. In most places, a normal Erlang variable can be used as metavariable, for example:
+
+.IP
+.nf
+?Q("f(_@Arg)") = Expr
+
+.fi
+
+.PP
+but if you want to match on something like the name of a function, you have to use an atom as metavariable:
+
+.IP
+.nf
+?Q("'@Name'() -> _@@_." = Function
+
+.fi
+
+.PP
+(note the anonymous glob variable \fI_@@_\fR to ignore the function body).
+
+.PP
+In some contexts, only a string or an integer is allowed. For example, the directive \fI-file(Name, Line)\fR requires that \fIName\fR is a string literal and \fILine\fR an integer literal:
+
+.IP
+.nf
+?Q("-file(\\"'@File\\", 9090).") = ?Q("-file(\\"foo.erl\\", 42).")).
+
+.fi
+
+.PP
+This will extract the string literal \fI"foo.erl"\fR into the variable \fIFoo\fR. Note the use of the anonymous variable \fI9090\fR to ignore the line number. To match and also bind a metavariable that must be an integer literal, we can use the convention of ending the integer with a 9, turning it into a Q-prefixed variable on the Erlang level (see the previous section).
+
+.PP
+\fBGlobs\fR
+
+.PP
+Whenever you want to match out a number of elements in a sequence (zero or more) rather than a fixed set of elements, you need to use a glob. For example:
+
+.IP
+.nf
+?Q("{_@@Elements}") = ?Q({a, b, c})
+
+.fi
+
+.PP
+will bind Elements to the list of individual syntax trees representing the atoms \fIa\fR, \fIb\fR, and \fIc\fR. This can also be used with static prefix and suffix elements in the sequence. For example:
+
+.IP
+.nf
+?Q("{a, b, _@@Elements}") = ?Q({a, b, c, d})
+
+.fi
+
+.PP
+will bind Elements to the list of the \fIc\fR and \fId\fR subtrees, and
+
+.IP
+.nf
+?Q("{_@@Elements, c, d}") = ?Q({a, b, c, d})
+
+.fi
+
+.PP
+will bind Elements to the list of the \fIa\fR and \fIb\fR subtrees. You can even use plain metavariables in the prefix or suffix:
+
+.IP
+.nf
+?Q("{_@First, _@@Rest}") = ?Q({a, b, c})
+
+.fi
+
+.PP
+or
+
+.IP
+.nf
+?Q("{_@@_, _@Last}") = ?Q({a, b, c})
+
+.fi
+
+.PP
+(ignoring all but the last element). However, you cannot have two globs as part of the same sequence.
+
+.PP
+\fBLifted metavariables\fR
+
+.PP
+In some cases, the Erlang syntax rules make it impossible to place a metavariable directly where you would like it. For example, you cannot write:
+
+.IP
+.nf
+?Q("-export([_@@Name]).")
+
+.fi
+
+.PP
+to match out all name/arity pairs in the export list, or to insert a list of exports in a declaration, because the Erlang parser only allows elements on the form \fIA/I\fR (where \fIA\fR is an atom and \fII\fR an integer) in the export list. A variable like the above is not allowed, but neither is a single atom or integer, so \fI'@@Name'\fR or \fI909919\fR would not work either.
+
+.PP
+What you have to do in such cases is to write your metavariable in a syntactically valid position, and use lifting markers to denote where it should really apply, as in:
+
+.IP
+.nf
+?Q("-export(['@_@Name'/0]).")
+
+.fi
+
+.PP
+This causes the variable to be lifted (after parsing) to the next higher level in the syntax tree, replacing that entire subtree. In this case, the \fI'@_@Name'/0\fR will be replaced with \fI'@@Name'\fR, and the \fI/0\fR part was just used as dummy notation and will be discarded.
+
+.PP
+You may even need to apply lifting more than once. To match the entire export list as a single syntax tree, you can write:
+
+.IP
+.nf
+?Q("-export(['@__Name'/0]).")
+
+.fi
+
+.PP
+using two underscores, but with no glob marker this time. This will make the entire \fI['@__Name'/0]\fR part be replaced with \fI'@Name'\fR.
+
+.PP
+Sometimes, the tree structure of a code fragment is not very obvious, and parts of the structure may be invisible when printed as source code. For instance, a simple function definition like the following:
+
+.IP
+.nf
+zero() -> 0.
+
+.fi
+
+.PP
+consists of the name (the atom \fIzero\fR), and a list of clauses containing the single clause \fI() -> 0\fR. The clause consists of an argument list (empty), a guard (empty), and a body (which is always a list of expressions) containing the single expression \fI0\fR. This means that to match out the name and the list of clauses of any function, you'll need to use a pattern like \fI?Q("'@Name'() -> _@_@Body.")\fR, using a dummy clause whose body is a glob lifted one level.
+
+.PP
+To visualize the structure of a syntax tree, you can use the function \fImerl:show(T)\fR, which prints a summary. For example, entering
+
+.IP
+.nf
+merl:show(merl:quote("inc(X, Y) when Y > 0 -> X + Y."))
+
+.fi
+
+.PP
+in the Erlang shell will print the following (where the \fI+\fR signs separate groups of subtrees on the same level):
+
+.IP
+.nf
+function: inc(X, Y) when ... -> X + Y.
+  atom: inc
+  +
+  clause: (X, Y) when ... -> X + Y
+    variable: X
+    variable: Y
+    +
+    disjunction: Y > 0
+      conjunction: Y > 0
+        infix_expr: Y > 0
+          variable: Y
+          +
+          operator: >
+          +
+          integer: 0
+    +
+    infix_expr: X + Y
+      variable: X
+      +
+      operator: +
+      +
+      variable: Y
+
+.fi
+
+.PP
+This shows another important non-obvious case: a clause guard, even if it's as simple as \fIY > 0\fR, always consists of a single disjunction of one or more conjunctions of tests, much like a tuple of tuples. Thus:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"when _@Guard ->"\fR will only match a guard with exactly one test
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"when _@@Guard ->"\fR will match a guard with one or more comma-separated tests (but no semicolons), binding \fIGuard\fR to the list of tests
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"when _@_Guard ->"\fR will match just like the previous pattern, but binds \fIGuard\fR to the conjunction subtree
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"when _@_@Guard ->"\fR will match an arbitrary nonempty guard, binding \fIGuard\fR to the list of conjunction subtrees
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"when _@__Guard ->"\fR will match like the previous pattern, but binds \fIGuard\fR to the whole disjunction subtree
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+and finally, \fI"when _@__@Guard ->"\fR will match any clause, binding \fIGuard\fR to \fI[]\fR if the guard is empty and to \fI[Disjunction]\fR otherwise
+
+.RE
+
+.PP
+Thus, the following pattern matches all possible clauses:
+
+.IP
+.nf
+     "(_@Args) when _@__@Guard -> _@Body"
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBdefault_action() :: fun(() -> any()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBenv() :: [{Key :: id(), pattern_or_patterns()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBguard_test() :: fun((env()) -> boolean()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBguarded_action() ::\fR
+\fB          switch_action() | {guard_test(), switch_action()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBguarded_actions() :: guarded_action() | [guarded_action()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBid() :: atom() | integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlocation() :: erl_anno:location().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBpattern() :: tree() | template().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBpattern_or_patterns() :: pattern() | [pattern()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBswitch_action() :: fun((env()) -> any()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBswitch_clause() ::\fR
+\fB          {pattern_or_patterns(), guarded_actions()} |\fR
+\fB          {pattern_or_patterns(), guard_test(), switch_action()} |\fR
+\fB          default_action().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtemplate() ::\fR
+\fB          tree() |\fR
+\fB          {id()} |\fR
+\fB          {'*', id()} |\fR
+\fB          {template, atom(), term(), [[template()]]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtemplate_or_templates() :: template() | [template()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtext() :: string() | binary() | [string()] | [binary()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtree() :: erl_syntax:syntaxTree().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtree_or_trees() :: tree() | [tree()].\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBalpha(pattern_or_patterns(), [{id(), id()}]) ->\fR
+\fB               template_or_templates().\fR
+
+.br
+.RS
+.PP
+Alpha converts a pattern (renames variables).
+
+.PP
+Similar to tsubst/1, but only renames variables (including globs).
+
+.PP
+\fISee also: \fR\fItsubst/2\fR.
+
+
+.RE
+.B
+\fBcompile(tree_or_trees(), [compile:option()]) -> compile:comp_ret().\fR
+
+.br
+.RS
+.PP
+Compile a syntax tree or list of syntax trees representing a module into a binary BEAM object.
+
+.PP
+\fISee also: \fR\fIcompile/1\fR, \fIcompile_and_load/2\fR.
+
+
+.RE
+.B
+\fBcompile_and_load(tree_or_trees(), [compile:option()]) ->\fR
+\fB                          {ok, binary()} |\fR
+\fB                          error |\fR
+\fB                          {error, Errors :: list(), Warnings :: list()}.\fR
+
+.br
+.RS
+.PP
+Compile a syntax tree or list of syntax trees representing a module and load the resulting module into memory.
+
+.PP
+\fISee also: \fR\fIcompile/2\fR, \fIcompile_and_load/1\fR.
+
+
+.RE
+.B
+\fBmatch(pattern_or_patterns(), tree_or_trees()) ->\fR
+\fB               {ok, env()} | error.\fR
+
+.br
+.RS
+.PP
+Match a pattern against a syntax tree (or patterns against syntax trees) returning an environment mapping variable names to subtrees; the environment is always sorted on keys.
+
+.PP
+\fBNOTE: \fRMultiple occurrences of metavariables in the pattern is not allowed, but is not checked.
+
+
+.PP
+\fISee also: \fR\fIswitch/2\fR, \fItemplate/1\fR.
+
+
+.RE
+.B
+\fBmeta_template(template_or_templates()) -> tree_or_trees().\fR
+
+.br
+.RS
+.PP
+Turn a template into a syntax tree representing the template.
+
+.PP
+Meta-variables in the template are turned into normal Erlang variables if their names (after the metavariable prefix characters) begin with an uppercase character. For example, \fI_@Foo\fR in the template becomes the variable \fIFoo\fR in the meta-template. Furthermore, variables ending with \fI@\fR are automatically wrapped in a call to merl:term/1, so \fI_@Foo@\fR in the template becomes \fImerl:term(Foo)\fR in the meta-template.
+
+
+.RE
+.B
+\fBprint(tree_or_trees()) -> ok.\fR
+
+.br
+.RS
+.PP
+Pretty-print a syntax tree or template to the standard output.
+
+.PP
+This is a utility function for development and debugging.
+
+
+.RE
+.B
+\fBqquote(StartPos :: location(), Text :: text(), Env :: env()) ->\fR
+\fB                tree_or_trees().\fR
+
+.br
+.RS
+.PP
+Parse text and substitute meta-variables.
+
+.PP
+Takes an initial scanner starting position as first argument.
+
+.PP
+The macro \fI?Q(Text, Env)\fR expands to \fImerl:qquote(?LINE, Text, Env)\fR.
+
+.PP
+\fISee also: \fR\fIquote/2\fR.
+
+
+.RE
+.B
+\fBquote(StartPos :: location(), Text :: text()) -> tree_or_trees().\fR
+
+.br
+.RS
+.PP
+Parse text.
+
+.PP
+Takes an initial scanner starting position as first argument.
+
+.PP
+The macro \fI?Q(Text)\fR expands to \fImerl:quote(?LINE, Text)\fR.
+
+.PP
+\fISee also: \fR\fIquote/1\fR.
+
+
+.RE
+.B
+\fBshow(tree_or_trees()) -> ok.\fR
+
+.br
+.RS
+.PP
+Print the structure of a syntax tree or template to the standard output.
+
+.PP
+This is a utility function for development and debugging.
+
+
+.RE
+.B
+\fBsubst(pattern_or_patterns(), env()) -> tree_or_trees().\fR
+
+.br
+.RS
+.PP
+Substitute metavariables in a pattern or list of patterns, yielding a syntax tree or list of trees as result.
+
+.PP
+Both for normal metavariables and glob metavariables, the substituted value may be a single element or a list of elements. For example, if a list representing \fI1, 2, 3\fR is substituted for \fIvar\fR in either of \fI[foo, _@var, bar]\fR or \fI[foo, _@var, bar]\fR, the result represents \fI[foo, 1, 2, 3, bar]\fR.
+
+
+.RE
+.B
+\fBswitch(tree_or_trees(), [switch_clause()]) -> any().\fR
+
+.br
+.RS
+.PP
+Match against one or more clauses with patterns and optional guards.
+
+.PP
+Note that clauses following a default action will be ignored.
+
+.PP
+\fISee also: \fR\fImatch/2\fR.
+
+
+.RE
+.B
+\fBtemplate(pattern_or_patterns()) -> template_or_templates().\fR
+
+.br
+.RS
+.PP
+Turn a syntax tree or list of trees into a template or templates.
+
+.PP
+Templates can be instantiated or matched against, and reverted back to normal syntax trees using \fItree/1\fR. If the input is already a template, it is not modified further.
+
+.PP
+\fISee also: \fR\fImatch/2\fR, \fIsubst/2\fR, \fItree/1\fR.
+
+
+.RE
+.B
+\fBtemplate_vars(template_or_templates()) -> [id()].\fR
+
+.br
+.RS
+.PP
+Return an ordered list of the metavariables in the template.
+
+
+.RE
+.B
+\fBterm(term()) -> tree().\fR
+
+.br
+.RS
+.PP
+Create a syntax tree for a constant term.
+
+
+.RE
+.B
+\fBtree(template_or_templates()) -> tree_or_trees().\fR
+
+.br
+.RS
+.PP
+Revert a template to a normal syntax tree.
+
+.PP
+Any remaining metavariables are turned into \fI@\fR-prefixed atoms or \fI909\fR-prefixed integers.
+
+.PP
+\fISee also: \fR\fItemplate/1\fR.
+
+
+.RE
+.B
+\fBtsubst(pattern_or_patterns(), env()) -> template_or_templates().\fR
+
+.br
+.RS
+.PP
+Like \fIsubst/2\fR, but does not convert the result from a template back to a tree.
+
+.PP
+Useful if you want to do multiple separate substitutions.
+
+.PP
+\fISee also: \fR\fIsubst/2\fR, \fItree/1\fR.
+
+
+.RE
+.B
+\fBvar(atom()) -> tree().\fR
+
+.br
+.RS
+.PP
+Create a variable.
+
+
+.RE

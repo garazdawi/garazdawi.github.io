@@ -1,0 +1,452 @@
+.TH wxBrush 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxBrush \- A brush is a drawing tool for filling in areas.
+
+.SH DESCRIPTION
+.PP
+It is used for painting the background of rectangles, ellipses, etc. It has a colour and a style.
+
+.PP
+On a monochrome display, wxWidgets shows all brushes as white unless the colour is really black.
+
+.PP
+Do not initialize objects on the stack before the program commences, since other required structures may not have been set up yet. Instead, define global pointers to objects and create them in \fIwxApp::OnInit\fR (not implemented in wx) or when required.
+
+.PP
+An application may wish to create brushes with different characteristics dynamically, and there is the consequent danger that a large number of duplicate brushes will be created. Therefore an application may wish to get a pointer to a brush by using the global list of brushes ?wxTheBrushList, and calling the member function \fIwxBrushList::FindOrCreateBrush()\fR (not implemented in wx).
+
+.PP
+This class uses reference counting and copy-on-write internally so that assignments between two instances of this class are very cheap. You can therefore use actual objects instead of pointers without efficiency problems. If an instance of this class is changed it will create its own data internally so that other instances, which previously shared the data using the reference counting, are not affected.
+
+.PP
+Predefined objects (include wx.hrl):
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxNullBrush
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxBLACK_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxBLUE_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxCYAN_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxGREEN_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxYELLOW_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxGREY_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxLIGHT_GREY_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxMEDIUM_GREY_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxRED_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxTRANSPARENT_BRUSH
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxWHITE_BRUSH
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC:setBrush/2\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxBrush
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxBrush() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxBrush()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetColour(This) -> wx:wx_colour4() when This :: wxBrush().\fR
+
+.br
+.RS
+.PP
+Returns a reference to the brush colour.
+
+.PP
+See: \fIsetColour/4\fR
+
+
+.RE
+.B
+\fBgetStipple(This) -> wxBitmap:wxBitmap() when This :: wxBrush().\fR
+
+.br
+.RS
+.PP
+Gets a pointer to the stipple bitmap.
+
+.PP
+If the brush does not have a \fIwxBRUSHSTYLE_STIPPLE\fR style, this bitmap may be non-NULL but uninitialised (i.e. \fIwxBitmap\fR:\fIisOk/1\fR returns false).
+
+.PP
+See: \fIsetStipple/2\fR
+
+
+.RE
+.B
+\fBgetStyle(This) -> wx:wx_enum() when This :: wxBrush().\fR
+
+.br
+.RS
+.PP
+Returns the brush style, one of the ?wxBrushStyle values.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetStyle/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetColour/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetStipple/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBisHatch(This) -> boolean() when This :: wxBrush().\fR
+
+.br
+.RS
+.PP
+Returns true if the style of the brush is any of hatched fills.
+
+.PP
+See: \fIgetStyle/1\fR
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxBrush().\fR
+
+.br
+.RS
+.PP
+Returns true if the brush is initialised.
+
+.PP
+Notice that an uninitialized brush object can't be queried for any brush properties and all calls to the accessor methods on it will result in an assert failure.
+
+
+.RE
+.B
+\fBnew() -> wxBrush().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+.PP
+The brush will be uninitialised, and \fIwxBrush\fR:\fIisOk/1\fR will return false.
+
+
+.RE
+.B
+\fBnew(Colour) -> wxBrush() when Colour :: wx:wx_colour();\fR
+\fB         (Brush) -> wxBrush()\fR
+\fB             when Brush :: wxBrush:wxBrush() | wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Copy constructor, uses reference counting.
+
+
+.RE
+.B
+\fBnew(Colour, [Option]) -> wxBrush()\fR
+\fB             when\fR
+\fB                 Colour :: wx:wx_colour(),\fR
+\fB                 Option :: {style, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Constructs a brush from a colour object and \fIstyle\fR.
+
+
+.RE
+.B
+\fBsetColour(This, Colour) -> ok\fR
+\fB                   when This :: wxBrush(), Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the brush colour using red, green and blue values.
+
+.PP
+See: \fIgetColour/1\fR
+
+
+.RE
+.B
+\fBsetColour(This, Red, Green, Blue) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxBrush(),\fR
+\fB                       Red :: integer(),\fR
+\fB                       Green :: integer(),\fR
+\fB                       Blue :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetStipple(This, Bitmap) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxBrush(), Bitmap :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Sets the stipple bitmap.
+
+.PP
+Remark: The style will be set to \fIwxBRUSHSTYLE_STIPPLE\fR, unless the bitmap has a mask associated to it, in which case the style will be set to \fIwxBRUSHSTYLE_STIPPLE_MASK_OPAQUE\fR.
+
+.PP
+See: \fIwxBitmap\fR
+
+
+.RE
+.B
+\fBsetStyle(This, Style) -> ok\fR
+\fB                  when This :: wxBrush(), Style :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the brush style.
+
+.PP
+See: \fIgetStyle/1\fR
+
+
+.RE

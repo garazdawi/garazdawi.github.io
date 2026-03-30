@@ -1,0 +1,183 @@
+.TH snmpm_network_interface_filter 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpm_network_interface_filter \- Behaviour module for the SNMP manager network-interface filter.
+
+.SH DESCRIPTION
+.PP
+This module defines the behaviour of the manager network interface filter. A \fIsnmpm_network_interface_filter\fR compliant module must export the following functions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaccept_recv/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaccept_send/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaccept_recv_pdu/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaccept_send_pdu/3\fR
+
+.RE
+
+.PP
+The semantics of them and their exact signatures are explained below.
+
+.PP
+The purpose of the network interface filter is to allow for filtering of messages (accept or reject) receive and send. This is done on two levels:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The first level is at the UDP entry / exit point, i.e. immediately after the receipt of the message, before any message processing is done (accept_recv) and immediately before sending the message, after all message processing is done (accept_send).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The second level is at the MPD entry / exit point, i.e. immediately after the basic message processing (accept_recv_pdu) / immediately before the basic message processing (accept_send_pdu).
+
+.RE
+
+.PP
+Note that the network interface filter is something which is used by the network interface implementation provided by the application (\fIsnmpm_net_if\fR and \fIsnmpm_net_if_mt\fR). The default filter accepts all messages.
+
+.PP
+A network interface filter can e.g. be used during testing or for load regulation.
+
+.PP
+Legacy network interface filter modules used arguments on the form \fI(IpAddr, PortNumber,...)\fR instead of \fI(Domain, Addr, ...)\fR, and if the SNMP manager is run without changing the configuration to use transport domains the network interface filter will still get the old arguments and work as before.
+
+.SH DATA TYPES
+.LP
+.B
+\fBpdu_type() :: snmpm:pdu_type().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportAddressWithPort() ::\fR
+\fB          snmpa_conf:transportAddressWithPort().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportDomain() :: snmpa_conf:transportDomain().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.SH CALLBACKS
+.LP
+.B
+\fBaccept_recv(Domain, Addr)\fR
+
+.br
+.RS
+.PP
+Called at the reception of a message (before \fIany\fR processing has been done).
+
+.PP
+For the message to be rejected, the function \fImust\fR return \fIfalse\fR.
+
+
+.RE
+.B
+\fBaccept_recv_pdu(Domain, Addr, PduType)\fR
+
+.br
+.RS
+.PP
+Called after the basic message processing (MPD) has been done, but before the pdu is handed over to the server for primary processing.
+
+.PP
+For the pdu to be rejected, the function \fImust\fR return \fIfalse\fR.
+
+
+.RE
+.B
+\fBaccept_send(Domain, Addr)\fR
+
+.br
+.RS
+.PP
+Called before the sending of a message (after \fIall\fR processing has been done).
+
+.PP
+For the message to be rejected, the function \fImust\fR return \fIfalse\fR.
+
+
+.RE
+.B
+\fBaccept_send_pdu(Domain, Addr, PduType)\fR
+
+.br
+.RS
+.PP
+Called before the basic message processing (MPD) is done, when a pdu has been received from the master-agent.
+
+.PP
+For the message to be rejected, the function \fImust\fR return \fIfalse\fR.
+
+
+.RE

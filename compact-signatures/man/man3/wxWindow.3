@@ -1,0 +1,5306 @@
+.TH wxWindow 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxWindow \- \fIwxWindow\fR is the base class for all windows and represents any visible object on screen.
+
+.SH DESCRIPTION
+.PP
+All controls, top level windows and so on are windows. Sizers and device contexts are not, however, as they don't appear on screen themselves.
+
+.PP
+Please note that all children of the window will be deleted automatically by the destructor before the window itself is deleted which means that you don't have to worry about deleting them manually. Please see the window deletion overview for more information.
+
+.PP
+Also note that in this, and many others, wxWidgets classes some \fIGetXXX()\fR methods may be overloaded (as, for example, \fIgetSize/1\fR or \fIgetClientSize/1\fR). In this case, the overloads are non-virtual because having multiple virtual functions with the same name results in a virtual function name hiding at the derived class level (in English, this means that the derived class has to override all overloaded variants if it overrides any of them). To allow overriding them in the derived class, wxWidgets uses a unique protected virtual \fIDoGetXXX()\fR method and all \fIGetXXX()\fR ones are forwarded to it, so overriding the former changes the behaviour of the latter.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_DEFAULT: The window class will decide the kind of border to show, if any.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_SIMPLE: Displays a thin border around the window. wxSIMPLE_BORDER is the old name for this style.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_SUNKEN: Displays a sunken border. wxSUNKEN_BORDER is the old name for this style.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_RAISED: Displays a raised border. wxRAISED_BORDER is the old name for this style.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_STATIC: Displays a border suitable for a static control. wxSTATIC_BORDER is the old name for this style. Windows only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_THEME: Displays a native border suitable for a control, on the current platform. On Windows, this will be a themed border; on most other platforms a sunken border will be used. For more information for themed borders on Windows, please see Themed borders on Windows.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_NONE: Displays no border, overriding the default border style for the window. wxNO_BORDER is the old name for this style.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_DOUBLE: This style is obsolete and should not be used.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTRANSPARENT_WINDOW: The window is transparent, that is, it will not receive paint events. Windows only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTAB_TRAVERSAL: This style is used by wxWidgets for the windows supporting TAB navigation among their children, such as \fIwxDialog\fR and \fIwxPanel\fR. It should almost never be used in the application code.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxWANTS_CHARS: Use this to indicate that the window wants to get all char/key events for all keys - even for keys like TAB or ENTER which are usually used for dialog navigation and which wouldn't be generated without this style. If you need to use this style in order to get the arrows or etc., but would still like to have normal keyboard navigation take place, you should call Navigate in response to the key events for Tab and Shift-Tab.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNO_FULL_REPAINT_ON_RESIZE: On Windows, this style used to disable repainting the window completely when its size is changed. Since this behaviour is now the default, the style is now obsolete and no longer has an effect.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxVSCROLL: Use this style to enable a vertical scrollbar. Notice that this style cannot be used with native controls which don't support scrollbars nor with top-level windows in most ports.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxHSCROLL: Use this style to enable a horizontal scrollbar. The same limitations as for wxVSCROLL apply to this style.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxALWAYS_SHOW_SB: If a window has scrollbars, disable them instead of hiding them when they are not needed (i.e. when the size of the window is big enough to not require the scrollbars to navigate it). This style is currently implemented for wxMSW, wxGTK and wxUniversal and does nothing on the other platforms.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCLIP_CHILDREN: Use this style to eliminate flicker caused by the background being repainted, then children being painted over them. Windows only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFULL_REPAINT_ON_RESIZE: Use this style to force a complete redraw of the window whenever it is resized instead of redrawing just the part of the window affected by resizing. Note that this was the behaviour by default before 2.5.1 release and that if you experience redraw problems with code which previously used to work you may want to try this. Currently this style applies on GTK+ 2 and Windows only, and full repainting is always done on other platforms.
+
+.RE
+
+.SS "Extra Styles"
+
+.PP
+This class supports the following extra styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxWS_EX_BLOCK_EVENTS: wxCommandEvents and the objects of the derived classes are forwarded to the parent window and so on recursively by default. Using this flag for the given window allows blocking this propagation at this window, i.e. prevent the events from being propagated further upwards. Dialogs have this flag on by default for the reasons explained in the overview_events.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxWS_EX_TRANSIENT: Don't use this window as an implicit parent for the other windows: this must be used with transient windows as otherwise there is the risk of creating a dialog/frame with this window as a parent, which would lead to a crash if the parent were destroyed before the child.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxWS_EX_CONTEXTHELP: Under Windows, puts a query button on the caption. When pressed, Windows will go into a context-sensitive help mode and wxWidgets will send a \fIwxEVT_HELP\fR event if the user clicked on an application window. This style cannot be used (because of the underlying native behaviour) together with \fIwxMAXIMIZE_BOX\fR or \fIwxMINIMIZE_BOX\fR, so these two styles are automatically turned off if this one is used.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxWS_EX_PROCESS_IDLE: This window should always process idle events, even if the mode set by \fIwxIdleEvent:setMode/1\fR is \fIwxIDLE_PROCESS_SPECIFIED\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxWS_EX_PROCESS_UI_UPDATES: This window should always process UI update events, even if the mode set by \fIwxUpdateUIEvent:setMode/1\fR is \fIwxUPDATE_UI_PROCESS_SPECIFIED\fR.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview windowsizing
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxWindow
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIactivate\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIchild_focus\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcontext_menu\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhelp\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdrop_files\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerase_background\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIset_focus\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIkill_focus\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIidle\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIjoy_button_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIjoy_button_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIjoy_move\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIjoy_zmove\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIkey_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIkey_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIchar\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIchar_hook\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImouse_capture_lost\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImouse_capture_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIleft_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIleft_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImiddle_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImiddle_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIright_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIright_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImotion\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIenter_window\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIleave_window\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIleft_dclick\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImiddle_dclick\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIright_dclick\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImousewheel\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaux1_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaux1_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaux1_dclick\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaux2_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaux2_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaux2_dclick\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpaint\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscrollwin_top\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscrollwin_bottom\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscrollwin_lineup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscrollwin_linedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscrollwin_pageup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscrollwin_pagedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscrollwin_thumbtrack\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscrollwin_thumbrelease\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIset_cursor\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsize\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsys_colour_changed\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxWindow() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fB'Destroy'(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Destroys the window safely.
+
+.PP
+Use this function instead of the delete operator, since different window classes can be destroyed differently. Frames and dialogs are not destroyed immediately when this function is called - they are added to a list of windows to be deleted on idle time, when all the window's events have been processed. This prevents problems with events being sent to non-existent windows.
+
+.PP
+Return: true if the window has either been successfully deleted, or it has been added to the list of windows pending real deletion.
+
+
+.RE
+.B
+\fBcacheBestSize(This, Size) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxWindow(),\fR
+\fB                           Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the cached best size value.
+
+.PP
+See: \fIgetBestSize/1\fR
+
+
+.RE
+.B
+\fBcanSetTransparent(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the system supports transparent windows and calling \fIsetTransparent/2\fR may succeed.
+
+.PP
+If this function returns false, transparent windows are definitely not supported by the current system.
+
+
+.RE
+.B
+\fBcaptureMouse(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Directs all mouse input to this window.
+
+.PP
+Call \fIreleaseMouse/1\fR to release the capture.
+
+.PP
+Note that wxWidgets maintains the stack of windows having captured the mouse and when the mouse is released the capture returns to the window which had had captured it previously and it is only really released if there were no previous window. In particular, this means that you must release the mouse as many times as you capture it, unless the window receives the \fIwxMouseCaptureLostEvent\fR event.
+
+.PP
+Any application which captures the mouse in the beginning of some operation must handle \fIwxMouseCaptureLostEvent\fR and cancel this operation when it receives the event. The event handler must not recapture mouse.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIreleaseMouse/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMouseCaptureLostEvent\fR
+
+.RE
+
+
+.RE
+.B
+\fBcenter(This, [Option]) -> ok\fR
+\fB                when This :: wxWindow(), Option :: {dir, integer()}.\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIcentre/2\fR
+
+
+.RE
+.B
+\fBcenterOnParent(This, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            Option :: {dir, integer()}.\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIcentreOnParent/2\fR
+
+
+.RE
+.B
+\fBcentre(This, [Option]) -> ok\fR
+\fB                when This :: wxWindow(), Option :: {dir, integer()}.\fR
+
+.br
+.RS
+.PP
+Centres the window.
+
+.PP
+Remark: If the window is a top level one (i.e. doesn't have a parent), it will be centred relative to the screen anyhow.
+
+.PP
+See: \fIcenter/2\fR
+
+
+.RE
+.B
+\fBcentreOnParent(This, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            Option :: {dir, integer()}.\fR
+
+.br
+.RS
+.PP
+Centres the window on its parent.
+
+.PP
+This is a more readable synonym for \fIcentre/2\fR.
+
+.PP
+Remark: This methods provides for a way to centre top level windows over their parents instead of the entire screen. If there is no parent or if the window is not a top level window, then behaviour is the same as \fIcentre/2\fR.
+
+.PP
+See: \fIwxTopLevelWindow:centreOnScreen/2\fR
+
+
+.RE
+.B
+\fBclearBackground(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Clears the window by filling it with the current background colour.
+
+.PP
+Does not cause an erase background event to be generated.
+
+.PP
+Notice that this uses \fIwxClientDC\fR to draw on the window and the results of doing it while also drawing on \fIwxPaintDC\fR for this window are undefined. Hence this method shouldn't be used from EVT_PAINT handlers, just use \fIwxDC:clear/1\fR on the \fIwxPaintDC\fR you already use there instead.
+
+
+.RE
+.B
+\fBclientToScreen(This, Pt) -> {X :: integer(), Y :: integer()}\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Converts to screen coordinates from coordinates relative to this window.
+
+
+.RE
+.B
+\fBclientToScreen(This, X, Y) -> {X :: integer(), Y :: integer()}\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            X :: integer(),\fR
+\fB                            Y :: integer().\fR
+
+.br
+.RS
+.PP
+Converts to screen coordinates from coordinates relative to this window.
+
+
+.RE
+.B
+\fBclose(This, [Option]) -> boolean()\fR
+\fB               when This :: wxWindow(), Option :: {force, boolean()}.\fR
+
+.br
+.RS
+.PP
+This function simply generates a \fIwxCloseEvent\fR whose handler usually tries to close the window.
+
+.PP
+It doesn't close the window itself, however.
+
+.PP
+Return: true if the event was handled and not vetoed, false otherwise.
+
+.PP
+Remark: Close calls the close handler for the window, providing an opportunity for the window to choose whether to destroy the window. Usually it is only used with the top level windows (\fIwxFrame\fR and \fIwxDialog\fR classes) as the others are not supposed to have any special OnClose() logic. The close handler should check whether the window is being deleted forcibly, using \fIwxCloseEvent:canVeto/1\fR, in which case it should destroy the window using \fI'Destroy'/1\fR. Note that calling Close does not guarantee that the window will be destroyed; but it provides a way to simulate a manual close of a window, which may or may not be implemented by destroying the window. The default implementation of wxDialog::OnCloseWindow does not necessarily delete the dialog, since it will simply simulate an wxID_CANCEL event which is handled by the appropriate button event handler and may do anything at all. To guarantee that the window will be destroyed, call \fI'Destroy'/1\fR instead
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI'Destroy'/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCloseEvent\fR
+
+.RE
+
+
+.RE
+.B
+\fBconvertDialogToPixels(This, Sz) ->\fR
+\fB                               {W :: integer(), H :: integer()}\fR
+\fB                               when\fR
+\fB                                   This :: wxWindow(),\fR
+\fB                                   Sz ::\fR
+\fB                                       {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBconvertPixelsToDialog(This, Sz) ->\fR
+\fB                               {W :: integer(), H :: integer()}\fR
+\fB                               when\fR
+\fB                                   This :: wxWindow(),\fR
+\fB                                   Sz ::\fR
+\fB                                       {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBcreate(This, Parent, Id, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxWindow(),\fR
+\fB                    Parent :: wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Construct the actual window object after creating the C++ object.
+
+.PP
+The non-default constructor of \fIwxWindow\fR class does two things: it initializes the C++ object and it also creates the window object in the underlying graphical toolkit. The \fIcreate/4\fR method can be used to perform the second part later, while the default constructor can be used to perform the first part only.
+
+.PP
+Please note that the underlying window must be created exactly once, i.e. if you use the default constructor, which doesn't do this, you \fImust\fR call \fIcreate/4\fR before using the window and if you use the non-default constructor, you can \fInot\fR call \fIcreate/4\fR, as the underlying window is already created.
+
+.PP
+Note that it is possible and, in fact, useful, to call some methods on the object between creating the C++ object itself and calling \fIcreate/4\fR on it, e.g. a common pattern to avoid showing the contents of a window before it is fully initialized is:
+
+.PP
+Also note that it is possible to create an object of a derived type and then call \fIcreate/4\fR on it: This is notably used by overview_xrc.
+
+.PP
+The parameters of this method have exactly the same meaning as the non-default constructor parameters, please refer to them for their description.
+
+.PP
+Return: true if window creation succeeded or false if it failed
+
+
+.RE
+.B
+\fBdestroy(This :: wxWindow()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBdestroyChildren(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Destroys all children of a window.
+
+.PP
+Called automatically by the destructor.
+
+
+.RE
+.B
+\fBdisable(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Disables the window.
+
+.PP
+Same as \fIenable/2\fR Enable(false).
+
+.PP
+Return: Returns true if the window has been disabled, false if it had been already disabled before the call to this function.
+
+
+.RE
+.B
+\fBdragAcceptFiles(This, Accept) -> ok\fR
+\fB                         when This :: wxWindow(), Accept :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables or disables eligibility for drop file events (OnDropFiles).
+
+.PP
+Remark: Windows only until version 2.8.9, available on all platforms since 2.8.10. Cannot be used together with \fIsetDropTarget/2\fR on non-Windows platforms.
+
+.PP
+See: \fIsetDropTarget/2\fR
+
+
+.RE
+.B
+\fBenable(This, [Option]) -> boolean()\fR
+\fB                when This :: wxWindow(), Option :: {enable, boolean()}.\fR
+
+.br
+.RS
+.PP
+Enable or disable the window for user input.
+
+.PP
+Note that when a parent window is disabled, all of its children are disabled as well and they are re-enabled again when the parent is.
+
+.PP
+A window can be created initially disabled by calling this method on it \fIbefore\fR calling \fIcreate/4\fR to create the actual underlying window, e.g.
+
+.PP
+Return: Returns true if the window has been enabled or disabled, false if nothing was done, i.e. if the window had already been in the specified state.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisEnabled/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdisable/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxRadioBox:enable/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBfindFocus() -> wxWindow().\fR
+
+.br
+.RS
+.PP
+Finds the window or control which currently has the keyboard focus.
+
+.PP
+Remark: Note that this is a static function, so it can be called without needing a \fIwxWindow\fR pointer.
+
+.PP
+See: \fIsetFocus/1\fR
+
+
+.RE
+.B
+\fBfindWindow(This, Id) -> wxWindow()\fR
+\fB                    when This :: wxWindow(), Id :: integer();\fR
+\fB                (This, Name) -> wxWindow()\fR
+\fB                    when This :: wxWindow(), Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Find a child of this window, by name.
+
+.PP
+May return \fIthis\fR if it matches itself.
+
+.PP
+Notice that only real children, not top level windows using this window as parent, are searched by this function.
+
+
+.RE
+.B
+\fBfindWindowById(Id, [Option]) -> wxWindow()\fR
+\fB                        when\fR
+\fB                            Id :: integer(),\fR
+\fB                            Option :: {parent, wxWindow()}.\fR
+
+.br
+.RS
+.PP
+Find the first window with the given \fIid\fR.
+
+.PP
+If \fIparent\fR is NULL, the search will start from all top-level frames and dialog boxes; if non-NULL, the search will be limited to the given window hierarchy. The search is recursive in both cases.
+
+.PP
+See: \fIfindWindow/2\fR
+
+.PP
+Return: Window with the given \fIid\fR or NULL if not found.
+
+
+.RE
+.B
+\fBfindWindowByLabel(Label, [Option]) -> wxWindow()\fR
+\fB                           when\fR
+\fB                               Label :: unicode:chardata(),\fR
+\fB                               Option :: {parent, wxWindow()}.\fR
+
+.br
+.RS
+.PP
+Find a window by its label.
+
+.PP
+Depending on the type of window, the label may be a window title or panel item label. If \fIparent\fR is NULL, the search will start from all top-level frames and dialog boxes; if non-NULL, the search will be limited to the given window hierarchy.
+
+.PP
+The search is recursive in both cases and, unlike with \fIfindWindow/2\fR, recurses into top level child windows too.
+
+.PP
+See: \fIfindWindow/2\fR
+
+.PP
+Return: Window with the given \fIlabel\fR or NULL if not found.
+
+
+.RE
+.B
+\fBfindWindowByName(Name, [Option]) -> wxWindow()\fR
+\fB                          when\fR
+\fB                              Name :: unicode:chardata(),\fR
+\fB                              Option :: {parent, wxWindow()}.\fR
+
+.br
+.RS
+.PP
+Find a window by its name (as given in a window constructor or \fIcreate/4\fR function call).
+
+.PP
+If \fIparent\fR is NULL, the search will start from all top-level frames and dialog boxes; if non-NULL, the search will be limited to the given window hierarchy.
+
+.PP
+The search is recursive in both cases and, unlike \fIfindWindow/2\fR, recurses into top level child windows too.
+
+.PP
+If no window with such name is found, \fIfindWindowByLabel/2\fR is called, i.e. the name is interpreted as (internal) name first but if this fails, it's internal as (user-visible) label. As this behaviour may be confusing, it is usually better to use either the \fIfindWindow/2\fR overload taking the name or \fIfindWindowByLabel/2\fR directly.
+
+.PP
+Return: Window with the given \fIname\fR or NULL if not found.
+
+
+.RE
+.B
+\fBfit(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Sizes the window to fit its best size.
+
+.PP
+Using this function is equivalent to setting window size to the return value of \fIgetBestSize/1\fR.
+
+.PP
+Note that, unlike \fIsetSizerAndFit/3\fR, this function only changes the current window size and doesn't change its minimal size.
+
+.PP
+See: Overview windowsizing
+
+
+.RE
+.B
+\fBfitInside(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Similar to \fIfit/1\fR, but sizes the interior (virtual) size of a window.
+
+.PP
+Mainly useful with scrolled windows to reset scrollbars after sizing changes that do not trigger a size event, and/or scrolled windows without an interior sizer. This function similarly won't do anything if there are no subwindows.
+
+
+.RE
+.B
+\fBfreeze(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Freezes the window or, in other words, prevents any updates from taking place on screen, the window is not redrawn at all.
+
+.PP
+\fIthaw/1\fR must be called to re-enable window redrawing. Calls to these two functions may be nested but to ensure that the window is properly repainted again, you must thaw it exactly as many times as you froze it.
+
+.PP
+If the window has any children, they are recursively frozen too.
+
+.PP
+This method is useful for visual appearance optimization (for example, it is a good idea to use it before doing many large text insertions in a row into a \fIwxTextCtrl\fR under wxGTK) but is not implemented on all platforms nor for all controls so it is mostly just a hint to wxWidgets and not a mandatory directive.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIthaw/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisFrozen/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBfromDIP(D, W) -> integer() when D :: integer(), W :: wxWindow();\fR
+\fB             (Sz, W) -> {W :: integer(), H :: integer()}\fR
+\fB                 when\fR
+\fB                     Sz :: {W :: integer(), H :: integer()},\fR
+\fB                     W :: wxWindow();\fR
+\fB             (This, D) -> integer()\fR
+\fB                 when This :: wxWindow(), D :: integer();\fR
+\fB             (This, Sz) -> {W :: integer(), H :: integer()}\fR
+\fB                 when\fR
+\fB                     This :: wxWindow(),\fR
+\fB                     Sz :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Convert DPI-independent pixel values to the value in pixels appropriate for the current toolkit.
+
+.PP
+A DPI-independent pixel is just a pixel at the standard 96 DPI resolution. To keep the same physical size at higher resolution, the physical pixel value must be scaled by \fIgetDPIScaleFactor/1\fR but this scaling may be already done by the underlying toolkit (GTK+, Cocoa, ...) automatically. This method performs the conversion only if it is not already done by the lower level toolkit and so by using it with pixel values you can guarantee that the physical size of the corresponding elements will remain the same in all resolutions under all platforms. For example, instead of creating a bitmap of the hard coded size of 32 pixels you should use to avoid using tiny bitmaps on high DPI screens.
+
+.PP
+Notice that this function is only needed when using hard coded pixel values. It is not necessary if the sizes are already based on the DPI-independent units such as dialog units or if you are relying on the controls automatic best size determination and using sizers to lay out them.
+
+.PP
+Also note that if either component of \fIsz\fR has the special value of -1, it is returned unchanged independently of the current DPI, to preserve the special value of -1 in wxWidgets API (it is often used to mean "unspecified").
+
+.PP
+Since: 3.1.0
+
+
+.RE
+.B
+\fBgetAcceleratorTable(This) ->\fR
+\fB                             wxAcceleratorTable:wxAcceleratorTable()\fR
+\fB                             when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Gets the accelerator table for this window.
+
+.PP
+See \fIwxAcceleratorTable\fR.
+
+
+.RE
+.B
+\fBgetBackgroundColour(This) -> wx:wx_colour4()\fR
+\fB                             when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the background colour of the window.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBackgroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetForegroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetForegroundColour/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetBackgroundStyle(This) -> wx:wx_enum() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the background style of the window.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBackgroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetForegroundColour/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBackgroundStyle/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetTransparent/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetBestSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                     when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+This functions returns the best acceptable minimal size for the window.
+
+.PP
+For example, for a static control, it will be the minimal size such that the control label is not truncated. For windows containing subwindows (typically \fIwxPanel\fR), the size returned by this function will be the same as the size the window would have had after calling \fIfit/1\fR.
+
+.PP
+Override virtual \fIDoGetBestSize()\fR (not implemented in wx) or, better, because it's usually more convenient, \fIDoGetBestClientSize()\fR (not implemented in wx) when writing your own custom window class to change the value returned by this public non-virtual method.
+
+.PP
+Notice that the best size respects the minimal and maximal size explicitly set for the window, if any. So even if some window believes that it needs 200 pixels horizontally, calling \fIsetMaxSize/2\fR with a width of 100 would ensure that \fIgetBestSize/1\fR returns the width of at most 100 pixels.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcacheBestSize/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview windowsizing
+
+.RE
+
+
+.RE
+.B
+\fBgetCapture() -> wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the currently captured window.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhasCapture/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcaptureMouse/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIreleaseMouse/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMouseCaptureLostEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMouseCaptureChangedEvent\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetCaret(This) -> wxCaret:wxCaret() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the caret() associated with the window.
+
+
+.RE
+.B
+\fBgetCharHeight(This) -> integer() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the character height for this window.
+
+
+.RE
+.B
+\fBgetCharWidth(This) -> integer() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the average character width for this window.
+
+
+.RE
+.B
+\fBgetChildren(This) -> [wxWindow()] when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns a const reference to the list of the window's children.
+
+.PP
+\fIwxWindowList\fR is a type-safe wxList-like class whose elements are of type \fIwxWindow*\fR.
+
+
+.RE
+.B
+\fBgetClientSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                       when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBgetContainingSizer(This) -> wxSizer:wxSizer()\fR
+\fB                            when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the sizer of which this window is a member, if any, otherwise NULL.
+
+
+.RE
+.B
+\fBgetContentScaleFactor(This) -> number() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the factor mapping logical pixels of this window to physical pixels.
+
+.PP
+This function can be used to portably determine the number of physical pixels in a window of the given size, by multiplying the window size by the value returned from it. I.e. it returns the factor converting window coordinates to "content view" coordinates, where the view can be just a simple window displaying a \fIwxBitmap\fR or \fIwxGLCanvas\fR or any other kind of window rendering arbitrary "content" on screen.
+
+.PP
+For the platforms not doing any pixel mapping, i.e. where logical and physical pixels are one and the same, this function always returns 1.0 and so using it is, in principle, unnecessary and could be avoided by using preprocessor check for \fIwxHAVE_DPI_INDEPENDENT_PIXELS\fR \fInot\fR being defined, however using this function unconditionally under all platforms is usually simpler and so preferable.
+
+.PP
+Note: Current behaviour of this function is compatible with wxWidgets 3.0, but different from its behaviour in versions 3.1.0 to 3.1.3, where it returned the same value as \fIgetDPIScaleFactor/1\fR. Please use the other function if you need to use a scaling factor greater than 1.0 even for the platforms without \fIwxHAVE_DPI_INDEPENDENT_PIXELS\fR, such as wxMSW.
+
+.PP
+Since: 2.9.5
+
+
+.RE
+.B
+\fBgetCursor(This) -> wxCursor:wxCursor() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Return the cursor associated with this window.
+
+.PP
+See: \fIsetCursor/2\fR
+
+
+.RE
+.B
+\fBgetDPI(This) -> {W :: integer(), H :: integer()}\fR
+\fB                when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Return the DPI of the display used by this window.
+
+.PP
+The returned value can be different for different windows on systems with support for per-monitor DPI values, such as Microsoft Windows 10.
+
+.PP
+If the DPI is not available, returns \fI{Width,Height}\fR object.
+
+.PP
+See: \fIwxDisplay:getPPI/1\fR
+
+.PP
+Since: 3.1.3
+
+
+.RE
+.B
+\fBgetDPIScaleFactor(This) -> number() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the ratio of the DPI used by this window to the standard DPI.
+
+.PP
+The returned value is 1 for standard DPI screens or 2 for "200% scaling" and, unlike for \fIgetContentScaleFactor/1\fR, is the same under all platforms.
+
+.PP
+This factor should be used to increase the size of icons and similar windows whose best size is not based on text metrics when using DPI scaling.
+
+.PP
+E.g. the program may load a 32px bitmap if the content scale factor is 1.0 or 64px version of the same bitmap if it is 2.0 or bigger.
+
+.PP
+Notice that this method should \fInot\fR be used for window sizes expressed in pixels, as they are already scaled by this factor by the underlying toolkit under some platforms. Use \fIfromDIP/2\fR for anything window-related instead.
+
+.PP
+Since: 3.1.4
+
+
+.RE
+.B
+\fBgetDropTarget(This) -> wx:wx_object() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the associated drop target, which may be NULL.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetDropTarget/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview dnd
+
+.RE
+
+
+.RE
+.B
+\fBgetExtraStyle(This) -> integer() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the extra style bits for the window.
+
+
+.RE
+.B
+\fBgetFont(This) -> wxFont:wxFont() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the font for this window.
+
+.PP
+See: \fIsetFont/2\fR
+
+
+.RE
+.B
+\fBgetForegroundColour(This) -> wx:wx_colour4()\fR
+\fB                             when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the foreground colour of the window.
+
+.PP
+Remark: The meaning of foreground colour varies according to the window class; it may be the text colour or other colour, or it may not be used at all.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetForegroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBackgroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetBackgroundColour/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetGrandParent(This) -> wxWindow() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the grandparent of a window, or NULL if there isn't one.
+
+
+.RE
+.B
+\fBgetHandle(This) -> integer() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the platform-specific handle of the physical window.
+
+.PP
+Cast it to an appropriate handle, such as \fIHWND\fR for Windows, \fIWidget\fR for Motif or \fIGtkWidget\fR for GTK.
+
+
+.RE
+.B
+\fBgetHelpText(This) -> unicode:charlist() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Gets the help text to be used as context-sensitive help for this window.
+
+.PP
+Note that the text is actually stored by the current \fIwxHelpProvider\fR (not implemented in wx) implementation, and not in the window object itself.
+
+.PP
+See: \fIsetHelpText/2\fR
+
+
+.RE
+.B
+\fBgetId(This) -> integer() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the identifier of the window.
+
+.PP
+Remark: Each window has an integer identifier. If the application has not provided one (or the default wxID_ANY) a unique identifier with a negative value will be generated.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetId/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview windowids
+
+.RE
+
+
+.RE
+.B
+\fBgetLabel(This) -> unicode:charlist() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Generic way of getting a label from any window, for identification purposes.
+
+.PP
+Remark: The interpretation of this function differs from class to class. For frames and dialogs, the value returned is the title. For buttons or static text controls, it is the button text. This function can be useful for meta-programs (such as testing tools or special-needs access programs) which need to identify windows by name.
+
+
+.RE
+.B
+\fBgetMaxSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                    when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the maximum size of the window.
+
+.PP
+This is an indication to the sizer layout mechanism that this is the maximum possible size as well as the upper bound on window's size settable using \fIsetSize/6\fR.
+
+.PP
+See: Overview windowsizing
+
+
+.RE
+.B
+\fBgetMinSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                    when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the minimum size of the window, an indication to the sizer layout mechanism that this is the minimum required size.
+
+.PP
+This method normally just returns the value set by \fIsetMinSize/2\fR, but it can be overridden to do the calculation on demand.
+
+.PP
+See: Overview windowsizing
+
+
+.RE
+.B
+\fBgetName(This) -> unicode:charlist() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the window's name.
+
+.PP
+Remark: This name is not guaranteed to be unique; it is up to the programmer to supply an appropriate name in the window constructor or via \fIsetName/2\fR.
+
+.PP
+See: \fIsetName/2\fR
+
+
+.RE
+.B
+\fBgetParent(This) -> wxWindow() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the parent of the window, or NULL if there is no parent.
+
+
+.RE
+.B
+\fBgetPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                     when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+This gets the position of the window in pixels, relative to the parent window for the child windows or relative to the display origin for the top level windows.
+
+.PP
+See: \fIgetScreenPosition/1\fR
+
+
+.RE
+.B
+\fBgetRect(This) ->\fR
+\fB                 {X :: integer(),\fR
+\fB                  Y :: integer(),\fR
+\fB                  W :: integer(),\fR
+\fB                  H :: integer()}\fR
+\fB                 when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the position and size of the window as a {X,Y,W,H} object.
+
+.PP
+See: \fIgetScreenRect/1\fR
+
+
+.RE
+.B
+\fBgetScreenPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                           when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the window position in screen coordinates, whether the window is a child window or a top level one.
+
+.PP
+See: \fIgetPosition/1\fR
+
+
+.RE
+.B
+\fBgetScreenRect(This) ->\fR
+\fB                       {X :: integer(),\fR
+\fB                        Y :: integer(),\fR
+\fB                        W :: integer(),\fR
+\fB                        H :: integer()}\fR
+\fB                       when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the position and size of the window on the screen as a {X,Y,W,H} object.
+
+.PP
+See: \fIgetRect/1\fR
+
+
+.RE
+.B
+\fBgetScrollPos(This, Orientation) -> integer()\fR
+\fB                      when This :: wxWindow(), Orientation :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the built-in scrollbar position.
+
+.PP
+See: \fIsetScrollbar/6\fR
+
+
+.RE
+.B
+\fBgetScrollRange(This, Orientation) -> integer()\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(), Orientation :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the built-in scrollbar range.
+
+.PP
+See: \fIsetScrollbar/6\fR
+
+
+.RE
+.B
+\fBgetScrollThumb(This, Orientation) -> integer()\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(), Orientation :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the built-in scrollbar thumb size.
+
+.PP
+See: \fIsetScrollbar/6\fR
+
+
+.RE
+.B
+\fBgetSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                 when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+See the GetSize(int\fI,int\fR) overload for more info.
+
+
+.RE
+.B
+\fBgetSizer(This) -> wxSizer:wxSizer() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the sizer associated with the window by a previous call to \fIsetSizer/3\fR, or NULL.
+
+
+.RE
+.B
+\fBgetTextExtent(This, String, [Option]) -> Result\fR
+\fB                       when\fR
+\fB                           Result ::\fR
+\fB                               {W :: integer(),\fR
+\fB                                H :: integer(),\fR
+\fB                                Descent :: integer(),\fR
+\fB                                ExternalLeading :: integer()},\fR
+\fB                           This :: wxWindow(),\fR
+\fB                           String :: unicode:chardata(),\fR
+\fB                           Option :: {theFont, wxFont:wxFont()}.\fR
+
+.br
+.RS
+.PP
+Gets the dimensions of the string as it would be drawn on the window with the currently selected font.
+
+.PP
+The text extent is returned in the \fIw\fR and \fIh\fR pointers.
+
+
+.RE
+.B
+\fBgetThemeEnabled(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window uses the system theme for drawing its background.
+
+.PP
+See: \fIsetThemeEnabled/2\fR
+
+
+.RE
+.B
+\fBgetToolTip(This) -> wxToolTip:wxToolTip() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Get the associated tooltip or NULL if none.
+
+
+.RE
+.B
+\fBgetUpdateRegion(This) -> wxRegion:wxRegion()\fR
+\fB                         when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Gets the dimensions of the string as it would be drawn on the window with the currently selected font.
+
+.PP
+Returns the region specifying which parts of the window have been damaged. Should only be called within an \fIwxPaintEvent\fR handler.
+
+.PP
+See: \fIwxRegion\fR
+
+
+.RE
+.B
+\fBgetVirtualSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                        when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+This gets the virtual size of the window in pixels.
+
+.PP
+By default it returns the client size of the window, but after a call to \fIsetVirtualSize/3\fR it will return the size set with that method.
+
+.PP
+See: Overview windowsizing
+
+
+.RE
+.B
+\fBgetWindowStyleFlag(This) -> integer() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Gets the window style that was passed to the constructor or \fIcreate/4\fR method.
+
+.PP
+\fIGetWindowStyle()\fR (not implemented in wx) is another name for the same function.
+
+
+.RE
+.B
+\fBgetWindowVariant(This) -> wx:wx_enum() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns the value previously passed to \fIsetWindowVariant/2\fR.
+
+
+.RE
+.B
+\fBhasCapture(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if this window has the current mouse capture.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcaptureMouse/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIreleaseMouse/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMouseCaptureLostEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMouseCaptureChangedEvent\fR
+
+.RE
+
+
+.RE
+.B
+\fBhasScrollbar(This, Orient) -> boolean()\fR
+\fB                      when This :: wxWindow(), Orient :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if this window currently has a scroll bar for this orientation.
+
+.PP
+This method may return false even when \fICanScroll()\fR (not implemented in wx) for the same orientation returns true, but if \fICanScroll()\fR (not implemented in wx) returns false, i.e. scrolling in this direction is not enabled at all, \fIhasScrollbar/2\fR always returns false as well.
+
+
+.RE
+.B
+\fBhasTransparentBackground(This) -> boolean()\fR
+\fB                                  when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if this window background is transparent (as, for example, for \fIwxStaticText\fR) and should show the parent window background.
+
+.PP
+This method is mostly used internally by the library itself and you normally shouldn't have to call it. You may, however, have to override it in your wxWindow-derived class to ensure that background is painted correctly.
+
+
+.RE
+.B
+\fBhide(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Equivalent to calling \fIshow/2\fR(false).
+
+
+.RE
+.B
+\fBinheritAttributes(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+This function is (or should be, in case of custom controls) called during window creation to intelligently set up the window visual attributes, that is the font and the foreground and background colours.
+
+.PP
+By "intelligently" the following is meant: by default, all windows use their own \fIGetClassDefaultAttributes()\fR (not implemented in wx) default attributes. However if some of the parents attributes are explicitly (that is, using \fIsetFont/2\fR and not \fIsetOwnFont/2\fR) changed and if the corresponding attribute hadn't been explicitly set for this window itself, then this window takes the same value as used by the parent. In addition, if the window overrides \fIshouldInheritColours/1\fR to return false, the colours will not be changed no matter what and only the font might.
+
+.PP
+This rather complicated logic is necessary in order to accommodate the different usage scenarios. The most common one is when all default attributes are used and in this case, nothing should be inherited as in modern GUIs different controls use different fonts (and colours) than their siblings so they can't inherit the same value from the parent. However it was also deemed desirable to allow to simply change the attributes of all children at once by just changing the font or colour of their common parent, hence in this case we do inherit the parents attributes.
+
+
+.RE
+.B
+\fBinitDialog(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Sends an \fIwxEVT\\_INIT\\_DIALOG\fR event, whose handler usually transfers data to the dialog via validators.
+
+
+.RE
+.B
+\fBinvalidateBestSize(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Resets the cached best size value so it will be recalculated the next time it is needed.
+
+.PP
+See: \fIcacheBestSize/2\fR
+
+
+.RE
+.B
+\fBisDoubleBuffered(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window contents is double-buffered by the system, i.e. if any drawing done on the window is really done on a temporary backing surface and transferred to the screen all at once later.
+
+.PP
+See: \fIwxBufferedDC\fR
+
+
+.RE
+.B
+\fBisEnabled(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is enabled, i.e. if it accepts user input, false otherwise.
+
+.PP
+Notice that this method can return false even if this window itself hadn't been explicitly disabled when one of its parent windows is disabled. To get the intrinsic status of this window, use \fIIsThisEnabled()\fR (not implemented in wx)
+
+.PP
+See: \fIenable/2\fR
+
+
+.RE
+.B
+\fBisExposed(This, Pt) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxWindow(),\fR
+\fB                       Pt :: {X :: integer(), Y :: integer()};\fR
+\fB               (This, Rect) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxWindow(),\fR
+\fB                       Rect ::\fR
+\fB                           {X :: integer(),\fR
+\fB                            Y :: integer(),\fR
+\fB                            W :: integer(),\fR
+\fB                            H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBisExposed(This, X, Y) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxWindow(),\fR
+\fB                       X :: integer(),\fR
+\fB                       Y :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if the given point or rectangle area has been exposed since the last repaint.
+
+.PP
+Call this in an paint event handler to optimize redrawing by only redrawing those areas, which have been exposed.
+
+
+.RE
+.B
+\fBisExposed(This, X, Y, W, H) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxWindow(),\fR
+\fB                       X :: integer(),\fR
+\fB                       Y :: integer(),\fR
+\fB                       W :: integer(),\fR
+\fB                       H :: integer().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBisFrozen(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is currently frozen by a call to \fIfreeze/1\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfreeze/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIthaw/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBisRetained(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is retained, false otherwise.
+
+.PP
+Remark: Retained windows are only available on X platforms.
+
+
+.RE
+.B
+\fBisShown(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is shown, false if it has been hidden.
+
+.PP
+See: \fIisShownOnScreen/1\fR
+
+
+.RE
+.B
+\fBisShownOnScreen(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is physically visible on the screen, i.e. it is shown and all its parents up to the toplevel window are shown as well.
+
+.PP
+See: \fIisShown/1\fR
+
+
+.RE
+.B
+\fBisTopLevel(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the given window is a top-level one.
+
+.PP
+Currently all frames and dialogs are considered to be top-level windows (even if they have a parent window).
+
+
+.RE
+.B
+\fBlayout(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Lays out the children of this window using the associated sizer.
+
+.PP
+If a sizer hadn't been associated with this window (see \fIsetSizer/3\fR), this function doesn't do anything, unless this is a top level window (see \fIlayout/1\fR).
+
+.PP
+Note that this method is called automatically when the window size changes if it has the associated sizer (or if \fIsetAutoLayout/2\fR with true argument had been explicitly called), ensuring that it is always laid out correctly.
+
+.PP
+See: Overview windowsizing
+
+.PP
+Return: Always returns true, the return value is not useful.
+
+
+.RE
+.B
+\fBlineDown(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Same as \fIscrollLines/2\fR (1).
+
+
+.RE
+.B
+\fBlineUp(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Same as \fIscrollLines/2\fR (-1).
+
+
+.RE
+.B
+\fBlower(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Lowers the window to the bottom of the window hierarchy (Z-order).
+
+.PP
+Remark: This function only works for wxTopLevelWindow-derived classes.
+
+.PP
+See: \fIraise/1\fR
+
+
+.RE
+.B
+\fBmove(This, X, Y) -> ok\fR
+\fB              when This :: wxWindow(), X :: integer(), Y :: integer();\fR
+\fB          (This, Pt, [Option]) -> ok\fR
+\fB              when\fR
+\fB                  This :: wxWindow(),\fR
+\fB                  Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                  Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Moves the window to the given position.
+
+.PP
+Remark: Implementations of \fIsetSize/6\fR can also implicitly implement the \fImove/4\fR function, which is defined in the base \fIwxWindow\fR class as the call:
+
+.PP
+See: \fIsetSize/6\fR
+
+
+.RE
+.B
+\fBmove(This, X, Y, [Option]) -> ok\fR
+\fB              when\fR
+\fB                  This :: wxWindow(),\fR
+\fB                  X :: integer(),\fR
+\fB                  Y :: integer(),\fR
+\fB                  Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Moves the window to the given position.
+
+.PP
+Remark: Implementations of SetSize can also implicitly implement the \fImove/4\fR function, which is defined in the base \fIwxWindow\fR class as the call:
+
+.PP
+See: \fIsetSize/6\fR
+
+
+.RE
+.B
+\fBmoveAfterInTabOrder(This, Win) -> ok\fR
+\fB                             when This :: wxWindow(), Win :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Moves this window in the tab navigation order after the specified \fIwin\fR.
+
+.PP
+This means that when the user presses \fITAB\fR key on that other window, the focus switches to this window.
+
+.PP
+Default tab order is the same as creation order, this function and \fImoveBeforeInTabOrder/2\fR allow to change it after creating all the windows.
+
+
+.RE
+.B
+\fBmoveBeforeInTabOrder(This, Win) -> ok\fR
+\fB                              when This :: wxWindow(), Win :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Same as \fImoveAfterInTabOrder/2\fR except that it inserts this window just before \fIwin\fR instead of putting it right after it.
+
+
+.RE
+.B
+\fBnavigate(This, [Option]) -> boolean()\fR
+\fB                  when This :: wxWindow(), Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Performs a keyboard navigation action starting from this window.
+
+.PP
+This method is equivalent to calling \fINavigateIn()\fR (not implemented in wx) method on the parent window.
+
+.PP
+Return: Returns true if the focus was moved to another window or false if nothing changed.
+
+.PP
+Remark: You may wish to call this from a text control custom keypress handler to do the default navigation behaviour for the tab key, since the standard default behaviour for a multiline text control with the wxTE_PROCESS_TAB style is to insert a tab and not navigate to the next control. See also \fIwxNavigationKeyEvent\fR and HandleAsNavigationKey.
+
+
+.RE
+.B
+\fBnew() -> wxWindow().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxWindow()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructs a window, which can be a child of a frame, dialog or any other non-control window.
+
+
+.RE
+.B
+\fBpageDown(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Same as \fIscrollPages/2\fR (1).
+
+
+.RE
+.B
+\fBpageUp(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Same as \fIscrollPages/2\fR (-1).
+
+
+.RE
+.B
+\fBpopupMenu(This, Menu, [Option]) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxWindow(),\fR
+\fB                       Menu :: wxMenu:wxMenu(),\fR
+\fB                       Option :: {pos, {X :: integer(), Y :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Pops up the given menu at the specified coordinates, relative to this window, and returns control when the user has dismissed the menu.
+
+.PP
+If a menu item is selected, the corresponding menu event is generated and will be processed as usual. If coordinates are not specified, the current mouse cursor position is used.
+
+.PP
+\fImenu\fR is the menu to pop up.
+
+.PP
+The position where the menu will appear can be specified either as a {X,Y} \fIpos\fR or by two integers (\fIx\fR and \fIy\fR).
+
+.PP
+Note that this function switches focus to this window before showing the menu.
+
+.PP
+Remark: Just before the menu is popped up, \fIwxMenu::UpdateUI\fR (not implemented in wx) is called to ensure that the menu items are in the correct state. The menu does not get deleted by the window. It is recommended to not explicitly specify coordinates when calling PopupMenu in response to mouse click, because some of the ports (namely, wxGTK) can do a better job of positioning the menu in that case.
+
+.PP
+See: \fIwxMenu\fR
+
+
+.RE
+.B
+\fBpopupMenu(This, Menu, X, Y) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxWindow(),\fR
+\fB                       Menu :: wxMenu:wxMenu(),\fR
+\fB                       X :: integer(),\fR
+\fB                       Y :: integer().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBraise(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Raises the window to the top of the window hierarchy (Z-order).
+
+.PP
+Notice that this function only requests the window manager to raise this window to the top of Z-order. Depending on its configuration, the window manager may raise the window, not do it at all or indicate that a window requested to be raised in some other way, e.g. by flashing its icon if it is minimized.
+
+.PP
+Remark: This function only works for wxTopLevelWindow-derived classes.
+
+.PP
+See: \fIlower/1\fR
+
+
+.RE
+.B
+\fBrefresh(This, [Option]) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxWindow(),\fR
+\fB                     Option ::\fR
+\fB                         {eraseBackground, boolean()} |\fR
+\fB                         {rect,\fR
+\fB                          {X :: integer(),\fR
+\fB                           Y :: integer(),\fR
+\fB                           W :: integer(),\fR
+\fB                           H :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Causes this window, and all of its children recursively (except under wxGTK1 where this is not implemented), to be repainted.
+
+.PP
+Note that repainting doesn't happen immediately but only during the next event loop iteration, if you need to update the window immediately you should use \fIupdate/1\fR instead.
+
+.PP
+See: \fIrefreshRect/3\fR
+
+
+.RE
+.B
+\fBrefreshRect(This, Rect, [Option]) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxWindow(),\fR
+\fB                         Rect ::\fR
+\fB                             {X :: integer(),\fR
+\fB                              Y :: integer(),\fR
+\fB                              W :: integer(),\fR
+\fB                              H :: integer()},\fR
+\fB                         Option :: {eraseBackground, boolean()}.\fR
+
+.br
+.RS
+.PP
+Redraws the contents of the given rectangle: only the area inside it will be repainted.
+
+.PP
+This is the same as \fIrefresh/2\fR but has a nicer syntax as it can be called with a temporary {X,Y,W,H} object as argument like this \fIRefreshRect(wxRect(x, y, w, h))\fR.
+
+
+.RE
+.B
+\fBreleaseMouse(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Releases mouse input captured with \fIcaptureMouse/1\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcaptureMouse/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhasCapture/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIreleaseMouse/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMouseCaptureLostEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMouseCaptureChangedEvent\fR
+
+.RE
+
+
+.RE
+.B
+\fBremoveChild(This, Child) -> ok\fR
+\fB                     when This :: wxWindow(), Child :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Removes a child window.
+
+.PP
+This is called automatically by window deletion functions so should not be required by the application programmer. Notice that this function is mostly internal to wxWidgets and shouldn't be called by the user code.
+
+
+.RE
+.B
+\fBreparent(This, NewParent) -> boolean()\fR
+\fB                  when This :: wxWindow(), NewParent :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Reparents the window, i.e. the window will be removed from its current parent window (e.g.
+
+.PP
+a non-standard toolbar in a \fIwxFrame\fR) and then re-inserted into another.
+
+.PP
+Notice that currently you need to explicitly call \fIwxBookCtrlBase:removePage/2\fR before reparenting a notebook page.
+
+
+.RE
+.B
+\fBscreenToClient(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                        when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Converts from screen to client window coordinates.
+
+
+.RE
+.B
+\fBscreenToClient(This, Pt) -> {X :: integer(), Y :: integer()}\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Converts from screen to client window coordinates.
+
+
+.RE
+.B
+\fBscrollLines(This, Lines) -> boolean()\fR
+\fB                     when This :: wxWindow(), Lines :: integer().\fR
+
+.br
+.RS
+.PP
+Scrolls the window by the given number of lines down (if \fIlines\fR is positive) or up.
+
+.PP
+Return: Returns true if the window was scrolled, false if it was already on top/bottom and nothing was done.
+
+.PP
+Remark: This function is currently only implemented under MSW and \fIwxTextCtrl\fR under wxGTK (it also works for \fIwxScrolled\fR (not implemented in wx) classes under all platforms).
+
+.PP
+See: \fIscrollPages/2\fR
+
+
+.RE
+.B
+\fBscrollPages(This, Pages) -> boolean()\fR
+\fB                     when This :: wxWindow(), Pages :: integer().\fR
+
+.br
+.RS
+.PP
+Scrolls the window by the given number of pages down (if \fIpages\fR is positive) or up.
+
+.PP
+Return: Returns true if the window was scrolled, false if it was already on top/bottom and nothing was done.
+
+.PP
+Remark: This function is currently only implemented under MSW and wxGTK.
+
+.PP
+See: \fIscrollLines/2\fR
+
+
+.RE
+.B
+\fBscrollWindow(This, Dx, Dy, [Option]) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxWindow(),\fR
+\fB                          Dx :: integer(),\fR
+\fB                          Dy :: integer(),\fR
+\fB                          Option ::\fR
+\fB                              {rect,\fR
+\fB                               {X :: integer(),\fR
+\fB                                Y :: integer(),\fR
+\fB                                W :: integer(),\fR
+\fB                                H :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Physically scrolls the pixels in the window and move child windows accordingly.
+
+.PP
+Remark: Note that you can often use \fIwxScrolled\fR (not implemented in wx) instead of using this function directly.
+
+
+.RE
+.B
+\fBsetAcceleratorTable(This, Accel) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxWindow(),\fR
+\fB                                 Accel ::\fR
+\fB                                     wxAcceleratorTable:wxAcceleratorTable().\fR
+
+.br
+.RS
+.PP
+Sets the accelerator table for this window.
+
+.PP
+See \fIwxAcceleratorTable\fR.
+
+
+.RE
+.B
+\fBsetAutoLayout(This, AutoLayout) -> ok\fR
+\fB                       when This :: wxWindow(), AutoLayout :: boolean().\fR
+
+.br
+.RS
+.PP
+Determines whether the \fIlayout/1\fR function will be called automatically when the window is resized.
+
+.PP
+This method is called implicitly by \fIsetSizer/3\fR but if you use \fISetConstraints()\fR (not implemented in wx) you should call it manually or otherwise the window layout won't be correctly updated when its size changes.
+
+.PP
+See: \fIsetSizer/3\fR
+
+
+.RE
+.B
+\fBsetBackgroundColour(This, Colour) -> boolean()\fR
+\fB                             when\fR
+\fB                                 This :: wxWindow(),\fR
+\fB                                 Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the background colour of the window.
+
+.PP
+Notice that as with \fIsetForegroundColour/2\fR, setting the background colour of a native control may not affect the entire control and could be not supported at all depending on the control and platform.
+
+.PP
+Please see \fIinheritAttributes/1\fR for explanation of the difference between this method and \fIsetOwnBackgroundColour/2\fR.
+
+.PP
+Remark: The background colour is usually painted by the default \fIwxEraseEvent\fR event handler function under Windows and automatically under GTK. Note that setting the background colour does not cause an immediate refresh, so you may wish to call \fIclearBackground/1\fR or \fIrefresh/2\fR after calling this function. Using this function will disable attempts to use themes for this window, if the system supports them. Use with care since usually the themes represent the appearance chosen by the user to be used for all applications on the system.
+
+.PP
+Return: true if the colour was really changed, false if it was already set to this colour and nothing was done.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetBackgroundColour/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetForegroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetForegroundColour/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIclearBackground/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrefresh/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEraseEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSystemSettings\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetBackgroundStyle(This, Style) -> boolean()\fR
+\fB                            when\fR
+\fB                                This :: wxWindow(),\fR
+\fB                                Style :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the background style of the window.
+
+.PP
+The default background style is \fIwxBG_STYLE_ERASE\fR which indicates that the window background may be erased in \fIEVT_ERASE_BACKGROUND\fR handler. This is a safe, compatibility default; however you may want to change it to \fIwxBG_STYLE_SYSTEM\fR if you don't define any erase background event handlers at all, to avoid unnecessary generation of erase background events and always let system erase the background. And you should change the background style to \fIwxBG_STYLE_PAINT\fR if you define an \fIEVT_PAINT\fR handler which completely overwrites the window background as in this case erasing it previously, either in \fIEVT_ERASE_BACKGROUND\fR handler or in the system default handler, would result in flicker as the background pixels will be repainted twice every time the window is redrawn. Do ensure that the background is entirely erased by your \fIEVT_PAINT\fR handler in this case however as otherwise garbage may be left on screen.
+
+.PP
+Notice that in previous versions of wxWidgets a common way to work around the above mentioned flickering problem was to define an empty \fIEVT_ERASE_BACKGROUND\fR handler. Setting background style to \fIwxBG_STYLE_PAINT\fR is a simpler and more efficient solution to the same problem.
+
+.PP
+Under wxGTK and wxOSX, you can use ?wxBG_STYLE_TRANSPARENT to obtain full transparency of the window background. Note that wxGTK supports this only since GTK 2.12 with a compositing manager enabled, call \fIIsTransparentBackgroundSupported()\fR (not implemented in wx) to check whether this is the case.
+
+.PP
+Also, in order for \fISetBackgroundStyle(wxBG_STYLE_TRANSPARENT)\fR to work, it must be called before \fIcreate/4\fR. If you're using your own wxWindow-derived class you should write your code in the following way:
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBackgroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetForegroundColour/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetTransparent/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetCaret(This, Caret) -> ok\fR
+\fB                  when This :: wxWindow(), Caret :: wxCaret:wxCaret().\fR
+
+.br
+.RS
+.PP
+Sets the caret() associated with the window.
+
+
+.RE
+.B
+\fBsetClientSize(This, Size) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxWindow(),\fR
+\fB                           Size :: {W :: integer(), H :: integer()};\fR
+\fB                   (This, Rect) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxWindow(),\fR
+\fB                           Rect ::\fR
+\fB                               {X :: integer(),\fR
+\fB                                Y :: integer(),\fR
+\fB                                W :: integer(),\fR
+\fB                                H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBsetClientSize(This, Width, Height) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxWindow(),\fR
+\fB                           Width :: integer(),\fR
+\fB                           Height :: integer().\fR
+
+.br
+.RS
+.PP
+This sets the size of the window client area in pixels.
+
+.PP
+Using this function to size a window tends to be more device-independent than \fIsetSize/6\fR, since the application need not worry about what dimensions the border or title bar have when trying to fit the window around panel items, for example.
+
+.PP
+See: Overview windowsizing
+
+
+.RE
+.B
+\fBsetContainingSizer(This, Sizer) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxWindow(),\fR
+\fB                                Sizer :: wxSizer:wxSizer().\fR
+
+.br
+.RS
+.PP
+Used by \fIwxSizer\fR internally to notify the window about being managed by the given sizer.
+
+.PP
+This method should not be called from outside the library, unless you're implementing a custom sizer class - and in the latter case you must call this method with the pointer to the sizer itself whenever a window is added to it and with NULL argument when the window is removed from it.
+
+
+.RE
+.B
+\fBsetCursor(This, Cursor) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxWindow(), Cursor :: wxCursor:wxCursor().\fR
+
+.br
+.RS
+.PP
+Sets the window's cursor.
+
+.PP
+Notice that the window cursor also sets it for the children of the window implicitly.
+
+.PP
+The \fIcursor\fR may be \fIwxNullCursor\fR in which case the window cursor will be reset back to default.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwx_misc:setCursor/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCursor\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetDoubleBuffered(This, On) -> ok\fR
+\fB                           when This :: wxWindow(), On :: boolean().\fR
+
+.br
+.RS
+.PP
+Turn on or off double buffering of the window if the system supports it.
+
+
+.RE
+.B
+\fBsetDropTarget(This, Target) -> ok\fR
+\fB                       when This :: wxWindow(), Target :: wx:wx_object().\fR
+
+.br
+.RS
+.PP
+Associates a drop target with this window.
+
+.PP
+If the window already has a drop target, it is deleted.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetDropTarget/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview dnd
+
+.RE
+
+
+.RE
+.B
+\fBsetExtraStyle(This, ExStyle) -> ok\fR
+\fB                       when This :: wxWindow(), ExStyle :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the extra style bits for the window.
+
+.PP
+The currently defined extra style bits are reported in the class description.
+
+
+.RE
+.B
+\fBsetFocus(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+This sets the window to receive keyboard input.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFocusEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetFocus/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPanel:setFocusIgnoringChildren/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetFocusFromKbd(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+This function is called by wxWidgets keyboard navigation code when the user gives the focus to this window from keyboard (e.g. using \fITAB\fR key).
+
+.PP
+By default this method simply calls \fIsetFocus/1\fR but can be overridden to do something in addition to this in the derived classes.
+
+
+.RE
+.B
+\fBsetFont(This, Font) -> boolean()\fR
+\fB                 when This :: wxWindow(), Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font for this window.
+
+.PP
+This function should not be called for the parent window if you don't want its font to be inherited by its children, use \fIsetOwnFont/2\fR instead in this case and see \fIinheritAttributes/1\fR for more explanations.
+
+.PP
+Please notice that the given font is not automatically used for \fIwxPaintDC\fR objects associated with this window, you need to call \fIwxDC:setFont/2\fR too. However this font is used by any standard controls for drawing their text as well as by \fIgetTextExtent/3\fR.
+
+.PP
+Return: true if the font was really changed, false if it was already set to this font and nothing was done.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetFont/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinheritAttributes/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetForegroundColour(This, Colour) -> boolean()\fR
+\fB                             when\fR
+\fB                                 This :: wxWindow(),\fR
+\fB                                 Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the foreground colour of the window.
+
+.PP
+The meaning of foreground colour varies according to the window class; it may be the text colour or other colour, or it may not be used at all. Additionally, not all native controls support changing their foreground colour so this method may change their colour only partially or even not at all.
+
+.PP
+Please see \fIinheritAttributes/1\fR for explanation of the difference between this method and \fIsetOwnForegroundColour/2\fR.
+
+.PP
+Return: true if the colour was really changed, false if it was already set to this colour and nothing was done.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetForegroundColour/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBackgroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetBackgroundColour/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshouldInheritColours/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetHelpText(This, HelpText) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxWindow(),\fR
+\fB                         HelpText :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the help text to be used as context-sensitive help for this window.
+
+.PP
+Note that the text is actually stored by the current \fIwxHelpProvider\fR (not implemented in wx) implementation, and not in the window object itself.
+
+.PP
+See: \fIgetHelpText/1\fR
+
+
+.RE
+.B
+\fBsetId(This, Winid) -> ok\fR
+\fB               when This :: wxWindow(), Winid :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the identifier of the window.
+
+.PP
+Remark: Each window has an integer identifier. If the application has not provided one, an identifier will be generated. Normally, the identifier should be provided on creation and should not be modified subsequently.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetId/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview windowids
+
+.RE
+
+
+.RE
+.B
+\fBsetLabel(This, Label) -> ok\fR
+\fB                  when This :: wxWindow(), Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the window's label.
+
+.PP
+See: \fIgetLabel/1\fR
+
+
+.RE
+.B
+\fBsetMaxSize(This, Size) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxWindow(),\fR
+\fB                        Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the maximum size of the window, to indicate to the sizer layout mechanism that this is the maximum possible size.
+
+.PP
+See: Overview windowsizing
+
+
+.RE
+.B
+\fBsetMinSize(This, Size) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxWindow(),\fR
+\fB                        Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the minimum size of the window, to indicate to the sizer layout mechanism that this is the minimum required size.
+
+.PP
+You may need to call this if you change the window size after construction and before adding to its parent sizer.
+
+.PP
+Notice that calling this method doesn't prevent the program from making the window explicitly smaller than the specified size by calling \fIsetSize/6\fR, it just ensures that it won't become smaller than this size during the automatic layout.
+
+.PP
+See: Overview windowsizing
+
+
+.RE
+.B
+\fBsetName(This, Name) -> ok\fR
+\fB                 when This :: wxWindow(), Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the window's name.
+
+.PP
+See: \fIgetName/1\fR
+
+
+.RE
+.B
+\fBsetOwnBackgroundColour(This, Colour) -> ok\fR
+\fB                                when\fR
+\fB                                    This :: wxWindow(),\fR
+\fB                                    Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the background colour of the window but prevents it from being inherited by the children of this window.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBackgroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinheritAttributes/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetOwnFont(This, Font) -> ok\fR
+\fB                    when This :: wxWindow(), Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font of the window but prevents it from being inherited by the children of this window.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetFont/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinheritAttributes/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetOwnForegroundColour(This, Colour) -> ok\fR
+\fB                                when\fR
+\fB                                    This :: wxWindow(),\fR
+\fB                                    Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the foreground colour of the window but prevents it from being inherited by the children of this window.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetForegroundColour/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinheritAttributes/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetPalette(This, Pal) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxWindow(), Pal :: wxPalette:wxPalette().\fR
+
+.br
+.RS
+.PP
+Deprecated:
+
+.PP
+use \fIwxDC:setPalette/2\fR instead.
+
+
+.RE
+.B
+\fBsetScrollPos(This, Orientation, Pos, [Option]) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxWindow(),\fR
+\fB                          Orientation :: integer(),\fR
+\fB                          Pos :: integer(),\fR
+\fB                          Option :: {refresh, boolean()}.\fR
+
+.br
+.RS
+.PP
+Sets the position of one of the built-in scrollbars.
+
+.PP
+Remark: This function does not directly affect the contents of the window: it is up to the application to take note of scrollbar attributes and redraw contents accordingly.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetScrollbar/6\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetScrollPos/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetScrollThumb/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxScrollBar\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetScrollbar(This, Orientation, Position, ThumbSize, Range,\fR
+\fB                   [Option]) ->\fR
+\fB                      ok\fR
+\fB                      when\fR
+\fB                          This :: wxWindow(),\fR
+\fB                          Orientation :: integer(),\fR
+\fB                          Position :: integer(),\fR
+\fB                          ThumbSize :: integer(),\fR
+\fB                          Range :: integer(),\fR
+\fB                          Option :: {refresh, boolean()}.\fR
+
+.br
+.RS
+.PP
+Sets the scrollbar properties of a built-in scrollbar.
+
+.PP
+Remark: Let's say you wish to display 50 lines of text, using the same font. The window is sized so that you can only see 16 lines at a time. You would use: Note that with the window at this size, the thumb position can never go above 50 minus 16, or 34. You can determine how many lines are currently visible by dividing the current view size by the character height in pixels. When defining your own scrollbar behaviour, you will always need to recalculate the scrollbar settings when the window size changes. You could therefore put your scrollbar calculations and SetScrollbar call into a function named AdjustScrollbars, which can be called initially and also from your \fIwxSizeEvent\fR handler function.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview scrolling
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxScrollBar\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxScrollWinEvent\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetSize(This, Rect) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxWindow(),\fR
+\fB                     Rect ::\fR
+\fB                         {X :: integer(),\fR
+\fB                          Y :: integer(),\fR
+\fB                          W :: integer(),\fR
+\fB                          H :: integer()};\fR
+\fB             (This, Size) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxWindow(),\fR
+\fB                     Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBsetSize(This, Width, Height) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxWindow(),\fR
+\fB                     Width :: integer(),\fR
+\fB                     Height :: integer();\fR
+\fB             (This, Rect, [Option]) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxWindow(),\fR
+\fB                     Rect ::\fR
+\fB                         {X :: integer(),\fR
+\fB                          Y :: integer(),\fR
+\fB                          W :: integer(),\fR
+\fB                          H :: integer()},\fR
+\fB                     Option :: {sizeFlags, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the size of the window in pixels.
+
+.PP
+The size is specified using a {X,Y,W,H}, {Width,Height} or by a couple of \fIint\fR objects.
+
+.PP
+Remark: This form must be used with non-default width and height values.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImove/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview windowsizing
+
+.RE
+
+
+.RE
+.B
+\fBsetSize(This, X, Y, Width, Height, [Option]) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxWindow(),\fR
+\fB                     X :: integer(),\fR
+\fB                     Y :: integer(),\fR
+\fB                     Width :: integer(),\fR
+\fB                     Height :: integer(),\fR
+\fB                     Option :: {sizeFlags, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the size of the window in pixels.
+
+.PP
+Remark: This overload sets the position and optionally size, of the window. Parameters may be wxDefaultCoord to indicate either that a default should be supplied by wxWidgets, or that the current value of the dimension should be used.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImove/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview windowsizing
+
+.RE
+
+
+.RE
+.B
+\fBsetSizeHints(This, MinW, MinH) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxWindow(),\fR
+\fB                          MinW :: integer(),\fR
+\fB                          MinH :: integer();\fR
+\fB                  (This, MinSize, [Option]) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxWindow(),\fR
+\fB                          MinSize :: {W :: integer(), H :: integer()},\fR
+\fB                          Option ::\fR
+\fB                              {maxSize,\fR
+\fB                               {W :: integer(), H :: integer()}} |\fR
+\fB                              {incSize,\fR
+\fB                               {W :: integer(), H :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Use of this function for windows which are not toplevel windows (such as \fIwxDialog\fR or \fIwxFrame\fR) is discouraged.
+
+.PP
+Please use \fIsetMinSize/2\fR and \fIsetMaxSize/2\fR instead.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetSizeHints/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview windowsizing
+
+.RE
+
+
+.RE
+.B
+\fBsetSizeHints(This, MinW, MinH, [Option]) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxWindow(),\fR
+\fB                          MinW :: integer(),\fR
+\fB                          MinH :: integer(),\fR
+\fB                          Option ::\fR
+\fB                              {maxW, integer()} |\fR
+\fB                              {maxH, integer()} |\fR
+\fB                              {incW, integer()} |\fR
+\fB                              {incH, integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBsetSizer(This, Sizer, [Option]) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxWindow(),\fR
+\fB                      Sizer :: wxSizer:wxSizer(),\fR
+\fB                      Option :: {deleteOld, boolean()}.\fR
+
+.br
+.RS
+.PP
+Sets the window to have the given layout sizer.
+
+.PP
+The window will then own the object, and will take care of its deletion. If an existing layout constraints object is already owned by the window, it will be deleted if the \fIdeleteOld\fR parameter is true.
+
+.PP
+Note that this function will also call \fIsetAutoLayout/2\fR implicitly with true parameter if the \fIsizer\fR is non-NULL and false otherwise so that the sizer will be effectively used to layout the window children whenever it is resized.
+
+.PP
+Remark: SetSizer enables and disables Layout automatically.
+
+
+.RE
+.B
+\fBsetSizerAndFit(This, Sizer, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            Sizer :: wxSizer:wxSizer(),\fR
+\fB                            Option :: {deleteOld, boolean()}.\fR
+
+.br
+.RS
+.PP
+Associate the sizer with the window and set the window size and minimal size accordingly.
+
+.PP
+This method calls \fIsetSizer/3\fR and then \fIwxSizer:setSizeHints/2\fR which sets the initial window size to the size needed to accommodate all sizer elements and sets the minimal size to the same size, this preventing the user from resizing this window to be less than this minimal size (if it's a top-level window which can be directly resized by the user).
+
+
+.RE
+.B
+\fBsetThemeEnabled(This, Enable) -> ok\fR
+\fB                         when This :: wxWindow(), Enable :: boolean().\fR
+
+.br
+.RS
+.PP
+This function tells a window if it should use the system's "theme" code to draw the windows' background instead of its own background drawing code.
+
+.PP
+This does not always have any effect since the underlying platform obviously needs to support the notion of themes in user defined windows. One such platform is GTK+ where windows can have (very colourful) backgrounds defined by a user's selected theme.
+
+.PP
+Dialogs, notebook pages and the status bar have this flag set to true by default so that the default look and feel is simulated best.
+
+.PP
+See: \fIgetThemeEnabled/1\fR
+
+
+.RE
+.B
+\fBsetToolTip(This, TipString) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxWindow(),\fR
+\fB                        TipString :: unicode:chardata();\fR
+\fB                (This, Tip) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxWindow(), Tip :: wxToolTip:wxToolTip().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBsetTransparent(This, Alpha) -> boolean()\fR
+\fB                        when This :: wxWindow(), Alpha :: integer().\fR
+
+.br
+.RS
+.PP
+Set the transparency of the window.
+
+.PP
+If the system supports transparent windows, returns true, otherwise returns false and the window remains fully opaque. See also \fIcanSetTransparent/1\fR.
+
+.PP
+The parameter \fIalpha\fR is in the range 0..255 where 0 corresponds to a fully transparent window and 255 to the fully opaque one. The constants \fIwxIMAGE_ALPHA_TRANSPARENT\fR and \fIwxIMAGE_ALPHA_OPAQUE\fR can be used.
+
+
+.RE
+.B
+\fBsetVirtualSize(This, Size) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBsetVirtualSize(This, Width, Height) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            Width :: integer(),\fR
+\fB                            Height :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the virtual size of the window in pixels.
+
+.PP
+See: Overview windowsizing
+
+
+.RE
+.B
+\fBsetWindowStyle(This, Style) -> ok\fR
+\fB                        when This :: wxWindow(), Style :: integer().\fR
+
+.br
+.RS
+.PP
+See \fIsetWindowStyleFlag/2\fR for more info.
+
+
+.RE
+.B
+\fBsetWindowStyleFlag(This, Style) -> ok\fR
+\fB                            when This :: wxWindow(), Style :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the style of the window.
+
+.PP
+Please note that some styles cannot be changed after the window creation and that \fIrefresh/2\fR might need to be called after changing the others for the change to take place immediately.
+
+.PP
+See Window styles for more information about flags.
+
+.PP
+See: \fIgetWindowStyleFlag/1\fR
+
+
+.RE
+.B
+\fBsetWindowVariant(This, Variant) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxWindow(),\fR
+\fB                              Variant :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Chooses a different variant of the window display to use.
+
+.PP
+Window variants currently just differ in size, as can be seen from ?wxWindowVariant documentation. Under all platforms but macOS, this function does nothing more than change the font used by the window. However under macOS it is implemented natively and selects the appropriate variant of the native widget, which has better appearance than just scaled down or up version of the normal variant, so it should be preferred to directly tweaking the font size.
+
+.PP
+By default the controls naturally use the normal variant.
+
+
+.RE
+.B
+\fBshouldInheritColours(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Return true from here to allow the colours of this window to be changed by \fIinheritAttributes/1\fR.
+
+.PP
+Returning false forbids inheriting them from the parent window.
+
+.PP
+The base class version returns false, but this method is overridden in \fIwxControl\fR where it returns true.
+
+
+.RE
+.B
+\fBshow(This, [Option]) -> boolean()\fR
+\fB              when This :: wxWindow(), Option :: {show, boolean()}.\fR
+
+.br
+.RS
+.PP
+Shows or hides the window.
+
+.PP
+You may need to call \fIraise/1\fR for a top level window if you want to bring it to top, although this is not needed if \fIshow/2\fR is called immediately after the frame creation.
+
+.PP
+Notice that the default state of newly created top level windows is hidden (to allow you to create their contents without flicker) unlike for all the other, not derived from \fIwxTopLevelWindow\fR, windows that are by default created in the shown state.
+
+.PP
+Return: true if the window has been shown or hidden or false if nothing was done because it already was in the requested state.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisShown/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhide/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxRadioBox:show/3\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxShowEvent\fR
+
+.RE
+
+
+.RE
+.B
+\fBthaw(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Re-enables window updating after a previous call to \fIfreeze/1\fR.
+
+.PP
+To really thaw the control, it must be called exactly the same number of times as \fIfreeze/1\fR.
+
+.PP
+If the window has any children, they are recursively thawed too.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfreeze/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisFrozen/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBtoDIP(D, W) -> integer() when D :: integer(), W :: wxWindow();\fR
+\fB           (Sz, W) -> {W :: integer(), H :: integer()}\fR
+\fB               when\fR
+\fB                   Sz :: {W :: integer(), H :: integer()},\fR
+\fB                   W :: wxWindow();\fR
+\fB           (This, D) -> integer()\fR
+\fB               when This :: wxWindow(), D :: integer();\fR
+\fB           (This, Sz) -> {W :: integer(), H :: integer()}\fR
+\fB               when\fR
+\fB                   This :: wxWindow(),\fR
+\fB                   Sz :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Convert pixel values of the current toolkit to DPI-independent pixel values.
+
+.PP
+A DPI-independent pixel is just a pixel at the standard 96 DPI resolution. To keep the same physical size at higher resolution, the physical pixel value must be scaled by \fIgetDPIScaleFactor/1\fR but this scaling may be already done by the underlying toolkit (GTK+, Cocoa, ...) automatically. This method performs the conversion only if it is not already done by the lower level toolkit, For example, you may want to use this to store window sizes and positions so that they can be re-used regardless of the display DPI:
+
+.PP
+Also note that if either component of \fIsz\fR has the special value of -1, it is returned unchanged independently of the current DPI, to preserve the special value of -1 in wxWidgets API (it is often used to mean "unspecified").
+
+.PP
+Since: 3.1.0
+
+
+.RE
+.B
+\fBtransferDataFromWindow(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Transfers values from child controls to data areas specified by their validators.
+
+.PP
+Returns false if a transfer failed.
+
+.PP
+Notice that this also calls \fItransferDataFromWindow/1\fR for all children recursively.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItransferDataToWindow/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIvalidate/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBtransferDataToWindow(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Transfers values to child controls from data areas specified by their validators.
+
+.PP
+Notice that this also calls \fItransferDataToWindow/1\fR for all children recursively.
+
+.PP
+Return: Returns false if a transfer failed.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItransferDataFromWindow/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIvalidate/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBupdate(This) -> ok when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Calling this method immediately repaints the invalidated area of the window and all of its children recursively (this normally only happens when the flow of control returns to the event loop).
+
+.PP
+Notice that this function doesn't invalidate any area of the window so nothing happens if nothing has been invalidated (i.e. marked as requiring a redraw). Use \fIrefresh/2\fR first if you want to immediately redraw the window unconditionally.
+
+
+.RE
+.B
+\fBupdateWindowUI(This, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxWindow(),\fR
+\fB                            Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+This function sends one or more \fIwxUpdateUIEvent\fR to the window.
+
+.PP
+The particular implementation depends on the window; for example a \fIwxToolBar\fR will send an update UI event for each toolbar button, and a \fIwxFrame\fR will send an update UI event for each menubar menu item.
+
+.PP
+You can call this function from your application to ensure that your UI is up-to-date at this point (as far as your \fIwxUpdateUIEvent\fR handlers are concerned). This may be necessary if you have called \fIwxUpdateUIEvent:setMode/1\fR or \fIwxUpdateUIEvent:setUpdateInterval/1\fR to limit the overhead that wxWidgets incurs by sending update UI events in idle time. \fIflags\fR should be a bitlist of one or more of the ?wxUpdateUI enumeration.
+
+.PP
+If you are calling this function from an OnInternalIdle or OnIdle function, make sure you pass the wxUPDATE_UI_FROMIDLE flag, since this tells the window to only update the UI elements that need to be updated in idle time. Some windows update their elements only when necessary, for example when a menu is about to be shown. The following is an example of how to call UpdateWindowUI from an idle function.
+
+.PP
+See: \fIwxUpdateUIEvent\fR
+
+
+.RE
+.B
+\fBvalidate(This) -> boolean() when This :: wxWindow().\fR
+
+.br
+.RS
+.PP
+Validates the current values of the child controls using their validators.
+
+.PP
+Notice that this also calls \fIvalidate/1\fR for all children recursively.
+
+.PP
+Return: Returns false if any of the validations failed.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItransferDataFromWindow/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItransferDataToWindow/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBwarpPointer(This, X, Y) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxWindow(),\fR
+\fB                         X :: integer(),\fR
+\fB                         Y :: integer().\fR
+
+.br
+.RS
+.PP
+Moves the pointer to the given position on the window.
+
+.PP
+Note: Apple Human Interface Guidelines forbid moving the mouse cursor programmatically so you should avoid using this function in Mac applications (and probably avoid using it under the other platforms without good reason as well).
+
+
+.RE

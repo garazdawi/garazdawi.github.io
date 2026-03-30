@@ -1,0 +1,749 @@
+.TH httpc 3 "inets 9.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+httpc \- An HTTP/1.1 client
+
+.SH DESCRIPTION
+.PP
+This module provides the API to an HTTP/1.1 compatible client according to RFC 2616. Caching is not supported.
+
+.PP
+\fBNOTE: \fRWhen starting the \fIInets\fR application, a manager process for the default profile is started. The functions in this API that do not explicitly use a profile accesses the default profile. A profile keeps track of proxy options, cookies, and other options that can be applied to more than one request. If the scheme \fIhttps\fR is used, the \fISSL\fR application must be started. When \fIhttps\fR links need to go through a proxy, the CONNECT method extension to HTTP-1.1 is used to establish a tunnel and then the connection is upgraded to TLS. However, "TLS upgrade" according to RFC 2817 is not supported. Pipelining is only used if the pipeline time-out is set, otherwise persistent connections without pipelining are used. That is, the client always waits for the previous response before sending the next request.
+
+
+.PP
+Some examples are provided in the Inets User's Guide.
+
+.SS "HTTP client service start & stop"
+
+.PP
+An HTTP client can be configured to start when starting the \fIInets\fR application or started dynamically in runtime by calling the \fIInets\fR application API \fIinets:start(httpc, ServiceConfig)\fR or \fIinets:start(httpc, ServiceConfig, How)\fR, see \fIinets\fR. The configuration options are as follows:
+
+{profile, Profile :: atom() | pid()}
+.RS 2
+Name of the profile. This option is mandatory.
+
+
+.RE
+
+{data_dir, Path :: string()}
+.RS 2
+Directory where the profile can save persistent data. If omitted, all cookies are treated as session cookies. 
+\fIPath\fR represents a file path or directory path.
+
+.RE
+
+.PP
+The client can be stopped using \fIinets:stop(httpc, Pid)\fR or \fIinets:stop(httpc, Profile)\fR.
+
+.PP
+\fBWARNING: \fRPlease note that \fIhttpc\fR normalizes input URIs before internal processing and special care shall be taken when the URI has percent ("%") characters. A percent serves as the indicator for percent-encoded octets and it must be percent-encoded as "%25" for that octet to be used as data within the URI. For example, in order to send an \fIHTTP GET\fR request with the URI \fIhttp://localhost/foo%25bar\fR, the percent character must be percent-encoded when creating the request: \fIhttpc:request("http://localhost/foo%2525bar").\fR
+
+
+.SS "See also"
+
+.PP
+RFC 2616, \fIinets\fR, \fIgen_tcp\fR, \fIssl\fR
+
+.SH FUNCTIONS
+.LP
+.B
+\fBcancel_request(RequestId, Profile) -> ok\fR
+\fB                        when\fR
+\fB                            RequestId :: any(),\fR
+\fB                            Profile :: atom() | pid().\fR
+
+.br
+.RS
+.PP
+Cancels an asynchronous HTTP request. Notice that this does not guarantee that the request response is not delivered. Because it is asynchronous, the request can already have been completed when the cancellation arrives.
+
+
+.RE
+.B
+\fBcookie_header(Url, ProfileOrOpts) -> HttpHeader | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Url :: uri_string:uri_string(),\fR
+\fB                           HttpHeader ::\fR
+\fB                               {Field :: [byte()],\fR
+\fB                                Value :: binary() | iolist()},\fR
+\fB                           ProfileOrOpts :: Profile | Opts,\fR
+\fB                           Profile :: atom() | pid(),\fR
+\fB                           Opts :: [CookieHeaderOpt],\fR
+\fB                           CookieHeaderOpt ::\fR
+\fB                               {ipv6_host_with_brackets, boolean()},\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns the cookie header that would have been sent when making a request to \fIUrl\fR using profile \fIProfile\fR. If no profile is specified, the default profile is used.
+
+.PP
+Option \fIipv6_host_with_bracket\fR deals with how to parse IPv6 addresses. For details, see argument \fIOptions\fR of request/4,5.
+
+
+.RE
+.B
+\fBcookie_header(Url, Opts, Profile) -> HttpHeader | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Url :: uri_string:uri_string(),\fR
+\fB                           HttpHeader ::\fR
+\fB                               {Field :: [byte()],\fR
+\fB                                Value :: binary() | iolist()},\fR
+\fB                           Profile :: atom() | pid(),\fR
+\fB                           Opts :: [CookieHeaderOpt],\fR
+\fB                           CookieHeaderOpt ::\fR
+\fB                               {ipv6_host_with_brackets, boolean()},\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns the cookie header that would have been sent when making a request to \fIUrl\fR using profile \fIProfile\fR. If no profile is specified, the default profile is used.
+
+.PP
+Option \fIipv6_host_with_bracket\fR deals with how to parse IPv6 addresses. For details, see argument \fIOptions\fR of request/4,5.
+
+
+.RE
+.B
+\fBget_options(OptionItems, Profile) ->\fR
+\fB                     {ok, Values} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         OptionItems :: all | [OptionItem],\fR
+\fB                         OptionItem ::\fR
+\fB                             proxy | https_proxy | max_sessions |\fR
+\fB                             max_connections_open | keep_alive_timeout |\fR
+\fB                             max_keep_alive_length | pipeline_timeout |\fR
+\fB                             max_pipeline_length | cookies | ipfamily |\fR
+\fB                             ip | port | socket_opts | verbose |\fR
+\fB                             unix_socket,\fR
+\fB                         Values :: [{OptionItem, term()}],\fR
+\fB                         Profile :: atom() | pid(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Retrieves the options currently used by the client.
+
+
+.RE
+.B
+\fBinfo(Profile) -> list() | {error, Reason}\fR
+\fB              when Reason :: term(), Profile :: atom() | pid().\fR
+
+.br
+.RS
+.PP
+Produces a list of miscellaneous information. Intended for debugging. If no profile is specified, the default profile is used.
+
+
+.RE
+.B
+\fBrequest(Url, Profile) -> {ok, Result} | {error, term()}\fR
+\fB                 when\fR
+\fB                     Url :: uri_string:uri_string(),\fR
+\fB                     Profile :: atom() | pid(),\fR
+\fB                     Result ::\fR
+\fB                         {StatusLine, [HttpHeader], HttpBodyResult} |\fR
+\fB                         {StatusCode, HttpBodyResult} |\fR
+\fB                         RequestId | saved_to_file,\fR
+\fB                     HttpHeader ::\fR
+\fB                         {Field :: [byte()],\fR
+\fB                          Value :: binary() | iolist()},\fR
+\fB                     HttpBodyResult :: string() | binary(),\fR
+\fB                     StatusLine :: {HttpVersion, StatusCode, string()},\fR
+\fB                     HttpVersion :: string(),\fR
+\fB                     StatusCode :: non_neg_integer(),\fR
+\fB                     RequestId :: any().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIhttpc:request(get, {Url, []}, [], [])\fR.
+
+
+.RE
+.B
+\fBrequest(Method, Request, HttpOptions, Options, Profile) ->\fR
+\fB                 {ok, Result} | {error, term()}\fR
+\fB                 when\fR
+\fB                     Method ::\fR
+\fB                         head | get | put | patch | post | trace |\fR
+\fB                         options | delete,\fR
+\fB                     Request ::\fR
+\fB                         {uri_string:uri_string(), [HttpHeader]} |\fR
+\fB                         {uri_string:uri_string(),\fR
+\fB                          [HttpHeader],\fR
+\fB                          ContentType :: string(),\fR
+\fB                          HttpBody},\fR
+\fB                     HttpBody ::\fR
+\fB                         iolist() |\fR
+\fB                         binary() |\fR
+\fB                         {fun((Accumulator :: term()) ->\fR
+\fB                                  eof |\fR
+\fB                                  {ok, iolist(), Accumulator :: term()}),\fR
+\fB                          Accumulator :: term()} |\fR
+\fB                         {chunkify,\fR
+\fB                          fun((Accumulator :: term()) ->\fR
+\fB                                  eof |\fR
+\fB                                  {ok, iolist(), Accumulator :: term()}),\fR
+\fB                          Accumulator :: term()},\fR
+\fB                     HttpHeader ::\fR
+\fB                         {Field :: [byte()],\fR
+\fB                          Value :: binary() | iolist()},\fR
+\fB                     HttpOptions :: [HttpOption],\fR
+\fB                     HttpOption ::\fR
+\fB                         {timeout, timeout()} |\fR
+\fB                         {connect_timeout, timeout()} |\fR
+\fB                         {ssl, [ssl:tls_option()]} |\fR
+\fB                         {autoredirect, boolean()} |\fR
+\fB                         {autoretry, timeout()} |\fR
+\fB                         {proxy_auth, {string(), string()}} |\fR
+\fB                         {version, HttpVersion} |\fR
+\fB                         {relaxed, boolean()},\fR
+\fB                     Options :: [OptionRequest],\fR
+\fB                     OptionRequest ::\fR
+\fB                         {sync, boolean()} |\fR
+\fB                         {stream, StreamTo} |\fR
+\fB                         {body_format, BodyFormat} |\fR
+\fB                         {full_result, boolean()} |\fR
+\fB                         {headers_as_is, boolean()} |\fR
+\fB                         {socket_opts, [SocketOpt]} |\fR
+\fB                         {receiver, Receiver} |\fR
+\fB                         {ipv6_host_with_brackets, boolean()},\fR
+\fB                     StreamTo ::\fR
+\fB                         none | self | {self, once} | file:name_all(),\fR
+\fB                     BodyFormat :: string | binary,\fR
+\fB                     SocketOpt :: term(),\fR
+\fB                     Receiver ::\fR
+\fB                         pid() |\fR
+\fB                         fun((term()) -> term()) |\fR
+\fB                         {ReceiverModule :: atom(),\fR
+\fB                          ReceiverFunction :: atom(),\fR
+\fB                          ReceiverArgs :: list()},\fR
+\fB                     Profile :: atom() | pid(),\fR
+\fB                     HttpVersion :: string(),\fR
+\fB                     Result ::\fR
+\fB                         {StatusLine, [HttpHeader], HttpBodyResult} |\fR
+\fB                         {StatusCode, HttpBodyResult} |\fR
+\fB                         RequestId | saved_to_file,\fR
+\fB                     StatusLine :: {HttpVersion, StatusCode, string()},\fR
+\fB                     StatusCode :: non_neg_integer(),\fR
+\fB                     HttpBodyResult :: string() | binary(),\fR
+\fB                     RequestId :: any().\fR
+
+.br
+.RS
+.PP
+Sends an HTTP request. The function can be both synchronous and asynchronous. In the latter case, the function returns \fI{ok, RequestId}\fR and then the information is delivered to the \fIreceiver\fR depending on that value.
+
+.PP
+When \fIProfile\fR is \fIstand_alone\fR only the pid can be used.
+
+.PP
+HTTP options:
+
+timeout
+.RS 2
+Time-out time for the request.
+
+.PP
+The clock starts ticking when the request is sent.
+
+.PP
+Time is in milliseconds.
+
+.PP
+Default is \fIinfinity\fR.
+
+
+.RE
+
+connect_timeout
+.RS 2
+Connection time-out time, used during the initial request, when the client is 
+\fIconnecting\fR to the server.
+.PP
+Time is in milliseconds.
+
+.PP
+Default is the value of option \fItimeout\fR.
+
+
+.RE
+
+ssl
+.RS 2
+This is the 
+\fISSL/TLS\fR connecting configuration option.
+.PP
+Default value is obtained by calling \fIhttpc:ssl_verify_host_options(true)\fR. . See ssl:connect/2,3,4 for available options.
+
+
+.RE
+
+autoredirect
+.RS 2
+The client automatically retrieves the information from the new URI and returns that as the result, instead of a 30X-result code.
+
+.PP
+For some 30X-result codes, automatic redirect is not allowed. In these cases the 30X-result is always returned.
+
+.PP
+Default is \fItrue\fR.
+
+
+.RE
+
+autoretry
+.RS 2
+The client automatically retries the request 
+\fBonce\fR after receiving a Retry-After header from the server.
+.PP
+Sometimes servers can suggest a value that is not suitable for application, so this option allows limiting the wait time \fB(in miliseconds)\fR inbetween requests, or disabling the retry with a value of \fI0\fR. If a value of Retry-After header exceeds the set value, no retry will be done.
+
+.PP
+Default is atom \fIinfinity\fR.
+
+
+.RE
+
+proxy_auth
+.RS 2
+A proxy-authorization header using a tuple where the first element is the 
+\fIusername\fR and the second element of the tuple is the \fIpassword\fR added to the request.
+
+.RE
+
+version
+.RS 2
+Can be used to make the client act as an 
+\fIHTTP/1.0\fR client. By default this is an \fIHTTP/1.1\fR client. When using \fIHTTP/1.0\fR persistent connections are not used.
+.PP
+Default is the string \fI"HTTP/1.1"\fR.
+
+
+.RE
+
+relaxed
+.RS 2
+If set to 
+\fItrue\fR, workarounds for known server deviations from the HTTP-standard are enabled.
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+.PP
+Options details:
+
+sync
+.RS 2
+Option for the request to be synchronous or asynchronous.
+
+.PP
+Default is \fItrue\fR.
+
+
+.RE
+
+stream
+.RS 2
+Streams the body of a 200 or 206 response to the calling process or to a file. When streaming to the calling process using option 
+\fIself\fR, the following stream messages are sent to that process: \fI{http, {RequestId, stream_start, Headers}}, {http, {RequestId, stream, BinBodyPart}}, and {http, {RequestId, stream_end, Headers}}\fR.
+.PP
+When streaming to the calling processes using option \fI{self, once}\fR, the first message has an extra element, that is, \fI{http, {RequestId, stream_start, Headers, Pid}}\fR. This is the process id to be used as an argument to \fIhttpc:stream_next/1\fR to trigger the next message to be sent to the calling process.
+
+.PP
+Notice that chunked encoding can add headers so that there are more headers in the \fIstream_end\fR message than in \fIstream_start\fR. When streaming to a file and the request is asynchronous, the message \fI{http, {RequestId, saved_to_file}}\fR is sent.
+
+.PP
+Default is \fInone\fR.
+
+
+.RE
+
+body_format
+.RS 2
+Defines if the body is to be delivered as a string or binary. This option is only valid for the synchronous request.
+
+.PP
+Default is \fIstring\fR. Asynchronous requests always use \fIbinary\fR.
+
+
+.RE
+
+full_result
+.RS 2
+Defines if a "full result" is to be returned to the caller (that is, the body, the headers, and the entire status line) or not (the body and the status code).
+
+.PP
+Default is \fItrue\fR.
+
+
+.RE
+
+headers_as_is
+.RS 2
+Defines if the headers provided by the user are to be made lower case or to be regarded as case sensitive.
+
+.PP
+The HTTP standard requires them to be case insensitive. Use this feature only if there is no other way to communicate with the server or for testing purpose. When this option is used, no headers are automatically added. All necessary headers must be provided by the user.
+
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+socket_opts
+.RS 2
+Socket options to be used for this request.
+
+.PP
+See the options used by \fIgen_tcp\fR and \fIssl\fR
+
+.PP
+Overrides any value set by function set_options.
+
+.PP
+The validity of the options is \fInot\fR checked by the HTTP client they are assumed to be correct and passed on to ssl application and inet driver, which may reject them if they are not correct.
+
+.PP
+\fBNOTE: \fRPersistent connections are not supported when setting the \fIsocket_opts\fR option. When \fIsocket_opts\fR is not set the current implementation assumes the requests to the same host, port combination will use the same socket options.
+
+
+.PP
+By default the socket options set by function set_options/1,2 are used when establishing a connection.
+
+
+.RE
+
+receiver
+.RS 2
+Defines how the client delivers the result of an asynchronous request (
+\fIsync\fR has the value \fIfalse\fR).
+pid/0
+.RS 2
+Messages are sent to this process in the format 
+\fI{http, ReplyInfo}\fR.
+
+.RE
+
+alias/0
+.RS 2
+Messages are sent to this special reference in the format 
+\fI{http, ReplyInfo}\fR.
+
+.RE
+
+function/1
+.RS 2
+Information is delivered to the receiver through calls to the provided fun 
+\fIReceiver(ReplyInfo)\fR.
+
+.RE
+
+{Module, Function, Args}
+.RS 2
+Information is delivered to the receiver through calls to the callback function 
+\fIapply(Module, Function, [ReplyInfo | Args])\fR.
+
+.RE
+
+.PP
+In all of these cases, \fIReplyInfo\fR has the following structure:
+
+.IP
+.nf
+ {RequestId, saved_to_file}
+ {RequestId, {error, Reason}}
+ {RequestId, Result}
+ {RequestId, stream_start, Headers}
+ {RequestId, stream_start, Headers, HandlerPid}
+ {RequestId, stream, BinBodyPart}
+ {RequestId, stream_end, Headers}
+
+.fi
+
+.PP
+Default is the \fIpid\fR of the process calling the request function (\fIself/0\fR).
+
+
+.RE
+
+ipv6_host_with_brackets
+.RS 2
+Defines when parsing the Host-Port part of an URI with an IPv6 address with brackets, if those brackets are to be retained (
+\fItrue\fR) or stripped (\fIfalse\fR).
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+
+.RE
+.B
+\fBreset_cookies(Profile) -> Void\fR
+\fB                       when Profile :: atom() | pid(), Void :: term().\fR
+
+.br
+.RS
+.PP
+Resets (clears) the cookie database for the specified \fIProfile\fR. If no profile is specified the default profile is used.
+
+
+.RE
+.B
+\fBset_options(Options, Profile) -> ok | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Options :: [Option],\fR
+\fB                         Option ::\fR
+\fB                             {proxy, {Proxy, NoProxy}} |\fR
+\fB                             {https_proxy, {Proxy, NoProxy}} |\fR
+\fB                             {max_connections_open, MaxConnectionsOpen} |\fR
+\fB                             {max_sessions, MaxSessions} |\fR
+\fB                             {max_keep_alive_length, MaxKeepAlive} |\fR
+\fB                             {keep_alive_timeout, KeepAliveTimeout} |\fR
+\fB                             {max_pipeline_length, MaxPipeline} |\fR
+\fB                             {pipeline_timeout, PipelineTimeout} |\fR
+\fB                             {cookies, CookieMode} |\fR
+\fB                             {ipfamily, IpFamily} |\fR
+\fB                             {ip, IpAddress} |\fR
+\fB                             {port, Port} |\fR
+\fB                             {socket_opts, [SocketOpt]} |\fR
+\fB                             {verbose, VerboseMode} |\fR
+\fB                             {unix_socket, UnixSocket},\fR
+\fB                         Profile :: atom() | pid(),\fR
+\fB                         SocketOpt :: term(),\fR
+\fB                         Proxy :: {HostName, Port},\fR
+\fB                         Port :: non_neg_integer(),\fR
+\fB                         NoProxy ::\fR
+\fB                             [DomainDesc | HostName | IpAddressDesc],\fR
+\fB                         MaxConnectionsOpen :: integer() | infinity,\fR
+\fB                         MaxSessions :: integer(),\fR
+\fB                         MaxKeepAlive :: integer(),\fR
+\fB                         KeepAliveTimeout :: integer(),\fR
+\fB                         MaxPipeline :: integer(),\fR
+\fB                         PipelineTimeout :: integer(),\fR
+\fB                         CookieMode :: enabled | disabled | verify,\fR
+\fB                         IpFamily :: inet | inet6 | local | inet6fb4,\fR
+\fB                         IpAddressDesc :: string(),\fR
+\fB                         IpAddress :: inet:ip_address(),\fR
+\fB                         VerboseMode :: false | verbose | debug | trace,\fR
+\fB                         UnixSocket :: string(),\fR
+\fB                         Reason :: term(),\fR
+\fB                         DomainDesc :: string(),\fR
+\fB                         HostName :: string().\fR
+
+.br
+.RS
+.PP
+Sets options to be used for subsequent requests.
+
+HostName
+.RS 2
+Example: "localhost" or "foo.bar.se"
+
+
+.RE
+
+DomainDesc
+.RS 2
+Example 
+\fI"*.Domain"\fR or \fI"*.ericsson.se"\fR
+
+.RE
+
+IpAddressDesc
+.RS 2
+Example: "134.138" or "[FEDC:BA98" (all IP addresses starting with 134.138 or FEDC:BA98), "66.35.250.150" or "[2010:836B:4179::836B:4179]" (a complete IP address). 
+\fIproxy\fR defaults to \fI{undefined, []}\fR, that is, no proxy is configured and \fIhttps_proxy\fR defaults to the value of \fIproxy\fR.
+
+.RE
+
+MaxConnectionsOpen
+.RS 2
+
+\fIMaxConnectionsOpen\fR Maximum number of handlers that can be opened at the same time. Default is \fIinfinity\fR which means that it's not limited.
+
+.RE
+
+MaxSessions
+.RS 2
+
+\fIMaxSessions\fR Maximum number of persistent connections to a host. Default is \fI2\fR.
+
+.RE
+
+MaxKeepAlive
+.RS 2
+
+\fIMaxKeepAlive\fR Maximum number of outstanding requests on the same connection to a host. Default is \fI5\fR.
+
+.RE
+
+KeepAliveTimeout
+.RS 2
+
+\fIKeepAliveTimeout\fR If a persistent connection is idle longer than the \fIkeep_alive_timeout\fR in milliseconds, the client closes the connection. The server can also have such a time-out but do not take that for granted. Default is \fI120000\fR (= 2 min).
+
+.RE
+
+MaxPipeline
+.RS 2
+
+\fIMaxPipeline\fR Maximum number of outstanding requests on a pipelined connection to a host. Default is \fI2\fR.
+
+.RE
+
+PipelineTimeout
+.RS 2
+
+\fIPipelineTimeout\fR If a persistent connection is idle longer than the \fIpipeline_timeout\fR in milliseconds, the client closes the connection. Default is \fI0\fR, which results in pipelining not being used.
+
+.RE
+
+CookieMode
+.RS 2
+If cookies are enabled, all valid cookies are automatically saved in the cookie database of the client manager. If option 
+\fIverify\fR is used, function \fIstore_cookies/2\fR has to be called for the cookies to be saved. Default is \fIdisabled\fR.
+
+.RE
+
+IpFamily
+.RS 2
+Default is 
+\fIinet\fR. With \fIinet6fb4\fR option, IPv6 will be preferred but if connection fails, an IPv4 fallback connection attempt will be made.
+
+.RE
+
+IpAddress
+.RS 2
+If the host has several network interfaces, this option specifies which one to use. See 
+\fIgen_tcp:connect/3,4\fR for details.
+
+.RE
+
+Port
+.RS 2
+Example: 
+\fI8080\fR. Local port number to use. See \fIgen_tcp:connect/3,4\fR for details.
+
+.RE
+
+SocketOpts
+.RS 2
+The options are appended to the socket options used by the client. These are the default values when a new request handler is started (for the initial connect). They are passed directly to the underlying transport (
+\fIgen_tcp\fR or \fISSL\fR) without verification.
+.PP
+See the options used by \fIgen_tcp\fR and \fIssl\fR
+
+
+.RE
+
+VerboseMode
+.RS 2
+Default is 
+\fIfalse\fR. This option is used to switch on (or off) different levels of Erlang trace on the client. It is a debug feature.
+
+.RE
+
+Profile
+.RS 2
+When started 
+\fIstand_alone\fR only the pid can be used.
+
+.RE
+
+UnixSocket
+.RS 2
+Experimental option for sending HTTP requests over a unix domain socket. The value of 
+\fIunix_socket\fR shall be the full path to a unix domain socket file with read/write permissions for the erlang process. Default is \fIundefined\fR.
+
+.RE
+
+.PP
+\fBNOTE: \fRIf possible, the client keeps its connections alive and uses persistent connections with or without pipeline depending on configuration and current circumstances. The HTTP/1.1 specification does not provide a guideline for how many requests that are ideal to be sent on a persistent connection. This depends much on the application. A long queue of requests can cause a user-perceived delay, as earlier requests can take a long time to complete. The HTTP/1.1 specification suggests a limit of two persistent connections per server, which is the default value of option \fImax_sessions\fR. The current implementation assumes the requests to the same host, port combination will use the same socket options.
+
+
+
+.RE
+.B
+\fBssl_verify_host_options(WildcardHostName) -> list()\fR
+\fB                                 when WildcardHostName :: boolean().\fR
+
+.br
+.RS
+.PP
+Returns ssl options which can be used to verify the host, uses \fIpublic_key:cacerts_get()\fR to read CA certicates and if \fIWildcardHostName\fR is true adds the hostname check from \fIpublic_key:public_key:pkix_verify_hostname_match_fun(https)\fR to the options.
+
+
+.RE
+.B
+\fBstore_cookies(SetCookieHeaders, Url, Profile) ->\fR
+\fB                       ok | {error, Reason}\fR
+\fB                       when\fR
+\fB                           SetCookieHeaders :: [HttpHeader],\fR
+\fB                           HttpHeader ::\fR
+\fB                               {Field :: [byte()],\fR
+\fB                                Value :: binary() | iolist()},\fR
+\fB                           Url :: term(),\fR
+\fB                           Profile :: atom() | pid(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Saves the cookies defined in \fISetCookieHeaders\fR in the client profile cookie database. Call this function if option \fIcookies\fR is set to \fIverify\fR. If no profile is specified, the default profile is used.
+
+
+.RE
+.B
+\fBstream_next(Pid) -> ok when Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Triggers the next message to be streamed, that is, the same behavior as active ones for sockets.
+
+
+.RE
+.B
+\fBwhich_cookies(Profile) -> [CookieStores]\fR
+\fB                       when\fR
+\fB                           Profile :: atom() | pid(),\fR
+\fB                           CookieStores ::\fR
+\fB                               {cookies, Cookies} |\fR
+\fB                               {session_cookies, Cookies},\fR
+\fB                           Cookies :: [term()].\fR
+
+.br
+.RS
+.PP
+Produces a list of the entire cookie database. Intended for debugging/testing purposes. If no profile is specified, the default profile is used.
+
+
+.RE
+.B
+\fBwhich_sessions(Profile) -> SessionInfo\fR
+\fB                        when\fR
+\fB                            Profile :: atom() | pid(),\fR
+\fB                            SessionInfo ::\fR
+\fB                                {GoodSession, BadSessions, NonSessions},\fR
+\fB                            GoodSession :: [Session],\fR
+\fB                            BadSessions :: [term()],\fR
+\fB                            NonSessions :: [term()],\fR
+\fB                            Session :: term().\fR
+
+.br
+.RS
+.PP
+This function is intended for debugging only. It produces a slightly processed dump of the session database. The first list of the session information tuple will contain session information on an internal format. The last two lists of the session information tuple should always be empty if the code is working as intended. If no profile is specified, the default profile is used.
+
+
+.RE

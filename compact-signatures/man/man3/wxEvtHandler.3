@@ -1,0 +1,236 @@
+.TH wxEvtHandler 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxEvtHandler \- The Event handler
+
+.SH DESCRIPTION
+.PP
+A class that can handle events from the windowing system. \fIwxWindow\fR is (and therefore all window classes are) derived from this class.
+
+.PP
+To get events from wxwidgets objects you subscribe to them by calling \fIconnect/3\fR.
+
+.PP
+If the \fIcallback\fR option is not supplied events are sent as messages.
+
+.PP
+These messages will be \fI#wx{}\fR where \fIEventRecord\fR is a record that depends on the \fIwxEventType\fR. The records are defined in: \fIwx/include/wx.hrl\fR.
+
+.PP
+If a callback was supplied to connect, the callback will be invoked (in another process) to handle the event. The callback should be of arity 2.
+
+.PP
+\fIfun Callback (EventRecord::wx(), EventObject::wxObject()).\fR
+
+.PP
+Note: The callback will be in executed in new process each time.
+
+.PP
+See: Overview events
+
+.PP
+wxWidgets docs: wxEvtHandler
+
+.SH DATA TYPES
+.LP
+.B
+\fBevent() ::\fR
+\fB          wxActivateEvent:wxActivate() |\fR
+\fB          wxAuiManagerEvent:wxAuiManager() |\fR
+\fB          wxAuiNotebookEvent:wxAuiNotebook() |\fR
+\fB          wxBookCtrlEvent:wxBookCtrl() |\fR
+\fB          wxCalendarEvent:wxCalendar() |\fR
+\fB          wxChildFocusEvent:wxChildFocus() |\fR
+\fB          wxClipboardTextEvent:wxClipboardText() |\fR
+\fB          wxCloseEvent:wxClose() |\fR
+\fB          wxColourPickerEvent:wxColourPicker() |\fR
+\fB          wxCommandEvent:wxCommand() |\fR
+\fB          wxContextMenuEvent:wxContextMenu() |\fR
+\fB          wxDateEvent:wxDate() |\fR
+\fB          wxDisplayChangedEvent:wxDisplayChanged() |\fR
+\fB          wxDropFilesEvent:wxDropFiles() |\fR
+\fB          wxEraseEvent:wxErase() |\fR
+\fB          wxFileDirPickerEvent:wxFileDirPicker() |\fR
+\fB          wxFocusEvent:wxFocus() |\fR
+\fB          wxFontPickerEvent:wxFontPicker() |\fR
+\fB          wxGridEvent:wxGrid() |\fR
+\fB          wxHelpEvent:wxHelp() |\fR
+\fB          wxHtmlLinkEvent:wxHtmlLink() |\fR
+\fB          wxIconizeEvent:wxIconize() |\fR
+\fB          wxIdleEvent:wxIdle() |\fR
+\fB          wxInitDialogEvent:wxInitDialog() |\fR
+\fB          wxJoystickEvent:wxJoystick() |\fR
+\fB          wxKeyEvent:wxKey() |\fR
+\fB          wxListEvent:wxList() |\fR
+\fB          wxMaximizeEvent:wxMaximize() |\fR
+\fB          wxMenuEvent:wxMenu() |\fR
+\fB          wxMouseCaptureChangedEvent:wxMouseCaptureChanged() |\fR
+\fB          wxMouseCaptureLostEvent:wxMouseCaptureLost() |\fR
+\fB          wxMouseEvent:wxMouse() |\fR
+\fB          wxMoveEvent:wxMove() |\fR
+\fB          wxNavigationKeyEvent:wxNavigationKey() |\fR
+\fB          wxPaintEvent:wxPaint() |\fR
+\fB          wxPaletteChangedEvent:wxPaletteChanged() |\fR
+\fB          wxQueryNewPaletteEvent:wxQueryNewPalette() |\fR
+\fB          wxSashEvent:wxSash() |\fR
+\fB          wxScrollEvent:wxScroll() |\fR
+\fB          wxScrollWinEvent:wxScrollWin() |\fR
+\fB          wxSetCursorEvent:wxSetCursor() |\fR
+\fB          wxShowEvent:wxShow() |\fR
+\fB          wxSizeEvent:wxSize() |\fR
+\fB          wxSpinEvent:wxSpin() |\fR
+\fB          wxSplitterEvent:wxSplitter() |\fR
+\fB          wxStyledTextEvent:wxStyledText() |\fR
+\fB          wxSysColourChangedEvent:wxSysColourChanged() |\fR
+\fB          wxTaskBarIconEvent:wxTaskBarIcon() |\fR
+\fB          wxTreeEvent:wxTree() |\fR
+\fB          wxUpdateUIEvent:wxUpdateUI() |\fR
+\fB          wxWebViewEvent:wxWebView() |\fR
+\fB          wxWindowCreateEvent:wxWindowCreate() |\fR
+\fB          wxWindowDestroyEvent:wxWindowDestroy().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx() :: #wx{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxEventType() ::\fR
+\fB          wxActivateEvent:wxActivateEventType() |\fR
+\fB          wxAuiManagerEvent:wxAuiManagerEventType() |\fR
+\fB          wxAuiNotebookEvent:wxAuiNotebookEventType() |\fR
+\fB          wxBookCtrlEvent:wxBookCtrlEventType() |\fR
+\fB          wxCalendarEvent:wxCalendarEventType() |\fR
+\fB          wxChildFocusEvent:wxChildFocusEventType() |\fR
+\fB          wxClipboardTextEvent:wxClipboardTextEventType() |\fR
+\fB          wxCloseEvent:wxCloseEventType() |\fR
+\fB          wxColourPickerEvent:wxColourPickerEventType() |\fR
+\fB          wxCommandEvent:wxCommandEventType() |\fR
+\fB          wxContextMenuEvent:wxContextMenuEventType() |\fR
+\fB          wxDateEvent:wxDateEventType() |\fR
+\fB          wxDisplayChangedEvent:wxDisplayChangedEventType() |\fR
+\fB          wxDropFilesEvent:wxDropFilesEventType() |\fR
+\fB          wxEraseEvent:wxEraseEventType() |\fR
+\fB          wxFileDirPickerEvent:wxFileDirPickerEventType() |\fR
+\fB          wxFocusEvent:wxFocusEventType() |\fR
+\fB          wxFontPickerEvent:wxFontPickerEventType() |\fR
+\fB          wxGridEvent:wxGridEventType() |\fR
+\fB          wxHelpEvent:wxHelpEventType() |\fR
+\fB          wxHtmlLinkEvent:wxHtmlLinkEventType() |\fR
+\fB          wxIconizeEvent:wxIconizeEventType() |\fR
+\fB          wxIdleEvent:wxIdleEventType() |\fR
+\fB          wxInitDialogEvent:wxInitDialogEventType() |\fR
+\fB          wxJoystickEvent:wxJoystickEventType() |\fR
+\fB          wxKeyEvent:wxKeyEventType() |\fR
+\fB          wxListEvent:wxListEventType() |\fR
+\fB          wxMaximizeEvent:wxMaximizeEventType() |\fR
+\fB          wxMenuEvent:wxMenuEventType() |\fR
+\fB          wxMouseCaptureChangedEvent:wxMouseCaptureChangedEventType() |\fR
+\fB          wxMouseCaptureLostEvent:wxMouseCaptureLostEventType() |\fR
+\fB          wxMouseEvent:wxMouseEventType() |\fR
+\fB          wxMoveEvent:wxMoveEventType() |\fR
+\fB          wxNavigationKeyEvent:wxNavigationKeyEventType() |\fR
+\fB          wxPaintEvent:wxPaintEventType() |\fR
+\fB          wxPaletteChangedEvent:wxPaletteChangedEventType() |\fR
+\fB          wxQueryNewPaletteEvent:wxQueryNewPaletteEventType() |\fR
+\fB          wxSashEvent:wxSashEventType() |\fR
+\fB          wxScrollEvent:wxScrollEventType() |\fR
+\fB          wxScrollWinEvent:wxScrollWinEventType() |\fR
+\fB          wxSetCursorEvent:wxSetCursorEventType() |\fR
+\fB          wxShowEvent:wxShowEventType() |\fR
+\fB          wxSizeEvent:wxSizeEventType() |\fR
+\fB          wxSpinEvent:wxSpinEventType() |\fR
+\fB          wxSplitterEvent:wxSplitterEventType() |\fR
+\fB          wxStyledTextEvent:wxStyledTextEventType() |\fR
+\fB          wxSysColourChangedEvent:wxSysColourChangedEventType() |\fR
+\fB          wxTaskBarIconEvent:wxTaskBarIconEventType() |\fR
+\fB          wxTreeEvent:wxTreeEventType() |\fR
+\fB          wxUpdateUIEvent:wxUpdateUIEventType() |\fR
+\fB          wxWebViewEvent:wxWebViewEventType() |\fR
+\fB          wxWindowCreateEvent:wxWindowCreateEventType() |\fR
+\fB          wxWindowDestroyEvent:wxWindowDestroyEventType().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxEvtHandler() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBconnect(This :: wxEvtHandler(),\fR
+\fB              EventType :: wxEventType(),\fR
+\fB              [Option]) ->\fR
+\fB                 ok\fR
+\fB                 when\fR
+\fB                     Option ::\fR
+\fB                         {id, integer()} |\fR
+\fB                         {lastId, integer()} |\fR
+\fB                         {skip, boolean()} |\fR
+\fB                         callback |\fR
+\fB                         {callback, function()} |\fR
+\fB                         {userData, term()}.\fR
+
+.br
+.RS
+.PP
+This function subscribes to events.
+
+.PP
+Subscribes to events of type \fIEventType\fR, in the range \fIid\fR, \fIlastId\fR.
+
+.PP
+The events will be received as messages if no callback is supplied.
+
+.PP
+Options
+
+.PP
+id:\fI{id, integer()} \fRThe identifier (or first of the identifier range) to be associated with this event handler. Default is ?wxID_ANY
+
+.PP
+lastid:\fI{lastId,integer()} \fRThe second part of the identifier range. If used 'id' must be set as the starting identifier range. Default is ?wxID_ANY
+
+.PP
+skip:\fI{skip,boolean()} \fRIf skip is true further event_handlers will be called. This is not used if the 'callback' option is used. Default is \fIfalse\fR.
+
+.PP
+callback:\fI{callback,function()} \fRUse a callback\fIfun(EventRecord::wx(),EventObject::wxObject()) \fRto process the event. Default not specified i.e. a message will be delivered to the process calling this function.
+
+.PP
+userData:\fI{userData,term()} \fRAn erlang term that will be sent with the event. Default: [].
+
+
+.RE
+.B
+\fBdisconnect(This :: wxEvtHandler(),\fR
+\fB                 EventType :: wxEventType(),\fR
+\fB                 [Option]) ->\fR
+\fB                    boolean()\fR
+\fB                    when\fR
+\fB                        Option ::\fR
+\fB                            {id, integer()} |\fR
+\fB                            {lastId, integer()} |\fR
+\fB                            {callback, function()}.\fR
+
+.br
+.RS
+.PP
+This function unsubscribes the process or callback fun from the event handler.
+
+.PP
+EventType may be the atom 'null' to match any eventtype. Notice that the options skip and userdata is not used to match the eventhandler.
+
+
+.RE

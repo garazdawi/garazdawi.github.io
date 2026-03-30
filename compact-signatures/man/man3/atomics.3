@@ -1,0 +1,293 @@
+.TH atomics 3 "erts 16.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+atomics \- Atomic Functions
+
+.SH DESCRIPTION
+.PP
+This module provides a set of functions to do atomic operations towards mutable atomic variables. The implementation utilizes only atomic hardware instructions without any software level locking, which makes it very efficient for concurrent access. The atomics are organized into arrays with the following semantics:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Atomics are 64 bit integers.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Atomics can be represented as either signed or unsigned.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Atomics wrap around at overflow and underflow operations.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+All operations guarantee atomicity. No intermediate results can be seen. The result of one mutation can only be the input to one following mutation.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+All atomic operations are mutually ordered. If atomic B is updated \fIafter\fR atomic A, then that is how it will appear to any concurrent readers. No one can read the new value of B and then read the old value of A.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Indexes into atomic arrays are one-based. An atomic array of arity N contains N atomics with index from 1 to N.
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fB-opaque atomics_ref() \fR
+
+.br
+.RS
+.PP
+Identifies an atomic array returned from \fInew/2\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd(Ref, Ix, Incr) -> ok\fR
+\fB             when\fR
+\fB                 Ref :: atomics_ref(),\fR
+\fB                 Ix :: pos_integer(),\fR
+\fB                 Incr :: integer().\fR
+
+.br
+.RS
+.PP
+Add \fIIncr\fR to atomic.
+
+
+.RE
+.B
+\fBadd_get(Ref, Ix, Incr) -> integer()\fR
+\fB                 when\fR
+\fB                     Ref :: atomics_ref(),\fR
+\fB                     Ix :: pos_integer(),\fR
+\fB                     Incr :: integer().\fR
+
+.br
+.RS
+.PP
+Atomically add \fIIncr\fR to atomic and return the result.
+
+
+.RE
+.B
+\fBcompare_exchange(Ref, Ix, Expected, Desired) -> ok | integer()\fR
+\fB                          when\fR
+\fB                              Ref :: atomics_ref(),\fR
+\fB                              Ix :: pos_integer(),\fR
+\fB                              Expected :: integer(),\fR
+\fB                              Desired :: integer().\fR
+
+.br
+.RS
+.PP
+Atomically compare the atomic with \fIExpected\fR, and if those are equal, set atomic to \fIDesired\fR.
+
+.PP
+Return \fIok\fR if \fIDesired\fR was written. Return the actual atomic value if not equal to \fIExpected\fR.
+
+
+.RE
+.B
+\fBexchange(Ref, Ix, Desired) -> integer()\fR
+\fB                  when\fR
+\fB                      Ref :: atomics_ref(),\fR
+\fB                      Ix :: pos_integer(),\fR
+\fB                      Desired :: integer().\fR
+
+.br
+.RS
+.PP
+Atomically replace the value of the atomic with \fIDesired\fR and return the previous value.
+
+
+.RE
+.B
+\fBget(Ref, Ix) -> integer()\fR
+\fB             when Ref :: atomics_ref(), Ix :: pos_integer().\fR
+
+.br
+.RS
+.PP
+Read atomic value.
+
+
+.RE
+.B
+\fBinfo(Ref) -> Info\fR
+\fB              when\fR
+\fB                  Ref :: atomics_ref(),\fR
+\fB                  Info ::\fR
+\fB                      #{size := Size,\fR
+\fB                        max := Max,\fR
+\fB                        min := Min,\fR
+\fB                        memory := Memory},\fR
+\fB                  Size :: non_neg_integer(),\fR
+\fB                  Max :: integer(),\fR
+\fB                  Min :: integer(),\fR
+\fB                  Memory :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Return information about an atomic array in a map.
+
+.PP
+The map has the following keys:
+
+size
+.RS 2
+The number of atomics in the array.
+
+
+.RE
+max
+.RS 2
+The highest possible value an atomic in this array can hold.
+
+
+.RE
+min
+.RS 2
+The lowest possible value an atomic in this array can hold.
+
+
+.RE
+memory
+.RS 2
+Approximate memory consumption for the array in bytes.
+
+
+.RE
+
+
+.RE
+.B
+\fBnew(Arity, Opts) -> atomics_ref()\fR
+\fB             when\fR
+\fB                 Arity :: pos_integer(),\fR
+\fB                 Opts :: [Opt],\fR
+\fB                 Opt :: {signed, boolean()}.\fR
+
+.br
+.RS
+.PP
+Create a new array of \fIArity\fR number of atomics. All atomics in the array are initially set to zero.
+
+.PP
+Argument \fIOpts\fR is a list of the following possible options:
+
+{signed, boolean()}
+.RS 2
+Indicate if the elements of the array will be treated as signed or unsigned integers. Default is 
+\fItrue\fR (signed).
+.PP
+The integer interval for signed atomics are from \fI-(1 bsl 63)\fR to \fI(1 bsl 63)-1\fR and for unsigned atomics from \fI0\fR to \fI(1 bsl 64)-1\fR.
+
+
+.RE
+
+.PP
+Atomics are not tied to the current process and are automatically garbage collected when they are no longer referenced.
+
+
+.RE
+.B
+\fBput(Ref, Ix, Value) -> ok\fR
+\fB             when\fR
+\fB                 Ref :: atomics_ref(),\fR
+\fB                 Ix :: pos_integer(),\fR
+\fB                 Value :: integer().\fR
+
+.br
+.RS
+.PP
+Set atomic to \fIValue\fR.
+
+
+.RE
+.B
+\fBsub(Ref, Ix, Decr) -> ok\fR
+\fB             when\fR
+\fB                 Ref :: atomics_ref(),\fR
+\fB                 Ix :: pos_integer(),\fR
+\fB                 Decr :: integer().\fR
+
+.br
+.RS
+.PP
+Subtract \fIDecr\fR from atomic.
+
+
+.RE
+.B
+\fBsub_get(Ref, Ix, Decr) -> integer()\fR
+\fB                 when\fR
+\fB                     Ref :: atomics_ref(),\fR
+\fB                     Ix :: pos_integer(),\fR
+\fB                     Decr :: integer().\fR
+
+.br
+.RS
+.PP
+Atomically subtract \fIDecr\fR from atomic and return the result.
+
+
+.RE

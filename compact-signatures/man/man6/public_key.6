@@ -1,0 +1,142 @@
+.TH Public_Key Application 6 "public_key 1.20.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+Public_Key Application
+.SH DESCRIPTION
+.PP
+The Public Key application deals with public-key related file formats, digital signatures, and X-509 certificates.  It handles validation of certificate paths and certificate revocation lists (CRLs) and other functions for handling of certificates, keys and CRLs. It is a library application that does not read or write files, it expects or returns file contents or partial file contents as binaries. Except for the functions \fIpublic-key:cacerts_load/0\fR, \fIpublic-key:cacerts_load/1\fR, and \fIpublic-key:cacerts_get/0\fR that reads files.
+
+.SS "Supported PKIX functionality"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports RFC 5280 - Internet X.509 Public-Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile. Certificate policies supported since OTP-26.2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports PKCS-1 - RSA Cryptography Standard
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports DSS - Digital Signature Standard (DSA - Digital Signature Algorithm)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports PKCS-3 - Diffie-Hellman Key Agreement Standard
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports Cryptographic Message Syntax (CMS) (http://www.ietf.org/rfc/rfc5652.txt) including Password-Based Encryption with original PKCS-5 support, but currently excluding offical support for most of section 10-12 (if proven useful, especially Attribute Certificates v2, it might be added later).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports PKCS-8 - Private-Key Information Syntax Standard
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports PKCS-10 - Certification Request Syntax Standard
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports PKIXCMP - Certificate Management Protocol
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supports PKIXCRMF - Certificate Request Message Format
+
+.RE
+
+.SS "Dependencies"
+
+.PP
+The \fIpublic_key\fR application uses the Crypto application to perform cryptographic operations and the ASN-1 application to handle PKIX-ASN-1 specifications, hence these applications must be loaded for the \fIpublic_key\fR application to work. In an embedded environment this means they must be started with \fIapplication:start/[1,2]\fR before the \fIpublic_key\fR application is started.
+
+.SS "Error Logger and Event Handlers"
+
+.PP
+The \fIpublic_key\fR application is a library application and does not use the error logger. The functions will either succeed or fail with a runtime error.
+
+.SS "See Also"
+
+.PP
+\fIapplication\fR
+

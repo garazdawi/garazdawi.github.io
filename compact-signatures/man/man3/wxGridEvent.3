@@ -1,0 +1,180 @@
+.TH wxGridEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGridEvent \- This event class contains information about various grid events.
+
+.SH DESCRIPTION
+.PP
+Notice that all grid event table macros are available in two versions: \fIEVT_GRID_XXX\fR and \fIEVT_GRID_CMD_XXX\fR. The only difference between the two is that the former doesn't allow to specify the grid window identifier and so takes a single parameter, the event handler, but is not suitable if there is more than one grid control in the window where the event table is used (as it would catch the events from all the grids). The version with \fICMD\fR takes the id as first argument and the event handler as the second one and so can be used with multiple grids as well. Otherwise there are no difference between the two and only the versions without the id are documented below for brevity.
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxNotifyEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGridEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxGridEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGrid() :: #wxGrid{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxGridEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxGridEventType() ::\fR
+\fB          grid_cell_left_click | grid_cell_right_click |\fR
+\fB          grid_cell_left_dclick | grid_cell_right_dclick |\fR
+\fB          grid_label_left_click | grid_label_right_click |\fR
+\fB          grid_label_left_dclick | grid_label_right_dclick |\fR
+\fB          grid_cell_changed | grid_select_cell | grid_cell_begin_drag |\fR
+\fB          grid_editor_shown | grid_editor_hidden | grid_col_move |\fR
+\fB          grid_col_sort | grid_tabbing.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaltDown(This) -> boolean() when This :: wxGridEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the Alt key was down at the time of the event.
+
+
+.RE
+.B
+\fBcontrolDown(This) -> boolean() when This :: wxGridEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the Control key was down at the time of the event.
+
+
+.RE
+.B
+\fBgetCol(This) -> integer() when This :: wxGridEvent().\fR
+
+.br
+.RS
+.PP
+Column at which the event occurred.
+
+.PP
+Notice that for a \fIwxEVT_GRID_SELECT_CELL\fR event this column is the column of the newly selected cell while the previously selected cell can be retrieved using \fIwxGrid:getGridCursorCol/1\fR.
+
+
+.RE
+.B
+\fBgetPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                     when This :: wxGridEvent().\fR
+
+.br
+.RS
+.PP
+Position in pixels at which the event occurred.
+
+
+.RE
+.B
+\fBgetRow(This) -> integer() when This :: wxGridEvent().\fR
+
+.br
+.RS
+.PP
+Row at which the event occurred.
+
+.PP
+Notice that for a \fIwxEVT_GRID_SELECT_CELL\fR event this row is the row of the newly selected cell while the previously selected cell can be retrieved using \fIwxGrid:getGridCursorRow/1\fR.
+
+
+.RE
+.B
+\fBmetaDown(This) -> boolean() when This :: wxGridEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the Meta key was down at the time of the event.
+
+
+.RE
+.B
+\fBselecting(This) -> boolean() when This :: wxGridEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the user is selecting grid cells, or false if deselecting.
+
+
+.RE
+.B
+\fBshiftDown(This) -> boolean() when This :: wxGridEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the Shift key was down at the time of the event.
+
+
+.RE

@@ -1,0 +1,304 @@
+.TH ssh_client_channel 3 "ssh 5.5.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ssh_client_channel \- SSH services (clients and servers) are implemented as channels that are multiplexed over an SSH connection and communicates over the SSH Connection Protocol. This module provides a callback API that takes care of generic channel aspects for clients, such as flow control and close messages. It lets the callback functions take care of the service (application) specific parts. This behavior also ensures that the channel process honors the principal of an OTP-process so that it can be part of a supervisor tree. This is a requirement of channel processes implementing a subsystem that will be added to the \fIssh\fR applications supervisor tree.
+
+.SH DESCRIPTION
+.PP
+\fBNOTE: \fRThis module replaces ssh_channel. The old module is still available for compatibility, but should not be used for new programs. The old module will not be maintained except for some error corrections
+
+
+.PP
+\fBNOTE: \fRWhen implementing a \fIssh\fR subsystem for daemons, use -behaviour(ssh_server_channel) (Replaces ssh_daemon_channel) instead.
+
+
+.PP
+\fBDONT: \fRFunctions in this module are not supposed to be called outside a module implementing this behaviour!
+
+
+.SS "Callback timeouts"
+
+.PP
+The timeout values that can be returned by the callback functions have the same semantics as in a \fIgen_server\fR. If the time-out occurs, \fIhandle_msg/2\fR is called as handle_msg(timeout, State).
+
+.SH DATA TYPES
+.LP
+.B
+\fB-opaque client() \fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcall(ChannelRef, Msg, Timeout) -> Reply | {error, Reason}\fR
+\fB              when\fR
+\fB                  ChannelRef :: pid(),\fR
+\fB                  Msg :: term(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Reply :: term(),\fR
+\fB                  Reason :: closed | timeout.\fR
+
+.br
+.RS
+.PP
+Makes a synchronous call to the channel process by sending a message and waiting until a reply arrives, or a time-out occurs. The channel calls Module:handle_call/3 to handle the message. If the channel process does not exist, \fI{error, closed}\fR is returned.
+
+
+.RE
+.B
+\fBcast(ChannelRef, Msg) -> ok\fR
+\fB              when ChannelRef :: pid(), Msg :: term().\fR
+
+.br
+.RS
+.PP
+Sends an asynchronous message to the channel process and returns ok immediately, ignoring if the destination node or channel process does not exist. The channel calls Module:handle_cast/2 to handle the message.
+
+
+.RE
+.B
+\fBenter_loop(State) -> no_return() when State :: term().\fR
+
+.br
+.RS
+.PP
+Makes an existing process an \fIssh_client_channel\fR (replaces ssh_channel) process.
+
+.PP
+Does not return, instead the calling process enters the \fIssh_client_channel\fR (replaces ssh_channel) process receive loop and become an \fIssh_client_channel\fR process. The process must have been started using one of the start functions in \fIproc_lib\fR, see the \fIproc_lib\fR manual page in STDLIB. The user is responsible for any initialization of the process and must call \fIinit/1\fR.
+
+
+.RE
+.B
+\fBinit(Args) -> {ok, State} | {ok, State, Timeout} | {stop, Reason}\fR
+\fB              when\fR
+\fB                  Args :: [[{Option :: term(), Value :: term()}]],\fR
+\fB                  State :: term(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Initiates a client channel.
+
+.PP
+The following options must be present:
+
+{channel_cb, atom()}
+.RS 2
+The module that implements the channel behaviour.
+
+
+.RE
+
+{init_args(), term()}
+.RS 2
+The arguments to the 
+\fIinit\fR function of the callback module.
+
+.RE
+
+{cm, ssh:connection_ref/0 }
+.RS 2
+Reference to the 
+\fIssh\fR connection as returned by \fIssh:connect/3\fR.
+
+.RE
+
+{channel_id, ssh:channel_id/0 }
+.RS 2
+Id of the 
+\fIssh\fR channel as returned by ssh_connection:session_channel/2,4.
+
+.RE
+
+.PP
+\fBNOTE: \fRThis function is normally not called by the user. The user only needs to call if the channel process needs to be started with help of \fIproc_lib\fR instead of calling \fIstart/4\fR or \fIstart_link/4\fR.
+
+
+
+.RE
+.B
+\fBreply(Client, Reply) -> _ when Client :: client(), Reply :: term().\fR
+
+.br
+.RS
+.PP
+This function can be used by a channel to send a reply to a client that called \fIcall/[2,3]\fR when the reply cannot be defined in the return value of Module:handle_call/3.
+
+.PP
+\fIClient\fR must be the \fIFrom\fR argument provided to the callback function \fIhandle_call/3\fR. \fIReply\fR is an arbitrary term, which is given back to the client as the return value of call/[2,3].
+
+
+.RE
+.B
+\fBstart_link(SshConnection, ChannelId, ChannelCb, CbInitArgs) ->\fR
+\fB                    {ok, ChannelRef} | {error, Reason :: term()}\fR
+\fB                    when\fR
+\fB                        SshConnection :: ssh:connection_ref(),\fR
+\fB                        ChannelId :: ssh:channel_id(),\fR
+\fB                        ChannelCb :: atom(),\fR
+\fB                        CbInitArgs :: term(),\fR
+\fB                        ChannelRef :: pid().\fR
+
+.br
+.RS
+.PP
+Starts a process that handles an SSH channel. It is called internally, by the \fIssh\fR daemon, or explicitly by the \fIssh\fR client implementations. The behavior sets the \fItrap_exit\fR flag to \fItrue\fR.
+
+.PP
+The \fICbInitArgs\fR parameter can be any Erlang term and will be passed as-is to the callback module's \fIinit/1\fR function. Common patterns include:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+list of parameters: \fI[Param1, Param2, ...]\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+map: \fI#{key => value}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+single value: an atom, tuple, or other term
+
+.RE
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBcode_change(OldVsn, State, Extra)\fR
+
+.br
+.RS
+.PP
+Converts process state when code is changed.
+
+.PP
+This function is called by a client-side channel when it is to update its internal state during a release upgrade or downgrade, that is, when the instruction \fI{update,Module,Change,...}\fR, where \fIChange={advanced,Extra}\fR, is given in the \fIappup\fR file. For more information, refer to Section 9.11.6 Release Handling Instructions in the System Documentation.
+
+.PP
+\fBNOTE: \fRSoft upgrade according to the OTP release concept is not straight forward for the server side, as subsystem channel processes are spawned by the \fIssh\fR application and hence added to its supervisor tree. The subsystem channels can be upgraded when upgrading the user application, if the callback functions can handle two versions of the state, but this function cannot be used in the normal way.
+
+
+
+.RE
+.B
+\fBhandle_call(Request, From, State)\fR
+
+.br
+.RS
+.PP
+Handles messages sent by calling call/2,3
+
+.PP
+For more detailed information on time-outs,, see Section Callback timeouts.
+
+
+.RE
+.B
+\fBhandle_cast(Request, State)\fR
+
+.br
+.RS
+.PP
+Handles messages sent by calling \fIcast/2\fR.
+
+.PP
+For more detailed information on time-outs, see Section Callback timeouts.
+
+
+.RE
+.B
+\fBhandle_msg(Msg, State)\fR
+
+.br
+.RS
+.PP
+Handles other messages than SSH Connection Protocol, call, or cast messages sent to the channel.
+
+.PP
+Possible Erlang 'EXIT' messages is to be handled by this function and all channels are to handle the following message.
+
+{ssh_channel_up, ssh:channel_id/0 , ssh:connection_ref/0 }
+.RS 2
+This is the first message that the channel receives. It is sent just before the 
+\fIinit/1\fR function returns successfully. This is especially useful if the server wants to send a message to the client without first receiving a message from it. If the message is not useful for your particular scenario, ignore it by immediately returning \fI{ok, State}\fR.
+
+.RE
+
+
+.RE
+.B
+\fBhandle_ssh_msg/2\fR
+
+.br
+.RS
+.PP
+Handles SSH Connection Protocol messages that may need service-specific attention. For details, see \fIssh_connection:event/0\fR.
+
+.PP
+The following message is taken care of by the \fIssh_client_channel\fR behavior.
+
+{closed, ssh:channel_id/0 }
+.RS 2
+The channel behavior sends a close message to the other side, if such a message has not already been sent. Then it terminates the channel with reason 
+\fInormal\fR.
+
+.RE
+
+
+.RE
+.B
+\fBinit(Args)\fR
+
+.br
+.RS
+.PP
+Makes necessary initializations and returns the initial channel state if the initializations succeed.
+
+.PP
+For more detailed information on time-outs, see Section Callback timeouts.
+
+
+.RE
+.B
+\fBterminate(Reason, State)\fR
+
+.br
+.RS
+.PP
+This function is called by a channel process when it is about to terminate. Before this function is called, ssh_connection:close/2 is called, if it has not been called earlier. This function does any necessary cleaning up. When it returns, the channel process terminates with reason \fIReason\fR. The return value is ignored.
+
+
+.RE

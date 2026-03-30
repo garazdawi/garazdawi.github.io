@@ -1,0 +1,1755 @@
+.TH trace 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+trace \- The Erlang trace interface.
+
+.SH DESCRIPTION
+.PP
+The Erlang run-time system exposes several trace points that allow users to be notified when they are triggered. Trace points are things such as function calls, message sending and receiving, garbage collection, and process scheduling.
+
+.PP
+The functions in this module can be used directly, but can also be used as building blocks to build more sophisticated debugging or profiling tools. For debugging Erlang code it is recommended to use \fIdbg\fR and for profiling to use \fItprof\fR.
+
+.SS "Trace Sessions"
+
+.PP
+All tracing is done within a trace session. Trace sessions can be created and destroyed dynamically. Each session has its own tracer that will receive all trace messages. Several sessions can exist at the same time without interfering with each other. When a trace session is destroyed, all its trace settings are automatically cleaned up.
+
+.PP
+\fIExample\fR:
+
+.IP
+.nf
+%% Create a tracer process that will receive the trace events
+1> Tracer = spawn(fun F() -> receive M -> io:format("~p~n",[M]), F() end end).
+<0.91.0>
+%% Create a session using the Tracer
+2> Session = trace:session_create(my_session, Tracer, []).
+{#Ref<0.1543805153.1548353537.92331>,{my_session, 0}}
+%% Setup call tracing on self()
+3> trace:process(Session, self(), true, [call]).
+1
+%% Setup call tracing on lists:seq/2
+4> trace:function(Session, {lists,seq,2}, [], []).
+1
+%% Call the traced function
+5> lists:seq(1, 10).
+{trace,<0.89.0>,call,{lists,seq,[1,10]}} % The trace message
+[1,2,3,4,5,6,7,8,9,10] % The return value
+%% Cleanup the trace session
+6> trace:session_destroy(Session).
+ok
+
+.fi
+
+.SS "Node Local Tracing Only"
+
+.PP
+The functions in this module only operates on the local node. That is, both the traced processes/ports as well as the tracer process/port/module must all reside on the same local node as the call is made. To trace remote nodes use \fIdbg\fR or \fIttb\fR.
+
+.PP
+\fBCHANGE: \fRThis \fItrace\fR module was introduced in OTP 27.0. The interface and semantics are similar to the older functions \fIerlang:trace/3\fR, \fIerlang:trace_pattern/3\fR, and \fIerlang:trace_info/2\fR. The main difference is the old functions operate on a single static trace session per node. That could impose the problem that different users and tools would interfere with each other's trace settings. The new trace functions in this module all operate on dynamically created trace sesssions isolated from each other. Also, this makes it easier to safely disable all trace settings when done by a single call to \fIsession_destroy/1\fR. To change an existing tool to use the interface the following table can be useful:
+
+.IP
+.nf
+.TS
+allbox;
+c c
+l l.
+Old function call	corresponds to
+\fIerlang:trace(Pid, ...)\fR	\fIprocess(S, Pid, ...)\fR
+\fIerlang:trace(processes, ...)\fR	\fIprocess(S, all, ...)\fR
+\fIerlang:trace(existing_processes, ...)\fR	\fIprocess(S, existing, ...)\fR
+\fIerlang:trace(new_processes, ...)\fR	\fIprocess(S, new, ...)\fR
+\fIerlang:trace(Port, ...)\fR	\fIport(S, Port, ...)\fR
+\fIerlang:trace(ports, ...)\fR	\fIport(S, all, ...)\fR
+\fIerlang:trace(existing_ports, ...)\fR	\fIport(S, existing, ...)\fR
+\fIerlang:trace(new_ports, ...)\fR	\fIport(S, new, ...)\fR
+\fIerlang:trace(all, ...)\fR	\fIprocess(S, all, ...)` and `port(S, all, ...)\fR
+\fIerlang:trace(existing, ...)\fR	\fIprocess(S, existing, ...)` and `port(S, existing, ...)\fR
+\fIerlang:trace(new, ...)\fR	\fIprocess(S, new, ...)` and `port(S, new, ...)\fR
+\fIerlang:trace_pattern(MFA, ...)\fR	\fIfunction(S, MFA, ...)\fR
+\fIerlang:trace_pattern(send, ...)\fR	\fIsend(S, ...)\fR
+\fIerlang:trace_pattern('receive', ...)\fR	\fIrecv(S, ...)\fR
+\fIerlang:trace_info(...)\fR	\fIinfo(S, ...)\fR
+.TE
+.fi
+
+.PP
+Argument \fIS\fR is the trace session that must first be created with \fIsession_create/3\fR. The other arguments (implied by \fI...\fR) are mostly the same. The only other difference is that the tracer is always the tracer specified when the session was created. Options \fI{tracer,T}\fR, \fI{tracer,M,S}\fR, \fI{meta,T}\fR, and \fI{meta,M,S}\fR are therefore not allowed, and the default tracer is never the calling process.
+
+
+.PP
+\fIerlang:trace/3\fR \fIerlang:trace_pattern/3\fR \fIerlang:trace_info/2\fR \fIprocess/4\fR \fIport/4\fR \fIfunction/4\fR \fIsend/3\fR \fIrecv/3\fR \fIinfo/3\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBmatch_variable() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsession() ::\fR
+\fB          {session_strong_ref(), session_weak_ref()} |\fR
+\fB          session_weak_ref().\fR
+
+.br
+.RS
+.PP
+A handle to an isolated trace session.
+
+
+.RE
+.B
+\fB-opaque session_strong_ref() \fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque session_weak_ref() \fR
+
+.br
+.RS
+.PP
+A weak session handle as returned by \fIsession_info/1\fR. A weak session handle can be used like a full session handle, but it will not prevent the session from being destroyed when the last strong handle is garbage collected.
+
+
+.RE
+.B
+\fBsystem_event() ::\fR
+\fB          busy_port | busy_dist_port | long_gc | long_message_queue |\fR
+\fB          long_schedule | large_heap.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsystem_value() ::\fR
+\fB          true | false |\fR
+\fB          non_neg_integer() |\fR
+\fB          {Disable :: non_neg_integer(), Enable :: pos_integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_flag() :: trace_info_flag() | all | cpu_timestamp.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_info_flag() ::\fR
+\fB          arity | call | exiting | garbage_collection |\fR
+\fB          monotonic_timestamp | procs | ports | 'receive' | return_to |\fR
+\fB          running | running_procs | running_ports | send |\fR
+\fB          set_on_first_link | set_on_first_spawn | set_on_link |\fR
+\fB          set_on_spawn | silent | strict_monotonic_timestamp | timestamp.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_info_item_result() ::\fR
+\fB          {traced, global | local | false | undefined} |\fR
+\fB          {match_spec, trace_match_spec() | false | undefined} |\fR
+\fB          {meta, pid() | port() | false | undefined | []} |\fR
+\fB          {meta, module(), term()} |\fR
+\fB          {meta_match_spec, trace_match_spec() | false | undefined} |\fR
+\fB          {call_count, non_neg_integer() | boolean() | undefined} |\fR
+\fB          {call_time,\fR
+\fB           [{pid(),\fR
+\fB             non_neg_integer(),\fR
+\fB             non_neg_integer(),\fR
+\fB             non_neg_integer()}] |\fR
+\fB           boolean() |\fR
+\fB           undefined} |\fR
+\fB          {call_memory,\fR
+\fB           [{pid(), non_neg_integer(), non_neg_integer()}] |\fR
+\fB           boolean() |\fR
+\fB           undefined}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_info_return() ::\fR
+\fB          undefined |\fR
+\fB          {flags, [trace_info_flag()]} |\fR
+\fB          {tracer, pid() | port() | []} |\fR
+\fB          {tracer, module(), term()} |\fR
+\fB          trace_info_item_result() |\fR
+\fB          {all, [trace_info_item_result()] | false | undefined} |\fR
+\fB          {system, [trace_info_system_item()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_info_system_item() ::\fR
+\fB          busy_port | busy_dist_port |\fR
+\fB          {long_gc, non_neg_integer()} |\fR
+\fB          {long_message_queue,\fR
+\fB           {Disable :: non_neg_integer(), Enable :: pos_integer()}} |\fR
+\fB          {long_schedule, non_neg_integer()} |\fR
+\fB          {large_heap, non_neg_integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_match_spec() ::\fR
+\fB          [{[term()] | '_' | match_variable(), [term()], [term()]}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_pattern_flag() ::\fR
+\fB          global | local | meta | call_count | call_time | call_memory.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_pattern_mfa() :: {atom(), atom(), arity() | '_'}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdelivered(Session :: session(), Tracee :: pid() | all) ->\fR
+\fB                   reference().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIerlang:trace_delivered(Tracee)\fR except that it is run within the given \fIsession/0\fR.
+
+
+.RE
+.B
+\fBfunction(Session, MFA, MatchSpec, FlagList) -> non_neg_integer()\fR
+\fB                  when\fR
+\fB                      Session :: session(),\fR
+\fB                      MFA :: trace_pattern_mfa() | on_load,\fR
+\fB                      MatchSpec ::\fR
+\fB                          trace_match_spec() |\fR
+\fB                          boolean() |\fR
+\fB                          restart | pause,\fR
+\fB                      FlagList :: [trace_pattern_flag()].\fR
+
+.br
+.RS
+.PP
+Enable or disable \fIcall tracing\fR for one or more functions.
+
+.PP
+Must be combined with \fIprocess/4\fR to set the \fIcall\fR trace flag for one or more processes.
+
+.PP
+Conceptually, call tracing works as follows. In each trace session, a set of processes and a set of functions have been marked for tracing. If a traced process calls a traced function, the trace action is taken. Otherwise, nothing happens.
+
+.PP
+To add or remove one or more processes to the set of traced processes, use \fIprocess/4\fR.
+
+.PP
+Use this function to add or remove functions to the set of traced functions in a trace session.
+
+.PP
+Argument \fISession\fR is the trace session to operate on as returned by \fIsession_create/3\fR.
+
+.PP
+Argument \fB\fIMFA\fR\fR is to be a tuple, such as \fI{Module, Function, Arity}\fR, or the atom \fIon_load\fR (described below). The \fIMFA\fR tuple specifies the module, function, and arity for the functions to be traced. The atom \fI'_'\fR can be used as a wildcard in any of the following ways:
+
+{Module,Function,'_'}
+.RS 2
+All functions of any arity named 
+\fIFunction\fR in module \fIModule\fR.
+
+.RE
+
+{Module,'_','_'}
+.RS 2
+All functions in module 
+\fIModule\fR.
+
+.RE
+
+{'_','_','_'}
+.RS 2
+All functions in all loaded modules.
+
+
+.RE
+
+.PP
+Other combinations, such as \fI{Module,'_',Arity}\fR, are not allowed.
+
+.PP
+If argument \fIMFA\fR is the atom \fIon_load\fR, the match specification and flag list are used on all functions in all modules that are newly loaded.
+
+.PP
+Argument \fB\fIMatchSpec\fR\fR can take the following forms:
+
+true
+.RS 2
+Enable tracing for the matching functions. Any match specification is removed.
+
+
+.RE
+
+false
+.RS 2
+Disable tracing for the matching functions. Any match specification is removed.
+
+
+.RE
+
+MatchExpression
+.RS 2
+A match specification. An empty list is equivalent to 
+\fItrue\fR. For a description of match specifications, see section Match Specifications in Erlang in the User's Guide for the ERTS application.
+
+.RE
+
+restart
+.RS 2
+For the 
+\fIFlagList\fR options \fIcall_count\fR, \fIcall_time\fR and \fIcall_memory\fR: restarts the existing counters. The behavior is undefined for other \fIFlagList\fR options.
+
+.RE
+
+pause
+.RS 2
+For the 
+\fIFlagList\fR options \fIcall_count\fR, \fIcall_time\fR and \fIcall_memory\fR: pauses the existing counters. The behavior is undefined for other \fIFlagList\fR options.
+
+.RE
+
+.PP
+Argument \fB\fIFlagList\fR\fR is a list of options. The following are the valid options:
+
+global
+.RS 2
+Turn on or off call tracing for global function calls (that is, calls specifying the module explicitly). Only exported functions match and only global calls generate trace messages. 
+\fBThis is the default if \fIFlagList\fR is empty\fR.
+
+.RE
+
+local
+.RS 2
+Turn on or off call tracing for all types of function calls. Trace messages are sent whenever any of the specified functions are called, regardless of how they are called. If flag 
+\fIreturn_to\fR is set for the process, a \fIreturn_to\fR message is also sent when this function returns to its caller.
+
+.RE
+
+meta
+.RS 2
+Turn on or off meta-tracing for all types of function calls. Trace messages are sent to the tracer whenever any of the specified functions are called.
+
+.PP
+Meta-tracing traces all processes and does not care about the process trace flags set by \fIprocess/4\fR, the trace flags are instead fixed to \fI[call, timestamp]\fR.
+
+.PP
+The match specification function \fI{return_trace}\fR works with meta-trace.
+
+
+.RE
+
+call_count
+.RS 2
+Start (
+\fIMatchSpec == true\fR) or stop (\fIMatchSpec == false\fR) call count tracing for all types of function calls. For every function, a counter is incremented when the function is called, in any process. No process trace flags need to be activated.
+.PP
+If call count tracing is started while already running, the count is restarted from zero. To pause running counters, use \fIMatchSpec == pause\fR. Paused and running counters can be restarted from zero with \fIMatchSpec == restart\fR.
+
+.PP
+To read the counter value for a function, call \fItrace:info(_, MFA, call_count)\fR.
+
+
+.RE
+
+call_time
+.RS 2
+Start (
+\fIMatchSpec\fR is \fItrue\fR) or stops (\fIMatchSpec\fR is \fIfalse\fR) call time tracing for all types of function calls. For every function, a counter is incremented when the function is called and the time spent in the function is measured and accumulated in another counter. The counters are stored for each call traced process.
+.PP
+If call time tracing is started while already running, the count and time restart from zero. To pause running counters, use \fIMatchSpec == pause\fR. Paused and running counters can be restarted from zero with \fIMatchSpec == restart\fR.
+
+.PP
+To read the counter values, use \fIinfo/3\fR.
+
+
+.RE
+
+call_memory
+.RS 2
+Start (
+\fIMatchSpec == true\fR) or stop (\fIMatchSpec == false\fR) call memory tracing for all types of function calls. For every function, a counter is incremented when the function is called and the memory consumed by the function is measured and accumulated in another counter. Separate counters are stored for each call traced process.
+.PP
+If call memory tracing is started while already running, counters and allocations restart from zero. To pause running counters, use \fIMatchSpec == pause\fR. Paused and running counters can be restarted from zero with \fIMatchSpec == restart\fR.
+
+.PP
+To read the counter value, use \fIinfo/3\fR.
+
+
+.RE
+
+.PP
+Option \fIglobal\fR cannot be combined with any of the other options, which all perform some kind of local tracing. If global tracing is specified for a set of functions, then \fIlocal\fR, \fImeta\fR, \fIcall_count\fR, \fIcall_time\fR, and \fIcall_memory\fR tracing for the matching set of functions are disabled, and vice versa.
+
+.PP
+When disabling trace, the option must match the type of trace set on the function. That is, local tracing must be disabled with option \fIlocal\fR and global tracing with option \fIglobal\fR (or no option), and so on.
+
+.PP
+Part of a match specification cannot be changed directly. If a function has a match specification, it can be replaced with a new one. Function \fIinfo/3\fR can be used to retrieve the existing match specification.
+
+.PP
+Returns the number of functions matching argument \fIMFA\fR. Zero is returned if none matched or if \fIon_load\fR was specified.
+
+.PP
+Fails by raising an error exception with an error reason of:
+
+badarg
+.RS 2
+If an argument is invalid.
+
+
+.RE
+
+system_limit
+.RS 2
+If a match specification passed as argument has excessive nesting which causes scheduler stack exhaustion for the scheduler that the calling process is executing on. Scheduler stack size can be configured when starting the runtime system.
+
+
+.RE
+
+
+.RE
+.B
+\fBinfo(Session, PidPortFuncEvent, Item) -> Res\fR
+\fB              when\fR
+\fB                  Session :: session(),\fR
+\fB                  PidPortFuncEvent ::\fR
+\fB                      pid() |\fR
+\fB                      port() |\fR
+\fB                      new | new_processes | new_ports | MFA | on_load |\fR
+\fB                      send | 'receive' | system,\fR
+\fB                  MFA :: {module(), atom(), arity()},\fR
+\fB                  Item ::\fR
+\fB                      flags | tracer | traced | match_spec | meta |\fR
+\fB                      meta_match_spec | call_count | call_time |\fR
+\fB                      call_memory | all,\fR
+\fB                  Res :: trace_info_return().\fR
+
+.br
+.RS
+.PP
+Return trace information about a port, process, function, or event.
+
+.PP
+Argument \fISession\fR is the trace session to inspect as returned by \fIsession_create/3\fR or \fIsession_info/1\fR.
+
+.PP
+\fBTo get information about a port or process\fR, \fIPidPortFuncEvent\fR is to be a process identifier (pid), port identifier, or one of the atoms \fInew\fR, \fInew_processes\fR, or \fInew_ports\fR. The atom \fInew\fR or \fInew_processes\fR means that the default trace state for processes to be created is returned. The atom \fInew_ports\fR means that the default trace state for ports to be created is returned.
+
+.PP
+Valid \fIItem\fR values for ports and processes:
+
+flags
+.RS 2
+Returns a list of atoms indicating what kind of traces is enabled for the process. The list is empty if no traces are enabled, and one or more of 
+\fItrace_info_flag()\fR if traces are enabled. The order is arbitrary.
+
+.RE
+
+tracer
+.RS 2
+Returns the identifier for process, port, or a tuple containing the tracer module and tracer state tracing this process. If this process is not traced, the return value is 
+\fI[]\fR.
+
+.RE
+
+.PP
+\fBTo get information about a function\fR, \fIPidPortFuncEvent\fR is to be the three-element tuple \fI{Module, Function, Arity}\fR or the atom \fIon_load\fR. No wildcards are allowed. Returns \fIundefined\fR if the function does not exist or \fIfalse\fR if the function is not traced. If \fIPidPortFuncEvent\fR is \fIon_load\fR, the information returned refers to the default value for code that will be loaded.
+
+.PP
+Valid \fIItem\fR values for functions:
+
+traced
+.RS 2
+Returns 
+\fIglobal\fR if this function is traced on global function calls, \fIlocal\fR if this function is traced on local function calls (that is, local and global function calls), and \fIfalse\fR if local or global function calls are not traced.
+
+.RE
+
+match_spec
+.RS 2
+Returns the match specification for this function, if it has one. If the function is locally or globally traced but has no match specification defined, the returned value is 
+\fI[]\fR.
+
+.RE
+
+meta
+.RS 2
+Returns the meta-trace tracer process, port, or trace module for this function, if it has one. If the function is not meta-traced, the returned value is 
+\fIfalse\fR. If the function is meta-traced but has once detected that the tracer process is invalid, the returned value is \fI[]\fR.
+
+.RE
+
+meta_match_spec
+.RS 2
+Returns the meta-trace match specification for this function, if it has one. If the function is meta-traced but has no match specification defined, the returned value is 
+\fI[]\fR.
+
+.RE
+
+call_count
+.RS 2
+Returns the call count value for this function or 
+\fItrue\fR for the pseudo function \fIon_load\fR if call count tracing is active. Otherwise \fIfalse\fR is returned.
+.PP
+See also \fIfunction/4\fR.
+
+
+.RE
+
+call_time
+.RS 2
+Returns the call time values for this function or 
+\fItrue\fR for the pseudo function \fIon_load\fR if call time tracing is active. Otherwise \fIfalse\fR is returned. The call time values returned, \fI[{Pid, Count, S, Us}]\fR, is a list of each process that executed the function and its specific counters. \fICount\fR is the call count. \fIS\fR and \fIUs\fR are the accumulated call time expressed in seconds and microseconds.
+.PP
+See also \fIfunction/4\fR.
+
+
+.RE
+
+call_memory
+.RS 2
+Returns the accumulated number of words allocated by this function. Accumulation stops at the next memory traced function: if there are 
+\fIouter\fR, \fImiddle\fR and \fIinner\fR functions each allocating 3 words, but only \fIouter\fR is traced, it will report 9 allocated words. If \fIouter\fR and \fIinner\fR are traced, 6 words are reported for \fIouter\fR and 3 for \fIinner\fR. When function is not traced, \fIfalse\fR is returned. Returned tuple is \fI[{Pid, Count, Words}]\fR, for each process that executed the function.
+.PP
+See also \fIfunction/4\fR.
+
+
+.RE
+
+all
+.RS 2
+Returns a list containing the 
+\fI{Item, Value}\fR tuples for all other items, or returns \fIfalse\fR if no tracing is active for this function.
+
+.RE
+
+.PP
+\fBTo get information about an event\fR, \fIPidPortFuncEvent\fR is to be one of the atoms \fIsend\fR or \fI'receive'\fR.
+
+.PP
+One valid \fIItem\fR for events exists:
+
+match_spec
+.RS 2
+Returns the match specification for this event, if it has one, or 
+\fItrue\fR if no match specification has been set.
+
+.RE
+
+.PP
+\fBTo get information about monitored system events\fR, \fIPidPortFuncEvent\fR is to be the atom \fIsystem\fR.
+
+.PP
+Only valid \fIItem\fR for \fIsystem\fR is
+
+all
+.RS 2
+Returns a list of all monitored system events enabled by 
+\fIsystem/3\fR.
+
+.RE
+
+.PP
+The return value is \fI{Item, Value}\fR, where \fIValue\fR is the requested information as described earlier. If a pid for a dead process was specified, or the name of a non-existing function, \fIValue\fR is \fIundefined\fR.
+
+
+.RE
+.B
+\fBport(Session, Ports, How, FlagList) -> integer()\fR
+\fB              when\fR
+\fB                  Session :: session(),\fR
+\fB                  Ports :: port() | all | existing | new,\fR
+\fB                  How :: boolean(),\fR
+\fB                  FlagList :: [trace_flag()].\fR
+
+.br
+.RS
+.PP
+Turn on or off trace flags for one or more ports.
+
+.PP
+Argument \fISession\fR is the trace session to operate on as returned by \fIsession_create/3\fR.
+
+.PP
+\fIPorts\fR is either a port identifier for a local port or one of the following atoms:
+
+all
+.RS 2
+All currently existing ports and all that will be created in the future.
+
+
+.RE
+
+existing
+.RS 2
+All currently existing ports.
+
+
+.RE
+
+new
+.RS 2
+All ports that will be created in the future.
+
+
+.RE
+
+.PP
+\fIFlagList\fR can contain any number of the following flags (the "message tags" refers to the list of \fItrace messages\fR):
+
+all
+.RS 2
+Sets all trace flags except 
+\fIcpu_timestamp\fR, which are in its nature different than the others.
+
+.RE
+
+send
+.RS 2
+Traces sending of messages.
+
+.PP
+Message tags: \fIsend\fR and \fIsend_to_non_existing_process\fR.
+
+
+.RE
+
+'receive'
+.RS 2
+Traces receiving of messages.
+
+.PP
+Message tags: \fI'receive'\fR.
+
+
+.RE
+
+ports
+.RS 2
+Traces port-related events.
+
+.PP
+Message tags: \fIopen\fR, \fIclosed\fR, \fIregister\fR, \fIunregister\fR, \fIgetting_linked\fR, and \fIgetting_unlinked\fR.
+
+
+.RE
+
+running_ports
+.RS 2
+Traces scheduling of ports.
+
+.PP
+Message tags: \fIin\fR and \fIout\fR.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fItimestamp\fR\fR, \fB\fIcpu_timestamp\fR\fR, \fB\fImonotonic_timestamp\fR\fR, \fB\fIstrict_monotonic_timestamp\fR\fR - Same as for timestamps in \fIprocess/4\fR.
+
+.RE
+
+.PP
+The tracing process receives the \fItrace messages\fR described in the following list. \fIPort\fR is the port identifier of the traced port in which the traced event has occurred. The third tuple element is the message tag.
+
+.PP
+If flag \fItimestamp\fR, \fIstrict_monotonic_timestamp\fR, or \fImonotonic_timestamp\fR is specified, the first tuple element is \fItrace_ts\fR instead, and the time stamp is added as an extra element last in the message tuple. If multiple time stamp flags are passed, \fItimestamp\fR has precedence over \fIstrict_monotonic_timestamp\fR, which in turn has precedence over \fImonotonic_timestamp\fR. All time stamp flags are remembered, so if two are passed and the one with highest precedence later is disabled, the other one becomes active.
+
+.PP
+If a match specification (applicable only for \fIsend\fR and \fI'receive'\fR tracing) contains a \fI{message}\fR action function with a non-boolean value, that value is added as an extra element to the message tuple either in the last position or before the timestamp (if it is present).
+
+.PP
+Trace messages:
+
+{trace, Port, send, Msg, To}
+.RS 2
+When 
+\fIPort\fR sends message \fIMsg\fR to process \fITo\fR.
+
+.RE
+
+{trace, Port, send_to_non_existing_process, Msg, To}
+.RS 2
+When 
+\fIPort\fR sends message \fIMsg\fR to the non-existing process \fITo\fR.
+
+.RE
+
+{trace, Port, 'receive', Msg}
+.RS 2
+When 
+\fIPort\fR receives message \fIMsg\fR. If \fIMsg\fR is set to time-out, a receive statement can have timed out, or the process received a message with the payload \fItimeout\fR.
+
+.RE
+
+{trace, Port, register, RegName}
+.RS 2
+When 
+\fIPort\fR gets the name \fIRegName\fR registered.
+
+.RE
+
+{trace, Port, unregister, RegName}
+.RS 2
+When 
+\fIPort\fR gets the name \fIRegName\fR unregistered. This is done automatically when a registered process or port exits.
+
+.RE
+
+{trace, Port, getting_linked, Pid2}
+.RS 2
+When 
+\fIPort\fR gets linked to a process \fIPid2\fR.
+
+.RE
+
+{trace, Port, getting_unlinked, Pid2}
+.RS 2
+When 
+\fIPort\fR gets unlinked from a process \fIPid2\fR.
+
+.RE
+
+{trace, Port, open, Pid, Driver}
+.RS 2
+When 
+\fIPid\fR opens a new port \fIPort\fR with the running \fIDriver\fR.
+.PP
+\fIDriver\fR is the name of the driver as an atom.
+
+
+.RE
+
+{trace, Port, closed, Reason}
+.RS 2
+When 
+\fIPort\fR closes with \fIReason\fR.
+
+.RE
+
+{trace, Port, in, Command | 0}
+.RS 2
+When 
+\fIPort\fR is scheduled to run. \fICommand\fR is the first thing the port will execute, it can however run several commands before being scheduled out. On some rare occasions, the current function cannot be determined, then the last element is \fI0\fR.
+.PP
+The possible commands are \fIcall\fR, \fIclose\fR, \fIcommand\fR, \fIconnect\fR, \fIcontrol\fR, \fIflush\fR, \fIinfo\fR, \fIlink\fR, \fIopen\fR, and \fIunlink\fR.
+
+
+.RE
+
+{trace, Port, out, Command | 0}
+.RS 2
+When 
+\fIPort\fR is scheduled out. The last command run was \fICommand\fR. On some rare occasions, the current function cannot be determined, then the last element is \fI0\fR. \fICommand\fR can contain the same commands as \fIin\fR
+
+.RE
+
+.PP
+If the tracing process/port dies or the tracer module returns \fIremove\fR, the flags are silently removed.
+
+.PP
+Returns a number indicating the number of ports that matched \fIPorts\fR. If \fIPorts\fR is a port identifier, the return value is \fI1\fR. If \fIPorts\fR is \fIall\fR or \fIexisting\fR, the return value is the number of existing ports. If \fIPorts\fR is \fInew\fR, the return value is \fI0\fR.
+
+.PP
+Failure: \fIbadarg\fR if the specified arguments are not supported. For example, \fIcpu_timestamp\fR is not supported on all platforms.
+
+
+.RE
+.B
+\fBprocess(Session, Procs, How, FlagList) -> integer()\fR
+\fB                 when\fR
+\fB                     Session :: session(),\fR
+\fB                     Procs :: pid() | all | existing | new,\fR
+\fB                     How :: boolean(),\fR
+\fB                     FlagList :: [trace_flag()].\fR
+
+.br
+.RS
+.PP
+Turn on or off trace flags for one or more processes.
+
+.PP
+Argument \fISession\fR is the trace session to operate on as returned by \fIsession_create/3\fR.
+
+.PP
+Argument \fIProcs\fR is either a process identifier (pid) for a local process or one of the following atoms:
+
+all
+.RS 2
+All currently existing processes and all that will be created in the future.
+
+
+.RE
+
+existing
+.RS 2
+All currently existing processes.
+
+
+.RE
+
+new
+.RS 2
+All processes that will be created in the future.
+
+
+.RE
+
+.PP
+Argument \fIHow\fR is either \fItrue\fR to turn on trace flags or \fIfalse\fR to turn them off.
+
+.PP
+Argument \fIFlagList\fR can contain any number of the following flags (the "message tags" refers to the list of \fItrace messages\fR):
+
+all
+.RS 2
+Sets all trace flags except 
+\fIcpu_timestamp\fR, which is in its nature different than the others.
+
+.RE
+
+send
+.RS 2
+Traces sending of messages. Limit which sent messages to trace by calling 
+\fIsend/3\fR.
+.PP
+Message tags: \fIsend\fR and \fIsend_to_non_existing_process\fR.
+
+
+.RE
+
+'receive'
+.RS 2
+Traces receiving of messages. Limit which received messages to trace by calling 
+\fIrecv/3\fR.
+.PP
+Message tags: \fI'receive'\fR.
+
+
+.RE
+
+call
+.RS 2
+Traces certain function calls. Specify which function calls to trace by calling 
+\fIfunction/4\fR.
+.PP
+Message tags: \fIcall\fR and \fIreturn_from\fR.
+
+
+.RE
+
+silent
+.RS 2
+Used with the 
+\fIcall\fR trace flag. The \fIcall\fR, \fIreturn_from\fR, and \fIreturn_to\fR trace messages are inhibited if this flag is set, but they are executed as normal if there are match specifications.
+.PP
+Silent mode is inhibited by executing \fItrace:process(_, _, false, [silent|_])\fR, or by a match specification executing the function \fI{silent, false}\fR.
+
+.PP
+The \fIsilent\fR trace flag facilitates setting up a trace on many or even all processes in the system. The trace can then be activated and deactivated using the match specification function \fI{silent,Bool}\fR, giving a high degree of control of which functions with which arguments that trigger the trace.
+
+.PP
+Message tags: \fIcall\fR, \fIreturn_from\fR, and \fIreturn_to\fR. Or rather, the absence of.
+
+
+.RE
+
+return_to
+.RS 2
+Used with the 
+\fIcall\fR trace flag. Traces the exit from call traced functions back to where the execution resumes. Only works for functions traced with option \fIlocal\fR to \fIfunction/4\fR.
+.PP
+The semantics is that a \fIreturn_to\fR trace message is sent when a call traced function returns or throws and exception that is caught. For tail calls, only one trace message is sent per chain of tail calls, so the properties of tail recursiveness for function calls are kept while tracing with this flag. Similar for exceptions, only one \fIreturn_to\fR trace message is sent, even if the exception passed more than one call traced function before it was caught.
+
+.PP
+Using \fIcall\fR and \fIreturn_to\fR trace together makes it possible to know exactly in which function a process executes at any time.
+
+.PP
+To get trace messages containing return values from functions, use the \fI{return_trace}\fR match specification action instead.
+
+.PP
+Message tags: \fIreturn_to\fR.
+
+
+.RE
+
+procs
+.RS 2
+Traces process-related events.
+
+.PP
+Message tags: \fIspawn\fR, \fIspawned\fR, \fIexit\fR, \fIregister\fR, \fIunregister\fR, \fIlink\fR, \fIunlink\fR, \fIgetting_linked\fR, and \fIgetting_unlinked\fR.
+
+
+.RE
+
+running
+.RS 2
+Traces scheduling of processes.
+
+.PP
+Message tags: \fIin\fR and \fIout\fR.
+
+
+.RE
+
+exiting
+.RS 2
+Traces scheduling of exiting processes.
+
+.PP
+Message tags: \fIin_exiting\fR, \fIout_exiting\fR, and \fIout_exited\fR.
+
+
+.RE
+
+running_procs
+.RS 2
+Traces scheduling of processes just like 
+\fIrunning\fR. However, this option also includes schedule events when the process executes within the context of a port without being scheduled out itself.
+.PP
+Message tags: \fIin\fR and \fIout\fR.
+
+
+.RE
+
+garbage_collection
+.RS 2
+Traces garbage collections of processes.
+
+.PP
+Message tags: \fIgc_minor_start\fR, \fIgc_max_heap_size\fR, and \fIgc_minor_end\fR.
+
+
+.RE
+
+timestamp
+.RS 2
+Includes a time stamp in all trace messages. The time stamp (Ts) has the same form as returned by 
+\fIerlang:now/0\fR.
+
+.RE
+
+cpu_timestamp
+.RS 2
+A global trace flag for the Erlang node that makes all trace time stamps using flag 
+\fItimestamp\fR to be in CPU time, not wall clock time. That is, \fIcpu_timestamp\fR is not be used if \fImonotonic_timestamp\fR or \fIstrict_monotonic_timestamp\fR is enabled. Only allowed with \fIProcs==all\fR. If the host machine OS does not support high-resolution CPU time measurements, \fIprocess/4\fR exits with \fIbadarg\fR. Notice that most OS do not synchronize this value across cores, so be prepared that time can seem to go backwards when using this option.
+
+.RE
+
+monotonic_timestamp
+.RS 2
+Includes an Erlang monotonic time time stamp in all trace messages. The time stamp (Ts) has the same format and value as produced by 
+\fIerlang:monotonic_time(nanosecond)\fR. This flag overrides flag \fIcpu_timestamp\fR.
+
+.RE
+
+strict_monotonic_timestamp
+.RS 2
+Includes an time stamp consisting of Erlang monotonic time and a monotonically increasing integer in all trace messages. The time stamp (Ts) has the same format and value as produced by 
+\fI{\fR \fIerlang:monotonic_time(nanosecond)\fR\fI,\fR \fIerlang:unique_integer([monotonic])\fR\fI}\fR. This flag overrides flag \fIcpu_timestamp\fR.
+.PP
+If multiple time stamp flags are passed, \fItimestamp\fR has precedence over \fIstrict_monotonic_timestamp\fR, which in turn has precedence over \fImonotonic_timestamp\fR. All time stamp flags are remembered, so if two are passed and the one with highest precedence later is disabled, the other one becomes active.
+
+
+.RE
+
+arity
+.RS 2
+Used with the 
+\fIcall\fR trace flag. \fI{M, F, Arity}\fR is specified instead of \fI{M, F, Args}\fR in call trace messages.
+
+.RE
+
+set_on_spawn
+.RS 2
+Makes any process created by a traced process inherit all its trace flags, including flag 
+\fIset_on_spawn\fR itself.
+
+.RE
+
+set_on_first_spawn
+.RS 2
+Makes the first process created by a traced process inherit all its trace flags, excluding flag 
+\fIset_on_first_spawn\fR itself. That is, after the first spawn is done, \fIset_on_first_spawn\fR will be cleared in both the spawned process and the spawning process.
+.PP
+If both are set, \fIset_on_first_spawn\fR will supersede \fIset_on_spawn\fR.
+
+
+.RE
+
+set_on_link
+.RS 2
+Makes any process linked by a traced process inherit all its trace flags, including flag 
+\fIset_on_link\fR itself.
+
+.RE
+
+set_on_first_link
+.RS 2
+Makes the first process linked to by a traced process inherit all its trace flags, excluding flag 
+\fIset_on_first_link\fR itself. That is, after the first link is done, \fIset_on_first_link\fR will be cleared in both the linked process and the linking process.
+.PP
+If both are set, \fIset_on_first_link\fR will supersede \fIset_on_link\fR.
+
+
+.RE
+
+.PP
+The tracing process receives the \fItrace messages\fR described in the following list. \fIPid\fR is the process identifier of the traced process in which the traced event has occurred. The third tuple element is the message tag.
+
+.PP
+If flag \fItimestamp\fR, \fIstrict_monotonic_timestamp\fR, or \fImonotonic_timestamp\fR is specified, the first tuple element is \fItrace_ts\fR instead, and the time stamp is added as an extra element last in the message tuple.
+
+.PP
+If a match specification (applicable only for \fIcall\fR, \fIsend\fR, and \fI'receive'\fR tracing) contains a \fI{message}\fR action function with a non-boolean value, that value is added as an extra element to the message tuple either in the last position or before the timestamp (if it is present).
+
+.PP
+Trace messages:
+
+{trace, Pid, send, Msg, To}
+.RS 2
+When process 
+\fIPid\fR sends message \fIMsg\fR to process \fITo\fR.
+
+.RE
+
+{trace, Pid, send_to_non_existing_process, Msg, To}
+.RS 2
+When process 
+\fIPid\fR sends message \fIMsg\fR to the non-existing process \fITo\fR.
+
+.RE
+
+{trace, Pid, 'receive', Msg}
+.RS 2
+When process 
+\fIPid\fR receives message \fIMsg\fR. If \fIMsg\fR is set to time-out, a receive statement can have timed out, or the process received a message with the payload \fItimeout\fR.
+
+.RE
+
+{trace, Pid, call, {M, F, Args}}
+.RS 2
+When process 
+\fIPid\fR calls a traced function. The return values of calls are never supplied, only the call and its arguments.
+.PP
+Trace flag \fIarity\fR can be used to change the contents of this message, so that \fIArity\fR is specified instead of \fIArgs\fR.
+
+
+.RE
+
+{trace, Pid, return_to, {M, F, Arity}}
+.RS 2
+When process 
+\fIPid\fR returns \fIto\fR the specified function. This trace message is sent if both the flags \fIcall\fR and \fIreturn_to\fR are set, and the function is set to be traced on \fIlocal\fR function calls. The message is only sent when returning from a chain of tail recursive function calls, where at least one call generated a \fIcall\fR trace message (that is, the functions match specification matched, and \fI{message, false}\fR was not an action).
+
+.RE
+
+{trace, Pid, return_from, {M, F, Arity}, ReturnValue}
+.RS 2
+When 
+\fIPid\fR returns \fIfrom\fR the specified function. This trace message is sent if flag \fIcall\fR is set, and the function has a match specification with a \fIreturn_trace\fR or \fIexception_trace\fR action.
+
+.RE
+
+{trace, Pid, exception_from, {M, F, Arity}, {Class, Value}}
+.RS 2
+When 
+\fIPid\fR exits \fIfrom\fR the specified function because of an exception. This trace message is sent if flag \fIcall\fR is set, and the function has a match specification with an \fIexception_trace\fR action.
+
+.RE
+
+{trace, Pid, spawn, Pid2, {M, F, Args}}
+.RS 2
+When 
+\fIPid\fR spawns a new process \fIPid2\fR with the specified function call as entry point.
+.PP
+\fIArgs\fR is supposed to be the argument list, but can be any term if the spawn is erroneous.
+
+
+.RE
+
+{trace, Pid, spawned, Pid2, {M, F, Args}}
+.RS 2
+When 
+\fIPid\fR is spawned by process \fIPid2\fR with the specified function call as entry point.
+.PP
+\fIArgs\fR is supposed to be the argument list, but can be any term if the spawn is erroneous.
+
+
+.RE
+
+{trace, Pid, exit, Reason}
+.RS 2
+When 
+\fIPid\fR exits with reason \fIReason\fR.
+
+.RE
+
+{trace, Pid, register, RegName}
+.RS 2
+When process 
+\fIPid\fR gets the name \fIRegName\fR registered.
+
+.RE
+
+{trace, Pid, unregister, RegName}
+.RS 2
+When process 
+\fIPid\fR gets the name \fIRegName\fR unregistered. This is done automatically when a registered process or port exits.
+
+.RE
+
+{trace, Pid, link, Pid2}
+.RS 2
+When 
+\fIPid\fR links to a process \fIPid2\fR.
+
+.RE
+
+{trace, Pid, unlink, Pid2}
+.RS 2
+When 
+\fIPid\fR removes the link from a process \fIPid2\fR.
+
+.RE
+
+{trace, Pid, getting_linked, Pid2}
+.RS 2
+When 
+\fIPid\fR gets linked to a process \fIPid2\fR.
+
+.RE
+
+{trace, Pid, getting_unlinked, Pid2}
+.RS 2
+When 
+\fIPid\fR gets unlinked from a process \fIPid2\fR.
+
+.RE
+
+{trace, Port, open, Pid, Driver}
+.RS 2
+When 
+\fIPid\fR opens a new port \fIPort\fR with the running \fIDriver\fR.
+.PP
+\fIDriver\fR is the name of the driver as an atom.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB \fI{trace, Pid, in | in_exiting, {M, F, Arity} | 0}\fR\fR When \fIPid\fR is scheduled to run. The process runs in function \fI{M, F, Arity}\fR. On some rare occasions, the current function cannot be determined, then the last element is \fI0\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB  \fI{trace, Pid, out | out_exiting | out_exited, {M, F, Arity} | 0}\fR\fR When \fIPid\fR is scheduled out. The process was running in function \fI{M, F, Arity}\fR. On some rare occasions, the current function cannot be determined, then the last element is \fI0\fR.
+
+.RE
+
+{trace, Pid, gc_minor_start, Info}
+.RS 2
+Sent when a garbage collection of the young generation is about to be started. 
+\fIInfo\fR is a list of two-element tuples, where the first element is a key, and the second is the value. Do not depend on any order of the tuples. The following keys are defined:
+heap_size
+.RS 2
+The size of the used part of the heap.
+
+
+.RE
+
+heap_block_size
+.RS 2
+The size of the memory block used for storing the heap and the stack.
+
+
+.RE
+
+old_heap_size
+.RS 2
+The size of the used part of the old heap.
+
+
+.RE
+
+old_heap_block_size
+.RS 2
+The size of the memory block used for storing the old heap.
+
+
+.RE
+
+stack_size
+.RS 2
+The size of the stack.
+
+
+.RE
+
+recent_size
+.RS 2
+The size of the data that survived the previous garbage collection.
+
+
+.RE
+
+mbuf_size
+.RS 2
+The combined size of message buffers associated with the process.
+
+
+.RE
+
+bin_vheap_size
+.RS 2
+The total size of unique off-heap binaries referenced from the process heap.
+
+
+.RE
+
+bin_vheap_block_size
+.RS 2
+The total size of binaries allowed in the virtual heap in the process before doing a garbage collection.
+
+
+.RE
+
+bin_old_vheap_size
+.RS 2
+The total size of unique off-heap binaries referenced from the process old heap.
+
+
+.RE
+
+bin_old_vheap_block_size
+.RS 2
+The total size of binaries allowed in the virtual old heap in the process before doing a garbage collection.
+
+
+.RE
+
+wordsize
+.RS 2
+For the 
+\fIgc_minor_start\fR event it is the size of the need that triggered the GC. For the corresponding \fIgc_minor_end\fR event it is the size of reclaimed memory = start \fIheap_size\fR - end \fIheap_size\fR.
+
+.RE
+
+.PP
+All sizes are in words.
+
+
+.RE
+
+{trace, Pid, gc_max_heap_size, Info}
+.RS 2
+Sent when the 
+\fImax_heap_size\fR is reached during garbage collection. \fIInfo\fR contains the same kind of list as in message \fIgc_start\fR, but the sizes reflect the sizes that triggered \fImax_heap_size\fR to be reached.
+
+.RE
+
+{trace, Pid, gc_minor_end, Info}
+.RS 2
+Sent when young garbage collection is finished. 
+\fIInfo\fR contains the same kind of list as in message \fIgc_minor_start\fR, but the sizes reflect the new sizes after garbage collection.
+
+.RE
+
+{trace, Pid, gc_major_start, Info}
+.RS 2
+Sent when fullsweep garbage collection is about to be started. 
+\fIInfo\fR contains the same kind of list as in message \fIgc_minor_start\fR.
+
+.RE
+
+{trace, Pid, gc_major_end, Info}
+.RS 2
+Sent when fullsweep garbage collection is finished. 
+\fIInfo\fR contains the same kind of list as in message \fIgc_minor_start\fR, but the sizes reflect the new sizes after a fullsweep garbage collection.
+
+.RE
+
+.PP
+If the tracing process dies or the tracer module returns \fIremove\fR, the flags are silently removed.
+
+.PP
+Returns a number indicating the number of processes that matched \fIProcs\fR. If \fIProcs\fR is a process identifier, the return value is \fI1\fR. If \fIProcs\fR is \fIall\fR or \fIexisting\fR, the return value is the number of processes running. If \fIProcs\fR is \fInew\fR, the return value is \fI0\fR.
+
+.PP
+Failure: \fIbadarg\fR if the specified arguments are not supported. For example, \fIcpu_timestamp\fR is not supported on all platforms.
+
+
+.RE
+.B
+\fBrecv(Session, MatchSpec, FlagList) -> non_neg_integer()\fR
+\fB              when\fR
+\fB                  Session :: session(),\fR
+\fB                  MatchSpec :: trace_match_spec() | boolean(),\fR
+\fB                  FlagList :: [].\fR
+
+.br
+.RS
+.PP
+Set trace pattern for \fImessage receiving\fR.
+
+.PP
+Must be combined with \fIprocess/4\fR or \fIport/4\fR to set the \fI'receive'\fR trace flag for one or more processes or ports.
+
+.PP
+Argument \fISession\fR is the trace session to operate on as returned by \fIsession_create/3\fR.
+
+.PP
+The default value for the \fIreceive\fR trace pattern in each session is \fItrue\fR. That is, all messages received by processes having \fI'receive'\fR trace enabled will be traced. Use this function to limit traced \fI'receive'\fR events based on the message content, the sender, and/or the receiver.
+
+.PP
+Argument \fIMatchSpec\fR can take the following forms:
+
+MatchExpression
+.RS 2
+A match specification. The matching is done on the list 
+\fI[Node, Sender, Msg]\fR. \fINode\fR is the node name of the sender. \fISender\fR is the process or port identity of the sender, or the atom \fIundefined\fR if the sender is not known (which can be the case for remote senders). \fIMsg\fR is the message term. The pid of the receiving process can be accessed with the guard function \fIself/0\fR. An empty list is the same as \fItrue\fR. For more information, see section Match Specifications in Erlang in the User's Guide for the ERTS application.
+
+.RE
+
+true
+.RS 2
+Enable tracing for all received messages (to 
+\fI'receive'\fR traced processes). Any match specification is removed. \fIThis is the default\fR.
+
+.RE
+
+false
+.RS 2
+Disable tracing for all received messages. Any match specification is removed.
+
+
+.RE
+
+.PP
+Argument \fIFlagList\fR must be \fI[]\fR for receive tracing.
+
+.PP
+The return value is always \fI1\fR.
+
+.PP
+\fIExamples:\fR
+
+.PP
+Only trace messages from a specific process \fIPid\fR:
+
+.IP
+.nf
+> trace:recv(Session, [{['_',Pid, '_'],[],[]}], []).
+1
+
+.fi
+
+.PP
+Only trace messages matching \fI{reply, _}\fR:
+
+.IP
+.nf
+> trace:recv(Session, [{['_','_', {reply,'_'}],[],[]}], []).
+1
+
+.fi
+
+.PP
+Only trace messages from other nodes:
+
+.IP
+.nf
+> trace:recv(Session, [{['$1', '_', '_'],[{'=/=','$1',{node}}],[]}], []).
+1
+
+.fi
+
+.PP
+\fBNOTE: \fRA match specification for \fI'receive'\fR trace can use all guard and body functions except \fIcaller\fR, \fIis_seq_trace\fR, \fIget_seq_token\fR, \fIset_seq_token\fR, \fIenable_trace\fR, \fIdisable_trace\fR, \fItrace\fR, \fIsilent\fR, and \fIprocess_dump\fR.
+
+
+.PP
+Fails by raising an error exception with an error reason of:
+
+badarg
+.RS 2
+If an argument is invalid.
+
+
+.RE
+
+system_limit
+.RS 2
+If a match specification passed as argument has excessive nesting which causes scheduler stack exhaustion for the scheduler that the calling process is executing on. Scheduler stack size can be configured when starting the runtime system.
+
+
+.RE
+
+
+.RE
+.B
+\fBsend(Session, MatchSpec, FlagList) -> non_neg_integer()\fR
+\fB              when\fR
+\fB                  Session :: session(),\fR
+\fB                  MatchSpec :: trace_match_spec() | boolean(),\fR
+\fB                  FlagList :: [].\fR
+
+.br
+.RS
+.PP
+Set trace pattern for \fImessage sending\fR.
+
+.PP
+Must be combined with \fIprocess/4\fR or \fIport/4\fR to set the \fIsend\fR trace flag for one or more processes or ports.
+
+.PP
+Argument \fISession\fR is the trace session to operate on as returned by \fIsession_create/3\fR.
+
+.PP
+The default value for the \fIsend\fR trace pattern in each session is \fItrue\fR. That is, all messages sent from processes having \fIsend\fR trace enabled will be traced. Use this function to limit traced \fIsend\fR events based on the message content, the sender, and/or the receiver.
+
+.PP
+Argument \fIMatchSpec\fR can take the following forms:
+
+MatchExpression
+.RS 2
+A match specification. The matching is done on the list 
+\fI[Receiver, Msg]\fR. \fIReceiver\fR is the process or port identity of the receiver and \fIMsg\fR is the message term. The pid of the sending process can be accessed with the guard function \fIself/0\fR. An empty list is the same as \fItrue\fR. For more information, see section Match Specifications in Erlang in the User's Guide for the ERTS application.
+
+.RE
+
+true
+.RS 2
+Enable tracing for all sent messages (from 
+\fIsend\fR traced processes). Any match specification is removed.
+
+.RE
+
+false
+.RS 2
+Disable tracing for all sent messages. Any match specification is removed.
+
+
+.RE
+
+.PP
+Argument \fIFlagList\fR must be \fI[]\fR.
+
+.PP
+The return value is always \fI1\fR.
+
+.PP
+\fIExamples:\fR
+
+.PP
+Only trace messages to a specific process \fIPid\fR:
+
+.IP
+.nf
+> trace:send(Session, [{[Pid, '_'],[],[]}], []).
+1
+
+.fi
+
+.PP
+Only trace messages matching \fI{reply, _}\fR:
+
+.IP
+.nf
+> trace:send(Session, [{['_', {reply,'_'}],[],[]}], []).
+1
+
+.fi
+
+.PP
+Only trace messages sent to the sender itself:
+
+.IP
+.nf
+> trace:send(Session, [{['$1', '_'],[{'=:=','$1',{self}}],[]}], []).
+1
+
+.fi
+
+.PP
+Only trace messages sent to other nodes:
+
+.IP
+.nf
+> trace:send(Session, [{['$1', '_'],[{'=/=',{node,'$1'},{node}}],[]}], []).
+1
+
+.fi
+
+.PP
+\fBNOTE: \fRA match specification for \fIsend\fR trace can use all guard and body functions except \fIcaller\fR.
+
+
+.PP
+Fails by raising an error exception with an error reason of:
+
+badarg
+.RS 2
+If an argument is invalid.
+
+
+.RE
+
+system_limit
+.RS 2
+If a match specification passed as argument has excessive nesting which causes scheduler stack exhaustion for the scheduler that the calling process is executing on. Scheduler stack size can be configured when starting the runtime system.
+
+
+.RE
+
+
+.RE
+.B
+\fBsession_create(Name, Tracer, Opts) -> session()\fR
+\fB                        when\fR
+\fB                            Name :: atom(),\fR
+\fB                            Tracer ::\fR
+\fB                                pid() | port() | {module(), term()},\fR
+\fB                            Opts :: [].\fR
+
+.br
+.RS
+.PP
+Create a new trace session.
+
+.PP
+Argument \fIName\fR is an atom name for the session. It will be returned when inspecting with \fIsession_info/1\fR.
+
+.PP
+Argument \fITracer\fR specifies the consumer of all trace events for the session. It can be an identifier of a local process or port to receive all trace messages.
+
+.PP
+\fITracer\fR can also be a tuple \fI{TracerModule, TracerState}\fR for a tracer module to be called instead of sending a trace message. The tracer module can then ignore or change the trace message. For more details on how to write a tracer module, see module \fIerl_tracer\fR.
+
+.PP
+Argument \fIOpts\fR must be \fI[]\fR.
+
+.PP
+Returns an opaque handle to the trace session. The handle will keep the session alive. If the handle is dropped and garbage collected, the session will be destroyed and cleaned up as if \fIsession_destroy/1\fR was called.
+
+
+.RE
+.B
+\fBsession_destroy(Session) -> true | false when Session :: session().\fR
+
+.br
+.RS
+.PP
+Destroy a trace session and cleanup all its settings on processes, ports, and functions.
+
+.PP
+The only things not cleaned up are trace messages that have already been sent.
+
+.PP
+Returns \fItrue\fR if the session was active. Returns \fIfalse\fR if the session had already been destroyed by either an earler call to this function or the garbage collector.
+
+
+.RE
+.B
+\fBsession_info(PidPortFuncEvent) -> Res\fR
+\fB                      when\fR
+\fB                          PidPortFuncEvent ::\fR
+\fB                              all |\fR
+\fB                              pid() |\fR
+\fB                              port() |\fR
+\fB                              new | new_processes | new_ports | MFA |\fR
+\fB                              on_load | send | 'receive',\fR
+\fB                          MFA :: {module(), atom(), arity()},\fR
+\fB                          Res :: undefined | [session_weak_ref()].\fR
+
+.br
+.RS
+.PP
+Return which trace sessions that affect a port, process, function, or event.
+
+.PP
+Argument \fIall\fR returns all active trace sessions that exists on the node.
+
+.PP
+Returns a list of weak session handles or \fIundefined\fR if the process/port/function does not exists.
+
+
+.RE
+.B
+\fBsystem(Session :: session(),\fR
+\fB             Event :: system_event(),\fR
+\fB             Value :: system_value()) ->\fR
+\fB                ok.\fR
+
+.br
+.RS
+.PP
+Enable/disable monitoring of system events.
+
+.PP
+Argument \fISession\fR is the trace session to operate on as returned by \fIsession_create/3\fR.
+
+.PP
+Argument \fIEvent\fR is an atom describing the kind of system event to monitor. To enable monitoring argument \fIValue\fR is, depending on event, either a limit of that event or the atom \fItrue\fR. To disable monitoring pass \fIValue\fR as the atom \fIfalse\fR.
+
+.PP
+When a monitored system event happens, a message is sent to the session tracer. The session tracer must be a process otherwise the function call will fail.
+
+.PP
+The following \fIEvent\fRs with \fIValue\fRs can be monitored:
+
+long_gc, Time
+.RS 2
+If a garbage collection in the system takes at least 
+\fITime\fR wall clock milliseconds, a message \fI{monitor, GcPid, long_gc, Info}\fR is sent. \fIGcPid\fR is the pid that was garbage collected. \fIInfo\fR is a list of two-element tuples describing the result of the garbage collection.
+.PP
+One of the tuples is \fI{timeout, GcTime}\fR, where \fIGcTime\fR is the time for the garbage collection in milliseconds. The other tuples are tagged with \fIheap_size\fR, \fIheap_block_size\fR, \fIstack_size\fR, \fImbuf_size\fR, \fIold_heap_size\fR, and \fIold_heap_block_size\fR. These tuples are explained in the description of trace message \fIgc_minor_start\fR (see \fItrace:process/4\fR). New tuples can be added, and the order of the tuples in the \fIInfo\fR list can be changed at any time without prior notice.
+
+
+.RE
+
+long_message_queue, {Disable, Enable}
+.RS 2
+If the number of messages in the message queue of a process reach 
+\fIEnable\fR, a message \fI{monitor, Pid, long_message_queue, Long}\fR is sent. \fIPid\fR is the process identifier of the process that got a long message queue and \fILong\fR will equal \fItrue\fR indicating that it is in a \fIlong message queue\fR state. No more \fIlong_message_queue\fR monitor messages will be sent due to the process identified by \fIPid\fR until its message queue length falls down to a length of \fIDisable\fR length. When this happens, a \fIlong_message_queue\fR monitor message with \fILong\fR equal to \fIfalse\fR will be sent indicating that the process is no longer in a \fIlong message queue\fR state. As of this, if the message queue length should again reach \fIEnable\fR length, a new \fIlong_message_queue\fR monitor message with \fILong\fR set to \fItrue\fR will again be sent. That is, a \fIlong_message_queue\fR monitor message is sent when a process enters or leaves a \fIlong message queue\fR state where these state changes are defined by the \fIEnable\fR and \fIDisable\fR parameters.
+.PP
+\fIEnable\fR must be an integer larger than zero. \fIDisable\fR must be an integer larger than or equal to zero and smaller than \fIEnable\fR. If the above is not satisfied the operation will fail with a \fIbadarg\fR error exception. You are recommended to use a much smaller value for \fIDisable\fR length than \fIEnable\fR length in order not to be flooded with \fIlong_message_queue\fR monitor messages.
+
+
+.RE
+
+long_schedule, Time
+.RS 2
+If a process or port in the system runs uninterrupted for at least 
+\fITime\fR wall clock milliseconds, a message \fI{monitor, PidOrPort, long_schedule, Info}\fR is sent. \fIPidOrPort\fR is the process or port that was running. \fIInfo\fR is a list of two-element tuples describing the event.
+.PP
+If a \fIpid/0\fR, the tuples \fI{timeout, Millis}\fR, \fI{in, Location}\fR, and \fI{out, Location}\fR are present, where \fILocation\fR is either an MFA (\fI{Module, Function, Arity}\fR) describing the function where the process was scheduled in/out, or the atom \fIundefined\fR.
+
+.PP
+If a \fIport/0\fR, the tuples \fI{timeout, Millis}\fR and \fI{port_op,Op}\fR are present. \fIOp\fR is one of \fIproc_sig\fR, \fItimeout\fR, \fIinput\fR, \fIoutput\fR, \fIevent\fR, or \fIdist_cmd\fR, depending on which driver callback was executing.
+
+.PP
+\fIproc_sig\fR is an internal operation and is never to appear, while the others represent the corresponding driver callbacks \fItimeout\fR, \fIready_input\fR, \fIready_output\fR, \fIevent\fR, and \fIoutputv\fR (when the port is used by distribution). Value \fIMillis\fR in tuple \fItimeout\fR informs about the uninterrupted execution time of the process or port, which always is equal to or higher than the \fITime\fR value supplied when starting the trace. New tuples can be added to the \fIInfo\fR list in a future release. The order of the tuples in the list can be changed at any time without prior notice.
+
+.PP
+This can be used to detect problems with NIFs or drivers that take too long to execute. 1 ms is considered a good maximum time for a driver callback or a NIF. However, a time-sharing system is usually to consider everything < 100 ms as "possible" and fairly "normal". However, longer schedule times can indicate swapping or a misbehaving NIF/driver. Misbehaving NIFs and drivers can cause bad resource utilization and bad overall system performance.
+
+
+.RE
+
+large_heap, Size
+.RS 2
+If a garbage collection in the system results in the allocated size of a heap being at least 
+\fISize\fR words, a message \fI{monitor, GcPid, large_heap, Info}\fR is sent. \fIGcPid\fR and \fIInfo\fR are the same as for \fIlong_gc\fR described above, except that the tuple tagged with \fItimeout\fR is not present.
+.PP
+The monitor message is sent if the sum of the sizes of all memory blocks allocated for all heap generations after a garbage collection is equal to or higher than \fISize\fR.
+
+.PP
+When a process is killed by \fImax_heap_size\fR, it is killed before the garbage collection is complete and thus no large heap message is sent.
+
+
+.RE
+
+busy_port, true
+.RS 2
+If a process in the system gets suspended because it sends to a busy port, a message 
+\fI{monitor, SusPid, busy_port, Port}\fR is sent. \fISusPid\fR is the pid that got suspended when sending to \fIPort\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIbusy_dist_port, true\fR \fR If a process in the system gets suspended because it sends to a process on a remote node whose inter-node communication was handled by a busy port, a message \fI{monitor, SusPid, busy_dist_port, Port}\fR is sent. \fISusPid\fR is the pid that got suspended when sending through the inter-node communication port \fIPort\fR.
+
+.RE
+
+.PP
+To disable system monitoring of a event pass the value as \fIfalse\fR. There are no other special values (like zero) to disable monitoring of an event. Some of the events have an unspecified minimum value. Lower values will be adjusted to the minimum value. For example, it is currently not possible to monitor all garbage collections with \fI{long_gc, 0}\fR.
+
+.PP
+\fBNOTE: \fRIf the session tracer process gets so large that it itself starts to cause system monitor messages when garbage collecting, the messages enlarge the process message queue and probably make the problem worse. Keep the tracer process neat and do not set the system monitor limits too tight.
+
+
+.PP
+Failures:
+
+badarg
+.RS 2
+If the session tracer is not a local process.
+
+
+.RE
+
+
+.RE

@@ -1,0 +1,637 @@
+.TH snmp_generic 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmp_generic \- Generic Functions for Implementing SNMP Objects in a Database
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmp_generic\fR contains generic functions for implementing tables (and variables) using the SNMP built-in database or Mnesia. These default functions are used if no instrumentation function is provided for a managed object in a MIB. Sometimes, it might be necessary to customize the behaviour of the default functions. For example, in some situations a trap should be sent if a row is deleted or modified, or some hardware is to be informed, when information is changed.
+
+.PP
+The overall structure is shown in the following figure:
+
+.IP
+.nf
+         +---------------+
+         |   SNMP Agent  |
+         +- - - - - - - -+
+         |      MIB      |
+         +---------------+
+                 |
+         Association file       (associates a MIB object with
+                 |               snmp_generic:table_funct
+                 |               snmp_generic:variable_func)
++--------------------------------------+
+|           snmp_generic               |  Support for get-next,
+|                                      |  RowStatus operations
++----------------------+---------------+
+|    snmpa_local_db    |    Mnesia     |  Database
++--------------+-------+---------------+
+|     dets     |  ets  |
+| (persistent) |       |
++--------------+-------+
+
+.fi
+
+.PP
+Each function takes the argument \fINameDb\fR, which is a tuple \fI{Name, Db}\fR, to identify which database the functions should use. \fIName\fR is the symbolic name of the managed object as defined in the MIB, and \fIDb\fR is either \fIvolatile\fR, \fIpersistent\fR, or \fImnesia\fR. If it is \fImnesia\fR, all variables are stored in the Mnesia table \fIsnmp_variables\fR which must be a table with two attributes (not a Mnesia SNMP table). The SNMP tables are stored in Mnesia tables with the same names as the SNMP tables. All functions assume that a Mnesia table exists with the correct name and attributes. It is the programmer's responsibility to ensure this. Specifically, if variables are stored in Mnesia, the table \fIsnmp_variables\fR must be created by the programmer. The record definition for this table is defined in the file \fIsnmp/include/snmp_types.hrl\fR.
+
+.PP
+If an instrumentation function in the association file for a variable \fImyVar\fR does not have a name when compiling an MIB, the compiler generates an entry.
+
+.IP
+.nf
+{myVar, {snmp_generic, variable_func, [{myVar, Db]}}.
+
+.fi
+
+.PP
+And for a table:
+
+.IP
+.nf
+{myTable, {snmp_generic, table_func, [{myTable, Db]}}.
+
+.fi
+
+.SS "Example"
+
+.PP
+The following example shows an implementation of a table which is stored in Mnesia, but with some checks performed at set-request operations.
+
+.IP
+.nf
+myTable_func(new, NameDb) ->   % pass unchanged
+  snmp_generic:table_func(new, NameDb).
+
+myTable_func(delete, NameDb) ->   % pass unchanged
+  snmp_generic:table_func(delete, NameDb).
+
+%% change row
+myTable_func(is_set_ok, RowIndex, Cols, NameDb) ->
+  case snmp_generic:table_func(is_set_ok, RowIndex,
+                               Cols, NameDb) of
+    {noError, 0} ->
+      myApplication:is_set_ok(RowIndex, Cols);
+    Err ->
+      Err
+  end;
+
+myTable_func(set, RowIndex, Cols, NameDb) ->
+  case snmp_generic:table_func(set, RowIndex, Cols,
+                               NameDb),
+    {noError, 0} ->
+      % Now the row is updated, tell the application
+      myApplication:update(RowIndex, Cols);
+    Err ->
+      Err
+  end;
+
+myTable_func(Op, RowIndex, Cols, NameDb) ->   % pass unchanged
+  snmp_generic:table_func(Op, RowIndex, Cols, NameDb).
+
+.fi
+
+.PP
+The \fI.funcs\fR file would look like:
+
+.IP
+.nf
+{myTable, {myModule, myTable_func, [{myTable, mnesia}]}}.
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBcolumn() :: pos_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcolumns() :: [column()] | [{column(), Value :: term()}].\fR
+
+.br
+.RS
+.PP
+Is a list of column numbers in the case of a get operation, and a list of column numbers and values in the case of a set operation.
+
+
+.RE
+.B
+\fBtable_info_item() ::\fR
+\fB          nbr_of_cols | defvals | status_col | not_accessible |\fR
+\fB          index_types | first_accessible | first_own_index.\fR
+
+.br
+.RS
+.PP
+For an ordinary table, the types will be the following:
+
+nbr_of_cols
+.RS 2
+Number of columns.
+
+.PP
+Value type: pos_integer()
+
+
+.RE
+
+defvals
+.RS 2
+A list of default values, ordered by column.
+
+.PP
+Value type: {Col :: [pos_integer(), DefVal :: term()}]
+
+
+.RE
+
+status_col
+.RS 2
+Column number of the status column.
+
+.PP
+Value type: pos_integer()
+
+
+.RE
+
+not_accessible
+.RS 2
+A sorted list of columns (> first_accessible) that are 'not-accessible'.
+
+.PP
+Value type: [pos_integer()]
+
+
+.RE
+
+index_types
+.RS 2
+A list of asn1_type() for the index columns, ordered by column number or an "augment"-tuple (see below).
+
+.PP
+Value type: [asn1_type()]
+
+
+.RE
+
+first_accessible
+.RS 2
+The first accessible column.
+
+.PP
+Value type: pos_integer()
+
+
+.RE
+
+first_own_index
+.RS 2
+Column number of the first own index. Will be 
+\fI0\fR if there is no such index for this table.
+.PP
+Value type: non_neg_integer()
+
+
+.RE
+
+.PP
+For a augmented table, it will instead look like this:
+
+index_types
+.RS 2
+Value type: {augments, {atom(), asn1_type()}}
+
+
+.RE
+
+nbr_of_cols
+.RS 2
+Value type: pos_integer()
+
+
+.RE
+
+not_accessible
+.RS 2
+Value type: [pos_integer()]
+
+
+.RE
+
+first_accessible
+.RS 2
+Value type: pos_integer()
+
+
+.RE
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBget_index_types(Name) -> IndexTypes\fR
+\fB                         when\fR
+\fB                             Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                             IndexTypes :: [snmp:asn1_type()].\fR
+
+.br
+.RS
+.PP
+Gets the index types of \fIName\fR
+
+.PP
+This function can be used in instrumentation functions to retrieve the index types part of the table info.
+
+
+.RE
+.B
+\fBget_status_col(Name, Cols) -> false | {value, StatusCol}\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Cols :: columns(),\fR
+\fB                            StatusCol :: term().\fR
+
+.br
+.RS
+.PP
+Gets the value of the status column from \fICols\fR.
+
+.PP
+This function can be used in instrumentation functions for \fIis_set_ok\fR, \fIundo\fR or \fIset\fR to check if the status column of a table is modified.
+
+
+.RE
+.B
+\fBget_table_info(Name, Item :: nbr_of_cols) -> Result\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Result :: pos_integer();\fR
+\fB                    (Name, Item :: defvals) -> Result\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Result :: [{Col, DefVal}],\fR
+\fB                            Col :: pos_integer(),\fR
+\fB                            DefVal :: term();\fR
+\fB                    (Name, Item :: status_col) -> Result\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Result :: pos_integer();\fR
+\fB                    (Name, Item :: not_accessible) -> Result\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Result :: [pos_integer()];\fR
+\fB                    (Name, Item :: index_types) -> Result\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Result :: [snmp:asn1_type()];\fR
+\fB                    (Name, Item :: first_accessible) -> Result\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Result :: pos_integer();\fR
+\fB                    (Name, Item :: first_own_index) -> Result\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Result :: non_neg_integer();\fR
+\fB                    (Name, Item :: all) -> Result\fR
+\fB                        when\fR
+\fB                            Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                            Result :: [{table_info_item(), term()}].\fR
+
+.br
+.RS
+.PP
+Get a specific table info item or, if \fIItem\fR has the value 'all', a two tuple list (property list) is instead returned with all the items and their respctive values of the given table.
+
+.PP
+This function can be used in instrumentation functions to retrieve a given part of the table info.
+
+
+.RE
+.B
+\fBtable_func(Op, NameDb) -> Return\fR
+\fB                    when\fR
+\fB                        Op :: new | delete,\fR
+\fB                        NameDb :: snmpa:name_db(),\fR
+\fB                        Return :: term().\fR
+
+.br
+.RS
+.PP
+This is the default instrumentation function for tables.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fInew\fR operation creates the table if it does not exist, but only if the database is the SNMP internal db.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIdelete\fR operation does not delete the table from the database since unloading an MIB does not necessarily mean that the table should be destroyed.
+
+.RE
+
+.PP
+If it is possible for a manager to create or delete rows in the table, there must be a \fIRowStatus\fR column for \fIis_set_ok\fR, \fIset\fR and \fIundo\fR to work properly.
+
+.PP
+The function returns according to the specification of an instrumentation function.
+
+
+.RE
+.B
+\fBtable_func(Op, RowIndex, Cols, NameDb) -> Return\fR
+\fB                    when\fR
+\fB                        Op :: get | get_next | is_set_ok | set | undo,\fR
+\fB                        RowIndex :: snmp:row_index(),\fR
+\fB                        Cols :: columns(),\fR
+\fB                        NameDb :: snmpa:name_db(),\fR
+\fB                        Return :: term().\fR
+
+.br
+.RS
+.PP
+This is the default instrumentation function for tables.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIis_set_ok\fR operation checks that a row which is to be modified or deleted exists, and that a row which is to be created does not exist.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIundo\fR operation does nothing.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIset\fR operation checks if it has enough information to make the row change its status from \fInotReady\fR to \fInotInService\fR (when a row has been been set to \fIcreateAndWait\fR). If a row is set to \fIcreateAndWait\fR, columns without a value are set to \fInoinit\fR. If Mnesia is used, the set functionality is handled within a transaction.
+
+.RE
+
+.PP
+If it is possible for a manager to create or delete rows in the table, there must be a \fIRowStatus\fR column for \fIis_set_ok\fR, \fIset\fR and \fIundo\fR to work properly.
+
+.PP
+The function returns according to the specification of an instrumentation function.
+
+
+.RE
+.B
+\fBtable_get_elements(NameDb, RowIndex, Cols) -> Values\fR
+\fB                            when\fR
+\fB                                NameDb :: snmpa:name_db(),\fR
+\fB                                RowIndex :: snmp:row_index(),\fR
+\fB                                Cols :: columns(),\fR
+\fB                                Values :: [noinit | Value],\fR
+\fB                                Value :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list with values for all columns in \fICols\fR. If a column is undefined, its value is \fInoinit\fR.
+
+
+.RE
+.B
+\fBtable_next(NameDb, RestOid) -> Result\fR
+\fB                    when\fR
+\fB                        NameDb :: snmpa:name_db(),\fR
+\fB                        RestOid :: [integer()],\fR
+\fB                        Result :: RowIndex | endOfTable,\fR
+\fB                        RowIndex :: snmp:row_index().\fR
+
+.br
+.RS
+.PP
+Finds the indices of the next row in the table. \fIRestOid\fR does not have to specify an existing row.
+
+
+.RE
+.B
+\fBtable_row_exists(NameDb, RowIndex) -> Result\fR
+\fB                          when\fR
+\fB                              NameDb :: snmpa:name_db(),\fR
+\fB                              RowIndex :: snmp:row_index(),\fR
+\fB                              Result :: boolean().\fR
+
+.br
+.RS
+.PP
+Checks if a row in a table exists.
+
+
+.RE
+.B
+\fBtable_set_elements(NameDb, RowIndex, Columns) -> Result\fR
+\fB                            when\fR
+\fB                                NameDb :: snmpa:name_db(),\fR
+\fB                                RowIndex :: snmp:row_index(),\fR
+\fB                                Columns :: [{Column, Value}],\fR
+\fB                                Column :: column(),\fR
+\fB                                Value :: term(),\fR
+\fB                                Result :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets the elements in \fICols\fR to the row specified by \fIRowIndex\fR. No checks are performed on the new values.
+
+.PP
+If the Mnesia database is used, this function calls \fImnesia:write\fR to store the values. This means that this function must be called from within a transaction (\fImnesia:transaction/1\fR).
+
+
+.RE
+.B
+\fBvariable_func(Op :: new, Name) -> Result\fR
+\fB                       when\fR
+\fB                           Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                           Result :: ok | boolean();\fR
+\fB                   (Op :: delete, Name) -> Result\fR
+\fB                       when\fR
+\fB                           Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                           Result :: ok;\fR
+\fB                   (Op :: get, Name) -> Result\fR
+\fB                       when\fR
+\fB                           Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                           Result :: {value, Value} | genErr,\fR
+\fB                           Value :: term().\fR
+
+.br
+.RS
+.PP
+This is the default instrumentation function for variables.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fInew\fR opeation creates a new variable in the database with a default value as defined in the MIB, or a zero value (depending on the type).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIdelete\fR function does not delete the variable from the database.
+
+.RE
+
+.PP
+The function returns according to the specification of an instrumentation function.
+
+
+.RE
+.B
+\fBvariable_func(Op :: is_set_ok, Value, Name) -> Result\fR
+\fB                       when\fR
+\fB                           Value :: term(),\fR
+\fB                           Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                           Result :: noError;\fR
+\fB                   (Op :: set, Value, Name) -> Result\fR
+\fB                       when\fR
+\fB                           Value :: term(),\fR
+\fB                           Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                           Result :: noError | commitFailed;\fR
+\fB                   (Op :: undo, Value, Name) -> Result\fR
+\fB                       when\fR
+\fB                           Value :: term(),\fR
+\fB                           Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                           Result :: noError.\fR
+
+.br
+.RS
+.PP
+This is the default instrumentation function for variables with operations; \fIis_set_ok | set | undo\fR.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIis_set_ok\fR operation does nothing.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIset\fR operation return \fInoError\fR if successful or \fIcommitFailed\fR otherwise.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIundo\fR operation does nothing.
+
+.RE
+
+.PP
+The function returns according to the specification of an instrumentation function.
+
+
+.RE
+.B
+\fBvariable_get(Name) -> {value, Value} | undefined\fR
+\fB                      when\fR
+\fB                          Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                          Value :: term().\fR
+
+.br
+.RS
+.PP
+Gets the value of a variable.
+
+
+.RE
+.B
+\fBvariable_set(Name, Value) -> boolean()\fR
+\fB                      when\fR
+\fB                          Name :: snmpa:name() | snmpa:name_db(),\fR
+\fB                          Value :: term().\fR
+
+.br
+.RS
+.PP
+Sets a new value to a variable. The variable is created if it does not exist. No checks are made on the type of the new value.
+
+.PP
+Returns \fIfalse\fR if the \fINameDb\fR argument is incorrectly specified, otherwise \fItrue\fR.
+
+
+.RE

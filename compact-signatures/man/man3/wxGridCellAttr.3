@@ -1,0 +1,290 @@
+.TH wxGridCellAttr 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGridCellAttr \- This class can be used to alter the cells' appearance in the grid by changing their attributes from the defaults.
+
+.SH DESCRIPTION
+.PP
+An object of this class may be returned by \fIwxGridTableBase::GetAttr()\fR (not implemented in wx).
+
+.PP
+Note that objects of this class are reference-counted and it's recommended to use wxGridCellAttrPtr smart pointer class when working with them to avoid memory leaks.
+
+.PP
+wxWidgets docs: wxGridCellAttr
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGridCellAttr() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetAlignment(This) -> {HAlign :: integer(), VAlign :: integer()}\fR
+\fB                      when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Get the alignment to use for the cell with the given attribute.
+
+.PP
+If this attribute doesn't specify any alignment, the default attribute alignment is used (which can be changed using \fIwxGrid:setDefaultCellAlignment/3\fR but is left and top by default).
+
+.PP
+Notice that \fIhAlign\fR and \fIvAlign\fR values are always overwritten by this function, use \fIGetNonDefaultAlignment()\fR (not implemented in wx) if this is not desirable.
+
+
+.RE
+.B
+\fBgetBackgroundColour(This) -> wx:wx_colour4()\fR
+\fB                             when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns the background colour.
+
+
+.RE
+.B
+\fBgetEditor(This, Grid, Row, Col) ->\fR
+\fB                   wxGridCellEditor:wxGridCellEditor()\fR
+\fB                   when\fR
+\fB                       This :: wxGridCellAttr(),\fR
+\fB                       Grid :: wxGrid:wxGrid(),\fR
+\fB                       Row :: integer(),\fR
+\fB                       Col :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the cell editor.
+
+.PP
+The caller is responsible for calling \fIDecRef()\fR (not implemented in wx) on the returned pointer, use \fIGetEditorPtr()\fR (not implemented in wx) to do it automatically.
+
+
+.RE
+.B
+\fBgetFont(This) -> wxFont:wxFont() when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns the font.
+
+
+.RE
+.B
+\fBgetRenderer(This, Grid, Row, Col) ->\fR
+\fB                     wxGridCellRenderer:wxGridCellRenderer()\fR
+\fB                     when\fR
+\fB                         This :: wxGridCellAttr(),\fR
+\fB                         Grid :: wxGrid:wxGrid(),\fR
+\fB                         Row :: integer(),\fR
+\fB                         Col :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the cell renderer.
+
+.PP
+The caller is responsible for calling \fIDecRef()\fR (not implemented in wx) on the returned pointer, use \fIGetRendererPtr()\fR (not implemented in wx) to do it automatically.
+
+
+.RE
+.B
+\fBgetTextColour(This) -> wx:wx_colour4()\fR
+\fB                       when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns the text colour.
+
+
+.RE
+.B
+\fBhasAlignment(This) -> boolean() when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if this attribute has a valid alignment set.
+
+
+.RE
+.B
+\fBhasBackgroundColour(This) -> boolean()\fR
+\fB                             when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if this attribute has a valid background colour set.
+
+
+.RE
+.B
+\fBhasEditor(This) -> boolean() when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if this attribute has a valid cell editor set.
+
+
+.RE
+.B
+\fBhasFont(This) -> boolean() when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if this attribute has a valid font set.
+
+
+.RE
+.B
+\fBhasRenderer(This) -> boolean() when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if this attribute has a valid cell renderer set.
+
+
+.RE
+.B
+\fBhasTextColour(This) -> boolean() when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if this attribute has a valid text colour set.
+
+
+.RE
+.B
+\fBisReadOnly(This) -> boolean() when This :: wxGridCellAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if this cell is set as read-only.
+
+
+.RE
+.B
+\fBsetAlignment(This, HAlign, VAlign) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxGridCellAttr(),\fR
+\fB                          HAlign :: integer(),\fR
+\fB                          VAlign :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the alignment.
+
+.PP
+\fIhAlign\fR can be one of \fIwxALIGN_LEFT\fR, \fIwxALIGN_CENTRE\fR or \fIwxALIGN_RIGHT\fR and \fIvAlign\fR can be one of \fIwxALIGN_TOP\fR, \fIwxALIGN_CENTRE\fR or \fIwxALIGN_BOTTOM\fR.
+
+
+.RE
+.B
+\fBsetBackgroundColour(This, ColBack) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxGridCellAttr(),\fR
+\fB                                 ColBack :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the background colour.
+
+
+.RE
+.B
+\fBsetDefAttr(This, DefAttr) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxGridCellAttr(),\fR
+\fB                        DefAttr :: wxGridCellAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetEditor(This, Editor) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxGridCellAttr(),\fR
+\fB                       Editor :: wxGridCellEditor:wxGridCellEditor().\fR
+
+.br
+.RS
+.PP
+Sets the editor to be used with the cells with this attribute.
+
+
+.RE
+.B
+\fBsetFont(This, Font) -> ok\fR
+\fB                 when This :: wxGridCellAttr(), Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font.
+
+
+.RE
+.B
+\fBsetReadOnly(This, [Option]) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxGridCellAttr(),\fR
+\fB                         Option :: {isReadOnly, boolean()}.\fR
+
+.br
+.RS
+.PP
+Sets the cell as read-only.
+
+
+.RE
+.B
+\fBsetRenderer(This, Renderer) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxGridCellAttr(),\fR
+\fB                         Renderer ::\fR
+\fB                             wxGridCellRenderer:wxGridCellRenderer().\fR
+
+.br
+.RS
+.PP
+Sets the renderer to be used for cells with this attribute.
+
+.PP
+Takes ownership of the pointer.
+
+
+.RE
+.B
+\fBsetTextColour(This, ColText) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxGridCellAttr(),\fR
+\fB                           ColText :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the text colour.
+
+
+.RE

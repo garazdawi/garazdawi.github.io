@@ -1,0 +1,136 @@
+.TH erl_boot_server 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_boot_server \- Boot server for other Erlang machines.
+
+.SH DESCRIPTION
+.PP
+This server is used to assist diskless Erlang nodes that fetch all Erlang code from another machine.
+
+.PP
+This server is used to fetch all code, including the start script, if an Erlang runtime system is started with command-line flag \fI-loader inet\fR. All hosts specified with command-line flag \fI-hosts Host\fR must have one instance of this server running.
+
+.PP
+This server can be started with the Kernel configuration parameter \fIstart_boot_server\fR.
+
+.PP
+The \fIerl_boot_server\fR can read regular files and files in archives. See \fIcode\fR and \fIerl_prim_loader\fR in ERTS.
+
+.PP
+\fBWARNING: \fRThe support for loading code from archive files is experimental. It is released before it is ready to obtain early feedback. The file format, semantics, interfaces, and so on, can be changed in a future release.
+
+
+.SS "SEE ALSO"
+
+.PP
+\fIerts:init\fR, \fIerts:erl_prim_loader\fR
+
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_slave(Slave) -> ok | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Slave :: Host,\fR
+\fB                       Host :: inet:ip_address() | inet:hostname(),\fR
+\fB                       Reason :: {badarg, Slave}.\fR
+
+.br
+.RS
+.PP
+Adds a \fISlave\fR node to the list of allowed slave hosts.
+
+
+.RE
+.B
+\fBdelete_slave(Slave) -> ok | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Slave :: Host,\fR
+\fB                          Host :: inet:ip_address() | inet:hostname(),\fR
+\fB                          Reason :: {badarg, Slave}.\fR
+
+.br
+.RS
+.PP
+Deletes a \fISlave\fR node from the list of allowed slave hosts.
+
+
+.RE
+.B
+\fBstart(Slaves) -> {ok, Pid} | {error, Reason}\fR
+\fB               when\fR
+\fB                   Slaves :: [Host],\fR
+\fB                   Host :: inet:ip_address() | inet:hostname(),\fR
+\fB                   Pid :: pid(),\fR
+\fB                   Reason :: any().\fR
+
+.br
+.RS
+.PP
+The same as \fIstart(Slaves, #{})\fR.
+
+
+.RE
+.B
+\fBstart(Slaves, Options) -> {ok, Pid} | {error, Reason}\fR
+\fB               when\fR
+\fB                   Slaves :: [Host],\fR
+\fB                   Host :: inet:ip_address() | inet:hostname(),\fR
+\fB                   Options :: #{listen_port => inet:port_number()},\fR
+\fB                   Pid :: pid(),\fR
+\fB                   Reason :: any().\fR
+
+.br
+.RS
+.PP
+Starts the boot server. \fISlaves\fR is a list of IP addresses for hosts, which are allowed to use this server as a boot server. \fIOptions\fR is a map with configuration options.
+
+.PP
+The boot server listening port can be configured with \fIlisten_port\fR. If an empty map is provided, or \fIlisten_port\fR is zero, then an ephemeral port is used.
+
+
+.RE
+.B
+\fBstart_link(Slaves) -> {ok, Pid} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Slaves :: [Host],\fR
+\fB                        Host :: inet:ip_address() | inet:hostname(),\fR
+\fB                        Pid :: pid(),\fR
+\fB                        Reason :: any().\fR
+
+.br
+.RS
+.PP
+The same as \fIstart_link(Slaves, #{})\fR.
+
+
+.RE
+.B
+\fBstart_link(Slaves, Options) -> {ok, Pid} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Slaves :: [Host],\fR
+\fB                        Host :: inet:ip_address() | inet:hostname(),\fR
+\fB                        Options :: #{listen_port => inet:port_number()},\fR
+\fB                        Pid :: pid(),\fR
+\fB                        Reason :: any().\fR
+
+.br
+.RS
+.PP
+The same as \fIstart(Slaves, Options)\fR, but it also links to the caller.
+
+
+.RE
+.B
+\fBwhich_slaves() -> Slaves\fR
+\fB                      when\fR
+\fB                          Slaves :: [Slave],\fR
+\fB                          Slave ::\fR
+\fB                              {Netmask :: inet:ip_address(),\fR
+\fB                               Address :: inet:ip_address()}.\fR
+
+.br
+.RS
+.PP
+Returns the current list of allowed slave hosts.
+
+
+.RE

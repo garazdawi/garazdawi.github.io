@@ -1,0 +1,93 @@
+.TH snmp_standard_mib 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmp_standard_mib \- Instrumentation Functions for STANDARD-MIB and SNMPv2-MIB
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmp_standard_mib\fR implements the instrumentation functions for the STANDARD-MIB and SNMPv2-MIB, and functions for configuring the database.
+
+.PP
+The configuration files are described in the SNMP User's Manual.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBconfigure(ConfDir) -> snmp:void() when ConfDir :: string().\fR
+
+.br
+.RS
+.PP
+This function is called from the supervisor at system start-up.
+
+.PP
+Inserts all data in the configuration files into the database and destroys all old rows with StorageType \fIvolatile\fR. The rows created from the configuration file will have StorageType \fInonVolatile\fR.
+
+.PP
+All \fIsnmp\fR counters are set to zero.
+
+.PP
+If an error is found in the configuration file, it is reported using the function \fIconfig_err/2\fR of the error report module, and the function fails with the reason \fIconfiguration_error\fR.
+
+.PP
+\fIConfDir\fR is a string which points to the directory where the configuration files are found.
+
+.PP
+The configuration file read is: \fIstandard.conf\fR.
+
+
+.RE
+.B
+\fBinc(Name, N) -> snmp:void() when Name :: atom(), N :: integer().\fR
+
+.br
+.RS
+.PP
+Increments a variable in the MIB with \fIN\fR, or one if \fIN\fR is not specified.
+
+
+.RE
+.B
+\fBreconfigure(ConfDir) -> snmp:void() when ConfDir :: string().\fR
+
+.br
+.RS
+.PP
+Inserts all data in the configuration files into the database and destroys all old data, including the rows with StorageType \fInonVolatile\fR. The rows created from the configuration file will have StorageType \fInonVolatile\fR.
+
+.PP
+Thus, the data in the SNMP-STANDARD-MIB and SNMPv2-MIB, after this function has been called, is from the configuration files.
+
+.PP
+All \fIsnmp\fR counters are set to zero.
+
+.PP
+If an error is found in the configuration file, it is reported using the function \fIconfig_err/2\fR of the error report module, and the function fails with the reason \fIconfiguration_error\fR.
+
+.PP
+\fIConfDir\fR is a string which points to the directory where the configuration files are found.
+
+.PP
+The configuration file read is: \fIstandard.conf\fR.
+
+
+.RE
+.B
+\fBreset() -> snmp:void().\fR
+
+.br
+.RS
+.PP
+Resets all \fIsnmp\fR counters to 0.
+
+
+.RE
+.B
+\fBsys_up_time() -> Time when Time :: integer().\fR
+
+.br
+.RS
+.PP
+Gets the system up time in hundredth of a second.
+
+
+.RE

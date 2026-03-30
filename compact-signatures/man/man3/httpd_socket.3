@@ -1,0 +1,59 @@
+.TH httpd_socket 3 "inets 9.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+httpd_socket \- Communication utility functions to be used by the Erlang web server API programmer.
+
+.SH DESCRIPTION
+.PP
+This module provides the Erlang web server API module programmer with utility functions for generic sockets communication. The appropriate communication mechanism is transparently used, that is, \fIip_comm\fR or \fIssl\fR.
+
+.PP
+\fBSee also\fR
+
+.PP
+\fIhttpd\fR
+
+.SH FUNCTIONS
+.LP
+.B
+\fBdeliver(SocketType, Socket, Data) -> Result\fR
+\fB                 when\fR
+\fB                     SocketType :: httpd:socket_type(),\fR
+\fB                     Socket :: inet:socket(),\fR
+\fB                     Data :: iolist() | binary(),\fR
+\fB                     Result :: ok | socket_closed.\fR
+
+.br
+.RS
+.PP
+\fIdeliver/3\fR sends \fIData\fR over \fISocket\fR using the specified \fISocketType\fR. \fISocket\fR and \fISocketType\fR is to be the socket and the \fIsocket_type\fR form the \fImod\fR record as defined in \fIhttpd.hrl\fR
+
+
+.RE
+.B
+\fBpeername(SocketType, Socket) -> {Port, IpAdress}\fR
+\fB                  when\fR
+\fB                      SocketType :: httpd:socket_type(),\fR
+\fB                      Socket :: inet:socket() | ssl:sslsocket(),\fR
+\fB                      Port :: inet:port_number(),\fR
+\fB                      IpAdress ::\fR
+\fB                          inet:ip4_address() |\fR
+\fB                          inet:ip6_address() |\fR
+\fB                          string().\fR
+
+.br
+.RS
+.PP
+\fIpeername/2\fR returns the \fIPort\fR and \fIIPAddress\fR of the remote \fISocket\fR.
+
+
+.RE
+.B
+\fBresolve() -> HostName when HostName :: inet:hostname().\fR
+
+.br
+.RS
+.PP
+\fIresolve/0\fR returns the official \fIHostName\fR of the current host.
+
+
+.RE

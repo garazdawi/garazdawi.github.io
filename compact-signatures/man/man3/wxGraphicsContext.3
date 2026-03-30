@@ -1,0 +1,815 @@
+.TH wxGraphicsContext 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGraphicsContext \- A \fIwxGraphicsContext\fR instance is the object that is drawn upon.
+
+.SH DESCRIPTION
+.PP
+It is created by a renderer using \fIwxGraphicsRenderer:createContext/2\fR. This can be either directly using a renderer instance, or indirectly using the static convenience \fIcreate/1\fR functions of \fIwxGraphicsContext\fR that always delegate the task to the default renderer.
+
+.PP
+Remark: For some renderers (like Direct2D or Cairo) processing of drawing operations may be deferred (Direct2D render target normally builds up a batch of rendering commands but defers processing of these commands, Cairo operates on a separate surface) so to make drawing results visible you need to update the content of the context by calling \fIwxGraphicsContext::Flush()\fR (not implemented in wx) or by destroying the context.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsRenderer:createContext/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGCDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsObject\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGraphicsContext
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGraphicsContext() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBclip(This, Region) -> ok\fR
+\fB              when\fR
+\fB                  This :: wxGraphicsContext(),\fR
+\fB                  Region :: wxRegion:wxRegion().\fR
+
+.br
+.RS
+.PP
+Sets the clipping region to the intersection of the given region and the previously set clipping region.
+
+.PP
+The clipping region is an area to which drawing is restricted.
+
+.PP
+Remark:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Clipping region should be given in logical coordinates.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Calling this function can only make the clipping region smaller, never larger.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+You need to call \fIresetClip/1\fR first if you want to set the clipping region exactly to the region specified.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If resulting clipping region is empty, then all drawing upon the context is clipped out (all changes made by drawing operations are masked out).
+
+.RE
+
+
+.RE
+.B
+\fBclip(This, X, Y, W, H) -> ok\fR
+\fB              when\fR
+\fB                  This :: wxGraphicsContext(),\fR
+\fB                  X :: number(),\fR
+\fB                  Y :: number(),\fR
+\fB                  W :: number(),\fR
+\fB                  H :: number().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBconcatTransform(This, Matrix) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxGraphicsContext(),\fR
+\fB                             Matrix ::\fR
+\fB                                 wxGraphicsMatrix:wxGraphicsMatrix().\fR
+
+.br
+.RS
+.PP
+Concatenates the passed in transform with the current transform of this context.
+
+
+.RE
+.B
+\fBcreate() -> wxGraphicsContext().\fR
+
+.br
+.RS
+.PP
+Create a lightweight context that can be used only for measuring text.
+
+
+.RE
+.B
+\fBcreate(WindowDC) -> wxGraphicsContext()\fR
+\fB                when\fR
+\fB                    WindowDC ::\fR
+\fB                        wxWindowDC:wxWindowDC() |\fR
+\fB                        wxWindow:wxWindow() |\fR
+\fB                        wxMemoryDC:wxMemoryDC() |\fR
+\fB                        wxImage:wxImage().\fR
+
+.br
+.RS
+.PP
+Creates a \fIwxGraphicsContext\fR from a \fIwxWindowDC\fR.
+
+.PP
+See: \fIwxGraphicsRenderer:createContext/2\fR
+
+
+.RE
+.B
+\fBcreateBrush(This, Brush) -> wxGraphicsBrush:wxGraphicsBrush()\fR
+\fB                     when\fR
+\fB                         This :: wxGraphicsContext(),\fR
+\fB                         Brush :: wxBrush:wxBrush().\fR
+
+.br
+.RS
+.PP
+Creates a native brush from a \fIwxBrush\fR.
+
+
+.RE
+.B
+\fBcreateFont(This, SizeInPixels, Facename) ->\fR
+\fB                    wxGraphicsFont:wxGraphicsFont()\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsContext(),\fR
+\fB                        SizeInPixels :: number(),\fR
+\fB                        Facename :: unicode:chardata();\fR
+\fB                (This, Font, [Option]) ->\fR
+\fB                    wxGraphicsFont:wxGraphicsFont()\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsContext(),\fR
+\fB                        Font :: wxFont:wxFont(),\fR
+\fB                        Option :: {col, wx:wx_colour()}.\fR
+
+.br
+.RS
+.PP
+Creates a native graphics font from a \fIwxFont\fR and a text colour.
+
+.PP
+Remark: For Direct2D graphics fonts can be created from TrueType fonts only.
+
+
+.RE
+.B
+\fBcreateFont(This, SizeInPixels, Facename, [Option]) ->\fR
+\fB                    wxGraphicsFont:wxGraphicsFont()\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsContext(),\fR
+\fB                        SizeInPixels :: number(),\fR
+\fB                        Facename :: unicode:chardata(),\fR
+\fB                        Option ::\fR
+\fB                            {flags, integer()} | {col, wx:wx_colour()}.\fR
+
+.br
+.RS
+.PP
+Creates a font object with the specified attributes.
+
+.PP
+The use of overload taking \fIwxFont\fR is preferred, see \fIwxGraphicsRenderer:createFont/4\fR for more details.
+
+.PP
+Remark: For Direct2D graphics fonts can be created from TrueType fonts only.
+
+.PP
+Since: 2.9.3
+
+
+.RE
+.B
+\fBcreateLinearGradientBrush(This, X1, Y1, X2, Y2, Stops) ->\fR
+\fB                                   wxGraphicsBrush:wxGraphicsBrush()\fR
+\fB                                   when\fR
+\fB                                       This :: wxGraphicsContext(),\fR
+\fB                                       X1 :: number(),\fR
+\fB                                       Y1 :: number(),\fR
+\fB                                       X2 :: number(),\fR
+\fB                                       Y2 :: number(),\fR
+\fB                                       Stops ::\fR
+\fB                                           wxGraphicsGradientStops:wxGraphicsGradientStops().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBcreateLinearGradientBrush(This, X1, Y1, X2, Y2, C1, C2) ->\fR
+\fB                                   wxGraphicsBrush:wxGraphicsBrush()\fR
+\fB                                   when\fR
+\fB                                       This :: wxGraphicsContext(),\fR
+\fB                                       X1 :: number(),\fR
+\fB                                       Y1 :: number(),\fR
+\fB                                       X2 :: number(),\fR
+\fB                                       Y2 :: number(),\fR
+\fB                                       C1 :: wx:wx_colour(),\fR
+\fB                                       C2 :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+\fI Creates a native brush with a linear gradient. The brush starts at (@a x1, @a y1) and ends at (@a x2, @a y2). Either just the start and end gradient colours (@a c1 and @a c2) or full set of gradient @a stops can be specified. The version taking wxGraphicsGradientStops is new in wxWidgets 2.9.1. \fR The \fImatrix\fR parameter was added in wxWidgets 3.1.3
+
+
+.RE
+.B
+\fBcreateMatrix(This, [Option]) ->\fR
+\fB                      wxGraphicsMatrix:wxGraphicsMatrix()\fR
+\fB                      when\fR
+\fB                          This :: wxGraphicsContext(),\fR
+\fB                          Option ::\fR
+\fB                              {a, number()} |\fR
+\fB                              {b, number()} |\fR
+\fB                              {c, number()} |\fR
+\fB                              {d, number()} |\fR
+\fB                              {tx, number()} |\fR
+\fB                              {ty, number()}.\fR
+
+.br
+.RS
+.PP
+Creates a native affine transformation matrix from the passed in values.
+
+.PP
+The default parameters result in an identity matrix.
+
+
+.RE
+.B
+\fBcreatePath(This) -> wxGraphicsPath:wxGraphicsPath()\fR
+\fB                    when This :: wxGraphicsContext().\fR
+
+.br
+.RS
+.PP
+Creates a native graphics path which is initially empty.
+
+
+.RE
+.B
+\fBcreatePen(This, Pen) -> wxGraphicsPen:wxGraphicsPen()\fR
+\fB                   when\fR
+\fB                       This :: wxGraphicsContext(), Pen :: wxPen:wxPen().\fR
+
+.br
+.RS
+.PP
+Creates a native pen from a \fIwxPen\fR.
+
+.PP
+Prefer to use the overload taking \fIwxGraphicsPenInfo\fR (not implemented in wx) unless you already have a \fIwxPen\fR as constructing one only to pass it to this method is wasteful.
+
+
+.RE
+.B
+\fBcreateRadialGradientBrush(This, StartX, StartY, EndX, EndY,\fR
+\fB                                Radius, Stops) ->\fR
+\fB                                   wxGraphicsBrush:wxGraphicsBrush()\fR
+\fB                                   when\fR
+\fB                                       This :: wxGraphicsContext(),\fR
+\fB                                       StartX :: number(),\fR
+\fB                                       StartY :: number(),\fR
+\fB                                       EndX :: number(),\fR
+\fB                                       EndY :: number(),\fR
+\fB                                       Radius :: number(),\fR
+\fB                                       Stops ::\fR
+\fB                                           wxGraphicsGradientStops:wxGraphicsGradientStops().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBcreateRadialGradientBrush(This, StartX, StartY, EndX, EndY,\fR
+\fB                                Radius, OColor, CColor) ->\fR
+\fB                                   wxGraphicsBrush:wxGraphicsBrush()\fR
+\fB                                   when\fR
+\fB                                       This :: wxGraphicsContext(),\fR
+\fB                                       StartX :: number(),\fR
+\fB                                       StartY :: number(),\fR
+\fB                                       EndX :: number(),\fR
+\fB                                       EndY :: number(),\fR
+\fB                                       Radius :: number(),\fR
+\fB                                       OColor :: wx:wx_colour(),\fR
+\fB                                       CColor :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+\fI Creates a native brush with a radial gradient. The brush originates at (@a startX, @a startY) and ends on a circle around (@a endX, @a endY) with the given @a radius. The gradient may be specified either by its start and end colours @a oColor and @a cColor or by a full set of gradient @a stops. The version taking wxGraphicsGradientStops is new in wxWidgets 2.9.1. \fR The ability to apply a transformation matrix to the gradient was added in 3.1.3
+
+
+.RE
+.B
+\fBdestroy(This :: wxGraphicsContext()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBdrawBitmap(This, Bmp, X, Y, W, H) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsContext(),\fR
+\fB                        Bmp :: wxBitmap:wxBitmap(),\fR
+\fB                        X :: number(),\fR
+\fB                        Y :: number(),\fR
+\fB                        W :: number(),\fR
+\fB                        H :: number().\fR
+
+.br
+.RS
+.PP
+Draws the bitmap.
+
+.PP
+In case of a mono bitmap, this is treated as a mask and the current brushed is used for filling.
+
+
+.RE
+.B
+\fBdrawEllipse(This, X, Y, W, H) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxGraphicsContext(),\fR
+\fB                         X :: number(),\fR
+\fB                         Y :: number(),\fR
+\fB                         W :: number(),\fR
+\fB                         H :: number().\fR
+
+.br
+.RS
+.PP
+Draws an ellipse.
+
+
+.RE
+.B
+\fBdrawIcon(This, Icon, X, Y, W, H) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsContext(),\fR
+\fB                      Icon :: wxIcon:wxIcon(),\fR
+\fB                      X :: number(),\fR
+\fB                      Y :: number(),\fR
+\fB                      W :: number(),\fR
+\fB                      H :: number().\fR
+
+.br
+.RS
+.PP
+Draws the icon.
+
+
+.RE
+.B
+\fBdrawLines(This, Points, [Option]) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxGraphicsContext(),\fR
+\fB                       Points :: [{X :: float(), Y :: float()}],\fR
+\fB                       Option :: {fillStyle, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Draws a polygon.
+
+
+.RE
+.B
+\fBdrawPath(This, Path, [Option]) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsContext(),\fR
+\fB                      Path :: wxGraphicsPath:wxGraphicsPath(),\fR
+\fB                      Option :: {fillStyle, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Draws the path by first filling and then stroking.
+
+
+.RE
+.B
+\fBdrawRectangle(This, X, Y, W, H) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxGraphicsContext(),\fR
+\fB                           X :: number(),\fR
+\fB                           Y :: number(),\fR
+\fB                           W :: number(),\fR
+\fB                           H :: number().\fR
+
+.br
+.RS
+.PP
+Draws a rectangle.
+
+
+.RE
+.B
+\fBdrawRoundedRectangle(This, X, Y, W, H, Radius) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxGraphicsContext(),\fR
+\fB                                  X :: number(),\fR
+\fB                                  Y :: number(),\fR
+\fB                                  W :: number(),\fR
+\fB                                  H :: number(),\fR
+\fB                                  Radius :: number().\fR
+
+.br
+.RS
+.PP
+Draws a rounded rectangle.
+
+
+.RE
+.B
+\fBdrawText(This, Str, X, Y) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsContext(),\fR
+\fB                      Str :: unicode:chardata(),\fR
+\fB                      X :: number(),\fR
+\fB                      Y :: number().\fR
+
+.br
+.RS
+.PP
+Draws text at the defined position.
+
+
+.RE
+.B
+\fBdrawText(This, Str, X, Y, Angle) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsContext(),\fR
+\fB                      Str :: unicode:chardata(),\fR
+\fB                      X :: number(),\fR
+\fB                      Y :: number(),\fR
+\fB                      Angle :: number();\fR
+\fB              (This, Str, X, Y, BackgroundBrush) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsContext(),\fR
+\fB                      Str :: unicode:chardata(),\fR
+\fB                      X :: number(),\fR
+\fB                      Y :: number(),\fR
+\fB                      BackgroundBrush ::\fR
+\fB                          wxGraphicsBrush:wxGraphicsBrush().\fR
+
+.br
+.RS
+.PP
+Draws text at the defined position.
+
+
+.RE
+.B
+\fBdrawText(This, Str, X, Y, Angle, BackgroundBrush) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsContext(),\fR
+\fB                      Str :: unicode:chardata(),\fR
+\fB                      X :: number(),\fR
+\fB                      Y :: number(),\fR
+\fB                      Angle :: number(),\fR
+\fB                      BackgroundBrush ::\fR
+\fB                          wxGraphicsBrush:wxGraphicsBrush().\fR
+
+.br
+.RS
+.PP
+Draws text at the defined position.
+
+
+.RE
+.B
+\fBfillPath(This, Path, [Option]) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsContext(),\fR
+\fB                      Path :: wxGraphicsPath:wxGraphicsPath(),\fR
+\fB                      Option :: {fillStyle, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Fills the path with the current brush.
+
+
+.RE
+.B
+\fBgetPartialTextExtents(This, Text) -> [number()]\fR
+\fB                               when\fR
+\fB                                   This :: wxGraphicsContext(),\fR
+\fB                                   Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Fills the \fIwidths\fR array with the widths from the beginning of \fItext\fR to the corresponding character of \fItext\fR.
+
+
+.RE
+.B
+\fBgetTextExtent(This, Text) -> Result\fR
+\fB                       when\fR
+\fB                           Result ::\fR
+\fB                               {Width :: number(),\fR
+\fB                                Height :: number(),\fR
+\fB                                Descent :: number(),\fR
+\fB                                ExternalLeading :: number()},\fR
+\fB                           This :: wxGraphicsContext(),\fR
+\fB                           Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Gets the dimensions of the string using the currently selected font.
+
+
+.RE
+.B
+\fBgetTransform(This) -> wxGraphicsMatrix:wxGraphicsMatrix()\fR
+\fB                      when This :: wxGraphicsContext().\fR
+
+.br
+.RS
+.PP
+Gets the current transformation matrix of this context.
+
+
+.RE
+.B
+\fBresetClip(This) -> ok when This :: wxGraphicsContext().\fR
+
+.br
+.RS
+.PP
+Resets the clipping to original shape.
+
+
+.RE
+.B
+\fBrotate(This, Angle) -> ok\fR
+\fB                when This :: wxGraphicsContext(), Angle :: number().\fR
+
+.br
+.RS
+.PP
+Rotates the current transformation matrix (in radians).
+
+
+.RE
+.B
+\fBscale(This, XScale, YScale) -> ok\fR
+\fB               when\fR
+\fB                   This :: wxGraphicsContext(),\fR
+\fB                   XScale :: number(),\fR
+\fB                   YScale :: number().\fR
+
+.br
+.RS
+.PP
+Scales the current transformation matrix.
+
+
+.RE
+.B
+\fBsetBrush(This, Brush) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsContext(),\fR
+\fB                      Brush ::\fR
+\fB                          wxGraphicsBrush:wxGraphicsBrush() |\fR
+\fB                          wxBrush:wxBrush().\fR
+
+.br
+.RS
+.PP
+Sets the brush for filling paths.
+
+
+.RE
+.B
+\fBsetFont(This, Font) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxGraphicsContext(),\fR
+\fB                     Font :: wxGraphicsFont:wxGraphicsFont().\fR
+
+.br
+.RS
+.PP
+Sets the font for drawing text.
+
+
+.RE
+.B
+\fBsetFont(This, Font, Colour) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxGraphicsContext(),\fR
+\fB                     Font :: wxFont:wxFont(),\fR
+\fB                     Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the font for drawing text.
+
+.PP
+Remark: For Direct2D only TrueType fonts can be used.
+
+
+.RE
+.B
+\fBsetPen(This, Pen) -> ok\fR
+\fB                when\fR
+\fB                    This :: wxGraphicsContext(),\fR
+\fB                    Pen :: wxPen:wxPen() | wxGraphicsPen:wxGraphicsPen().\fR
+
+.br
+.RS
+.PP
+Sets the pen used for stroking.
+
+
+.RE
+.B
+\fBsetTransform(This, Matrix) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxGraphicsContext(),\fR
+\fB                          Matrix :: wxGraphicsMatrix:wxGraphicsMatrix().\fR
+
+.br
+.RS
+.PP
+Sets the current transformation matrix of this context.
+
+
+.RE
+.B
+\fBstrokeLine(This, X1, Y1, X2, Y2) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsContext(),\fR
+\fB                        X1 :: number(),\fR
+\fB                        Y1 :: number(),\fR
+\fB                        X2 :: number(),\fR
+\fB                        Y2 :: number().\fR
+
+.br
+.RS
+.PP
+Strokes a single line.
+
+
+.RE
+.B
+\fBstrokeLines(This, Points) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxGraphicsContext(),\fR
+\fB                         Points :: [{X :: float(), Y :: float()}].\fR
+
+.br
+.RS
+.PP
+Stroke lines connecting all the points.
+
+.PP
+Unlike the other overload of this function, this method draws a single polyline and not a number of disconnected lines.
+
+
+.RE
+.B
+\fBstrokePath(This, Path) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsContext(),\fR
+\fB                        Path :: wxGraphicsPath:wxGraphicsPath().\fR
+
+.br
+.RS
+.PP
+Strokes along a path with the current pen.
+
+
+.RE
+.B
+\fBtranslate(This, Dx, Dy) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxGraphicsContext(),\fR
+\fB                       Dx :: number(),\fR
+\fB                       Dy :: number().\fR
+
+.br
+.RS
+.PP
+Translates the current transformation matrix.
+
+
+.RE

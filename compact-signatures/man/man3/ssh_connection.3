@@ -1,0 +1,589 @@
+.TH ssh_connection 3 "ssh 5.5.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ssh_connection \- This module provides API functions to send SSH Connection Protocol events to the other side of an SSH channel.
+
+.SH DESCRIPTION
+.PP
+The SSH Connection Protocol (RFC 4254) is used by clients and servers, that is, SSH channels, to communicate over the SSH connection. The API functions in this module send SSH Connection Protocol events, which are received as messages by the remote channel handling the remote channel. The Erlang format of thoose messages is (see also below):
+
+.PP
+\fI{ssh_cm,\fR \fIssh:connection_ref/0\fR \fI,\fR \fIchannel_msg/0\fR \fI}\fR
+
+.PP
+If the \fIssh_client_channel\fR behavior is used to implement the channel process, these messages are handled by handle_ssh_msg/2.
+
+.SH DATA TYPES
+.LP
+.B
+\fBchannel_id() :: ssh:channel_id().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBchannel_msg() ::\fR
+\fB          data_ch_msg() |\fR
+\fB          eof_ch_msg() |\fR
+\fB          closed_ch_msg() |\fR
+\fB          pty_ch_msg() |\fR
+\fB          env_ch_msg() |\fR
+\fB          shell_ch_msg() |\fR
+\fB          exec_ch_msg() |\fR
+\fB          signal_ch_msg() |\fR
+\fB          window_change_ch_msg() |\fR
+\fB          exit_status_ch_msg() |\fR
+\fB          exit_signal_ch_msg().\fR
+
+.br
+.RS
+.PP
+As mentioned in the introduction, the SSH Connection Protocol events are handled as messages. When writing a channel handling process without using the support by the \fIssh_client_channel\fR behavior the process must handle thoose messages.
+
+
+.RE
+.B
+\fBclosed_ch_msg() :: {closed, ssh:channel_id()}.\fR
+
+.br
+.RS
+.PP
+This event is sent as a result of calling ssh_connection:close/2. Both the handling of this event and sending it are taken care of by the \fIssh_client_channel\fR behavior.
+
+
+.RE
+.B
+\fBconnection_ref() :: ssh:connection_ref().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdata_ch_msg() ::\fR
+\fB          {data,\fR
+\fB           ssh:channel_id(),\fR
+\fB           ssh_data_type_code(),\fR
+\fB           Data :: binary()}.\fR
+
+.br
+.RS
+.PP
+Data has arrived on the channel. This event is sent as a result of calling ssh_connection:send/3,4,5.
+
+
+.RE
+.B
+\fBenv_ch_msg() ::\fR
+\fB          {env,\fR
+\fB           ssh:channel_id(),\fR
+\fB           want_reply(),\fR
+\fB           Var :: string(),\fR
+\fB           Value :: string()}.\fR
+
+.br
+.RS
+.PP
+Environment variables can be passed to the shell/command to be started later. This event is sent as a result of calling ssh_connection:setenv/5.
+
+
+.RE
+.B
+\fBeof_ch_msg() :: {eof, ssh:channel_id()}.\fR
+
+.br
+.RS
+.PP
+Indicates that the other side sends no more data. This event is sent as a result of calling ssh_connection:send_eof/2.
+
+
+.RE
+.B
+\fBevent() :: {ssh_cm, ssh:connection_ref(), channel_msg()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexec_ch_msg() ::\fR
+\fB          {exec, ssh:channel_id(), want_reply(), Command :: string()}.\fR
+
+.br
+.RS
+.PP
+This message requests that the server starts execution of the given command. This event is sent as a result of calling ssh_connection:exec/4 .
+
+
+.RE
+.B
+\fBexit_signal_ch_msg() ::\fR
+\fB          {exit_signal,\fR
+\fB           ssh:channel_id(),\fR
+\fB           ExitSignal :: string(),\fR
+\fB           ErrorMsg :: string(),\fR
+\fB           LanguageString :: string()}.\fR
+
+.br
+.RS
+.PP
+A remote execution can terminate violently because of a signal. Then this message can be received. For details on valid string values, see RFC 4254 Section 6.10, which shows a special case of these signals.
+
+
+.RE
+.B
+\fBexit_status_ch_msg() ::\fR
+\fB          {exit_status,\fR
+\fB           ssh:channel_id(),\fR
+\fB           ExitStatus :: non_neg_integer()}.\fR
+
+.br
+.RS
+.PP
+When the command running at the other end terminates, the following message can be sent to return the exit status of the command. A zero \fIexit_status\fR usually means that the command terminated successfully. This event is sent as a result of calling ssh_connection:exit_status/3.
+
+
+.RE
+.B
+\fBpty_ch_msg() ::\fR
+\fB          {pty,\fR
+\fB           ssh:channel_id(),\fR
+\fB           want_reply(),\fR
+\fB           {Terminal :: string(),\fR
+\fB            CharWidth :: non_neg_integer(),\fR
+\fB            RowHeight :: non_neg_integer(),\fR
+\fB            PixelWidth :: non_neg_integer(),\fR
+\fB            PixelHeight :: non_neg_integer(),\fR
+\fB            TerminalModes :: [term_mode()]}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBreason() :: closed | timeout.\fR
+
+.br
+.RS
+.PP
+The result of a call.
+
+.PP
+If the request reached the peer, was handled and the response reached the requesting node the \fIreq_status/0\fR is the status reported from the peer.
+
+.PP
+If not, the \fIreason/0\fR indicates what went wrong:
+
+closed
+.RS 2
+indicates that the channel or connection was closed when trying to send the request
+
+
+.RE
+
+timeout
+.RS 2
+indicates that the operation exceeded a time limit
+
+
+.RE
+
+
+.RE
+.B
+\fBreq_status() :: success | failure.\fR
+
+.br
+.RS
+.PP
+The status of a request. Corresponds to the \fISSH_MSG_CHANNEL_SUCCESS\fR and \fISSH_MSG_CHANNEL_FAILURE\fR values in RFC 4254, Section 5.4.
+
+
+.RE
+.B
+\fBresult() :: req_status() | {error, reason()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBshell_ch_msg() :: {shell, ssh:channel_id(), want_reply()}.\fR
+
+.br
+.RS
+.PP
+This message requests that the user default shell is started at the other end. This event is sent as a result of calling ssh_connection:shell/2.
+
+
+.RE
+.B
+\fBsignal_ch_msg() ::\fR
+\fB          {signal, ssh:channel_id(), SignalName :: string()}.\fR
+
+.br
+.RS
+.PP
+A signal can be delivered to the remote process/service using the following message. Some systems do not support signals, in which case they are to ignore this message. There is currently no function to generate this event as the signals referred to are on OS-level and not something generated by an Erlang program.
+
+
+.RE
+.B
+\fBssh_data_type_code() :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+The valid values are \fI0\fR ("normal") and \fI1\fR ("stderr"), see RFC 4254, Section 5.2.
+
+
+.RE
+.B
+\fBterm_mode() ::\fR
+\fB          {Opcode :: atom() | byte(), Value :: non_neg_integer()}.\fR
+
+.br
+.RS
+.PP
+A pseudo-terminal has been requested for the session. \fITerminal\fR is the value of the TERM environment variable value, that is, \fIvt100\fR. Zero dimension parameters must be ignored. The character/row dimensions override the pixel dimensions (when non-zero). Pixel dimensions refer to the drawable area of the window. \fIOpcode\fR in the \fITerminalModes\fR list is the mnemonic name, represented as a lowercase Erlang atom, defined in RFC 4254, Section 8. It can also be an \fIOpcode\fR if the mnemonic name is not listed in the RFC. Example: \fIOP code: 53, mnemonic name ECHO erlang atom: echo\fR. This event is sent as a result of calling ssh_connection:ptty_alloc/4.
+
+
+.RE
+.B
+\fBwant_reply() :: boolean().\fR
+
+.br
+.RS
+.PP
+Messages that include a \fIWantReply\fR expect the channel handling process to call ssh_connection:reply_request/4 with the boolean value of \fIWantReply\fR as the second argument.
+
+
+.RE
+.B
+\fBwindow_change_ch_msg() ::\fR
+\fB          {window_change,\fR
+\fB           ssh:channel_id(),\fR
+\fB           CharWidth :: non_neg_integer(),\fR
+\fB           RowHeight :: non_neg_integer(),\fR
+\fB           PixelWidth :: non_neg_integer(),\fR
+\fB           PixelHeight :: non_neg_integer()}.\fR
+
+.br
+.RS
+.PP
+When the window (terminal) size changes on the client side, it \fIcan\fR send a message to the server side to inform it of the new dimensions. No API function generates this event.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadjust_window(ConnectionRef, ChannelId, NumOfBytes) -> ok\fR
+\fB                       when\fR
+\fB                           ConnectionRef :: ssh:connection_ref(),\fR
+\fB                           ChannelId :: ssh:channel_id(),\fR
+\fB                           NumOfBytes :: integer().\fR
+
+.br
+.RS
+.PP
+Adjusts the SSH flow control window. This is to be done by both the client- and server-side channel processes.
+
+.PP
+\fBNOTE: \fRChannels implemented with the \fIssh_client_channel\fR behavior do not normally need to call this function as flow control is handled by the behavior. The behavior adjusts the window every time the callback handle_ssh_msg/2 returns after processing channel data.
+
+
+
+.RE
+.B
+\fBclose(ConnectionRef, ChannelId) -> ok\fR
+\fB               when\fR
+\fB                   ConnectionRef :: ssh:connection_ref(),\fR
+\fB                   ChannelId :: ssh:channel_id().\fR
+
+.br
+.RS
+.PP
+A server- or client-channel process can choose to close their session by sending a close event.
+
+.PP
+\fBNOTE: \fRThis function is called by the \fIssh_client_channel\fR behavior when the channel is terminated, see \fIssh_client_channel\fR. Thus, channels implemented with the behavior are not to call this function explicitly.
+
+
+
+.RE
+.B
+\fBexec(ConnectionRef, ChannelId, Command, Timeout) -> result()\fR
+\fB              when\fR
+\fB                  ConnectionRef :: ssh:connection_ref(),\fR
+\fB                  ChannelId :: ssh:channel_id(),\fR
+\fB                  Command :: string(),\fR
+\fB                  Timeout :: timeout().\fR
+
+.br
+.RS
+.PP
+Is to be called by a client-channel process to request that the server starts executing the given command. The result is several messages according to the following pattern. The last message is a channel close message, as the \fIexec\fR request is a one-time execution that closes the channel when it is done.
+
+N x data message(s)
+.RS 2
+The result of executing the command can be only one line or thousands of lines depending on the command.
+
+
+.RE
+
+0 or 1 x eof message
+.RS 2
+Indicates that no more data is to be sent.
+
+
+.RE
+
+0 or 1 x exit signal message
+.RS 2
+Not all systems send signals. For details on valid string values, see RFC 4254, Section 6.10
+
+
+.RE
+
+0 or 1 x exit status message
+.RS 2
+It is recommended by the SSH Connection Protocol to send this message, but that is not always the case.
+
+
+.RE
+
+1 x closed status message
+.RS 2
+Indicates that the 
+\fIssh_client_channel\fR started for the execution of the command has now been shut down.
+
+.RE
+
+.PP
+See the User's Guide section on One-Time Execution for examples.
+
+.PP
+\fBNOTE: \fRIn case when command generates large amount of output data, manual window adjustment might be necessary in order to receive it. see \fIssh_connectino:adjust_window/3\fR
+
+
+
+.RE
+.B
+\fBexit_status(ConnectionRef, ChannelId, Status) -> ok\fR
+\fB                     when\fR
+\fB                         ConnectionRef :: ssh:connection_ref(),\fR
+\fB                         ChannelId :: ssh:channel_id(),\fR
+\fB                         Status :: integer().\fR
+
+.br
+.RS
+.PP
+Is to be called by a server-channel process to send the exit status of a command to the client.
+
+
+.RE
+.B
+\fBptty_alloc(ConnectionRef, ChannelId, Options, Timeout) -> result()\fR
+\fB                    when\fR
+\fB                        ConnectionRef :: ssh:connection_ref(),\fR
+\fB                        ChannelId :: ssh:channel_id(),\fR
+\fB                        Options :: proplists:proplist(),\fR
+\fB                        Timeout :: timeout().\fR
+
+.br
+.RS
+.PP
+Sends an SSH Connection Protocol \fIpty_req\fR, to allocate a pseudo-terminal. Is to be called by an SSH client process.
+
+.PP
+Options:
+
+{term, string()}
+.RS 2
+Defaults to 
+\fIos:getenv("TERM")\fR or \fIvt100\fR if it is undefined.
+
+.RE
+
+{width, integer()}
+.RS 2
+Defaults to 80 if 
+\fIpixel_width\fR is not defined.
+
+.RE
+
+{height, integer()}
+.RS 2
+Defaults to 24 if 
+\fIpixel_height\fR is not defined.
+
+.RE
+
+{pixel_width, integer()}
+.RS 2
+Is disregarded if 
+\fIwidth\fR is defined.
+
+.RE
+
+{pixel_height, integer()}
+.RS 2
+Is disregarded if 
+\fIheight\fR is defined.
+
+.RE
+
+{pty_opts, [{posix_atom(), integer()}]}
+.RS 2
+Option can be an empty list. Otherwise, see possible 
+\fIPOSIX\fR names in Section 8 in RFC 4254.
+
+.RE
+
+
+.RE
+.B
+\fBreply_request(ConnectionRef, WantReply, Status, ChannelId) -> ok\fR
+\fB                       when\fR
+\fB                           ConnectionRef :: ssh:connection_ref(),\fR
+\fB                           WantReply :: boolean(),\fR
+\fB                           Status :: req_status(),\fR
+\fB                           ChannelId :: ssh:channel_id().\fR
+
+.br
+.RS
+.PP
+Sends status replies to requests where the requester has stated that it wants a status report, that is, \fIWantReply = true\fR. If \fIWantReply\fR is \fIfalse\fR, calling this function becomes a "noop". Is to be called while handling an SSH Connection Protocol message containing a \fIWantReply\fR boolean value.
+
+
+.RE
+.B
+\fBsend(connection_ref(), channel_id(), iodata(), timeout()) ->\fR
+\fB              ok | {error, reason()};\fR
+\fB          (connection_ref(),\fR
+\fB           channel_id(),\fR
+\fB           ssh_data_type_code(),\fR
+\fB           iodata()) ->\fR
+\fB              ok | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Depending on input arguments equivalent to one of \fIsend/5\fR calls specified below.
+
+.PP
+Equivalent to send(ConnectionRef, ChannelId, 0, Data, TimeOut) if called with TimeOut being integer.
+
+.PP
+Equivalent to send(ConnectionRef, ChannelId, 0, Data, infinity) if called with TimeOut being infinity atom.
+
+.PP
+Equivalent to send(ConnectionRef, ChannelId, Type, Data, infinity) if called with last argument which is not integer or infinity atom.
+
+
+.RE
+.B
+\fBsend(connection_ref(),\fR
+\fB           channel_id(),\fR
+\fB           ssh_data_type_code(),\fR
+\fB           iodata(),\fR
+\fB           timeout()) ->\fR
+\fB              ok | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Is to be called by client- and server-channel processes to send data to each other.
+
+.PP
+The function \fIsubsystem/4\fR and subsequent calls of \fIsend/3,4,5\fR must be executed in the same process.
+
+
+.RE
+.B
+\fBsend_eof(ConnectionRef, ChannelId) -> ok | {error, closed}\fR
+\fB                  when\fR
+\fB                      ConnectionRef :: ssh:connection_ref(),\fR
+\fB                      ChannelId :: ssh:channel_id().\fR
+
+.br
+.RS
+.PP
+Sends EOF on channel \fIChannelId\fR.
+
+
+.RE
+.B
+\fBsession_channel(ConnectionRef, InitialWindowSize, MaxPacketSize,\fR
+\fB                      Timeout) ->\fR
+\fB                         Result\fR
+\fB                         when\fR
+\fB                             ConnectionRef :: ssh:connection_ref(),\fR
+\fB                             InitialWindowSize ::\fR
+\fB                                 pos_integer() | undefined,\fR
+\fB                             MaxPacketSize :: pos_integer() | undefined,\fR
+\fB                             Timeout :: timeout(),\fR
+\fB                             Result ::\fR
+\fB                                 {ok, ssh:channel_id()} |\fR
+\fB                                 {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a channel for an SSH session. The channel id returned from this function is the id used as input to the other functions in this module.
+
+
+.RE
+.B
+\fBsetenv(ConnectionRef, ChannelId, Var, Value, Timeout) -> success\fR
+\fB                when\fR
+\fB                    ConnectionRef :: ssh:connection_ref(),\fR
+\fB                    ChannelId :: ssh:channel_id(),\fR
+\fB                    Var :: string(),\fR
+\fB                    Value :: string(),\fR
+\fB                    Timeout :: timeout().\fR
+
+.br
+.RS
+.PP
+Environment variables can be passed before starting the shell/command. Is to be called by a client channel processes.
+
+
+.RE
+.B
+\fBshell(ConnectionRef, ChannelId) -> Result\fR
+\fB               when\fR
+\fB                   ConnectionRef :: ssh:connection_ref(),\fR
+\fB                   ChannelId :: ssh:channel_id(),\fR
+\fB                   Result :: ok | success | failure | {error, timeout}.\fR
+
+.br
+.RS
+.PP
+Is to be called by a client channel process to request that the user default shell (typically defined in /etc/passwd in Unix systems) is executed at the server end.
+
+.PP
+Note: the return value is \fIok\fR instead of \fIsuccess\fR unlike in other functions in this module. This is a fault that was introduced so long ago that any change would break a large number of existing software.
+
+
+.RE
+.B
+\fBsubsystem(ConnectionRef, ChannelId, Subsystem, Timeout) ->\fR
+\fB                   result()\fR
+\fB                   when\fR
+\fB                       ConnectionRef :: ssh:connection_ref(),\fR
+\fB                       ChannelId :: ssh:channel_id(),\fR
+\fB                       Subsystem :: string(),\fR
+\fB                       Timeout :: timeout().\fR
+
+.br
+.RS
+.PP
+Is to be called by a client-channel process for requesting to execute a predefined subsystem on the server.
+
+.PP
+The function \fIsubsystem/4\fR and subsequent calls of send/3,4,5 must be executed in the same process.
+
+
+.RE

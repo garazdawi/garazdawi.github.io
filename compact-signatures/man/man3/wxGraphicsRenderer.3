@@ -1,0 +1,195 @@
+.TH wxGraphicsRenderer 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGraphicsRenderer \- A \fIwxGraphicsRenderer\fR is the instance corresponding to the rendering engine used.
+
+.SH DESCRIPTION
+.PP
+There may be multiple instances on a system, if there are different rendering engines present, but there is always only one instance per engine. This instance is pointed back to by all objects created by it (\fIwxGraphicsContext\fR, \fIwxGraphicsPath\fR etc.) and can be retrieved through their \fIwxGraphicsObject:getRenderer/1\fR method. Therefore you can create an additional instance of a path etc. by calling \fIwxGraphicsObject:getRenderer/1\fR and then using the appropriate CreateXXX() function of that renderer.
+
+.PP
+wxWidgets docs: wxGraphicsRenderer
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGraphicsRenderer() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreateBrush(This, Brush) -> wxGraphicsBrush:wxGraphicsBrush()\fR
+\fB                     when\fR
+\fB                         This :: wxGraphicsRenderer(),\fR
+\fB                         Brush :: wxBrush:wxBrush().\fR
+
+.br
+.RS
+.PP
+Creates a native brush from a \fIwxBrush\fR.
+
+
+.RE
+.B
+\fBcreateContext(This, WindowDC) ->\fR
+\fB                       wxGraphicsContext:wxGraphicsContext()\fR
+\fB                       when\fR
+\fB                           This :: wxGraphicsRenderer(),\fR
+\fB                           WindowDC ::\fR
+\fB                               wxWindowDC:wxWindowDC() |\fR
+\fB                               wxWindow:wxWindow() |\fR
+\fB                               wxMemoryDC:wxMemoryDC().\fR
+
+.br
+.RS
+.PP
+Creates a \fIwxGraphicsContext\fR from a \fIwxWindowDC\fR.
+
+
+.RE
+.B
+\fBcreateFont(This, SizeInPixels, Facename) ->\fR
+\fB                    wxGraphicsFont:wxGraphicsFont()\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsRenderer(),\fR
+\fB                        SizeInPixels :: number(),\fR
+\fB                        Facename :: unicode:chardata();\fR
+\fB                (This, Font, [Option]) ->\fR
+\fB                    wxGraphicsFont:wxGraphicsFont()\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsRenderer(),\fR
+\fB                        Font :: wxFont:wxFont(),\fR
+\fB                        Option :: {col, wx:wx_colour()}.\fR
+
+.br
+.RS
+.PP
+Creates a native graphics font from a \fIwxFont\fR and a text colour.
+
+
+.RE
+.B
+\fBcreateFont(This, SizeInPixels, Facename, [Option]) ->\fR
+\fB                    wxGraphicsFont:wxGraphicsFont()\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsRenderer(),\fR
+\fB                        SizeInPixels :: number(),\fR
+\fB                        Facename :: unicode:chardata(),\fR
+\fB                        Option ::\fR
+\fB                            {flags, integer()} | {col, wx:wx_colour()}.\fR
+
+.br
+.RS
+.PP
+Creates a graphics font with the given characteristics.
+
+.PP
+If possible, the \fIcreateFont/4\fR overload taking \fIwxFont\fR should be used instead. The main advantage of this overload is that it can be used without X server connection under Unix when using Cairo.
+
+.PP
+Since: 2.9.3
+
+
+.RE
+.B
+\fBcreateLinearGradientBrush(This, X1, Y1, X2, Y2, Stops) ->\fR
+\fB                                   wxGraphicsBrush:wxGraphicsBrush()\fR
+\fB                                   when\fR
+\fB                                       This :: wxGraphicsRenderer(),\fR
+\fB                                       X1 :: number(),\fR
+\fB                                       Y1 :: number(),\fR
+\fB                                       X2 :: number(),\fR
+\fB                                       Y2 :: number(),\fR
+\fB                                       Stops ::\fR
+\fB                                           wxGraphicsGradientStops:wxGraphicsGradientStops().\fR
+
+.br
+.RS
+.PP
+Creates a native brush with a linear gradient.
+
+.PP
+Stops support is new since wxWidgets 2.9.1, previously only the start and end colours could be specified.
+
+.PP
+The ability to apply a transformation matrix to the gradient was added in 3.1.3
+
+
+.RE
+.B
+\fBcreateMatrix(This, [Option]) ->\fR
+\fB                      wxGraphicsMatrix:wxGraphicsMatrix()\fR
+\fB                      when\fR
+\fB                          This :: wxGraphicsRenderer(),\fR
+\fB                          Option ::\fR
+\fB                              {a, number()} |\fR
+\fB                              {b, number()} |\fR
+\fB                              {c, number()} |\fR
+\fB                              {d, number()} |\fR
+\fB                              {tx, number()} |\fR
+\fB                              {ty, number()}.\fR
+
+.br
+.RS
+.PP
+Creates a native affine transformation matrix from the passed in values.
+
+.PP
+The defaults result in an identity matrix.
+
+
+.RE
+.B
+\fBcreatePath(This) -> wxGraphicsPath:wxGraphicsPath()\fR
+\fB                    when This :: wxGraphicsRenderer().\fR
+
+.br
+.RS
+.PP
+Creates a native graphics path which is initially empty.
+
+
+.RE
+.B
+\fBcreateRadialGradientBrush(This, StartX, StartY, EndX, EndY,\fR
+\fB                                Radius, Stops) ->\fR
+\fB                                   wxGraphicsBrush:wxGraphicsBrush()\fR
+\fB                                   when\fR
+\fB                                       This :: wxGraphicsRenderer(),\fR
+\fB                                       StartX :: number(),\fR
+\fB                                       StartY :: number(),\fR
+\fB                                       EndX :: number(),\fR
+\fB                                       EndY :: number(),\fR
+\fB                                       Radius :: number(),\fR
+\fB                                       Stops ::\fR
+\fB                                           wxGraphicsGradientStops:wxGraphicsGradientStops().\fR
+
+.br
+.RS
+.PP
+Creates a native brush with a radial gradient.
+
+.PP
+Stops support is new since wxWidgets 2.9.1, previously only the start and end colours could be specified.
+
+.PP
+The ability to apply a transformation matrix to the gradient was added in 3.1.3
+
+
+.RE
+.B
+\fBgetDefaultRenderer() -> wxGraphicsRenderer().\fR
+
+.br
+.RS
+.PP
+Returns the default renderer on this platform.
+
+.PP
+On macOS this is the Core Graphics (a.k.a. Quartz 2D) renderer, on MSW the GDIPlus renderer, and on GTK we currently default to the Cairo renderer.
+
+
+.RE

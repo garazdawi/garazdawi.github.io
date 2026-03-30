@@ -1,0 +1,191 @@
+.TH wxJoystickEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxJoystickEvent \- This event class contains information about joystick events, particularly events received by windows.
+
+.SH DESCRIPTION
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxJoystickEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxJoystickEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxJoystick() :: #wxJoystick{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxJoystickEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxJoystickEventType() ::\fR
+\fB          joy_button_down | joy_button_up | joy_move | joy_zmove.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbuttonDown(This, [Option]) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxJoystickEvent(),\fR
+\fB                        Option :: {but, integer()}.\fR
+
+.br
+.RS
+.PP
+Returns true if the event was a down event from the specified button (or any button).
+
+
+.RE
+.B
+\fBbuttonIsDown(This, [Option]) -> boolean()\fR
+\fB                      when\fR
+\fB                          This :: wxJoystickEvent(),\fR
+\fB                          Option :: {but, integer()}.\fR
+
+.br
+.RS
+.PP
+Returns true if the specified button (or any button) was in a down state.
+
+
+.RE
+.B
+\fBbuttonUp(This, [Option]) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxJoystickEvent(),\fR
+\fB                      Option :: {but, integer()}.\fR
+
+.br
+.RS
+.PP
+Returns true if the event was an up event from the specified button (or any button).
+
+
+.RE
+.B
+\fBgetButtonChange(This) -> integer() when This :: wxJoystickEvent().\fR
+
+.br
+.RS
+.PP
+Returns the identifier of the button changing state.
+
+.PP
+The return value is where \fIn\fR is the index of the button changing state, which can also be retrieved using \fIGetButtonOrdinal()\fR (not implemented in wx).
+
+.PP
+Note that for \fIn\fR equal to 1, 2, 3 or 4 there are predefined \fIwxJOY_BUTTONn\fR constants which can be used for more clarity, however these constants are not defined for the buttons beyond the first four.
+
+
+.RE
+.B
+\fBgetButtonState(This) -> integer() when This :: wxJoystickEvent().\fR
+
+.br
+.RS
+.PP
+Returns the down state of the buttons.
+
+.PP
+This is a \fIwxJOY_BUTTONn\fR identifier, where \fIn\fR is one of 1, 2, 3, 4.
+
+
+.RE
+.B
+\fBgetJoystick(This) -> integer() when This :: wxJoystickEvent().\fR
+
+.br
+.RS
+.PP
+Returns the identifier of the joystick generating the event - one of wxJOYSTICK1 and wxJOYSTICK2.
+
+
+.RE
+.B
+\fBgetPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                     when This :: wxJoystickEvent().\fR
+
+.br
+.RS
+.PP
+Returns the x, y position of the joystick event.
+
+.PP
+These coordinates are valid for all the events except wxEVT_JOY_ZMOVE.
+
+
+.RE
+.B
+\fBgetZPosition(This) -> integer() when This :: wxJoystickEvent().\fR
+
+.br
+.RS
+.PP
+Returns the z position of the joystick event.
+
+.PP
+This method can only be used for wxEVT_JOY_ZMOVE events.
+
+
+.RE
+.B
+\fBisButton(This) -> boolean() when This :: wxJoystickEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if this was a button up or down event (\fInot\fR 'is any button down?').
+
+
+.RE
+.B
+\fBisMove(This) -> boolean() when This :: wxJoystickEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if this was an x, y move event.
+
+
+.RE
+.B
+\fBisZMove(This) -> boolean() when This :: wxJoystickEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if this was a z move event.
+
+
+.RE

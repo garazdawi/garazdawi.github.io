@@ -1,0 +1,158 @@
+.TH wxTextEntryDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxTextEntryDialog \- This class represents a dialog that requests a one-line text string from the user.
+
+.SH DESCRIPTION
+.PP
+It is implemented as a generic wxWidgets dialog.
+
+.PP
+See: Overview cmndlg
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxTextEntryDialog
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxTextEntryDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxTextEntryDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetValue(This) -> unicode:charlist()\fR
+\fB                  when This :: wxTextEntryDialog().\fR
+
+.br
+.RS
+.PP
+Returns the text that the user has entered if the user has pressed OK, or the original value if the user has pressed Cancel.
+
+
+.RE
+.B
+\fBnew() -> wxTextEntryDialog().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+.PP
+Call \fICreate()\fR (not implemented in wx) to really create the dialog later.
+
+.PP
+Since: 2.9.5
+
+
+.RE
+.B
+\fBnew(Parent, Message, [Option]) -> wxTextEntryDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Message :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {caption, unicode:chardata()} |\fR
+\fB                     {value, unicode:chardata()} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Use \fIwxDialog:showModal/1\fR to show the dialog.
+
+.PP
+See \fICreate()\fR (not implemented in wx) method for parameter description.
+
+
+.RE
+.B
+\fBsetValue(This, Value) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxTextEntryDialog(),\fR
+\fB                      Value :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the default text value.
+
+
+.RE

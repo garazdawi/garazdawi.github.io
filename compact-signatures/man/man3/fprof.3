@@ -1,0 +1,900 @@
+.TH fprof 3 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+fprof \- A Time Profiling Tool using trace to file for minimal runtime performance impact.
+
+.SH DESCRIPTION
+.PP
+This module is used to profile a program to find out how the execution time is used. Tracing to file is used to minimize the runtime performance degradation.
+
+.PP
+The \fIfprof\fR module uses tracing to collect profiling data, hence there is no need for special compilation of any module to be profiled. When it starts tracing, \fIfprof\fR will erase all previous tracing in the node and set the necessary trace flags on the profiling target processes as well as local call trace on all functions in all loaded modules and all modules to be loaded. \fIfprof\fR disable all tracing in the node when it stops tracing.
+
+.PP
+\fIfprof\fR presents both \fIown time\fR that is, how much time a function has used for its own execution, and \fIaccumulated time\fR that is, including called functions. All presented times are collected using trace timestamps. \fIfprof\fR tries to collect CPU time timestamps, if the host machine OS supports it. Therefore, the times can be wallclock times and OS scheduling will randomly strike all called functions in a presumably fair way.
+
+.PP
+However, if the profiling time is short, and the host machine OS does not support high resolution CPU time measurements, a few OS schedulings can show up as ridiculously long execution times for functions doing practically nothing. As an example, it has been observed that a function that more or less just composing a tuple, was running 100 times slower than normal. When tracing was repeated, the execution time was normal.
+
+.PP
+Profiling is essentially done in 3 steps:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Tracing: to a file. The trace data contains entries for function calls, returns to function, process scheduling, other process related events (for example \fIspawn\fR), and garbage collection. All trace entries are timestamped.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Profiling: the trace file is read, the execution call stack is simulated, and raw profile data is calculated from the simulated call stack and the trace timestamps. The profile data is stored in the \fIfprof\fR server state. During this step the trace data may be dumped in text format to file or console.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Analysing: the raw profile data is sorted, filtered and dumped in text format either to file or console. The text format intended to be both readable for a human reader, as well as parsable with the standard erlang parsing tools.
+
+.RE
+
+.PP
+Since \fIfprof\fR sends trace data to afile, the runtime performance degradation is minimized, but still far from negligible, especially for programs that themselves use the filesystem heavily. Where the trace file is placed is also important, for example, on Unix systems \fI/tmp\fR is usually a good choice since it is essentially a RAM disk, while any network-mounted disk is a bad idea.
+
+.PP
+\fIfprof\fR can also skip the file step and trace to a tracer process that does the profiling in runtime.
+
+.SS "Analysis format"
+
+.PP
+This section describes the output format of the \fIanalyse/1\fR function.
+
+.PP
+The format is parsable with the standard Erlang parsing tools \fIerl_scan\fR and \fIerl_parse\fR, \fIfile:consult/1\fR, or \fIio:read/2\fR. The parse format is not described here — it should be easy enough for the interested reader to try it out. Note that some flags to \fIanalyse/1\fR will affect the format.
+
+.PP
+The following example was run on Erlang/OTP R8 on Solaris 8; all OTP internals in this example are version dependent.
+
+.PP
+As an example, we will use the following function, which is a slightly modified benchmark function from module \fIfile\fR:
+
+.IP
+.nf
+-module(foo).
+-export([create_file_slow/2]).
+
+create_file_slow(Name, N) when is_integer(N), N >= 0 ->
+    {ok, FD} =
+        file:open(Name, [raw, write, delayed_write, binary]),
+    if N > 256 ->
+            ok = file:write(FD,
+                            lists:map(fun (X) -> <<X:32/unsigned>> end,
+                            lists:seq(0, 255))),
+            ok = create_file_slow(FD, 256, N);
+       true ->
+            ok = create_file_slow(FD, 0, N)
+    end,
+    ok = file:close(FD).
+
+create_file_slow(FD, M, M) ->
+    ok;
+create_file_slow(FD, M, N) ->
+    ok = file:write(FD, <<M:32/unsigned>>),
+    create_file_slow(FD, M+1, N).
+
+.fi
+
+.PP
+Let us have a look at the printout after running:
+
+.IP
+.nf
+1> fprof:apply(foo, create_file_slow, [junk, 1024]).
+2> fprof:profile().
+3> fprof:analyse().
+
+.fi
+
+.PP
+The printout starts with:
+
+.IP
+.nf
+%% Analysis results:
+{  analysis_options,
+ [{callers, true},
+  {sort, acc},
+  {totals, false},
+  {details, true}]}.
+
+%                                       CNT       ACC       OWN
+[{ totals,                             9627, 1691.119, 1659.074}].  %%%
+
+.fi
+
+.PP
+The \fICNT\fR column shows the total number of function calls that was found in the trace. In the \fIACC\fR column is the total time of the trace from first timestamp to last. And in the \fIOWN\fR column is the sum of the execution time in functions found in the trace, not including called functions. In this case it is very close to the \fIACC\fR time since the emulator had practically nothing to do except executing our test program.
+
+.PP
+All time values in the printout are in milliseconds.
+
+.PP
+The printout continues:
+
+.IP
+.nf
+%                                       CNT       ACC       OWN
+[{ "<0.28.0>",                         9627,undefined, 1659.074}].   %%
+
+.fi
+
+.PP
+This is the printout header of one process. The printout contains only this one process since we called \fIfprof:apply/3\fR that traces only the current process. Therefore the \fICNT\fR and \fIOWN\fR columns perfectly matches the totals above. The \fIACC\fR column is undefined since summing the \fIACC\fR times of all calls in the process makes no sense — one would get something like the \fIACC\fR value from totals above multiplied by the average depth of the call stack.
+
+.PP
+All paragraphs up to the next process header only concerns function calls within this process.
+
+.PP
+Now we come to something more interesting:
+
+.IP
+.nf
+{[{undefined,                             0, 1691.076,    0.030}],
+ { {fprof,apply_start_stop,4},            0, 1691.076,    0.030},     %
+ [{{foo,create_file_slow,2},              1, 1691.046,    0.103},
+  {suspend,                               1,    0.000,    0.000}]}.
+
+{[{{fprof,apply_start_stop,4},            1, 1691.046,    0.103}],
+ { {foo,create_file_slow,2},              1, 1691.046,    0.103},     %
+ [{{file,close,1},                        1, 1398.873,    0.019},
+  {{foo,create_file_slow,3},              1,  249.678,    0.029},
+  {{file,open,2},                         1,   20.778,    0.055},
+  {{lists,map,2},                         1,   16.590,    0.043},
+  {{lists,seq,2},                         1,    4.708,    0.017},
+  {{file,write,2},                        1,    0.316,    0.021}]}.
+
+.fi
+
+.PP
+The printout consists of one paragraph per called function. The function \fImarked\fR with \fI%\fR is the one the paragraph concerns — \fIfoo:create_file_slow/2\fR. Above the marked function are the \fIcalling\fR functions — those that has called the marked, and below are those \fIcalled\fR by the marked function.
+
+.PP
+The paragraphs are per default sorted in descending order of the \fIACC\fR column for the marked function. The calling list and called list within one paragraph are also per default sorted in descending order of their \fIACC\fR column.
+
+.PP
+The columns are:
+
+CNT
+.RS 2
+the number of times the function has been called
+
+
+.RE
+ACC
+.RS 2
+the time spent in the function including called functions
+
+
+.RE
+OWN
+.RS 2
+the time spent in the function not including called functions
+
+
+.RE
+
+.PP
+The rows for the \fIcalling\fR functions contain statistics for the \fImarked\fR function with the constraint that only the occasions when a call was made from the \fIrow's\fR function to the \fImarked\fR function are accounted for.
+
+.PP
+The row for the \fImarked\fR function simply contains the sum of all \fIcalling\fR rows.
+
+.PP
+The rows for the \fIcalled\fR functions contains statistics for the \fIrow's\fR function with the constraint that only the occasions when a call was made from the \fImarked\fR to the \fIrow's\fR function are accounted for.
+
+.PP
+So, we see that \fIfoo:create_file_slow/2\fR used very little time for its own execution. It spent most of its time in \fIfile:close/1\fR. The function \fIfoo:create_file_slow/3\fR that writes 3/4 of the file contents is the second biggest time thief.
+
+.PP
+We also see that the call to \fIfile:write/2\fR that writes 1/4 of the file contents takes very little time in itself. What takes time is to build the data (\fIlists:seq/2\fR and \fIlists:map/2\fR).
+
+.PP
+The function \fIundefined\fR that has called \fIfprof:apply_start_stop/4\fR is an unknown function because that call was not recorded in the trace. It was only recorded that the execution returned from \fIfprof:apply_start_stop/4\fR to some other function above in the call stack, or that the process exited from there.
+
+.PP
+Let us continue down the printout to find:
+
+.IP
+.nf
+{[{{foo,create_file_slow,2},              1,  249.678,    0.029},
+  {{foo,create_file_slow,3},            768,    0.000,   23.294}],
+ { {foo,create_file_slow,3},            769,  249.678,   23.323},     %
+ [{{file,write,2},                      768,  220.314,   14.539},
+  {suspend,                              57,    6.041,    0.000},
+  {{foo,create_file_slow,3},            768,    0.000,   23.294}]}.
+
+.fi
+
+.PP
+If you compare with the code you will see there also that \fIfoo:create_file_slow/3\fR was called only from \fIfoo:create_file_slow/2\fR and itself, and called only \fIfile:write/2\fR, note the number of calls to \fIfile:write/2\fR. But here we see that \fIsuspend\fR was called a few times. This is a pseudo function that indicates that the process was suspended while executing in \fIfoo:create_file_slow/3\fR, and since there is no \fIreceive\fR or \fIerlang:yield/0\fR in the code, it must be Erlang scheduling suspensions, or the trace file driver compensating for large file write operations (these are regarded as a schedule out followed by a schedule in to the same process).
+
+.PP
+Let us find the \fIsuspend\fR entry:
+
+.IP
+.nf
+{[{{file,write,2},                       53,    6.281,    0.000},
+  {{foo,create_file_slow,3},             57,    6.041,    0.000},
+  {{prim_file,drv_command,4},            50,    4.582,    0.000},
+  {{prim_file,drv_get_response,1},       34,    2.986,    0.000},
+  {{lists,map,2},                        10,    2.104,    0.000},
+  {{prim_file,write,2},                  17,    1.852,    0.000},
+  {{erlang,port_command,2},              15,    1.713,    0.000},
+  {{prim_file,drv_command,2},            22,    1.482,    0.000},
+  {{prim_file,translate_response,2},     11,    1.441,    0.000},
+  {{prim_file,'-drv_command/2-fun-0-',1},  15,    1.340,    0.000},
+  {{lists,seq,4},                         3,    0.880,    0.000},
+  {{foo,'-create_file_slow/2-fun-0-',1},   5,    0.523,    0.000},
+  {{erlang,bump_reductions,1},            4,    0.503,    0.000},
+  {{prim_file,open_int_setopts,3},        1,    0.165,    0.000},
+  {{prim_file,i32,4},                     1,    0.109,    0.000},
+  {{fprof,apply_start_stop,4},            1,    0.000,    0.000}],
+ { suspend,                             299,   32.002,    0.000},     %
+ [ ]}.
+
+.fi
+
+.PP
+We find no particularly long suspend times, so no function seems to have waited in a receive statement. Actually, \fIprim_file:drv_command/4\fR contains a receive statement, but in this test program, the message lies in the process receive buffer when the receive statement is entered. We also see that the total suspend time for the test run is small.
+
+.PP
+The \fIsuspend\fR pseudo function has an \fIOWN\fR time of zero. This is to prevent the process total \fIOWN\fR time from including time in suspension. Whether suspend time is really \fIACC\fR or \fIOWN\fR time is more of a philosophical question.
+
+.PP
+Now we look at another interesting pseudo function, \fIgarbage_collect\fR:
+
+.IP
+.nf
+{[{{prim_file,drv_command,4},            25,    0.873,    0.873},
+  {{prim_file,write,2},                  16,    0.692,    0.692},
+  {{lists,map,2},                         2,    0.195,    0.195}],
+ { garbage_collect,                      43,    1.760,    1.760},     %
+ [ ]}.
+
+.fi
+
+.PP
+Here we see that no function stands out, which is very normal.
+
+.PP
+The \fIgarbage_collect\fR pseudo function has not an \fIOWN\fR time of zero like \fIsuspend\fR, instead it is equal to the \fIACC\fR time.
+
+.PP
+Garbage collection often occurs while a process is suspended, but \fIfprof\fR hides this fact by pretending that the suspended function was first unsuspended and then garbage collected. Otherwise the printout would show \fIgarbage_collect\fR being called from \fIsuspend\fR, but not which function that might have caused the garbage collection.
+
+.PP
+Let us now get back to the test code:
+
+.IP
+.nf
+{[{{foo,create_file_slow,3},            768,  220.314,   14.539},
+  {{foo,create_file_slow,2},              1,    0.316,    0.021}],
+ { {file,write,2},                      769,  220.630,   14.560},     %
+ [{{prim_file,write,2},                 769,  199.789,   22.573},
+  {suspend,                              53,    6.281,    0.000}]}.
+
+.fi
+
+.PP
+Not unexpectedly, we see that \fIfile:write/2\fR was called from \fIfoo:create_file_slow/3\fR and \fIfoo:create_file_slow/2\fR. The number of calls in each case as well as the used time are also confirms the previous results.
+
+.PP
+We see that \fIfile:write/2\fR only calls \fIprim_file:write/2\fR, but let us refrain from digging into the internals of the kernel application.
+
+.PP
+If we nevertheless \fIdo\fR dig down we find the call to the linked-in driver that does the file operations towards the host operating system:
+
+.IP
+.nf
+{[{{prim_file,drv_command,4},           772, 1458.356, 1456.643}],
+ { {erlang,port_command,2},             772, 1458.356, 1456.643},     %
+ [{suspend,                              15,    1.713,    0.000}]}.
+
+.fi
+
+.PP
+This is 86 % of the total run time, and as we saw before it is the close operation the absolutely biggest contributor. We find a comparison ratio a little bit up in the call stack:
+
+.IP
+.nf
+{[{{prim_file,close,1},                   1, 1398.748,    0.024},
+  {{prim_file,write,2},                 769,  174.672,   12.810},
+  {{prim_file,open_int,4},                1,   19.755,    0.017},
+  {{prim_file,open_int_setopts,3},        1,    0.147,    0.016}],
+ { {prim_file,drv_command,2},           772, 1593.322,   12.867},     %
+ [{{prim_file,drv_command,4},           772, 1578.973,   27.265},
+  {suspend,                              22,    1.482,    0.000}]}.
+
+.fi
+
+.PP
+The time for file operations in the linked in driver distributes itself as 1 % for open, 11 % for write, and 87 % for close. All data is probably buffered in the operating system until the close.
+
+.PP
+The observant reader may notice that the ACC times for \fIprim_file:drv_command/2\fR and \fIprim_file:drv_command/4\fR is not equal between the paragraphs above, even though it is easy to believe that \fIprim_file:drv_command/2\fR is just a passthrough function.
+
+.PP
+The missing time can be found in the paragraph for \fIprim_file:drv_command/4\fR where it is evident that not only \fIprim_file:drv_command/2\fR is called but also a fun:
+
+.IP
+.nf
+{[{{prim_file,drv_command,2},           772, 1578.973,   27.265}],
+ { {prim_file,drv_command,4},           772, 1578.973,   27.265},     %
+ [{{erlang,port_command,2},             772, 1458.356, 1456.643},
+  {{prim_file,'-drv_command/2-fun-0-',1}, 772,   87.897,   12.736},
+  {suspend,                              50,    4.582,    0.000},
+  {garbage_collect,                      25,    0.873,    0.873}]}.
+
+.fi
+
+.PP
+And some more missing time can be explained by the fact that \fIprim_file:open_int/4\fR both calls \fIprim_file:drv_command/2\fR directly as well as through \fIprim_file:open_int_setopts/3\fR, which complicates the picture.
+
+.IP
+.nf
+{[{{prim_file,open,2},                    1,   20.309,    0.029},
+  {{prim_file,open_int,4},                1,    0.000,    0.057}],
+ { {prim_file,open_int,4},                2,   20.309,    0.086},     %
+ [{{prim_file,drv_command,2},             1,   19.755,    0.017},
+  {{prim_file,open_int_setopts,3},        1,    0.360,    0.032},
+  {{prim_file,drv_open,2},                1,    0.071,    0.030},
+  {{erlang,list_to_binary,1},             1,    0.020,    0.020},
+  {{prim_file,i32,1},                     1,    0.017,    0.017},
+  {{prim_file,open_int,4},                1,    0.000,    0.057}]}.
+.
+.
+.
+{[{{prim_file,open_int,4},                1,    0.360,    0.032},
+  {{prim_file,open_int_setopts,3},        1,    0.000,    0.016}],
+ { {prim_file,open_int_setopts,3},        2,    0.360,    0.048},     %
+ [{suspend,                               1,    0.165,    0.000},
+  {{prim_file,drv_command,2},             1,    0.147,    0.016},
+  {{prim_file,open_int_setopts,3},        1,    0.000,    0.016}]}.
+
+.fi
+
+.SS "Notes on accuracy of measurements"
+
+.PP
+The actual supervision of execution times is in itself a CPU-intensive activity. A message is written on the trace file for every function call that is made by the profiled code.
+
+.PP
+The \fIACC\fR time calculation is sometimes difficult to make correct, since it is difficult to define. This happens especially when a function occurs in several instances in the call stack, for example by calling itself perhaps through other functions and perhaps even non-tail recursively.
+
+.PP
+To produce sensible results, \fIfprof\fR tries not to charge any function more than once for \fIACC\fR time. The instance highest up (with longest duration) in the call stack is chosen.
+
+.PP
+Sometimes a function can unexpectedly waste a lot (some 10 ms or more depending on host machine OS) of \fIOWN\fR (and \fIACC\fR) time, even functions that do practically nothing at all. The problem may be that the OS has chosen to schedule out the Erlang runtime system process for a while, and if the OS does not support high resolution CPU time measurements \fIfprof\fR will use wallclock time for its calculations, and it will appear as if functions are randomly burning virtual machine time.
+
+.PP
+\fBSee Also\fR
+
+.PP
+fprof - The File Trace Profiler, \fIdbg\fR, \fIeprof\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBanalyse_option() ::\fR
+\fB          append | callers |\fR
+\fB          {callers, boolean()} |\fR
+\fB          {cols, Cols :: non_neg_integer()} |\fR
+\fB          dest |\fR
+\fB          {dest, Dest :: pid() | (Destfile :: file:filename())} |\fR
+\fB          details |\fR
+\fB          {details, boolean()} |\fR
+\fB          no_callers | no_details |\fR
+\fB          {sort, SortSpec :: acc | own} |\fR
+\fB          totals |\fR
+\fB          {totals, boolean()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBapply_option() ::\fR
+\fB          continue |\fR
+\fB          {procs, PidList :: [pid()]} |\fR
+\fB          start |\fR
+\fB          (TraceStartOption :: trace_option()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBpid_spec() :: pid() | atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBprofile_option() ::\fR
+\fB          append | dump |\fR
+\fB          {dump, pid() | (Dump :: (Dumpfile :: file:filename() | []))} |\fR
+\fB          file |\fR
+\fB          {file, Filename :: file:filename()} |\fR
+\fB          start | stop.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_option() ::\fR
+\fB          cpu_time |\fR
+\fB          {cpu_time, boolean()} |\fR
+\fB          file |\fR
+\fB          {file, Filename :: file:filename()} |\fR
+\fB          {procs, PidSpec :: pid_spec()} |\fR
+\fB          {procs, [PidSpec :: pid_spec()]} |\fR
+\fB          start | stop |\fR
+\fB          {tracer, Tracer :: pid() | port()} |\fR
+\fB          verbose |\fR
+\fB          {verbose, boolean()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBanalyse(OptionName) ->\fR
+\fB                 ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB                 when\fR
+\fB                     OptionName :: atom(),\fR
+\fB                     ServerPid :: pid(),\fR
+\fB                     Reason :: term();\fR
+\fB             ({OptionName, OptionValue}) ->\fR
+\fB                 ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB                 when\fR
+\fB                     OptionName :: atom(),\fR
+\fB                     OptionValue :: term(),\fR
+\fB                     ServerPid :: pid(),\fR
+\fB                     Reason :: term();\fR
+\fB             (OptionList) ->\fR
+\fB                 ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB                 when\fR
+\fB                     OptionList :: [Option],\fR
+\fB                     Option :: analyse_option(),\fR
+\fB                     ServerPid :: pid(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Analyses raw profile data in the \fIfprof\fR server.
+
+.PP
+If \fIArg\fR is an atom, this call is equivalent to \fIanalyse([Arg])\fR.
+
+.PP
+If \fIArg\fR is a a tuple \fI{Option, _}\fR, this call is equivalent to \fIanalyse([Option])\fR.
+
+.PP
+Otherwise \fIArg\fR must be a list of valid options.
+
+.PP
+If called when no raw profile data is available, \fI{error, no_profile}\fR is returned.
+
+.PP
+\fIDestfile\fR is used to call \fIfile:open/2\fR.
+
+.PP
+Option description:
+
+dest | {dest, Dest}
+.RS 2
+Specifies the destination for the analysis. If this option is not given or it is 
+\fIdest\fR, the destination will be the caller's group leader, otherwise the destination \fIDest\fR is either the \fIpid/0\fR of an I/O device or a filename. If the filename is \fI[]\fR, \fI"fprof.analysis"\fR is used instead.
+
+.RE
+
+append
+.RS 2
+Causes the analysis to be appended to the destination file. This option is only allowed with the 
+\fI{dest, Destfile}\fR option.
+
+.RE
+
+{cols, Cols}
+.RS 2
+Specifies the number of columns in the analysis text. If this option is not given the number of columns is set to 80.
+
+
+.RE
+
+callers | {callers, true}
+.RS 2
+Prints callers and called information in the analysis. This is the default.
+
+
+.RE
+
+{callers, false} | no_callers
+.RS 2
+Suppresses the printing of callers and called information in the analysis.
+
+
+.RE
+
+{sort, SortSpec}
+.RS 2
+Specifies if the analysis should be sorted according to the ACC column, which is the default, or the OWN column. See Analysis Format below.
+
+
+.RE
+
+totals | {totals, true}
+.RS 2
+Includes a section containing call statistics for all calls regardless of process, in the analysis.
+
+
+.RE
+
+{totals, false}
+.RS 2
+Suppresses the totals section in the analysis, which is the default.
+
+
+.RE
+
+details | {details, true}
+.RS 2
+Prints call statistics for each process in the analysis. This is the default.
+
+
+.RE
+
+{details, false} | no_details
+.RS 2
+Suppresses the call statistics for each process from the analysis.
+
+
+.RE
+
+
+.RE
+.B
+\fBapply(Module, Function, Args) -> term()\fR
+\fB               when\fR
+\fB                   Module :: module(),\fR
+\fB                   Function :: atom(),\fR
+\fB                   Args :: [term()];\fR
+\fB           (Func, Args, OptionList) -> term()\fR
+\fB               when\fR
+\fB                   Func ::\fR
+\fB                       fun() | {Module :: module(), Function :: atom()},\fR
+\fB                   Args :: [term()],\fR
+\fB                   OptionList :: [Option],\fR
+\fB                   Option :: apply_option().\fR
+
+.br
+.RS
+.PP
+Calls the given function surrounded by \fItrace([start, ...])\fR and \fItrace(stop)\fR.
+
+.PP
+If the function arguments (\fIArg1\fR, \fIArg2\fR, and \fIArg3\fR) are \fIModule\fR (an atom), \fIFunction\fR (an atom), and \fIArgs\fR (a list), the function will be called using \fIerlang:apply(Module, Function, Args)\fR.
+
+.PP
+If the function arguments are \fIFunc\fR (a fun), \fIArgs\fR (a list), and \fIOptionList\fR (a list of options), the fun will be called using \fIerlang:apply(Func, Args)\fR.
+
+.PP
+Some effort is made to keep the trace clean from unnecessary trace messages; tracing is started and stopped from a spawned process while \fIerlang:apply/2\fR is called in the current process only surrounded by \fIreceive\fR and \fIsend\fR statements towards the trace starting process. The trace starting process exits when it is not needed any more.
+
+.PP
+The \fITraceStartOption\fR is any option allowed for \fItrace/1\fR. The options \fI[start, {procs, [self() | PidList]} | OptList]\fR are given to \fItrace/1\fR, where \fIOptList\fR is \fIOptionList\fR with the \fIcontinue\fR, \fIstart\fR and \fI{procs, _}\fR options removed.
+
+.PP
+The \fIcontinue\fR option inhibits the call to \fItrace(stop)\fR and leaves it up to the caller to stop tracing at a suitable time.
+
+
+.RE
+.B
+\fBprofile(OptionName) ->\fR
+\fB                 ok |\fR
+\fB                 {ok, Tracer} |\fR
+\fB                 {error, Reason} |\fR
+\fB                 {'EXIT', ServerPid, Reason}\fR
+\fB                 when\fR
+\fB                     OptionName :: atom(),\fR
+\fB                     Tracer :: pid(),\fR
+\fB                     ServerPid :: pid(),\fR
+\fB                     Reason :: term();\fR
+\fB             ({OptionName, OptionValue}) ->\fR
+\fB                 ok |\fR
+\fB                 {ok, Tracer} |\fR
+\fB                 {error, Reason} |\fR
+\fB                 {'EXIT', ServerPid, Reason}\fR
+\fB                 when\fR
+\fB                     OptionName :: atom(),\fR
+\fB                     OptionValue :: term(),\fR
+\fB                     Tracer :: pid(),\fR
+\fB                     ServerPid :: pid(),\fR
+\fB                     Reason :: term();\fR
+\fB             (OptionList) ->\fR
+\fB                 ok |\fR
+\fB                 {ok, Tracer} |\fR
+\fB                 {error, Reason} |\fR
+\fB                 {'EXIT', ServerPid, Reason}\fR
+\fB                 when\fR
+\fB                     OptionList :: [Option],\fR
+\fB                     Option :: profile_option(),\fR
+\fB                     Tracer :: pid(),\fR
+\fB                     ServerPid :: pid(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Compiles a trace into raw profile data held by the \fIfprof\fR server.
+
+.PP
+If \fIArg\fR is an atom, this call is equivalent to \fIprofile([Arg])\fR.
+
+.PP
+If \fIArg\fR is a tuple \fI{OptionName, OptionValue}\fR, this call is equivalent to \fIprofile([Arg])\fR.
+
+.PP
+Otherwise, \fIArg\fR must be a list of options.
+
+.PP
+\fIDumpfile\fR is used to call \fIfile:open/2\fR, and \fIFilename\fR is used to call \fIdbg:trace_port(file, Filename)\fR.
+
+.PP
+The following options are supported:
+
+file | {file, Filename}
+.RS 2
+Reads the file 
+\fIFilename\fR and creates raw profile data that is stored in RAM by the \fIfprof\fR server. If the option \fIfile\fR is given, or none of these options are given, the file \fIfprof.trace\fR is read. The call will return when the whole trace has been read with the return value \fIok\fR if successful. This option is not allowed with the \fIstart\fR or \fIstop\fR options.
+
+.RE
+
+dump | {dump, Dump}
+.RS 2
+Specifies the destination for the trace text dump. If this option is not given, no dump is generated, if it is 
+\fIdump\fR the destination will be the caller's group leader, otherwise the destination \fIDump\fR is either the pid of an I/O device or a filename. If the filename is \fI[]\fR, \fI"fprof.dump"\fR is used instead. This option cannot be combined with the \fIstop\fR option.
+
+.RE
+
+append
+.RS 2
+Causes the trace text dump to be appended to the destination file. This option is only allowed with the 
+\fI{dump, Dumpfile}\fR option.
+
+.RE
+
+start
+.RS 2
+Starts a tracer process that profiles trace data in runtime. The call will return immediately with the return value 
+\fI{ok, Tracer}\fR if successful. This option is not allowed with the \fIstop\fR, \fIfile\fR, or \fI{file, Filename}\fR options.
+
+.RE
+
+stop
+.RS 2
+Stops the tracer process that profiles trace data in runtime. The return value will be value 
+\fIok\fR if successful. This option cannot be combined with the \fIstart\fR, \fIfile\fR, or \fI{file, Filename}\fR options.
+
+.RE
+
+
+.RE
+.B
+\fBstart() -> {ok, Pid} | {error, {already_started, Pid}}\fR
+\fB               when Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Starts the \fIfprof\fR server.
+
+.PP
+Note that there is seldom any need to call this function directly, since the server will be automatically started by any function that will need it.
+
+
+.RE
+.B
+\fBstop(Reason) -> ok when Reason :: term().\fR
+
+.br
+.RS
+.PP
+Stops the \fIfprof\fR server.
+
+.PP
+The supplied \fIReason\fR becomes the exit reason for the server process. By default, any \fIReason\fR other than \fIkill\fR sends a request to the server and waits for it to clean up, reply, and exit. If \fIReason\fR is \fIkill\fR, the server is bluntly killed.
+
+.PP
+If the \fIfprof\fR server is not running, this function returns immediately.
+
+.PP
+\fBNOTE: \fRWhen the \fIfprof\fR server is stopped the collected raw profile data is lost.
+
+
+
+.RE
+.B
+\fBtrace(verbose) ->\fR
+\fB               ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB               when ServerPid :: pid(), Reason :: term();\fR
+\fB           (OptionName) ->\fR
+\fB               ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB               when\fR
+\fB                   OptionName :: atom(),\fR
+\fB                   ServerPid :: pid(),\fR
+\fB                   Reason :: term();\fR
+\fB           ({OptionName, OptionValue}) ->\fR
+\fB               ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB               when\fR
+\fB                   OptionName :: atom(),\fR
+\fB                   OptionValue :: term(),\fR
+\fB                   ServerPid :: pid(),\fR
+\fB                   Reason :: term();\fR
+\fB           (OptionList) ->\fR
+\fB               ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB               when\fR
+\fB                   OptionList :: [Option],\fR
+\fB                   Option :: trace_option(),\fR
+\fB                   ServerPid :: pid(),\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+Starts or stops tracing.
+
+.PP
+If \fIArg\fR is atom \fIverbose\fR, this call is equivalent to \fItrace([start, verbose])\fR.
+
+.PP
+If \fIArg\fR is an atom, this call is equivalent to \fItrace([Arg])\fR.
+
+.PP
+If \fIArg\fR is a tuple \fI{OptionName, OptionValue}\fR, this call is equivalent to \fItrace([Arg])\fR.
+
+.PP
+Otherwise, \fIArg\fR has to be a list of trace options.
+
+.PP
+\fIPidSpec\fR and \fITracer\fR are used in calls to \fIerlang:trace(PidSpec, true, [{tracer, Tracer} | Flags])\fR, and \fIFilename\fR is used to call \fIdbg:trace_port(file, Filename)\fR.
+
+.PP
+Option description:
+
+stop
+.RS 2
+Stops a running 
+\fIfprof\fR trace and clears all tracing from the node. Either option \fIstop\fR or \fIstart\fR must be specified, but not both.
+
+.RE
+
+start
+.RS 2
+Clears all tracing from the node and starts a new 
+\fIfprof\fR trace. Either option \fIstart\fR or \fIstop\fR must be specified, but not both.
+
+.RE
+
+verbose | {verbose, boolean()}
+.RS 2
+The 
+\fIverbose\fR or \fI{verbose, true}\fR options add some trace flags that \fIfprof\fR does not need, but that can be interesting for general debugging purposes. These options are only allowed with the \fIstart\fR option.
+
+.RE
+
+cpu_time | {cpu_time, boolean()}
+.RS 2
+The 
+\fIcpu_time\fR or \fI{cpu_time, true}\fR options make the timestamps in the trace be in CPU time instead of the default wallclock time. These options are only allowed with the \fIstart\fR option.
+.PP
+\fBNOTE: \fRGetting correct values out of \fIcpu_time\fR can be difficult. The best way to get correct values is to run using a single scheduler and bind that scheduler to a specific CPU. For example:
+
+.IP
+.nf
+erl +S 1 +sbt db`
+
+.fi
+
+
+
+.RE
+
+{procs, PidSpec} | {procs, [PidSpec]}
+.RS 2
+Specifies which processes that should be traced. If this option is not given, the calling process is traced. All processes spawned by the traced processes are also traced. This option is only allowed with the 
+\fIstart\fR option.
+
+.RE
+
+file | {file, Filename}
+.RS 2
+Specifies the filename of the trace. If the option 
+\fIfile\fR is given, or none of these options are given, the file \fIfprof.trace\fR is used. This option is only allowed with the \fIstart\fR option, but not with the \fI{tracer, Tracer}\fR option.
+
+.RE
+
+{tracer, Tracer}
+.RS 2
+Specifies that trace to process or port shall be done instead of trace to file. This option is only allowed with the 
+\fIstart\fR option, but not with the \fI{file, Filename}\fR option.
+
+.RE
+
+
+.RE
+.B
+\fBtrace(start, Filename) ->\fR
+\fB               ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB               when\fR
+\fB                   Filename :: file:filename(),\fR
+\fB                   ServerPid :: pid(),\fR
+\fB                   Reason :: term();\fR
+\fB           (verbose, Filename) ->\fR
+\fB               ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB               when\fR
+\fB                   Filename :: file:filename(),\fR
+\fB                   ServerPid :: pid(),\fR
+\fB                   Reason :: term();\fR
+\fB           (OptionName, OptionValue) ->\fR
+\fB               ok | {error, Reason} | {'EXIT', ServerPid, Reason}\fR
+\fB               when\fR
+\fB                   OptionName :: atom(),\fR
+\fB                   OptionValue :: term(),\fR
+\fB                   ServerPid :: pid(),\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+Starts or stop tracing.
+
+.PP
+If \fIWhat\fR is atom \fIstart\fR, this call is equivalent to \fItrace([start, {file, Value}])\fR.
+
+.PP
+If \fIWhat\fR is atom \fIverbose\fR, this call is equivalent to \fItrace([start, verbose, {file, Value}])\fR.
+
+.PP
+If \fIWhat\fR is a tuple \fI{OptionName, OptionValue}\fR, this call is equivalent to \fItrace([What])\fR.
+
+
+.RE

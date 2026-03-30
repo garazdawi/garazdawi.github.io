@@ -1,0 +1,314 @@
+.TH erl_prettypr 3 "syntax_tools 4.0.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_prettypr \- Pretty printing of abstract Erlang syntax trees.
+
+.SH DESCRIPTION
+.PP
+This module is a front end to the pretty-printing library module \fIprettypr\fR, for text formatting of abstract syntax trees defined by the module \fIerl_syntax\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBclause_t() ::\fR
+\fB          case_expr | fun_expr | if_expr | maybe_expr | receive_expr |\fR
+\fB          try_expr |\fR
+\fB          {function, prettypr:document()} |\fR
+\fB          spec.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcontext() :: #ctxt{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhook() :: none | fun((syntaxTree(), _, _) -> prettypr:document()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsyntaxTree() :: erl_syntax:syntaxTree().\fR
+
+.br
+.RS
+.PP
+An abstract syntax tree.
+
+.PP
+See the \fIerl_syntax\fR module for details.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbest(syntaxTree(), [term()]) -> empty | prettypr:document().\fR
+
+.br
+.RS
+.PP
+Creates a fixed "best" abstract layout for a syntax tree.
+
+.PP
+This is similar to the \fIlayout/2\fR function, except that here, the final layout has been selected with respect to the given options. The atom \fIempty\fR is returned if no such layout could be produced. For information on the options, see the \fIformat/2\fR function.
+
+.PP
+\fISee also: \fR\fIbest/1\fR, \fIformat/2\fR, \fIlayout/2\fR, \fIprettypr:best/3\fR.
+
+
+.RE
+.B
+\fBformat(syntaxTree(), [term()]) -> string().\fR
+
+.br
+.RS
+.PP
+Prettyprint-formats an abstract Erlang syntax tree as text.
+
+.PP
+For example, if you have a \fI.beam\fR file that has been compiled with \fIdebug_info\fR, the following should print the source code for the module (as it looks in the debug info representation):
+
+.IP
+.nf
+     {ok,{_,[{abstract_code,{_,AC}}]}} =
+             beam_lib:chunks("myfile.beam",[abstract_code]),
+     io:put_chars(erl_prettypr:format(erl_syntax:form_list(AC)))
+
+.fi
+
+.PP
+Available options:
+
+{hook, none | hook()}
+.RS 2
+Unless the value is 
+\fInone\fR, the given function is called for each node whose list of annotations is not empty. The default value is \fInone\fR.
+
+.RE
+
+{paper, integer()}
+.RS 2
+Specifies the preferred maximum number of characters on any line, including indentation. The default value is 80.
+
+
+.RE
+
+{ribbon, integer()}
+.RS 2
+Specifies the preferred maximum number of characters on any line, not counting indentation. The default value is 65.
+
+
+.RE
+
+{user, term()}
+.RS 2
+User-specific data for use in hook functions. The default value is 
+\fIundefined\fR.
+
+.RE
+
+{encoding, epp:source_encoding()}
+.RS 2
+Specifies the encoding of the generated file.
+
+
+.RE
+
+.PP
+A hook function (see the \fIhook()\fR type) is passed the current syntax tree node, the context, and a continuation. The context can be examined and manipulated by functions such as \fIget_ctxt_user/1\fR and \fIset_ctxt_user/2\fR. The hook must return a "document" data structure (see \fIlayout/2\fR and \fIbest/2\fR); this may be constructed in part or in whole by applying the continuation function. For example, the following is a trivial hook:
+
+.IP
+.nf
+      fun (Node, Ctxt, Cont) -> Cont(Node, Ctxt) end
+
+.fi
+
+.PP
+which yields the same result as if no hook was given. The following, however:
+
+.IP
+.nf
+      fun (Node, Ctxt, Cont) ->
+          Doc = Cont(Node, Ctxt),
+          prettypr:beside(prettypr:text("<b>"),
+                          prettypr:beside(Doc,
+                                          prettypr:text("</b>")))
+      end
+
+.fi
+
+.PP
+will place the text of any annotated node (regardless of the annotation data) between HTML "boldface begin" and "boldface end" tags.
+
+.PP
+\fISee also: \fR\fIerl_syntax\fR, \fIbest/2\fR, \fIformat/1\fR, \fIget_ctxt_user/1\fR, \fIlayout/2\fR, \fIset_ctxt_user/2\fR.
+
+
+.RE
+.B
+\fBget_ctxt_hook(context()) -> hook().\fR
+
+.br
+.RS
+.PP
+Returns the hook function field of the prettyprinter context.
+
+.PP
+\fISee also: \fR\fIset_ctxt_hook/2\fR.
+
+
+.RE
+.B
+\fBget_ctxt_linewidth(context()) -> integer().\fR
+
+.br
+.RS
+.PP
+Returns the line widh field of the prettyprinter context.
+
+.PP
+\fISee also: \fR\fIset_ctxt_linewidth/2\fR.
+
+
+.RE
+.B
+\fBget_ctxt_paperwidth(context()) -> integer().\fR
+
+.br
+.RS
+.PP
+Returns the paper widh field of the prettyprinter context.
+
+.PP
+\fISee also: \fR\fIset_ctxt_paperwidth/2\fR.
+
+
+.RE
+.B
+\fBget_ctxt_precedence(context()) -> integer().\fR
+
+.br
+.RS
+.PP
+Returns the operator precedence field of the prettyprinter context.
+
+.PP
+\fISee also: \fR\fIset_ctxt_precedence/2\fR.
+
+
+.RE
+.B
+\fBget_ctxt_user(context()) -> term().\fR
+
+.br
+.RS
+.PP
+Returns the user data field of the prettyprinter context.
+
+.PP
+\fISee also: \fR\fIset_ctxt_user/2\fR.
+
+
+.RE
+.B
+\fBlayout(syntaxTree(), [term()]) -> prettypr:document().\fR
+
+.br
+.RS
+.PP
+Creates an abstract document layout for a syntax tree.
+
+.PP
+The result represents a set of possible layouts (see module \fIprettypr\fR). For information on the options, see \fIformat/2\fR; however, note that the \fIpaper\fR and \fIribbon\fR options are ignored by this function.
+
+.PP
+This function provides a low-level interface to the pretty printer, returning a flexible representation of possible layouts, independent of the paper width eventually to be used for formatting. This can be included as part of another document and/or further processed directly by the functions in the \fIprettypr\fR module, or used in a hook function (see \fIformat/2\fR for details).
+
+.PP
+\fISee also: \fR\fIprettypr\fR, \fIformat/2\fR, \fIlayout/1\fR.
+
+
+.RE
+.B
+\fBset_ctxt_hook(context(), hook()) -> context().\fR
+
+.br
+.RS
+.PP
+Updates the hook function field of the prettyprinter context.
+
+.PP
+\fISee also: \fR\fIget_ctxt_hook/1\fR.
+
+
+.RE
+.B
+\fBset_ctxt_linewidth(context(), integer()) -> context().\fR
+
+.br
+.RS
+.PP
+Updates the line widh field of the prettyprinter context.
+
+.PP
+\fBNOTE: \fRChanging this value (and passing the resulting context to a continuation function) does not affect the normal formatting, but may affect user-defined behaviour in hook functions.
+
+
+.PP
+\fISee also: \fR\fIget_ctxt_linewidth/1\fR.
+
+
+.RE
+.B
+\fBset_ctxt_paperwidth(context(), integer()) -> context().\fR
+
+.br
+.RS
+.PP
+Updates the paper widh field of the prettyprinter context.
+
+.PP
+\fBNOTE: \fRChanging this value (and passing the resulting context to a continuation function) does not affect the normal formatting, but may affect user-defined behaviour in hook functions.
+
+
+.PP
+\fISee also: \fR\fIget_ctxt_paperwidth/1\fR.
+
+
+.RE
+.B
+\fBset_ctxt_precedence(context(), integer()) -> context().\fR
+
+.br
+.RS
+.PP
+Updates the operator precedence field of the prettyprinter context.
+
+.PP
+See the \fI//stdlib/erl_parse\fR module for operator precedences.
+
+.PP
+\fISee also: \fR//stdlib/erl_parse, \fIget_ctxt_precedence/1\fR.
+
+
+.RE
+.B
+\fBset_ctxt_user(context(), term()) -> context().\fR
+
+.br
+.RS
+.PP
+Updates the user data field of the prettyprinter context.
+
+.PP
+\fISee also: \fR\fIget_ctxt_user/1\fR.
+
+
+.RE

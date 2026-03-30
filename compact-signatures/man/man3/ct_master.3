@@ -1,0 +1,243 @@
+.TH ct_master 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_master \- Distributed test execution control for \fICommon Test\fR.
+
+.SH DESCRIPTION
+.PP
+This module exports functions for running \fICommon Test\fR nodes on multiple hosts in parallel.
+
+.SH DATA TYPES
+.LP
+.B
+\fBtest_spec() :: file:name_all().\fR
+
+.br
+.RS
+.PP
+Filename of test spec to be executed.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBabort() -> ok.\fR
+
+.br
+.RS
+.PP
+Stops all running tests.
+
+
+.RE
+.B
+\fBabort(Nodes) -> ok when Nodes :: Node | [Node], Node :: node().\fR
+
+.br
+.RS
+.PP
+Stops tests on specified nodes.
+
+
+.RE
+.B
+\fBbasic_html(Bool) -> ok when Bool :: boolean().\fR
+
+.br
+.RS
+.PP
+If set to \fItrue\fR, the \fIct_master logs\fR are written on a primitive HTML format, not using the \fICommon Test\fR CSS style sheet.
+
+
+.RE
+.B
+\fBget_event_mgr_ref() -> atom().\fR
+
+.br
+.RS
+.PP
+Gets a reference to the \fICommon Test\fR master event manager. The reference can be used to, for example, add a user-specific event handler while tests are running.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+gen_event:add_handler(ct_master:get_event_mgr_ref(), my_ev_h, [])
+
+.fi
+
+
+.RE
+.B
+\fBprogress() -> [{Node, Status}]\fR
+\fB                  when Node :: node(), Status :: atom().\fR
+
+.br
+.RS
+.PP
+Returns test progress. If \fIStatus\fR is \fIongoing\fR, tests are running on the node and are not yet finished.
+
+
+.RE
+.B
+\fBrun(TestSpecs) -> [{Specs, ok} | {error, Reason}]\fR
+\fB             when\fR
+\fB                 TestSpecs :: TestSpec | [TestSpec] | [[TestSpec]],\fR
+\fB                 TestSpec :: test_spec(),\fR
+\fB                 Specs :: [file:filename_all()],\fR
+\fB                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Run tests on spawned nodes as specified in \fITestSpecs\fR (see \fIrun/4\fR).
+
+.PP
+Equivalent to \fIrun(TestSpecs, false, [], [])\fR if called with TestSpecs being list of strings;
+
+.PP
+Equivalent to \fIrun([TS], false, [], [])\fR if called with TS being string.
+
+
+.RE
+.B
+\fBrun(TestSpecs, AllowUserTerms, InclNodes, ExclNodes) ->\fR
+\fB             [{Specs, ok} | {error, Reason}]\fR
+\fB             when\fR
+\fB                 TestSpecs :: TestSpec | [TestSpec] | [[TestSpec]],\fR
+\fB                 TestSpec :: test_spec(),\fR
+\fB                 AllowUserTerms :: boolean(),\fR
+\fB                 InclNodes :: [node()],\fR
+\fB                 ExclNodes :: [node()],\fR
+\fB                 Specs :: [file:filename_all()],\fR
+\fB                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Tests are spawned on the nodes as specified in \fITestSpecs\fR. Each specification in \fITestSpec\fR is handled separately. However, it is also possible to specify a list of specifications to be merged into one specification before the tests are executed. Any test without a particular node specification is also executed on the nodes in \fIInclNodes\fR. Nodes in the \fIExclNodes\fR list are excluded from the test.
+
+
+.RE
+.B
+\fBrun_on_node(TestSpecs, AllowUserTerms, Node) ->\fR
+\fB                     [{Specs, ok} | {error, Reason}]\fR
+\fB                     when\fR
+\fB                         TestSpecs ::\fR
+\fB                             TestSpec | [TestSpec] | [[TestSpec]],\fR
+\fB                         TestSpec :: test_spec(),\fR
+\fB                         AllowUserTerms :: boolean(),\fR
+\fB                         Node :: node(),\fR
+\fB                         Specs :: [file:filename_all()],\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Tests are spawned on \fINode\fR according to \fITestSpecs\fR.
+
+
+.RE
+.B
+\fBrun_test(Node, Opts) -> ok\fR
+\fB                  when\fR
+\fB                      Node :: node(),\fR
+\fB                      Opts :: [OptTuples],\fR
+\fB                      OptTuples ::\fR
+\fB                          {dir, TestDirs} |\fR
+\fB                          {suite, Suites} |\fR
+\fB                          {group, Groups} |\fR
+\fB                          {testcase, Cases} |\fR
+\fB                          {spec, TestSpecs} |\fR
+\fB                          {join_specs, boolean()} |\fR
+\fB                          {label, Label} |\fR
+\fB                          {config, CfgFiles} |\fR
+\fB                          {userconfig, UserConfig} |\fR
+\fB                          {allow_user_terms, boolean()} |\fR
+\fB                          {logdir, LogDir} |\fR
+\fB                          {silent_connections, Conns} |\fR
+\fB                          {stylesheet, CSSFile} |\fR
+\fB                          {cover, CoverSpecFile} |\fR
+\fB                          {cover_stop, boolean()} |\fR
+\fB                          {step, StepOpts} |\fR
+\fB                          {event_handler, EventHandlers} |\fR
+\fB                          {include, InclDirs} |\fR
+\fB                          {auto_compile, boolean()} |\fR
+\fB                          {abort_if_missing_suites, boolean()} |\fR
+\fB                          {create_priv_dir, CreatePrivDir} |\fR
+\fB                          {multiply_timetraps, M} |\fR
+\fB                          {scale_timetraps, boolean()} |\fR
+\fB                          {repeat, N} |\fR
+\fB                          {duration, DurTime} |\fR
+\fB                          {until, StopTime} |\fR
+\fB                          {force_stop, ForceStop} |\fR
+\fB                          {decrypt, DecryptKeyOrFile} |\fR
+\fB                          {refresh_logs, LogDir} |\fR
+\fB                          {logopts, LogOpts} |\fR
+\fB                          {verbosity, VLevels} |\fR
+\fB                          {basic_html, boolean()} |\fR
+\fB                          {esc_chars, boolean()} |\fR
+\fB                          {keep_logs, KeepSpec} |\fR
+\fB                          {ct_hooks, CTHs} |\fR
+\fB                          {ct_hooks_order, CTHsOrder} |\fR
+\fB                          {enable_builtin_hooks, boolean()} |\fR
+\fB                          {release_shell, boolean()},\fR
+\fB                      TestDirs :: [string()] | string(),\fR
+\fB                      Suites ::\fR
+\fB                          [string()] | [atom()] | string() | atom(),\fR
+\fB                      Cases :: [atom()] | atom(),\fR
+\fB                      Groups :: GroupNameOrPath | [GroupNameOrPath],\fR
+\fB                      GroupNameOrPath :: [atom()] | atom() | all,\fR
+\fB                      TestSpecs :: [string()] | string(),\fR
+\fB                      Label :: string() | atom(),\fR
+\fB                      CfgFiles :: [string()] | string(),\fR
+\fB                      UserConfig ::\fR
+\fB                          [{CallbackMod, CfgStrings}] |\fR
+\fB                          {CallbackMod, CfgStrings},\fR
+\fB                      CallbackMod :: atom(),\fR
+\fB                      CfgStrings :: [string()] | string(),\fR
+\fB                      LogDir :: string(),\fR
+\fB                      Conns :: all | [atom()],\fR
+\fB                      CSSFile :: string(),\fR
+\fB                      CoverSpecFile :: string(),\fR
+\fB                      StepOpts :: [StepOpt],\fR
+\fB                      StepOpt :: config | keep_inactive,\fR
+\fB                      EventHandlers :: EH | [EH],\fR
+\fB                      EH ::\fR
+\fB                          atom() |\fR
+\fB                          {atom(), InitArgs} |\fR
+\fB                          {[atom()], InitArgs},\fR
+\fB                      InitArgs :: [term()],\fR
+\fB                      InclDirs :: [string()] | string(),\fR
+\fB                      CreatePrivDir ::\fR
+\fB                          auto_per_run | auto_per_tc | manual_per_tc,\fR
+\fB                      M :: integer(),\fR
+\fB                      N :: integer(),\fR
+\fB                      DurTime :: HHMMSS,\fR
+\fB                      HHMMSS :: string(),\fR
+\fB                      StopTime :: YYMoMoDDHHMMSS | HHMMSS,\fR
+\fB                      YYMoMoDDHHMMSS :: string(),\fR
+\fB                      ForceStop :: skip_rest | boolean(),\fR
+\fB                      DecryptKeyOrFile ::\fR
+\fB                          {key, DecryptKey} | {file, DecryptFile},\fR
+\fB                      DecryptKey :: string(),\fR
+\fB                      DecryptFile :: string(),\fR
+\fB                      LogOpts :: [LogOpt],\fR
+\fB                      LogOpt :: no_nl | no_src,\fR
+\fB                      VLevels :: VLevel | [{Category, VLevel}],\fR
+\fB                      VLevel :: integer(),\fR
+\fB                      Category :: atom(),\fR
+\fB                      KeepSpec :: all | pos_integer(),\fR
+\fB                      CTHs :: [CTHModule | {CTHModule, CTHInitArgs}],\fR
+\fB                      CTHsOrder :: atom(),\fR
+\fB                      CTHModule :: atom(),\fR
+\fB                      CTHInitArgs :: term().\fR
+
+.br
+.RS
+.PP
+Tests are spawned on \fINode\fR using \fIct:run_test/1\fR
+
+
+.RE

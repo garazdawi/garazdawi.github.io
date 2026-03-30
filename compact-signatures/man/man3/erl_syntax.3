@@ -1,0 +1,5887 @@
+.TH erl_syntax 3 "syntax_tools 4.0.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_syntax \- Abstract Erlang syntax trees.
+
+.SH DESCRIPTION
+.PP
+This module defines an abstract data type for representing Erlang source code as syntax trees, in a way that is backwards compatible with the data structures created by the Erlang standard library parser module \fIerl_parse\fR (often referred to as "parse trees", which is a bit of a misnomer). This means that all \fIerl_parse\fR trees are valid abstract syntax trees, but the reverse is not true: abstract syntax trees can in general not be used as input to functions expecting an \fIerl_parse\fR tree. However, as long as an abstract syntax tree represents a correct Erlang program, the function \fIrevert/1\fR should be able to transform it to the corresponding \fIerl_parse\fR representation.
+
+.PP
+A recommended starting point for the first-time user is the documentation of the \fIsyntaxTree()\fR data type, and the function \fItype/1\fR.
+
+.PP
+\fBNOTE: \fRThis module deals with the composition and decomposition of \fIsyntactic\fR entities (as opposed to semantic ones); its purpose is to hide all direct references to the data structures used to represent these entities. With few exceptions, the functions in this module perform no semantic interpretation of their inputs, and in general, the user is assumed to pass type-correct arguments — if this is not done, the effects are not defined.
+
+
+.PP
+With the exception of the \fIerl_parse()\fR data structures, the internal representations of abstract syntax trees are subject to change without notice, and should not be documented outside this module. Furthermore, we do not give any guarantees on how an abstract syntax tree may or may not be represented, \fIwith the following exceptions\fR: no syntax tree is represented by a single atom, such as \fInone\fR, by a list constructor \fI[X | Y]\fR, or by the empty list \fI[]\fR. This can be relied on when writing functions that operate on syntax trees.
+
+.SH DATA TYPES
+.LP
+.B
+\fBannotation_or_location() :: erl_anno:anno() | erl_anno:location().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBencoding() :: utf8 | unicode | latin1.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerl_parse() ::\fR
+\fB          erl_parse:abstract_clause() |\fR
+\fB          erl_parse:abstract_expr() |\fR
+\fB          erl_parse:abstract_form() |\fR
+\fB          erl_parse:abstract_type() |\fR
+\fB          erl_parse:form_info() |\fR
+\fB          erl_parse:af_binelement(term()) |\fR
+\fB          erl_parse:af_generator() |\fR
+\fB          [erl_parse:af_generator()] |\fR
+\fB          erl_parse:af_remote_function().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBforms() :: syntaxTree() | [syntaxTree()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBguard() :: none | syntaxTree() | [syntaxTree()] | [[syntaxTree()]].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBpadding() :: none | integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsyntaxTree() :: tree() | wrapper() | erl_parse().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsyntaxTreeAttributes() :: #attr{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtree() :: #tree{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwrapper() :: #wrapper{}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBabstract(term()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the syntax tree corresponding to an Erlang term.
+
+.PP
+\fITerm\fR must be a literal term, meaning one that can be represented as a source code literal. Thus, it must not contain a process identifier, port, reference, or function value as a subterm. The function recognises printable strings, in order to get a compact and readable representation. Evaluation fails with reason \fIbadarg\fR if \fITerm\fR is not a literal term.
+
+.PP
+\fISee also: \fR\fIconcrete/1\fR, \fIis_literal/1\fR.
+
+
+.RE
+.B
+\fBadd_ann(term(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Appends the term \fIAnnotation\fR to the list of user annotations of \fINode\fR.
+
+.PP
+Note: this is equivalent to \fIset_ann(Node, [Annotation | get_ann(Node)])\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIget_ann/1\fR, \fIset_ann/2\fR.
+
+
+.RE
+.B
+\fBadd_postcomments([syntaxTree()], syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Appends \fIComments\fR to the post-comments of \fINode\fR.
+
+.PP
+Note: This is equivalent to \fIset_postcomments(Node, get_postcomments(Node) ++ Comments)\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIadd_precomments/2\fR, \fIcomment/2\fR, \fIget_postcomments/1\fR, \fIjoin_comments/2\fR, \fIset_postcomments/2\fR.
+
+
+.RE
+.B
+\fBadd_precomments([syntaxTree()], syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Appends \fIComments\fR to the pre-comments of \fINode\fR.
+
+.PP
+Note: This is equivalent to \fIset_precomments(Node, get_precomments(Node) ++ Comments)\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIadd_postcomments/2\fR, \fIcomment/2\fR, \fIget_precomments/1\fR, \fIjoin_comments/2\fR, \fIset_precomments/2\fR.
+
+
+.RE
+.B
+\fBannotated_type(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract annotated type expression.
+
+.PP
+The result represents "\fIName :: Type\fR".
+
+.PP
+\fISee also: \fR\fIannotated_type_body/1\fR, \fIannotated_type_name/1\fR.
+
+
+.RE
+.B
+\fBannotated_type_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the type subtrees of an \fIannotated_type\fR node.
+
+.PP
+\fISee also: \fR\fIannotated_type/2\fR.
+
+
+.RE
+.B
+\fBannotated_type_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of an \fIannotated_type\fR node.
+
+.PP
+\fISee also: \fR\fIannotated_type/2\fR.
+
+
+.RE
+.B
+\fBapplication(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract function application expression.
+
+.PP
+If \fIArguments\fR is \fI[A1, ..., An]\fR, the result represents "\fIOperator(A1, ..., An)\fR".
+
+.PP
+\fISee also: \fR\fIapplication/3\fR, \fIapplication_arguments/1\fR, \fIapplication_operator/1\fR.
+
+
+.RE
+.B
+\fBapplication(none | syntaxTree(), syntaxTree(), [syntaxTree()]) ->\fR
+\fB                     syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract function application expression.
+
+.PP
+If \fIModule\fR is \fInone\fR, this is call is equivalent to \fIapplication(Function, Arguments)\fR, otherwise it is equivalent to \fIapplication(module_qualifier(Module, Function), Arguments)\fR.
+
+.PP
+(This is a utility function.)
+
+.PP
+\fISee also: \fR\fIapplication/2\fR, \fImodule_qualifier/2\fR.
+
+
+.RE
+.B
+\fBapplication_arguments(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of argument subtrees of an \fIapplication\fR node.
+
+.PP
+\fISee also: \fR\fIapplication/2\fR.
+
+
+.RE
+.B
+\fBapplication_operator(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the operator subtree of an \fIapplication\fR node.
+
+.PP
+If \fINode\fR represents "\fIM:F(...)\fR", then the result is the subtree representing "\fIM:F\fR".
+
+.PP
+\fISee also: \fR\fIapplication/2\fR, \fImodule_qualifier/2\fR.
+
+
+.RE
+.B
+\fBarity_qualifier(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract arity qualifier.
+
+.PP
+The result represents "\fIBody/Arity\fR".
+
+.PP
+\fISee also: \fR\fIarity_qualifier_argument/1\fR, \fIarity_qualifier_body/1\fR.
+
+
+.RE
+.B
+\fBarity_qualifier_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument (the arity) subtree of an \fIarity_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fIarity_qualifier/2\fR.
+
+
+.RE
+.B
+\fBarity_qualifier_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of an \fIarity_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fIarity_qualifier/2\fR.
+
+
+.RE
+.B
+\fBatom(atom() | string()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract atom literal.
+
+.PP
+The print name of the atom is the character sequence represented by \fIName\fR.
+
+.PP
+\fISee also: \fR\fIatom_literal/1\fR, \fIatom_literal/2\fR, \fIatom_name/1\fR, \fIatom_value/1\fR, \fIis_atom/2\fR.
+
+
+.RE
+.B
+\fBatom_literal(syntaxTree()) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the literal string represented by an \fIatom\fR node.
+
+.PP
+This includes surrounding single-quote characters if necessary. Characters beyond 255 will be escaped.
+
+.PP
+Note that, for example, the result of \fIatom("x\\ny")\fR represents any and all of \fI'x\\ny'\fR, \fI'x\\12y'\fR, \fI'x\\012y'\fR, and \fI'x\\^Jy'\fR; see \fIstring/1\fR.
+
+.PP
+\fISee also: \fR\fIatom/1\fR, \fIstring/1\fR.
+
+
+.RE
+.B
+\fBatom_literal(syntaxTree(), utf8 | unicode | latin1) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the literal string represented by an \fIatom\fR node.
+
+.PP
+This includes surrounding single-quote characters if necessary. Depending on the encoding a character beyond 255 will be escaped (\fIlatin1\fR) or copied as is (\fIutf8\fR).
+
+.PP
+\fISee also: \fR\fIatom/1\fR, \fIatom_literal/1\fR, \fIstring/1\fR.
+
+
+.RE
+.B
+\fBatom_name(syntaxTree()) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the printname of an \fIatom\fR node.
+
+.PP
+\fISee also: \fR\fIatom/1\fR.
+
+
+.RE
+.B
+\fBatom_value(syntaxTree()) -> atom().\fR
+
+.br
+.RS
+.PP
+Returns the value represented by an \fIatom\fR node.
+
+.PP
+\fISee also: \fR\fIatom/1\fR.
+
+
+.RE
+.B
+\fBattribute(syntaxTree(), none | [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract program attribute.
+
+.PP
+If \fIArguments\fR is \fI[A1, ..., An]\fR, the result represents "\fI-Name(A1, ..., An).\fR". Otherwise, if \fIArguments\fR is \fInone\fR, the result represents "\fI-Name.\fR". The latter form makes it possible to represent preprocessor directives such as "\fI-endif.\fR". Attributes are source code forms.
+
+.PP
+\fBNOTE: \fRThe preprocessor macro definition directive "\fI-define(Name, Body).\fR" has relatively few requirements on the syntactical form of \fIBody\fR (viewed as a sequence of tokens). The \fItext\fR node type can be used for a \fIBody\fR that is not a normal Erlang construct.
+
+
+.PP
+\fISee also: \fR\fIattribute/1\fR, \fIattribute_arguments/1\fR, \fIattribute_name/1\fR, \fIis_form/1\fR, \fItext/1\fR.
+
+
+.RE
+.B
+\fBattribute_arguments(syntaxTree()) -> none | [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of argument subtrees of an \fIattribute\fR node, if any.
+
+.PP
+If \fINode\fR represents "\fI-Name.\fR", the result is \fInone\fR. Otherwise, if \fINode\fR represents "\fI-Name(E1, ..., En).\fR", \fI[E1, ..., E1]\fR is returned.
+
+.PP
+\fISee also: \fR\fIattribute/1\fR.
+
+
+.RE
+.B
+\fBattribute_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of an \fIattribute\fR node.
+
+.PP
+\fISee also: \fR\fIattribute/1\fR.
+
+
+.RE
+.B
+\fBbinary([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract binary-object template.
+
+.PP
+If \fIFields\fR is \fI[F1, ..., Fn]\fR, the result represents "\fI<<F1, ..., Fn>>\fR".
+
+.PP
+\fISee also: \fR\fIbinary_field/2\fR, \fIbinary_fields/1\fR.
+
+
+.RE
+.B
+\fBbinary_comp(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract binary comprehension.
+
+.PP
+If \fIBody\fR is \fI[E1, ..., En]\fR, the result represents "\fI<<Template || E1, ..., En>>\fR".
+
+.PP
+\fISee also: \fR\fIbinary_comp_body/1\fR, \fIbinary_comp_template/1\fR, \fIgenerator/2\fR.
+
+
+.RE
+.B
+\fBbinary_comp_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of body subtrees of a \fIbinary_comp\fR node.
+
+.PP
+\fISee also: \fR\fIbinary_comp/2\fR.
+
+
+.RE
+.B
+\fBbinary_comp_template(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the template subtree of a \fIbinary_comp\fR node.
+
+.PP
+\fISee also: \fR\fIbinary_comp/2\fR.
+
+
+.RE
+.B
+\fBbinary_field(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract binary template field.
+
+.PP
+If \fITypes\fR is the empty list, the result simply represents "\fIBody\fR", otherwise, if \fITypes\fR is \fI[T1, ..., Tn]\fR, the result represents "\fIBody/T1-...-Tn\fR".
+
+.PP
+\fISee also: \fR\fIbinary/1\fR, \fIbinary_field/1\fR, \fIbinary_field/3\fR, \fIbinary_field_body/1\fR, \fIbinary_field_size/1\fR, \fIbinary_field_types/1\fR.
+
+
+.RE
+.B
+\fBbinary_field(syntaxTree(), none | syntaxTree(), [syntaxTree()]) ->\fR
+\fB                      syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract binary template field.
+
+.PP
+If \fISize\fR is \fInone\fR, this is equivalent to "\fIbinary_field(Body, Types)\fR", otherwise it is equivalent to "\fIbinary_field(size_qualifier(Body, Size), Types)\fR".
+
+.PP
+(This is a utility function.)
+
+.PP
+\fISee also: \fR\fIbinary/1\fR, \fIbinary_field/2\fR, \fIsize_qualifier/2\fR.
+
+
+.RE
+.B
+\fBbinary_field_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIbinary_field\fR.
+
+.PP
+\fISee also: \fR\fIbinary_field/2\fR.
+
+
+.RE
+.B
+\fBbinary_field_size(syntaxTree()) -> none | syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the size specifier subtree of a \fIbinary_field\fR node, if any.
+
+.PP
+If \fINode\fR represents "\fIBody:Size\fR" or "\fIBody:Size/T1, ..., Tn\fR", the result is \fISize\fR, otherwise \fInone\fR is returned.
+
+.PP
+(This is a utility function.)
+
+.PP
+\fISee also: \fR\fIbinary_field/2\fR, \fIbinary_field/3\fR.
+
+
+.RE
+.B
+\fBbinary_field_types(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of type-specifier subtrees of a \fIbinary_field\fR node.
+
+.PP
+If \fINode\fR represents "\fI.../T1, ..., Tn\fR", the result is \fI[T1, ..., Tn]\fR, otherwise the result is the empty list.
+
+.PP
+\fISee also: \fR\fIbinary_field/2\fR.
+
+
+.RE
+.B
+\fBbinary_fields(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of field subtrees of a \fIbinary\fR node.
+
+.PP
+\fISee also: \fR\fIbinary/1\fR, \fIbinary_field/2\fR.
+
+
+.RE
+.B
+\fBbinary_generator(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract binary_generator.
+
+.PP
+The result represents "\fIPattern <= Body\fR".
+
+.PP
+\fISee also: \fR\fIbinary_comp/2\fR, \fIbinary_generator_body/1\fR, \fIbinary_generator_pattern/1\fR, \fIlist_comp/2\fR, \fImap_comp/2\fR.
+
+
+.RE
+.B
+\fBbinary_generator_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIbinary_generator/2\fR.
+
+
+.RE
+.B
+\fBbinary_generator_pattern(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the pattern subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIbinary_generator/2\fR.
+
+
+.RE
+.B
+\fBbitstring_type(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract bitstring type.
+
+.PP
+The result represents "\fI<<_:M, _:_N>>\fR".
+
+.PP
+\fISee also: \fR\fIbitstring_type_m/1\fR, \fIbitstring_type_n/1\fR.
+
+
+.RE
+.B
+\fBbitstring_type_m(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the number of start bits, \fIM\fR, of a \fIbitstring_type\fR node.
+
+.PP
+\fISee also: \fR\fIbitstring_type/2\fR.
+
+
+.RE
+.B
+\fBbitstring_type_n(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the segment size, \fIN\fR, of a \fIbitstring_type\fR node.
+
+.PP
+\fISee also: \fR\fIbitstring_type/2\fR.
+
+
+.RE
+.B
+\fBblock_expr([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract block expression.
+
+.PP
+If \fIBody\fR is \fI[B1, ..., Bn]\fR, the result represents "\fIbegin B1, ..., Bn end\fR".
+
+.PP
+\fISee also: \fR\fIblock_expr_body/1\fR.
+
+
+.RE
+.B
+\fBblock_expr_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of body subtrees of a \fIblock_expr\fR node.
+
+.PP
+\fISee also: \fR\fIblock_expr/1\fR.
+
+
+.RE
+.B
+\fBcase_expr(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract case-expression.
+
+.PP
+If \fIClauses\fR is \fI[C1, ..., Cn]\fR, the result represents "\fIcase Argument of C1; ...; Cn end\fR". More exactly, if each \fICi\fR represents "\fI(Pi) Gi -> Bi\fR", then the result represents "\fIcase Argument of P1G1 -> B1; ...; PnGn -> Bn end\fR".
+
+.PP
+\fISee also: \fR\fIcase_expr_argument/1\fR, \fIcase_expr_clauses/1\fR, \fIclause/3\fR, \fIif_expr/1\fR.
+
+
+.RE
+.B
+\fBcase_expr_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument subtree of a \fIcase_expr\fR node.
+
+.PP
+\fISee also: \fR\fIcase_expr/2\fR.
+
+
+.RE
+.B
+\fBcase_expr_clauses(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of clause subtrees of a \fIcase_expr\fR node.
+
+.PP
+\fISee also: \fR\fIcase_expr/2\fR.
+
+
+.RE
+.B
+\fBcatch_expr(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract catch-expression.
+
+.PP
+The result represents "\fIcatch Expr\fR".
+
+.PP
+\fISee also: \fR\fIcatch_expr_body/1\fR.
+
+
+.RE
+.B
+\fBcatch_expr_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIcatch_expr\fR node.
+
+.PP
+\fISee also: \fR\fIcatch_expr/1\fR.
+
+
+.RE
+.B
+\fBchar(char()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract character literal.
+
+.PP
+The result represents "\fI$Name\fR", where \fIName\fR corresponds to \fIValue\fR.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.RE
+
+.PP
+The literal corresponding to a particular character value is not uniquely defined. For example, the character "\fIa\fR" can be written both as "\fI$a\fR" and "\fI$\\141\fR", and a Tab character can be written as "\fI$\\11\fR", "\fI$\\011\fR", or "\fI$\\t\fR".
+
+.PP
+\fISee also: \fR\fIchar_literal/1\fR, \fIchar_literal/2\fR, \fIchar_value/1\fR, \fIis_char/2\fR.
+
+
+.RE
+.B
+\fBchar_literal(syntaxTree()) -> nonempty_string().\fR
+
+.br
+.RS
+.PP
+Returns the literal string represented by a \fIchar\fR node.
+
+.PP
+This includes the leading "\fI$\fR" character. Characters beyond 255 will be escaped.
+
+.PP
+\fISee also: \fR\fIchar/1\fR.
+
+
+.RE
+.B
+\fBchar_literal(syntaxTree(), encoding()) -> nonempty_string().\fR
+
+.br
+.RS
+.PP
+Returns the literal string represented by a \fIchar\fR node.
+
+.PP
+This includes the leading "\fI$\fR" character. Depending on the encoding a character beyond 255 will be escaped (\fIlatin1\fR) or copied as is (\fIutf8\fR).
+
+.PP
+\fISee also: \fR\fIchar/1\fR.
+
+
+.RE
+.B
+\fBchar_value(syntaxTree()) -> char().\fR
+
+.br
+.RS
+.PP
+Returns the value represented by a \fIchar\fR node.
+
+.PP
+\fISee also: \fR\fIchar/1\fR.
+
+
+.RE
+.B
+\fBclass_qualifier(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract class qualifier.
+
+.PP
+The result represents "\fIClass:Body\fR".
+
+.PP
+\fISee also: \fR\fIclass_qualifier_argument/1\fR, \fIclass_qualifier_body/1\fR, \fIclass_qualifier_stacktrace/1\fR, \fItry_expr/4\fR.
+
+
+.RE
+.B
+\fBclass_qualifier(syntaxTree(), syntaxTree(), syntaxTree()) ->\fR
+\fB                         syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract class qualifier.
+
+.PP
+The result represents "\fIClass:Body:Stacktrace\fR".
+
+.PP
+\fISee also: \fR\fIclass_qualifier_argument/1\fR, \fIclass_qualifier_body/1\fR, \fItry_expr/4\fR.
+
+
+.RE
+.B
+\fBclass_qualifier_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument (the class) subtree of a \fIclass_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fIclass_qualifier/2\fR.
+
+
+.RE
+.B
+\fBclass_qualifier_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIclass_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fIclass_qualifier/2\fR.
+
+
+.RE
+.B
+\fBclass_qualifier_stacktrace(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the stacktrace subtree of a \fIclass_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fIclass_qualifier/2\fR.
+
+
+.RE
+.B
+\fBclause([syntaxTree()], guard(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract clause.
+
+.PP
+If \fIPatterns\fR is \fI[P1, ..., Pn]\fR and \fIBody\fR is \fI[B1, ..., Bm]\fR, then if \fIGuard\fR is \fInone\fR, the result represents "\fI(P1, ..., Pn) -> B1, ..., Bm\fR", otherwise, unless \fIGuard\fR is a list, the result represents "\fI(P1, ..., Pn) when Guard -> B1, ..., Bm\fR".
+
+.PP
+For simplicity, the \fIGuard\fR argument may also be any of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An empty list \fI[]\fR. This is equivalent to passing \fInone\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+nonempty list \fI[E1, ..., Ej]\fR of syntax trees. This is equivalent to passing \fIconjunction([E1, ..., Ej])\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+nonempty list of lists of syntax trees \fI[[E1_1, ..., E1_k1], ..., [Ej_1, ..., Ej_kj]]\fR, which is equivalent to passing \fIdisjunction([conjunction([E1_1, ..., E1_k1]), ..., conjunction([Ej_1, ..., Ej_kj])])\fR.
+
+.RE
+
+.PP
+\fISee also: \fR\fIclause/2\fR, \fIclause_body/1\fR, \fIclause_guard/1\fR, \fIclause_patterns/1\fR.
+
+
+.RE
+.B
+\fBclause_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Return the list of body subtrees of a \fIclause\fR node.
+
+.PP
+\fISee also: \fR\fIclause/3\fR.
+
+
+.RE
+.B
+\fBclause_guard(syntaxTree()) -> none | syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the guard subtree of a \fIclause\fR node, if any.
+
+.PP
+If \fINode\fR represents "\fI(P1, ..., Pn) when Guard -> B1, ..., Bm\fR", \fIGuard\fR is returned.  Otherwise, the result is \fInone\fR.
+
+.PP
+\fISee also: \fR\fIclause/3\fR.
+
+
+.RE
+.B
+\fBclause_patterns(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of pattern subtrees of a \fIclause\fR node.
+
+.PP
+\fISee also: \fR\fIclause/3\fR.
+
+
+.RE
+.B
+\fBcomment(padding(), [string()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract comment with the given padding and text.
+
+.PP
+If \fIStrings\fR is a (possibly empty) list \fI["Txt1", ..., "TxtN"]\fR, the result represents the source code text
+
+.IP
+.nf
+     Txt1
+     ...
+     TxtN
+
+.fi
+
+.PP
+\fIPadding\fR states the number of empty character positions to the left of the comment separating it horizontally from source code on the same line (if any). If \fIPadding\fR is \fInone\fR, a default positive number is used. If \fIPadding\fR is an integer less than 1, there should be no separating space. Comments are in themselves regarded as source program forms.
+
+.PP
+\fISee also: \fR\fIcomment/1\fR, \fIis_form/1\fR.
+
+
+.RE
+.B
+\fBcomment_padding(syntaxTree()) -> padding().\fR
+
+.br
+.RS
+.PP
+Returns the amount of padding before the comment, or \fInone\fR.
+
+.PP
+\fInone\fR means that a default padding may be used.
+
+.PP
+\fISee also: \fR\fIcomment/2\fR.
+
+
+.RE
+.B
+\fBcomment_text(syntaxTree()) -> [string()].\fR
+
+.br
+.RS
+.PP
+Returns the lines of text of the abstract comment.
+
+.PP
+\fISee also: \fR\fIcomment/2\fR.
+
+
+.RE
+.B
+\fBcompact_list(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Yields the most compact form for an abstract list skeleton.
+
+.PP
+The result either represents "\fI[E1, ..., En | Tail]\fR", where \fITail\fR is not a list skeleton, or otherwise simply "\fI[E1, ..., En]\fR". Annotations on subtrees of \fINode\fR that represent list skeletons may be lost, but comments will be propagated to the result. Returns \fINode\fR itself if \fINode\fR does not represent a list skeleton.
+
+.PP
+\fISee also: \fR\fIlist/2\fR, \fInormalize_list/1\fR.
+
+
+.RE
+.B
+\fBconcrete(syntaxTree()) -> term().\fR
+
+.br
+.RS
+.PP
+Returns the Erlang term represented by a syntax tree.
+
+.PP
+Evaluation fails with reason \fIbadarg\fR if \fINode\fR does not represent a literal term.
+
+.PP
+\fBNOTE: \fRThe set of syntax trees which have a concrete representation is larger than the set of trees which can be built using the function \fIabstract/1\fR.  An abstract character will be concretised as an integer, while \fIabstract/1\fR does not at present yield an abstract character for any input. (Use the \fIchar/1\fR function to explicitly create an abstract character.)
+
+
+.PP
+\fBNOTE: \fR\fIarity_qualifier\fR nodes are recognized. This is to follow the Erlang Parser when it comes to wild attributes: both \fI{F, A}\fR and \fIF/A\fR are recognized, which makes it possible to turn wild attributes into recognized attributes without at the same time making it impossible to compile files using the new syntax with the old version of the Erlang Compiler.
+
+
+.PP
+\fISee also: \fR\fIabstract/1\fR, \fIchar/1\fR, \fIis_literal/1\fR.
+
+
+.RE
+.B
+\fBconjunction([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract conjunction.
+
+.PP
+If \fIList\fR is \fI[E1, ..., En]\fR, the result represents "\fIE1, ..., En\fR".
+
+.PP
+\fISee also: \fR\fIconjunction_body/1\fR, \fIdisjunction/1\fR.
+
+
+.RE
+.B
+\fBconjunction_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of body subtrees of a \fIconjunction\fR node.
+
+.PP
+\fISee also: \fR\fIconjunction/1\fR.
+
+
+.RE
+.B
+\fBcons(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+"Optimizing" list skeleton cons operation.
+
+.PP
+Creates an abstract list skeleton whose first element is \fIHead\fR and whose tail corresponds to \fITail\fR. This is similar to \fIlist([Head], Tail)\fR, except that \fITail\fR must not be \fInone\fR, and the result does not necessarily represent exactly "\fI[Head | Tail]\fR", but may depend on the \fITail\fR subtree.
+
+.PP
+For example, if \fITail\fR represents \fI[X, Y]\fR, the result may represent "\fI[Head, X, Y]\fR", rather than "\fI[Head | [X, Y]]\fR". Annotations on \fITail\fR itself may be lost if \fITail\fR represents a list skeleton, but comments on \fITail\fR are propagated to the result.
+
+.PP
+\fISee also: \fR\fIlist/2\fR, \fIlist_head/1\fR, \fIlist_tail/1\fR.
+
+
+.RE
+.B
+\fBconstrained_function_type(syntaxTree(), [syntaxTree()]) ->\fR
+\fB                                   syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract constrained function type.
+
+.PP
+If \fIFunctionConstraint\fR is \fI[C1, ..., Cn]\fR, the result represents "\fIFunctionType when C1, ...Cn\fR".
+
+.PP
+\fISee also: \fR\fIconstrained_function_type_argument/1\fR, \fIconstrained_function_type_body/1\fR.
+
+
+.RE
+.B
+\fBconstrained_function_type_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the function constraint subtree of a \fIconstrained_function_type\fR node.
+
+.PP
+\fISee also: \fR\fIconstrained_function_type/2\fR.
+
+
+.RE
+.B
+\fBconstrained_function_type_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the function type subtree of a \fIconstrained_function_type\fR node.
+
+.PP
+\fISee also: \fR\fIconstrained_function_type/2\fR.
+
+
+.RE
+.B
+\fBconstraint(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract (subtype) constraint.
+
+.PP
+The result represents "\fIName :: Type\fR".
+
+.PP
+\fISee also: \fR\fIconstraint_argument/1\fR, \fIconstraint_body/1\fR.
+
+
+.RE
+.B
+\fBconstraint_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fIconstraint\fR node.
+
+.PP
+\fISee also: \fR\fIconstraint/2\fR.
+
+
+.RE
+.B
+\fBconstraint_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the type subtree of a \fIconstraint\fR node.
+
+.PP
+\fISee also: \fR\fIconstraint/2\fR.
+
+
+.RE
+.B
+\fBcopy_ann(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Copies the list of user annotations from \fISource\fR to \fITarget\fR.
+
+.PP
+Note: this is equivalent to \fIset_ann(Target, get_ann(Source))\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIget_ann/1\fR, \fIset_ann/2\fR.
+
+
+.RE
+.B
+\fBcopy_attrs(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Copies the attributes from \fISource\fR to \fITarget\fR.
+
+.PP
+Note: this is equivalent to \fIset_attrs(Target, get_attrs(Source))\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIget_attrs/1\fR, \fIset_attrs/2\fR.
+
+
+.RE
+.B
+\fBcopy_comments(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Copies the pre- and postcomments from \fISource\fR to \fITarget\fR.
+
+.PP
+Note: This is equivalent to \fIset_postcomments(set_precomments(Target, get_precomments(Source)), get_postcomments(Source))\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIcomment/2\fR, \fIget_postcomments/1\fR, \fIget_precomments/1\fR, \fIset_postcomments/2\fR, \fIset_precomments/2\fR.
+
+
+.RE
+.B
+\fBcopy_pos(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Copies the annotation from \fISource\fR to \fITarget\fR.
+
+.PP
+This is equivalent to \fIset_pos(Target, get_pos(Source))\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIget_pos/1\fR, \fIset_pos/2\fR.
+
+
+.RE
+.B
+\fBdata(syntaxTree()) -> term().\fR
+
+.br
+.RS
+.PP
+\fBFor special purposes only\fR. Returns the associated data of a syntax tree node.
+
+.PP
+Evaluation fails with reason \fIbadarg\fR if \fIis_tree(Node)\fR does not yield \fItrue\fR.
+
+.PP
+\fISee also: \fR\fItree/2\fR.
+
+
+.RE
+.B
+\fBdisjunction([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract disjunction.
+
+.PP
+If \fIList\fR is \fI[E1, ..., En]\fR, the result represents "\fIE1; ...; En\fR".
+
+.PP
+\fISee also: \fR\fIconjunction/1\fR, \fIdisjunction_body/1\fR.
+
+
+.RE
+.B
+\fBdisjunction_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of body subtrees of a \fIdisjunction\fR node.
+
+.PP
+\fISee also: \fR\fIdisjunction/1\fR.
+
+
+.RE
+.B
+\fBelse_expr([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract else-expression.
+
+.PP
+If \fIClauses\fR is \fI[C1, ..., Cn]\fR, the result represents "\fIelse C1; ...; Cn end\fR". More exactly, if each \fICi\fR represents "\fI(Pi) Gi -> Bi\fR", then the result represents "\fIelse (P1) G1 -> B1; ...; (Pn) Gn -> Bn end\fR".
+
+.PP
+\fISee also: \fR\fIclause/3\fR, \fIelse_expr_clauses/1\fR, \fImaybe_expr/2\fR.
+
+
+.RE
+.B
+\fBelse_expr_clauses(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of clause subtrees of an \fIelse_expr\fR node.
+
+.PP
+\fISee also: \fR\fIelse_expr/1\fR.
+
+
+.RE
+.B
+\fBeof_marker() -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract end-of-file marker.
+
+.PP
+This represents the end of input when reading a sequence of source code forms. An end-of-file marker is itself regarded as a source code form (namely, the last in any sequence in which it occurs). It has no defined lexical form.
+
+.PP
+\fBNOTE: \fRThis is retained only for backwards compatibility with existing parsers and tools.
+
+
+.PP
+\fISee also: \fR\fIerror_marker/1\fR, \fIis_form/1\fR, \fIwarning_marker/1\fR.
+
+
+.RE
+.B
+\fBerror_marker(term()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract error marker.
+
+.PP
+The result represents an occurrence of an error in the source code, with an associated Erlang I/O ErrorInfo structure given by \fIError\fR (see module \fI//stdlib/io\fR for details). Error markers are regarded as source code forms, but have no defined lexical form.
+
+.PP
+\fBNOTE: \fRThis is supported only for backwards compatibility with existing parsers and tools.
+
+
+.PP
+\fISee also: \fR\fIeof_marker/0\fR, \fIerror_marker_info/1\fR, \fIis_form/1\fR, \fIwarning_marker/1\fR.
+
+
+.RE
+.B
+\fBerror_marker_info(syntaxTree()) -> term().\fR
+
+.br
+.RS
+.PP
+Returns the ErrorInfo structure of an \fIerror_marker\fR node.
+
+.PP
+\fISee also: \fR\fIerror_marker/1\fR.
+
+
+.RE
+.B
+\fBflatten_form_list(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Flattens sublists of a \fIform_list\fR node.
+
+.PP
+Returns \fINode\fR with all subtrees of type \fIform_list\fR recursively expanded, yielding a single "flat" abstract form sequence.
+
+.PP
+\fISee also: \fR\fIform_list/1\fR.
+
+
+.RE
+.B
+\fBfloat(float()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract floating-point literal.
+
+.PP
+The lexical representation is the decimal floating-point numeral of \fIValue\fR.
+
+.PP
+\fISee also: \fR\fIfloat_literal/1\fR, \fIfloat_value/1\fR.
+
+
+.RE
+.B
+\fBfloat_literal(syntaxTree()) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the numeral string represented by a \fIfloat\fR node.
+
+.PP
+\fISee also: \fR\fIfloat/1\fR.
+
+
+.RE
+.B
+\fBfloat_value(syntaxTree()) -> float().\fR
+
+.br
+.RS
+.PP
+Returns the value represented by a \fIfloat\fR node.
+
+.PP
+Note that floating-point values should usually not be compared for equality.
+
+.PP
+\fISee also: \fR\fIfloat/1\fR.
+
+
+.RE
+.B
+\fBform_list([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract sequence of "source code forms".
+
+.PP
+If \fIForms\fR is \fI[F1, ..., Fn]\fR, where each \fIFi\fR is a form (see \fIis_form/1\fR), the result represents:
+
+.IP
+.nf
+F1
+...
+Fn
+
+.fi
+
+.PP
+where the \fIFi\fR are separated by one or more line breaks. A node of type \fIform_list\fR is itself regarded as a source code form; see \fIflatten_form_list/1\fR.
+
+.PP
+\fBNOTE: \fRThis is simply a way of grouping source code forms into a single syntax
+
+
+.PP
+tree, usually to form an Erlang module definition.
+
+.PP
+\fISee also: \fR\fIflatten_form_list/1\fR, \fIform_list_elements/1\fR, \fIis_form/1\fR.
+
+
+.RE
+.B
+\fBform_list_elements(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of subnodes of a \fIform_list\fR node.
+
+.PP
+\fISee also: \fR\fIform_list/1\fR.
+
+
+.RE
+.B
+\fBfun_expr([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract fun-expression.
+
+.PP
+If \fIClauses\fR is \fI[C1, ..., Cn]\fR, the result represents "\fIfun C1; ...; Cn end\fR". More exactly, if each \fICi\fR represents "\fI(Pi1, ..., Pim) Gi -> Bi\fR", then the result represents "\fIfun (P11, ..., P1m) G1 -> B1; ...; (Pn1, ..., Pnm) Gn -> Bn end\fR".
+
+.PP
+\fISee also: \fR\fIfun_expr_arity/1\fR, \fIfun_expr_clauses/1\fR.
+
+
+.RE
+.B
+\fBfun_expr_arity(syntaxTree()) -> arity().\fR
+
+.br
+.RS
+.PP
+Returns the arity of a \fIfun_expr\fR node.
+
+.PP
+The result is the number of parameter patterns in the first clause of the fun-expression; subsequent clauses are ignored.
+
+.PP
+An exception is thrown if \fIfun_expr_clauses(Node)\fR returns an empty list, or if the first element of that list is not a syntax tree \fIC\fR of type \fIclause\fR such that \fIclause_patterns(C)\fR is a nonempty list.
+
+.PP
+\fISee also: \fR\fIclause/3\fR, \fIclause_patterns/1\fR, \fIfun_expr/1\fR, \fIfun_expr_clauses/1\fR.
+
+
+.RE
+.B
+\fBfun_expr_clauses(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of clause subtrees of a \fIfun_expr\fR node.
+
+.PP
+\fISee also: \fR\fIfun_expr/1\fR.
+
+
+.RE
+.B
+\fBfun_type() -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract fun of any type.
+
+.PP
+The result represents "\fIfun()\fR".
+
+
+.RE
+.B
+\fBfunction(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract function definition.
+
+.PP
+If \fIClauses\fR is \fI[C1, ..., Cn]\fR, the result represents "\fIName C1; ...; Name Cn.\fR". More exactly, if each \fICi\fR represents "\fI(Pi1, ..., Pim) Gi -> Bi\fR", then the result represents "\fIName(P11, ..., P1m) G1 -> B1; ...; Name(Pn1, ..., Pnm) Gn -> Bn.\fR". Function definitions are source code forms.
+
+.PP
+\fISee also: \fR\fIfunction_arity/1\fR, \fIfunction_clauses/1\fR, \fIfunction_name/1\fR, \fIis_form/1\fR.
+
+
+.RE
+.B
+\fBfunction_arity(syntaxTree()) -> arity().\fR
+
+.br
+.RS
+.PP
+Returns the arity of a \fIfunction\fR node.
+
+.PP
+The result is the number of parameter patterns in the first clause of the function; subsequent clauses are ignored.
+
+.PP
+An exception is thrown if \fIfunction_clauses(Node)\fR returns an empty list, or if the first element of that list is not a syntax tree \fIC\fR of type \fIclause\fR such that \fIclause_patterns(C)\fR is a nonempty list.
+
+.PP
+\fISee also: \fR\fIclause/3\fR, \fIclause_patterns/1\fR, \fIfunction/2\fR, \fIfunction_clauses/1\fR.
+
+
+.RE
+.B
+\fBfunction_clauses(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of clause subtrees of a \fIfunction\fR node.
+
+.PP
+\fISee also: \fR\fIfunction/2\fR.
+
+
+.RE
+.B
+\fBfunction_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fIfunction\fR node.
+
+.PP
+\fISee also: \fR\fIfunction/2\fR.
+
+
+.RE
+.B
+\fBfunction_type(any_arity | [syntaxTree()], syntaxTree()) ->\fR
+\fB                       syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract function type.
+
+.PP
+If \fIArguments\fR is \fI[T1, ..., Tn]\fR \fIand\fR it occurs within a function specification, the result represents "\fI(T1, ...Tn) -> Return\fR"; otherwise it represents "\fIfun((T1, ...Tn) -> Return)\fR". If \fIArguments\fR is \fIany_arity\fR, it represents "\fIfun((...) -> Return)\fR".
+
+.PP
+Note that the \fIerl_parse\fR representation is identical for "\fIFunctionType\fR" and "\fIfun(FunctionType)\fR".
+
+.PP
+\fISee also: \fR\fIfunction_type_arguments/1\fR, \fIfunction_type_return/1\fR.
+
+
+.RE
+.B
+\fBfunction_type_arguments(syntaxTree()) ->\fR
+\fB                                 any_arity | [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the argument types subtrees of a \fIfunction_type\fR node.
+
+.PP
+If \fINode\fR represents "\fIfun((...) -> Return)\fR", \fIany_arity\fR is returned; otherwise, if \fINode\fR represents "\fI(T1, ...Tn) -> Return\fR" or "\fIfun((T1, ...Tn) -> Return)\fR", \fI[T1, ..., Tn]\fR is returned.
+
+.PP
+\fISee also: \fR\fIfunction_type/1\fR, \fIfunction_type/2\fR.
+
+
+.RE
+.B
+\fBfunction_type_return(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the return type subtrees of a \fIfunction_type\fR node.
+
+.PP
+\fISee also: \fR\fIfunction_type/1\fR, \fIfunction_type/2\fR.
+
+
+.RE
+.B
+\fBgenerator(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract list generator.
+
+.PP
+The result represents "\fIPattern <- Body\fR".
+
+.PP
+\fISee also: \fR\fIbinary_comp/2\fR, \fIgenerator_body/1\fR, \fIgenerator_pattern/1\fR, \fImap_comp/2\fR, \fIlist_comp/2\fR.
+
+
+.RE
+.B
+\fBgenerator_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIgenerator/2\fR.
+
+
+.RE
+.B
+\fBgenerator_pattern(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the pattern subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIgenerator/2\fR.
+
+
+.RE
+.B
+\fBget_ann(syntaxTree()) -> [term()].\fR
+
+.br
+.RS
+.PP
+Returns the list of user annotations associated with a syntax tree.
+
+.PP
+For a newly created node, this is the empty list. The annotations may be any terms.
+
+.PP
+\fISee also: \fR\fIget_attrs/1\fR, \fIset_ann/2\fR.
+
+
+.RE
+.B
+\fBget_attrs(syntaxTree()) -> syntaxTreeAttributes().\fR
+
+.br
+.RS
+.PP
+Returns a representation of the attributes associated with a syntax tree node.
+
+.PP
+The attributes are all the extra information that can be attached to a node. Currently, this includes position information, source code comments, and user annotations. The result of this function cannot be inspected directly; only attached to another node (see \fIset_attrs/2\fR).
+
+.PP
+For accessing individual attributes, see \fIget_pos/1\fR, \fIget_ann/1\fR, \fIget_precomments/1\fR and \fIget_postcomments/1\fR.
+
+.PP
+\fISee also: \fR\fIget_ann/1\fR, \fIget_pos/1\fR, \fIget_postcomments/1\fR, \fIget_precomments/1\fR, \fIset_attrs/2\fR.
+
+
+.RE
+.B
+\fBget_pos(syntaxTree()) -> annotation_or_location().\fR
+
+.br
+.RS
+.PP
+Returns the annotation (see \fI//stdlib/erl_anno\fR) associated with \fINode\fR.
+
+.PP
+By default, all new tree nodes have their associated position information set to the integer zero. Use \fI//stdlib/erl_anno:location/1\fR or \fI//stdlib/erl_anno:line/1\fR to get the position information.
+
+.PP
+\fISee also: \fR\fIget_attrs/1\fR, \fIset_pos/2\fR.
+
+
+.RE
+.B
+\fBget_postcomments(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the associated post-comments of a node.
+
+.PP
+This is a possibly empty list of abstract comments, in top-down textual order. When the code is formatted, post-comments are typically displayed to the right of and/or below the node. For example:
+
+.IP
+.nf
+{foo, X, Y}     % Post-comment of tuple
+
+.fi
+
+.PP
+If possible, the comment should be moved past any following separator characters on the same line, rather than placing the separators on the following line. For example:
+
+.IP
+.nf
+foo([X | Xs], Y) ->
+    foo(Xs, bar(X));     % Post-comment of 'bar(X)' node
+ ...
+
+.fi
+
+.PP
+(where the comment is moved past the rightmost "\fI)\fR" and the "\fI;\fR").
+
+.PP
+\fISee also: \fR\fIcomment/2\fR, \fIget_attrs/1\fR, \fIget_precomments/1\fR, \fIset_postcomments/2\fR.
+
+
+.RE
+.B
+\fBget_precomments(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the associated pre-comments of a node.
+
+.PP
+This is a possibly empty list of abstract comments, in top-down textual order. When the code is formatted, pre-comments are typically displayed directly above the node. For example:
+
+.IP
+.nf
+% Pre-comment of function
+foo(X) -> {bar, X}.
+
+.fi
+
+.PP
+If possible, the comment should be moved before any preceding separator characters on the same line. For example:
+
+.IP
+.nf
+foo([X | Xs]) ->
+    % Pre-comment of 'bar(X)' node
+    [bar(X) | foo(Xs)];
+...
+
+.fi
+
+.PP
+(where the comment is moved before the "\fI[\fR").
+
+.PP
+\fISee also: \fR\fIcomment/2\fR, \fIget_attrs/1\fR, \fIget_postcomments/1\fR, \fIset_precomments/2\fR.
+
+
+.RE
+.B
+\fBhas_comments(syntaxTree()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Yields \fIfalse\fR if the node has no associated comments, and \fItrue\fR otherwise.
+
+.PP
+Note: This is equivalent to \fI(get_precomments(Node) == []) and (get_postcomments(Node) == [])\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIget_postcomments/1\fR, \fIget_precomments/1\fR, \fIremove_comments/1\fR.
+
+
+.RE
+.B
+\fBif_expr([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract if-expression.
+
+.PP
+If \fIClauses\fR is \fI[C1, ..., Cn]\fR, the result represents "\fIif C1; ...; Cn end\fR". More exactly, if each \fICi\fR represents "\fI() Gi -> Bi\fR", then the result represents "\fIif G1 -> B1; ...; Gn -> Bn end\fR".
+
+.PP
+\fISee also: \fR\fIcase_expr/2\fR, \fIclause/3\fR, \fIif_expr_clauses/1\fR.
+
+
+.RE
+.B
+\fBif_expr_clauses(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of clause subtrees of an \fIif_expr\fR node.
+
+.PP
+\fISee also: \fR\fIif_expr/1\fR.
+
+
+.RE
+.B
+\fBimplicit_fun(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract "implicit fun" expression.
+
+.PP
+The result represents "\fIfun Name\fR". \fIName\fR should represent either \fIF/A\fR or \fIM:F/A\fR
+
+.PP
+\fISee also: \fR\fIarity_qualifier/2\fR, \fIimplicit_fun/2\fR, \fIimplicit_fun/3\fR, \fIimplicit_fun_name/1\fR, \fImodule_qualifier/2\fR.
+
+
+.RE
+.B
+\fBimplicit_fun(syntaxTree(), none | syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract "implicit fun" expression.
+
+.PP
+If \fIArity\fR is \fInone\fR, this is equivalent to \fIimplicit_fun(Name)\fR, otherwise it is equivalent to \fIimplicit_fun(arity_qualifier(Name, Arity))\fR.
+
+.PP
+(This is a utility function.)
+
+.PP
+\fISee also: \fR\fIimplicit_fun/1\fR, \fIimplicit_fun/3\fR.
+
+
+.RE
+.B
+\fBimplicit_fun(none | syntaxTree(), syntaxTree(), syntaxTree()) ->\fR
+\fB                      syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract module-qualified "implicit fun" expression.
+
+.PP
+If \fIModule\fR is \fInone\fR, this is equivalent to \fIimplicit_fun(Name, Arity)\fR, otherwise it is equivalent to \fIimplicit_fun(module_qualifier(Module, arity_qualifier(Name, Arity))\fR.
+
+.PP
+(This is a utility function.)
+
+.PP
+\fISee also: \fR\fIimplicit_fun/1\fR, \fIimplicit_fun/2\fR.
+
+
+.RE
+.B
+\fBimplicit_fun_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of an \fIimplicit_fun\fR node.
+
+.PP
+If \fINode\fR represents "\fIfun N/A\fR" or "\fIfun M:N/A\fR", then the result is the subtree representing "\fIN/A\fR" or "\fIM:N/A\fR", respectively.
+
+.PP
+\fISee also: \fR\fIarity_qualifier/2\fR, \fIimplicit_fun/1\fR, \fImodule_qualifier/2\fR.
+
+
+.RE
+.B
+\fBinfix_expr(syntaxTree(), syntaxTree(), syntaxTree()) ->\fR
+\fB                    syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract infix operator expression.
+
+.PP
+The result represents "\fILeft Operator Right\fR".
+
+.PP
+\fISee also: \fR\fIinfix_expr_left/1\fR, \fIinfix_expr_operator/1\fR, \fIinfix_expr_right/1\fR, \fIprefix_expr/2\fR.
+
+
+.RE
+.B
+\fBinfix_expr_left(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the left argument subtree of an \fIinfix_expr\fR node.
+
+.PP
+\fISee also: \fR\fIinfix_expr/3\fR.
+
+
+.RE
+.B
+\fBinfix_expr_operator(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the operator subtree of an \fIinfix_expr\fR node.
+
+.PP
+\fISee also: \fR\fIinfix_expr/3\fR.
+
+
+.RE
+.B
+\fBinfix_expr_right(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the right argument subtree of an \fIinfix_expr\fR node.
+
+.PP
+\fISee also: \fR\fIinfix_expr/3\fR.
+
+
+.RE
+.B
+\fBinteger(integer()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract integer literal.
+
+.PP
+The lexical representation is the canonical decimal numeral of \fIValue\fR.
+
+.PP
+\fISee also: \fR\fIinteger_literal/1\fR, \fIinteger_value/1\fR, \fIis_integer/2\fR.
+
+
+.RE
+.B
+\fBinteger_literal(syntaxTree()) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the numeral string represented by an \fIinteger\fR node.
+
+.PP
+\fISee also: \fR\fIinteger/1\fR.
+
+
+.RE
+.B
+\fBinteger_range_type(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract range type.
+
+.PP
+The result represents "\fILow .. High\fR".
+
+.PP
+\fISee also: \fR\fIinteger_range_type_high/1\fR, \fIinteger_range_type_low/1\fR.
+
+
+.RE
+.B
+\fBinteger_range_type_high(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the high limit of an \fIinteger_range_type\fR node.
+
+.PP
+\fISee also: \fR\fIinteger_range_type/2\fR.
+
+
+.RE
+.B
+\fBinteger_range_type_low(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the low limit of an \fIinteger_range_type\fR node.
+
+.PP
+\fISee also: \fR\fIinteger_range_type/2\fR.
+
+
+.RE
+.B
+\fBinteger_value(syntaxTree()) -> integer().\fR
+
+.br
+.RS
+.PP
+Returns the value represented by an \fIinteger\fR node.
+
+.PP
+\fISee also: \fR\fIinteger/1\fR.
+
+
+.RE
+.B
+\fBis_atom(syntaxTree(), atom()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR has type \fIatom\fR and represents \fIValue\fR, otherwise \fIfalse\fR.
+
+.PP
+\fISee also: \fR\fIatom/1\fR.
+
+
+.RE
+.B
+\fBis_char(syntaxTree(), char()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR has type \fIchar\fR and represents \fIValue\fR, otherwise \fIfalse\fR.
+
+.PP
+\fISee also: \fR\fIchar/1\fR.
+
+
+.RE
+.B
+\fBis_form(syntaxTree()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR is a syntax tree representing a so-called "source code form", otherwise \fIfalse\fR.
+
+.PP
+Forms are the Erlang source code units which, placed in sequence, constitute an Erlang program. Current form types are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIattribute\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcomment\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror_marker\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIeof_marker\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIform_list\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfunction\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwarning_marker\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItext\fR
+
+.RE
+
+.PP
+\fISee also: \fR\fIattribute/2\fR, \fIcomment/2\fR, \fIeof_marker/0\fR, \fIerror_marker/1\fR, \fIform_list/1\fR, \fIfunction/2\fR, \fItype/1\fR, \fIwarning_marker/1\fR.
+
+
+.RE
+.B
+\fBis_integer(syntaxTree(), integer()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR has type \fIinteger\fR and represents \fIValue\fR, otherwise \fIfalse\fR.
+
+.PP
+\fISee also: \fR\fIinteger/1\fR.
+
+
+.RE
+.B
+\fBis_leaf(syntaxTree()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR is a leaf node, otherwise \fIfalse\fR.
+
+.PP
+The currently recognised leaf node types are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIatom\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIchar\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcomment\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIeof_marker\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror_marker\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfloat\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfun_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinteger\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInil\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIoperator\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstring\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItext\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIunderscore\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIvariable\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwarning_marker\fR
+
+.RE
+
+.PP
+A node of type \fImap_expr\fR is a leaf node if and only if it has no argument and no fields. A node of type \fImap_type\fR is a leaf node if and only if it has no fields (\fIany_size\fR). A node of type \fItuple\fR is a leaf node if and only if its arity is zero. A node of type \fItuple_type\fR is a leaf node if and only if it has no elements (\fIany_size\fR).
+
+.PP
+Note: not all literals are leaf nodes, and vice versa. For example, tuples with nonzero arity and nonempty lists may be literals, but are not leaf nodes. Variables, on the other hand, are leaf nodes but not literals.
+
+.PP
+\fISee also: \fR\fIis_literal/1\fR, \fItype/1\fR.
+
+
+.RE
+.B
+\fBis_list_skeleton(syntaxTree()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR has type \fIlist\fR or \fInil\fR, otherwise \fIfalse\fR.
+
+.PP
+\fISee also: \fR\fIlist/2\fR, \fInil/0\fR.
+
+
+.RE
+.B
+\fBis_literal(syntaxTree()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR represents a literal term, otherwise \fIfalse\fR.
+
+.PP
+This function returns \fItrue\fR if and only if the value of \fIconcrete(Node)\fR is defined.
+
+.PP
+\fISee also: \fR\fIabstract/1\fR, \fIconcrete/1\fR.
+
+
+.RE
+.B
+\fBis_proper_list(syntaxTree()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR represents a proper list, and \fIfalse\fR otherwise.
+
+.PP
+A proper list is a list skeleton either of the form "\fI[]\fR" or "\fI[E1, ..., En]\fR", or "\fI[... | Tail]\fR" where recursively \fITail\fR also represents a proper list.
+
+.PP
+\fBNOTE: \fRSince \fINode\fR is a syntax tree, the actual run-time values corresponding to its subtrees can often be partially or completely unknown. For example, if \fINode\fR represents "\fI[... | Ns]\fR" (where \fINs\fR is a variable), the function will return \fIfalse\fR because it is not known whether \fINs\fR will be bound to a list at run-time. Conversely, if \fINode\fR represents, for example, "\fI[1, 2, 3]\fR" or "\fI[A | []]\fR", the function will return \fItrue\fR.
+
+
+.PP
+\fISee also: \fR\fIlist/2\fR.
+
+
+.RE
+.B
+\fBis_string(syntaxTree(), string()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fINode\fR has type \fIstring\fR and represents \fIValue\fR, otherwise \fIfalse\fR.
+
+.PP
+\fISee also: \fR\fIstring/1\fR.
+
+
+.RE
+.B
+\fBis_tree(syntaxTree()) -> boolean().\fR
+
+.br
+.RS
+.PP
+\fBFor special purposes only\fR. Returns \fItrue\fR if \fITree\fR is an abstract syntax tree and \fIfalse\fR otherwise.
+
+.PP
+\fBNOTE: \fRThis function yields \fIfalse\fR for all "old-style" \fIerl_parse\fR-compatible "parse trees".
+
+
+.PP
+\fISee also: \fR\fItree/2\fR.
+
+
+.RE
+.B
+\fBjoin_comments(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Appends the comments of \fISource\fR to the current comments of \fITarget\fR.
+
+.PP
+Note: This is equivalent to \fIadd_postcomments(get_postcomments(Source), add_precomments(get_precomments(Source), Target))\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIadd_postcomments/2\fR, \fIadd_precomments/2\fR, \fIcomment/2\fR, \fIget_postcomments/1\fR, \fIget_precomments/1\fR.
+
+
+.RE
+.B
+\fBlist([syntaxTree()], none | syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Constructs an abstract list skeleton.
+
+.PP
+The result has type \fIlist\fR or \fInil\fR. If \fIList\fR is a nonempty list \fI[E1, ..., En]\fR, the result has type \fIlist\fR and represents either "\fI[E1, ..., En]\fR" if \fITail\fR is \fInone\fR, or otherwise "\fI[E1, ..., En | Tail]\fR". If \fIList\fR is the empty list, \fITail\fR \fImust\fR be \fInone\fR, and in that case the result has type \fInil\fR and represents "\fI[]\fR" (see \fInil/0\fR).
+
+.PP
+The difference between lists as semantic objects (built up of individual "cons" and "nil" terms) and the various syntactic forms for denoting lists may be bewildering at first. This module provides functions both for exact control of the syntactic representation as well as for the simple composition and deconstruction in terms of cons and head/tail operations.
+
+.PP
+\fBNOTE: \fRIn \fIlist(Elements, none)\fR, the "nil" list terminator is implicit and has no associated information (see \fIget_attrs/1\fR). However, in the seemingly equivalent \fIlist(Elements, Tail)\fR where \fITail\fR has the type \fInil\fR, the list terminator subtree \fITail\fR may have attached attributes such as position, comments, and annotations, which will be preserved in the result.
+
+
+.PP
+\fISee also: \fR\fIcompact_list/1\fR, \fIcons/2\fR, \fIget_attrs/1\fR, \fIis_list_skeleton/1\fR, \fIis_proper_list/1\fR, \fIlist/1\fR, \fIlist_elements/1\fR, \fIlist_head/1\fR, \fIlist_length/1\fR, \fIlist_prefix/1\fR, \fIlist_suffix/1\fR, \fIlist_tail/1\fR, \fInil/0\fR, \fInormalize_list/1\fR.
+
+
+.RE
+.B
+\fBlist_comp(syntaxTree() | [syntaxTree()], [syntaxTree()]) ->\fR
+\fB                   syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract list comprehension.
+
+.PP
+If \fIBody\fR is \fI[E1, ..., En]\fR, the result represents "\fI[Template || E1, ..., En]\fR".
+
+.PP
+Supports comprehensions with multiple emitted elements per iteration, from EEP 78 - in such cases, \fITemplate\fR is a list of expressions.
+
+.PP
+\fISee also: \fR\fIgenerator/2\fR, \fIlist_comp_body/1\fR, \fIlist_comp_template/1\fR.
+
+
+.RE
+.B
+\fBlist_comp_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of body subtrees of a \fIlist_comp\fR node.
+
+.PP
+\fISee also: \fR\fIlist_comp/2\fR.
+
+
+.RE
+.B
+\fBlist_comp_template(syntaxTree()) -> syntaxTree() | [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the template subtree of a \fIlist_comp\fR node.
+
+.PP
+Supports comprehensions with multiple emitted elements per iteration, from EEP 78 - in such cases, template will be a list of expressions.
+
+.PP
+\fISee also: \fR\fIlist_comp/2\fR.
+
+
+.RE
+.B
+\fBlist_elements(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of element subtrees of a list skeleton.
+
+.PP
+\fINode\fR must represent a proper list. For example, if \fINode\fR represents "\fI[X1, X2 | [X3, X4 | []]\fR", then \fIlist_elements(Node)\fR yields the list \fI[X1, X2, X3, X4]\fR.
+
+.PP
+\fISee also: \fR\fIis_proper_list/1\fR, \fIlist/2\fR.
+
+
+.RE
+.B
+\fBlist_head(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the head element subtree of a \fIlist\fR node.
+
+.PP
+If \fINode\fR represents "\fI[Head ...]\fR", the result will represent "\fIHead\fR".
+
+.PP
+\fISee also: \fR\fIcons/2\fR, \fIlist/2\fR, \fIlist_tail/1\fR.
+
+
+.RE
+.B
+\fBlist_length(syntaxTree()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of element subtrees of a list skeleton.
+
+.PP
+\fINode\fR must represent a proper list. For example, if \fINode\fR represents "\fI[X1 | [X2, X3 | [X4, X5, X6]]]\fR", then \fIlist_length(Node)\fR returns the integer 6.
+
+.PP
+\fBNOTE: \fRThis is equivalent to \fIlength(list_elements(Node))\fR, but potentially more efficient.
+
+
+.PP
+\fISee also: \fR\fIis_proper_list/1\fR, \fIlist/2\fR, \fIlist_elements/1\fR.
+
+
+.RE
+.B
+\fBlist_prefix(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the prefix element subtrees of a \fIlist\fR node.
+
+.PP
+If \fINode\fR represents "\fI[E1, ..., En]\fR" or "\fI[E1, ..., En | Tail]\fR", the returned value is \fI[E1, ..., En]\fR.
+
+.PP
+\fISee also: \fR\fIlist/2\fR.
+
+
+.RE
+.B
+\fBlist_suffix(syntaxTree()) -> none | syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the suffix subtree of a \fIlist\fR node, if one exists.
+
+.PP
+If \fINode\fR represents "\fI[E1, ..., En | Tail]\fR", the returned value is \fITail\fR. Otherwise, if \fINode\fR represents "\fI[E1, ..., En]\fR", \fInone\fR is returned.
+
+.PP
+\fBNOTE: \fREven if this function returns a \fITail\fR that is not \fInone\fR, the type of \fITail\fR can be \fInil\fR if the tail has been given explicitly and the list skeleton has not been compacted (see \fIcompact_list/1\fR).
+
+
+.PP
+\fISee also: \fR\fIcompact_list/1\fR, \fIlist/2\fR, \fInil/0\fR.
+
+
+.RE
+.B
+\fBlist_tail(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the tail of a \fIlist\fR node.
+
+.PP
+If \fINode\fR represents a single-element list "\fI[E]\fR", then the result has type \fInil\fR, representing "\fI[]\fR". If \fINode\fR represents "\fI[E1, E2 ...]\fR", the result will represent "\fI[E2 ...]\fR", and if \fINode\fR represents "\fI[Head | Tail]\fR", the result will represent "\fITail\fR".
+
+.PP
+\fISee also: \fR\fIcons/2\fR, \fIlist/2\fR, \fIlist_head/1\fR.
+
+
+.RE
+.B
+\fBmacro(syntaxTree(), none | [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract macro application.
+
+.PP
+If \fIArguments\fR is \fInone\fR, the result represents "\fI?Name\fR", otherwise, if \fIArguments\fR is \fI[A1, ..., An]\fR, the result represents "\fI?Name(A1, ..., An)\fR".
+
+.PP
+Notes: if \fIArguments\fR is the empty list, the result will thus represent "\fI?Name()\fR", including a pair of matching parentheses.
+
+.PP
+The only syntactical limitation imposed by the preprocessor on the arguments to a macro application (viewed as sequences of tokens) is that they must be balanced with respect to parentheses, brackets, \fIbegin ... end\fR, \fIcase ... end\fR, and so on. The \fItext\fR node type can be used to represent arguments which are not regular Erlang constructs.
+
+.PP
+\fISee also: \fR\fImacro/1\fR, \fImacro_arguments/1\fR, \fImacro_name/1\fR, \fItext/1\fR.
+
+
+.RE
+.B
+\fBmacro_arguments(syntaxTree()) -> none | [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of argument subtrees of a \fImacro\fR node, if any.
+
+.PP
+If \fINode\fR represents "\fI?Name\fR", \fInone\fR is returned. Otherwise, if \fINode\fR represents "\fI?Name(A1, ..., An)\fR", \fI[A1, ..., An]\fR is returned.
+
+.PP
+\fISee also: \fR\fImacro/2\fR.
+
+
+.RE
+.B
+\fBmacro_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fImacro\fR node.
+
+.PP
+\fISee also: \fR\fImacro/2\fR.
+
+
+.RE
+.B
+\fBmake_tree(atom(), [[syntaxTree()]]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates a syntax tree with the given type and subtrees.
+
+.PP
+\fIType\fR must be a node type name (see \fItype/1\fR) that does not denote a leaf node type (see \fIis_leaf/1\fR). \fIGroups\fR must be a \fInonempty\fR list of groups of syntax trees, representing the subtrees of a node of the given type, in left-to-right order as they would occur in the printed program text, grouped by category as done by \fIsubtrees/1\fR.
+
+.PP
+The result of \fIcopy_attrs(Node, make_tree(type(Node), subtrees(Node)))\fR (see \fIupdate_tree/2\fR) represents the same source code text as the original \fINode\fR, assuming that \fIsubtrees(Node)\fR yields a nonempty list. However, it does not necessarily have the same data representation as \fINode\fR.
+
+.PP
+\fISee also: \fR\fIcopy_attrs/2\fR, \fIis_leaf/1\fR, \fIsubtrees/1\fR, \fItype/1\fR, \fIupdate_tree/2\fR.
+
+
+.RE
+.B
+\fBmap_comp(syntaxTree() | [syntaxTree()], [syntaxTree()]) ->\fR
+\fB                  syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract map comprehension.
+
+.PP
+If \fIBody\fR is \fI[E1, ..., En]\fR, the result represents "\fI#{Template || E1, ..., En}\fR".
+
+.PP
+Supports comprehensions with multiple emitted elements per iteration, from EEP 78 - in such cases, \fITemplate\fR is a list of key-value associations.
+
+.PP
+\fISee also: \fR\fIgenerator/2\fR, \fImap_comp_body/1\fR, \fImap_comp_template/1\fR.
+
+
+.RE
+.B
+\fBmap_comp_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of body subtrees of a \fImap_comp\fR node.
+
+.PP
+\fISee also: \fR\fImap_comp/2\fR.
+
+
+.RE
+.B
+\fBmap_comp_template(syntaxTree()) -> syntaxTree() | [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the template subtree of a \fImap_comp\fR node.
+
+.PP
+Supports comprehensions with multiple emitted elements per iteration, from EEP 78 - in such cases, template will be list of key-value associations.
+
+.PP
+\fISee also: \fR\fImap_comp/2\fR.
+
+
+.RE
+.B
+\fBmap_expr(none | syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract map expression.
+
+.PP
+If \fIFields\fR is \fI[F1, ..., Fn]\fR, then if \fIArgument\fR is \fInone\fR, the result represents "\fI#{F1, ..., Fn}\fR", otherwise it represents "\fIArgument#{F1, ..., Fn}\fR".
+
+.PP
+\fISee also: \fR\fImap_expr/1\fR, \fImap_expr_argument/1\fR, \fImap_expr_fields/1\fR, \fImap_field_assoc/2\fR, \fImap_field_exact/2\fR.
+
+
+.RE
+.B
+\fBmap_expr_argument(syntaxTree()) -> none | syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument subtree of a \fImap_expr\fR node, if any.
+
+.PP
+If \fINode\fR represents "\fI#{...}\fR", \fInone\fR is returned. Otherwise, if \fINode\fR represents "\fIArgument#{...}\fR", \fIArgument\fR is returned.
+
+.PP
+\fISee also: \fR\fImap_expr/2\fR.
+
+
+.RE
+.B
+\fBmap_expr_fields(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of field subtrees of a \fImap_expr\fR node.
+
+.PP
+\fISee also: \fR\fImap_expr/2\fR.
+
+
+.RE
+.B
+\fBmap_field_assoc(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract map assoc field.
+
+.PP
+The result represents "\fIName => Value\fR".
+
+.PP
+\fISee also: \fR\fImap_expr/2\fR, \fImap_field_assoc_name/1\fR, \fImap_field_assoc_value/1\fR.
+
+
+.RE
+.B
+\fBmap_field_assoc_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fImap_field_assoc\fR node.
+
+.PP
+\fISee also: \fR\fImap_field_assoc/2\fR.
+
+
+.RE
+.B
+\fBmap_field_assoc_value(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the value subtree of a \fImap_field_assoc\fR node.
+
+.PP
+\fISee also: \fR\fImap_field_assoc/2\fR.
+
+
+.RE
+.B
+\fBmap_field_exact(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract map exact field.
+
+.PP
+The result represents "\fIName := Value\fR".
+
+.PP
+\fISee also: \fR\fImap_expr/2\fR, \fImap_field_exact_name/1\fR, \fImap_field_exact_value/1\fR.
+
+
+.RE
+.B
+\fBmap_field_exact_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fImap_field_exact\fR node.
+
+.PP
+\fISee also: \fR\fImap_field_exact/2\fR.
+
+
+.RE
+.B
+\fBmap_field_exact_value(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the value subtree of a \fImap_field_exact\fR node.
+
+.PP
+\fISee also: \fR\fImap_field_exact/2\fR.
+
+
+.RE
+.B
+\fBmap_generator(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract map_generator.
+
+.PP
+The result represents "\fIPattern <- Body\fR".
+
+.PP
+\fISee also: \fR\fIbinary_comp/2\fR, \fIlist_comp/2\fR, \fImap_comp/2\fR, \fImap_generator_body/1\fR, \fImap_generator_pattern/1\fR.
+
+
+.RE
+.B
+\fBmap_generator_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fImap_generator\fR node.
+
+.PP
+\fISee also: \fR\fImap_generator/2\fR.
+
+
+.RE
+.B
+\fBmap_generator_pattern(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the pattern subtree of a \fImap_generator\fR node.
+
+.PP
+\fISee also: \fR\fImap_generator/2\fR.
+
+
+.RE
+.B
+\fBmap_type(any_size | [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract type map.
+
+.PP
+If \fIFields\fR is \fI[F1, ..., Fn]\fR, the result represents "\fI#{F1, ..., Fn}\fR"; otherwise, if \fIFields\fR is \fIany_size\fR, it represents "\fImap/0\fR".
+
+.PP
+\fISee also: \fR\fImap_type_fields/1\fR.
+
+
+.RE
+.B
+\fBmap_type_assoc(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract map type assoc field.
+
+.PP
+The result represents "\fIName => Value\fR".
+
+.PP
+\fISee also: \fR\fImap_type/1\fR, \fImap_type_assoc_name/1\fR, \fImap_type_assoc_value/1\fR.
+
+
+.RE
+.B
+\fBmap_type_assoc_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fImap_type_assoc\fR node.
+
+.PP
+\fISee also: \fR\fImap_type_assoc/2\fR.
+
+
+.RE
+.B
+\fBmap_type_assoc_value(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the value subtree of a \fImap_type_assoc\fR node.
+
+.PP
+\fISee also: \fR\fImap_type_assoc/2\fR.
+
+
+.RE
+.B
+\fBmap_type_exact(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract map type exact field.
+
+.PP
+The result represents "\fIName := Value\fR".
+
+.PP
+\fISee also: \fR\fImap_type/1\fR, \fImap_type_exact_name/1\fR, \fImap_type_exact_value/1\fR.
+
+
+.RE
+.B
+\fBmap_type_exact_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fImap_type_exact\fR node.
+
+.PP
+\fISee also: \fR\fImap_type_exact/2\fR.
+
+
+.RE
+.B
+\fBmap_type_exact_value(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the value subtree of a \fImap_type_exact\fR node.
+
+.PP
+\fISee also: \fR\fImap_type_exact/2\fR.
+
+
+.RE
+.B
+\fBmap_type_fields(syntaxTree()) -> any_size | [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of field subtrees of a \fImap_type\fR node.
+
+.PP
+If \fINode\fR represents "\fImap/0\fR", \fIany_size\fR is returned; otherwise, if \fINode\fR represents "\fI#{F1, ..., Fn}\fR", \fI[F1, ..., Fn]\fR is returned.
+
+.PP
+\fISee also: \fR\fImap_type/0\fR, \fImap_type/1\fR.
+
+
+.RE
+.B
+\fBmatch_expr(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract match-expression.
+
+.PP
+The result represents "\fIPattern = Body\fR".
+
+.PP
+\fISee also: \fR\fImatch_expr_body/1\fR, \fImatch_expr_pattern/1\fR.
+
+
+.RE
+.B
+\fBmatch_expr_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fImatch_expr\fR node.
+
+.PP
+\fISee also: \fR\fImatch_expr/2\fR.
+
+
+.RE
+.B
+\fBmatch_expr_pattern(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the pattern subtree of a \fImatch_expr\fR node.
+
+.PP
+\fISee also: \fR\fImatch_expr/2\fR.
+
+
+.RE
+.B
+\fBmaybe_expr([syntaxTree()], none | syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract maybe-expression.
+
+.PP
+If \fIBody\fR is \fI[B1, ..., Bn]\fR, and \fIOptionalElse\fR is \fInone\fR, the result represents "\fImaybe B1, ..., Bn end\fR".  If \fIBody\fR is \fI[B1, ..., Bn]\fR, and \fIOptionalElse\fR reprsents an \fIelse_expr\fR node with clauses \fI[C1, ..., Cn]\fR, the result represents "\fImaybe B1, ..., Bn else C1; ..., Cn end\fR".
+
+.PP
+See \fIclause\fR for documentation on \fIerl_parse\fR clauses.
+
+.PP
+\fISee also: \fR\fImaybe_expr_body/1\fR, \fImaybe_expr_else/1\fR.
+
+
+.RE
+.B
+\fBmaybe_expr_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of body subtrees of a \fImaybe_expr\fR node.
+
+.PP
+\fISee also: \fR\fImaybe_expr/2\fR.
+
+
+.RE
+.B
+\fBmaybe_expr_else(syntaxTree()) -> none | syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the else subtree of a \fImaybe_expr\fR node.
+
+.PP
+\fISee also: \fR\fImaybe_expr/2\fR.
+
+
+.RE
+.B
+\fBmaybe_match_expr(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract maybe-expression, as used in \fImaybe\fR blocks.
+
+.PP
+The result represents "\fIPattern ?= Body\fR".
+
+.PP
+\fISee also: \fR\fImaybe_expr/2\fR, \fImaybe_match_expr_body/1\fR, \fImaybe_match_expr_pattern/1\fR.
+
+
+.RE
+.B
+\fBmaybe_match_expr_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fImaybe_expr\fR node.
+
+.PP
+\fISee also: \fR\fImaybe_match_expr/2\fR.
+
+
+.RE
+.B
+\fBmaybe_match_expr_pattern(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the pattern subtree of a \fImaybe_expr\fR node.
+
+.PP
+\fISee also: \fR\fImaybe_match_expr/2\fR.
+
+
+.RE
+.B
+\fBmeta(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates a meta-representation of a syntax tree.
+
+.PP
+The result represents an Erlang expression "\fIMetaTree\fR" which, if evaluated, will yield a new syntax tree representing the same source code text as \fITree\fR (although the actual data representation may be different). The expression represented by \fIMetaTree\fR is \fIimplementation independent\fR with regard to the data structures used by the abstract syntax tree implementation. Comments attached to nodes of \fITree\fR will be preserved, but other attributes are lost.
+
+.PP
+Any node in \fITree\fR whose node type is \fIvariable\fR (see \fItype/1\fR), and whose list of annotations (see \fIget_ann/1\fR) contains the atom \fImeta_var\fR, will remain unchanged in the resulting tree, except that exactly one occurrence of \fImeta_var\fR is removed from its annotation list.
+
+.PP
+The main use of the function \fImeta/1\fR is to transform a data structure \fITree\fR, which represents a piece of program code, into a form that is \fIrepresentation independent when printed\fR. For example, suppose \fITree\fR represents a variable named "V". Then (assuming a function \fIprint/1\fR for printing syntax trees), evaluating \fIprint(abstract(Tree))\fR — simply using \fIabstract/1\fR to map the actual data structure onto a syntax tree representation — would output a string that might look something like "\fI{tree, variable, ..., "V", ...}\fR", which is obviously dependent on the implementation of the abstract syntax trees. This could, for example, be useful for caching a syntax tree in a file. However, in some situations like in a program generator generator (with two "generator"), it may be unacceptable. Using \fIprint(meta(Tree))\fR instead would output a \fIrepresentation independent\fR syntax tree generating expression; in the above case, something like "\fIerl_syntax:variable("V")\fR".
+
+.PP
+\fISee also: \fR\fIabstract/1\fR, \fIget_ann/1\fR, \fItype/1\fR.
+
+
+.RE
+.B
+\fBmodule_qualifier(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract module qualifier.
+
+.PP
+The result represents "\fIModule:Body\fR".
+
+.PP
+\fISee also: \fR\fImodule_qualifier_argument/1\fR, \fImodule_qualifier_body/1\fR.
+
+
+.RE
+.B
+\fBmodule_qualifier_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument (the module) subtree of a \fImodule_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fImodule_qualifier/2\fR.
+
+
+.RE
+.B
+\fBmodule_qualifier_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fImodule_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fImodule_qualifier/2\fR.
+
+
+.RE
+.B
+\fBnamed_fun_expr(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract named fun-expression.
+
+.PP
+If \fIClauses\fR is \fI[C1, ..., Cn]\fR, the result represents "\fIfun Name C1; ...; Name Cn end\fR". More exactly, if each \fICi\fR represents "\fI(Pi1, ..., Pim) Gi -> Bi\fR", then the result represents "\fIfun Name(P11, ..., P1m) G1 -> B1; ...; Name(Pn1, ..., Pnm) Gn -> Bn end\fR".
+
+.PP
+\fISee also: \fR\fInamed_fun_expr_arity/1\fR, \fInamed_fun_expr_clauses/1\fR, \fInamed_fun_expr_name/1\fR.
+
+
+.RE
+.B
+\fBnamed_fun_expr_arity(syntaxTree()) -> arity().\fR
+
+.br
+.RS
+.PP
+Returns the arity of a \fInamed_fun_expr\fR node.
+
+.PP
+The result is the number of parameter patterns in the first clause of the named fun-expression; subsequent clauses are ignored.
+
+.PP
+An exception is thrown if \fInamed_fun_expr_clauses(Node)\fR returns an empty list, or if the first element of that list is not a syntax tree \fIC\fR of type \fIclause\fR such that \fIclause_patterns(C)\fR is a nonempty list.
+
+.PP
+\fISee also: \fR\fIclause/3\fR, \fIclause_patterns/1\fR, \fInamed_fun_expr/2\fR, \fInamed_fun_expr_clauses/1\fR.
+
+
+.RE
+.B
+\fBnamed_fun_expr_clauses(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of clause subtrees of a \fInamed_fun_expr\fR node.
+
+.PP
+\fISee also: \fR\fInamed_fun_expr/2\fR.
+
+
+.RE
+.B
+\fBnamed_fun_expr_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fInamed_fun_expr\fR node.
+
+.PP
+\fISee also: \fR\fInamed_fun_expr/2\fR.
+
+
+.RE
+.B
+\fBnil() -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract empty list.
+
+.PP
+The result represents "\fI[]\fR". The empty list is traditionally called "nil".
+
+.PP
+\fISee also: \fR\fIis_list_skeleton/1\fR, \fIlist/2\fR.
+
+
+.RE
+.B
+\fBnormalize_list(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Expands an abstract list skeleton to its most explicit form.
+
+.PP
+If \fINode\fR represents "\fI[E1, ..., En | Tail]\fR", the result represents "\fI[E1 | ... [En | Tail1] ... ]\fR", where \fITail1\fR is the result of \fInormalize_list(Tail)\fR. If \fINode\fR represents "\fI[E1, ..., En]\fR", the result simply represents "\fI[E1 | ... [En | []] ... ]\fR". If \fINode\fR does not represent a list skeleton, \fINode\fR itself is returned.
+
+.PP
+\fISee also: \fR\fIcompact_list/1\fR, \fIlist/2\fR.
+
+
+.RE
+.B
+\fBoperator(atom() | string()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract operator.
+
+.PP
+The name of the operator is the character sequence represented by \fIName\fR. This is analogous to the print name of an atom, but an operator is never written within single-quotes; for example, the result of \fIoperator('++')\fR represents "\fI++\fR" rather than "\fI'++'\fR".
+
+.PP
+\fISee also: \fR\fIatom/1\fR, \fIoperator_literal/1\fR, \fIoperator_name/1\fR.
+
+
+.RE
+.B
+\fBoperator_literal(syntaxTree()) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the literal string represented by an \fIoperator\fR node.
+
+.PP
+This is simply the operator name as a string.
+
+.PP
+\fISee also: \fR\fIoperator/1\fR.
+
+
+.RE
+.B
+\fBoperator_name(syntaxTree()) -> atom().\fR
+
+.br
+.RS
+.PP
+Returns the name of an \fIoperator\fR node.
+
+.PP
+Note that the name is returned as an atom.
+
+.PP
+\fISee also: \fR\fIoperator/1\fR.
+
+
+.RE
+.B
+\fBparentheses(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract parenthesised expression.
+
+.PP
+The result represents "\fI(Body)\fR", independently of the context.
+
+.PP
+\fISee also: \fR\fIparentheses_body/1\fR.
+
+
+.RE
+.B
+\fBparentheses_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIparentheses\fR node.
+
+.PP
+\fISee also: \fR\fIparentheses/1\fR.
+
+
+.RE
+.B
+\fBprefix_expr(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract prefix operator expression.
+
+.PP
+The result represents "\fIOperator Argument\fR".
+
+.PP
+\fISee also: \fR\fIinfix_expr/3\fR, \fIprefix_expr_argument/1\fR, \fIprefix_expr_operator/1\fR.
+
+
+.RE
+.B
+\fBprefix_expr_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument subtree of a \fIprefix_expr\fR node.
+
+.PP
+\fISee also: \fR\fIprefix_expr/2\fR.
+
+
+.RE
+.B
+\fBprefix_expr_operator(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the operator subtree of a \fIprefix_expr\fR node.
+
+.PP
+\fISee also: \fR\fIprefix_expr/2\fR.
+
+
+.RE
+.B
+\fBreceive_expr([syntaxTree()], none | syntaxTree(), [syntaxTree()]) ->\fR
+\fB                      syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract receive-expression.
+
+.PP
+If \fITimeout\fR is \fInone\fR, the result represents "\fIreceive C1; ...; Cn end\fR" (the \fIAction\fR argument is ignored).  Otherwise, if \fIClauses\fR is \fI[C1, ..., Cn]\fR and \fIAction\fR is \fI[A1, ..., Am]\fR, the result represents "\fIreceive C1; ...; Cn after Timeout -> A1, ..., Am end\fR". More exactly, if each \fICi\fR represents "\fI(Pi) Gi -> Bi\fR", then the result represents "\fIreceive P1 G1 -> B1; ...; Pn Gn -> Bn ... end\fR".
+
+.PP
+Note that in Erlang, a receive-expression must have at least one clause if no timeout part is specified.
+
+.PP
+\fISee also: \fR\fIcase_expr/2\fR, \fIclause/3\fR, \fIreceive_expr/1\fR, \fIreceive_expr_action/1\fR, \fIreceive_expr_clauses/1\fR, \fIreceive_expr_timeout/1\fR.
+
+
+.RE
+.B
+\fBreceive_expr_action(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of action body subtrees of a \fIreceive_expr\fR node.
+
+.PP
+If \fINode\fR represents "\fIreceive C1; ...; Cn end\fR", this is the empty list.
+
+.PP
+\fISee also: \fR\fIreceive_expr/3\fR.
+
+
+.RE
+.B
+\fBreceive_expr_clauses(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of clause subtrees of a \fIreceive_expr\fR node.
+
+.PP
+\fISee also: \fR\fIreceive_expr/3\fR.
+
+
+.RE
+.B
+\fBreceive_expr_timeout(syntaxTree()) -> none | syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the timeout subtree of a \fIreceive_expr\fR node, if any.
+
+.PP
+If \fINode\fR represents "\fIreceive C1; ...; Cn end\fR", \fInone\fR is returned. Otherwise, if \fINode\fR represents "\fIreceive C1; ...; Cn after Timeout -> ... end\fR", \fITimeout\fR is returned.
+
+.PP
+\fISee also: \fR\fIreceive_expr/3\fR.
+
+
+.RE
+.B
+\fBrecord_access(syntaxTree(), syntaxTree(), syntaxTree()) ->\fR
+\fB                       syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract record field access expression.
+
+.PP
+The result represents "\fIArgument#Type.Field\fR".
+
+.PP
+\fISee also: \fR\fIrecord_access_argument/1\fR, \fIrecord_access_field/1\fR, \fIrecord_access_type/1\fR, \fIrecord_expr/3\fR.
+
+
+.RE
+.B
+\fBrecord_access_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument subtree of a \fIrecord_access\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_access/3\fR.
+
+
+.RE
+.B
+\fBrecord_access_field(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the field subtree of a \fIrecord_access\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_access/3\fR.
+
+
+.RE
+.B
+\fBrecord_access_type(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the type subtree of a \fIrecord_access\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_access/3\fR.
+
+
+.RE
+.B
+\fBrecord_expr(none | syntaxTree(),\fR
+\fB                  syntaxTree() | [syntaxTree()],\fR
+\fB                  [syntaxTree()]) ->\fR
+\fB                     syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract record expression.
+
+.PP
+If \fIFields\fR is \fI[F1, ..., Fn]\fR, then if \fIArgument\fR is \fInone\fR, the result represents "\fI#Type{F1, ..., Fn}\fR", otherwise it represents "\fIArgument#Type{F1, ..., Fn}\fR".
+
+.PP
+\fISee also: \fR\fIrecord_access/3\fR, \fIrecord_expr/2\fR, \fIrecord_expr_argument/1\fR, \fIrecord_expr_fields/1\fR, \fIrecord_expr_type/1\fR, \fIrecord_field/2\fR, \fIrecord_index_expr/2\fR.
+
+
+.RE
+.B
+\fBrecord_expr_argument(syntaxTree()) -> none | syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument subtree of a \fIrecord_expr\fR node, if any.
+
+.PP
+If \fINode\fR represents "\fI#Type{...}\fR", \fInone\fR is returned. Otherwise, if \fINode\fR represents "\fIArgument#Type{...}\fR", \fIArgument\fR is returned.
+
+.PP
+\fISee also: \fR\fIrecord_expr/3\fR.
+
+
+.RE
+.B
+\fBrecord_expr_fields(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of field subtrees of a \fIrecord_expr\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_expr/3\fR.
+
+
+.RE
+.B
+\fBrecord_expr_type(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the type subtree of a \fIrecord_expr\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_expr/3\fR.
+
+
+.RE
+.B
+\fBrecord_field(syntaxTree(), none | syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract record field specification.
+
+.PP
+If \fIValue\fR is \fInone\fR, the result represents simply "\fIName\fR", otherwise it represents "\fIName = Value\fR".
+
+.PP
+\fISee also: \fR\fIrecord_expr/3\fR, \fIrecord_field_name/1\fR, \fIrecord_field_value/1\fR.
+
+
+.RE
+.B
+\fBrecord_field_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fIrecord_field\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_field/2\fR.
+
+
+.RE
+.B
+\fBrecord_field_value(syntaxTree()) -> none | syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the value subtree of a \fIrecord_field\fR node, if any.
+
+.PP
+If \fINode\fR represents "\fIName\fR", \fInone\fR is returned. Otherwise, if \fINode\fR represents "\fIName = Value\fR", \fIValue\fR is returned.
+
+.PP
+\fISee also: \fR\fIrecord_field/2\fR.
+
+
+.RE
+.B
+\fBrecord_index_expr(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract record field index expression. The result represents "\fI#Type.Field\fR".
+
+.PP
+\fBNOTE: \fRThe function name \fIrecord_index/2\fR is reserved by the Erlang compiler, which is why that name could not be used for this constructor.
+
+
+.PP
+\fISee also: \fR\fIrecord_expr/3\fR, \fIrecord_index_expr_field/1\fR, \fIrecord_index_expr_type/1\fR.
+
+
+.RE
+.B
+\fBrecord_index_expr_field(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the field subtree of a \fIrecord_index_expr\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_index_expr/2\fR.
+
+
+.RE
+.B
+\fBrecord_index_expr_type(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the type subtree of a \fIrecord_index_expr\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_index_expr/2\fR.
+
+
+.RE
+.B
+\fBrecord_type(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract record type.
+
+.PP
+If \fIFields\fR is \fI[F1, ..., Fn]\fR, the result represents "\fI#Name{F1, ..., Fn}\fR".
+
+.PP
+\fISee also: \fR\fIrecord_type_fields/1\fR, \fIrecord_type_name/1\fR.
+
+
+.RE
+.B
+\fBrecord_type_field(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract record type field.
+
+.PP
+The result represents "\fIName :: Type\fR".
+
+.PP
+\fISee also: \fR\fIrecord_type_field_name/1\fR, \fIrecord_type_field_type/1\fR.
+
+
+.RE
+.B
+\fBrecord_type_field_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fIrecord_type_field\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_type_field/2\fR.
+
+
+.RE
+.B
+\fBrecord_type_field_type(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the type subtree of a \fIrecord_type_field\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_type_field/2\fR.
+
+
+.RE
+.B
+\fBrecord_type_fields(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the fields subtree of a \fIrecord_type\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_type/2\fR.
+
+
+.RE
+.B
+\fBrecord_type_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the name subtree of a \fIrecord_type\fR node.
+
+.PP
+\fISee also: \fR\fIrecord_type/2\fR.
+
+
+.RE
+.B
+\fBremove_comments(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Clears the associated comments of \fINode\fR.
+
+.PP
+Note: This is equivalent to \fIset_precomments(set_postcomments(Node, []), [])\fR, but potentially more efficient.
+
+.PP
+\fISee also: \fR\fIset_postcomments/2\fR, \fIset_precomments/2\fR.
+
+
+.RE
+.B
+\fBrevert(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns an \fIerl_parse\fR-compatible representation of a syntax tree, if possible.
+
+.PP
+If \fITree\fR represents a well-formed Erlang program or expression, the conversion should work without problems. Typically, \fIis_tree/1\fR yields \fItrue\fR if conversion failed (that is, the result is still an abstract syntax tree), and \fIfalse\fR otherwise.
+
+.PP
+The \fIis_tree/1\fR test is not completely foolproof. For a few special node types (for example \fIarity_qualifier\fR), if such a node occurs in a context where it is not expected, it will be left unchanged as a non-reverted subtree of the result.  This can only happen if \fITree\fR does not actually represent legal Erlang code.
+
+.PP
+\fISee also: \fR//stdlib/erl_parse, \fIrevert_forms/1\fR.
+
+
+.RE
+.B
+\fBrevert_forms(forms()) -> [erl_parse()].\fR
+
+.br
+.RS
+.PP
+Reverts a sequence of Erlang source code forms.
+
+.PP
+The sequence can be given either as a \fIform_list\fR syntax tree (possibly nested), or as a list of "program form" syntax trees. If successful, the corresponding flat list of \fIerl_parse\fR-compatible syntax trees is returned (see \fIrevert/1\fR). If some program form could not be reverted, \fI{error, Form}\fR is thrown. Standalone comments in the form sequence are discarded.
+
+.PP
+\fISee also: \fR\fIform_list/1\fR, \fIis_form/1\fR, \fIrevert/1\fR.
+
+
+.RE
+.B
+\fBset_ann(syntaxTree(), [term()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Sets the list of user annotations of \fINode\fR to \fIAnnotations\fR.
+
+.PP
+\fISee also: \fR\fIadd_ann/2\fR, \fIcopy_ann/2\fR, \fIget_ann/1\fR.
+
+
+.RE
+.B
+\fBset_attrs(syntaxTree(), syntaxTreeAttributes()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Sets the attributes of \fINode\fR to \fIAttributes\fR.
+
+.PP
+\fISee also: \fR\fIcopy_attrs/2\fR, \fIget_attrs/1\fR.
+
+
+.RE
+.B
+\fBset_pos(syntaxTree(), annotation_or_location()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Sets the position information of \fINode\fR to \fIPos\fR.
+
+.PP
+\fISee also: \fR\fIcopy_pos/2\fR, \fIget_pos/1\fR.
+
+
+.RE
+.B
+\fBset_postcomments(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Sets the post-comments of \fINode\fR to \fIComments\fR.
+
+.PP
+\fIComments\fR should be a possibly empty list of abstract comments, in top-down textual order
+
+.PP
+\fISee also: \fR\fIadd_postcomments/2\fR, \fIcomment/2\fR, \fIcopy_comments/2\fR, \fIget_postcomments/1\fR, \fIjoin_comments/2\fR, \fIremove_comments/1\fR, \fIset_precomments/2\fR.
+
+
+.RE
+.B
+\fBset_precomments(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Sets the pre-comments of \fINode\fR to \fIComments\fR.
+
+.PP
+\fIComments\fR should be a possibly empty list of abstract comments, in top-down textual order.
+
+.PP
+\fISee also: \fR\fIadd_precomments/2\fR, \fIcomment/2\fR, \fIcopy_comments/2\fR, \fIget_precomments/1\fR, \fIjoin_comments/2\fR, \fIremove_comments/1\fR, \fIset_postcomments/2\fR.
+
+
+.RE
+.B
+\fBsize_qualifier(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract size qualifier.
+
+.PP
+The result represents "\fIBody:Size\fR".
+
+.PP
+\fISee also: \fR\fIsize_qualifier_argument/1\fR, \fIsize_qualifier_body/1\fR.
+
+
+.RE
+.B
+\fBsize_qualifier_argument(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the argument subtree (the size) of a \fIsize_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fIsize_qualifier/2\fR.
+
+
+.RE
+.B
+\fBsize_qualifier_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIsize_qualifier\fR node.
+
+.PP
+\fISee also: \fR\fIsize_qualifier/2\fR.
+
+
+.RE
+.B
+\fBstrict_binary_generator(syntaxTree(), syntaxTree()) ->\fR
+\fB                                 syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract strict binary_generator.
+
+.PP
+The result represents "\fI*Pattern*<:- *Body*\fR".
+
+.PP
+\fISee also: \fR\fIbinary_comp/2\fR, \fIstrict_binary_generator_body/1\fR, \fIstrict_binary_generator_pattern/1\fR, \fIlist_comp/2\fR.
+
+
+.RE
+.B
+\fBstrict_binary_generator_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIstrict_binary_generator/2\fR.
+
+
+.RE
+.B
+\fBstrict_binary_generator_pattern(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the pattern subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIstrict_binary_generator/2\fR.
+
+
+.RE
+.B
+\fBstrict_generator(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract strict list generator.
+
+.PP
+The result represents "\fI*Pattern*<:- *Body*\fR".
+
+.PP
+\fISee also: \fR\fIbinary_comp/2\fR, \fIstrict_generator_body/1\fR, \fIstrict_generator_pattern/1\fR, \fIlist_comp/2\fR.
+
+
+.RE
+.B
+\fBstrict_generator_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIstrict_generator/2\fR.
+
+
+.RE
+.B
+\fBstrict_generator_pattern(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the pattern subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIstrict_generator/2\fR.
+
+
+.RE
+.B
+\fBstrict_map_generator(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract strict map_generator. The result represents "\fI*Pattern*<- *Body*\fR".
+
+.PP
+\fISee also: \fR\fIlist_comp/2\fR, \fImap_comp/2\fR, \fIstrict_map_generator_body/1\fR, \fIstrict_map_generator_pattern/1\fR.
+
+
+.RE
+.B
+\fBstrict_map_generator_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIstrict_map_generator/2\fR.
+
+
+.RE
+.B
+\fBstrict_map_generator_pattern(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the pattern subtree of a \fIgenerator\fR node.
+
+.PP
+\fISee also: \fR\fIstrict_map_generator/2\fR.
+
+
+.RE
+.B
+\fBstring(string()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract string literal.
+
+.PP
+The result represents \fI"Text"\fR (including the surrounding double-quotes), where \fIText\fR corresponds to the sequence of characters in \fIValue\fR, but not representing a \fIspecific\fR string literal.
+
+.PP
+For example, the result of \fIstring("x\\ny")\fR represents any and all of \fI"x\\ny"\fR, \fI"x\\12y"\fR, \fI"x\\012y"\fR and \fI"x\\^Jy"\fR; see \fIchar/1\fR.
+
+.PP
+\fISee also: \fR\fIchar/1\fR, \fIis_string/2\fR, \fIstring_literal/1\fR, \fIstring_literal/2\fR, \fIstring_value/1\fR.
+
+
+.RE
+.B
+\fBstring_literal(syntaxTree()) -> nonempty_string().\fR
+
+.br
+.RS
+.PP
+Returns the literal string represented by a \fIstring\fR node.
+
+.PP
+This includes surrounding double-quote characters. Characters beyond 255 will be escaped.
+
+.PP
+\fISee also: \fR\fIstring/1\fR.
+
+
+.RE
+.B
+\fBstring_literal(syntaxTree(), encoding()) -> nonempty_string().\fR
+
+.br
+.RS
+.PP
+Returns the literal string represented by a \fIstring\fR node.
+
+.PP
+This includes surrounding double-quote characters. Depending on the encoding characters beyond 255 will be escaped (\fIlatin1\fR) or copied as is (\fIutf8\fR).
+
+.PP
+\fISee also: \fR\fIstring/1\fR.
+
+
+.RE
+.B
+\fBstring_value(syntaxTree()) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the value represented by a \fIstring\fR node.
+
+.PP
+\fISee also: \fR\fIstring/1\fR.
+
+
+.RE
+.B
+\fBsubtrees(syntaxTree()) -> [[syntaxTree()]].\fR
+
+.br
+.RS
+.PP
+Returns the grouped list of all subtrees of a syntax tree.
+
+.PP
+If \fINode\fR is a leaf node (see \fIis_leaf/1\fR), this is the empty list, otherwise the result is always a nonempty list, containing the lists of subtrees of \fINode\fR, in left-to-right order as they occur in the printed program text, and grouped by category. Often, each group contains only a single subtree.
+
+.PP
+Depending on the type of \fINode\fR, the size of some groups may be variable (for example, the group consisting of all the elements of a tuple), while others always contain the same number of elements — usually exactly one (for example, the group containing the argument expression of a case-expression). Note, however, that the exact structure of the returned list (for a given node type) should in general not be depended upon, since it might be subject to change without notice.
+
+.PP
+The function \fIsubtrees/1\fR and the constructor functions \fImake_tree/2\fR and \fIupdate_tree/2\fR can be a great help if one wants to traverse a syntax tree, visiting all its subtrees, but treat nodes of the tree in a uniform way in most or all cases. Using these functions makes this simple, and also assures that your code is not overly sensitive to extensions of the syntax tree data type, because any node types not explicitly handled by your code can be left to a default case.
+
+.PP
+For example:
+
+.IP
+.nf
+     postorder(F, Tree) ->
+        F(case subtrees(Tree) of
+            [] -> Tree;
+            List -> update_tree(Tree,
+                                [[postorder(F, Subtree)
+                                  || Subtree &lt;- Group]
+                                 || Group &lt;- List])
+          end).
+
+.fi
+
+.PP
+maps the function \fIF\fR on \fITree\fR and all its subtrees, doing a post-order traversal of the syntax tree. (Note the use of \fIupdate_tree/2\fR to preserve node attributes.) For a simple function like:
+
+.IP
+.nf
+     f(Node) ->
+        case type(Node) of
+            atom -> atom("a_" ++ atom_name(Node));
+            _ -> Node
+        end.
+
+.fi
+
+.PP
+the call \fIpostorder(fun f/1, Tree)\fR will yield a new representation of \fITree\fR in which all atom names have been extended with the prefix "a_", but nothing else (including comments, annotations, and line numbers) has been changed.
+
+.PP
+\fISee also: \fR\fIcopy_attrs/2\fR, \fIis_leaf/1\fR, \fImake_tree/2\fR, \fItype/1\fR.
+
+
+.RE
+.B
+\fBtext(string()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract piece of source code text.
+
+.PP
+The result represents exactly the sequence of characters in \fIString\fR. This is useful in cases where one wants full control of the resulting output, such as the appearance of floating-point numbers or macro definitions.
+
+.PP
+\fISee also: \fR\fItext_string/1\fR.
+
+
+.RE
+.B
+\fBtext_string(syntaxTree()) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the character sequence represented by a \fItext\fR node.
+
+.PP
+\fISee also: \fR\fItext/1\fR.
+
+
+.RE
+.B
+\fBtree(atom(), term()) -> tree().\fR
+
+.br
+.RS
+.PP
+\fBFor special purposes only\fR. Creates an abstract syntax tree node with type tag \fIType\fR and associated data \fIData\fR.
+
+.PP
+This function and the related \fIis_tree/1\fR and \fIdata/1\fR provide a uniform way to extend the set of \fIerl_parse\fR node types. The associated data is any term, whose format may depend on the type tag.
+
+.RS 4
+.PP
+\fBNotes \fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Any nodes created outside of this module must have type tags distinct from those currently defined by this module; see \fItype/1\fR for a complete list.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The type tag of a syntax tree node may also be used as a primary tag by the \fIerl_parse\fR representation; in that case, the selector functions for that node type \fImust\fR handle both the abstract syntax tree and the \fIerl_parse\fR form. The function \fItype(T)\fR should return the correct type tag regardless of the representation of \fIT\fR, so that the user sees no difference between \fIerl_syntax\fR and \fIerl_parse\fR nodes.
+
+.RE
+
+.RE
+
+.PP
+\fISee also: \fR\fIdata/1\fR, \fIis_tree/1\fR, \fItype/1\fR.
+
+
+.RE
+.B
+\fBtry_expr([syntaxTree()],\fR
+\fB               [syntaxTree()],\fR
+\fB               [syntaxTree()],\fR
+\fB               [syntaxTree()]) ->\fR
+\fB                  syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract try-expression.
+
+.PP
+If \fIBody\fR is \fI[B1, ..., Bn]\fR, \fIClauses\fR is \fI[C1, ..., Cj]\fR, \fIHandlers\fR is \fI[H1, ..., Hk]\fR, and \fIAfter\fR is \fI[A1, ..., Am]\fR, the result represents "\fItry B1, ..., Bn of C1; ...; Cj catch H1; ...; Hk after A1, ..., Am end\fR".  More exactly, if each \fICi\fR represents "\fI(CPi) CGi -> CBi\fR", and each \fIHi\fR represents "\fI(HPi) HGi -> HBi\fR", then the result represents "\fItry B1, ..., Bn of CP1 CG1 -> CB1; ...; CPj CGj -> CBj catch HP1 HG1 -> HB1; ...; HPk HGk -> HBk after A1, ..., Am end\fR"; see \fIcase_expr/2\fR. If \fIClauses\fR is the empty list, the \fIof ...\fR section is left out. If \fIAfter\fR is the empty list, the \fIafter ...\fR section is left out. If \fIHandlers\fR is the empty list, and \fIAfter\fR is nonempty, the \fIcatch ...\fR section is left out.
+
+.PP
+\fISee also: \fR\fIcase_expr/2\fR, \fIclass_qualifier/2\fR, \fIclause/3\fR, \fItry_after_expr/2\fR, \fItry_expr/2\fR, \fItry_expr/3\fR, \fItry_expr_after/1\fR, \fItry_expr_body/1\fR, \fItry_expr_clauses/1\fR, \fItry_expr_handlers/1\fR.
+
+
+.RE
+.B
+\fBtry_expr_after(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of "after" subtrees of a \fItry_expr\fR node.
+
+.PP
+\fISee also: \fR\fItry_expr/4\fR.
+
+
+.RE
+.B
+\fBtry_expr_body(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of body subtrees of a \fItry_expr\fR node.
+
+.PP
+\fISee also: \fR\fItry_expr/4\fR.
+
+
+.RE
+.B
+\fBtry_expr_clauses(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of case-clause subtrees of a \fItry_expr\fR node. If \fINode\fR represents "\fItry Body catch H1; ...; Hn end\fR", the result is the empty list.
+
+.PP
+\fISee also: \fR\fItry_expr/4\fR.
+
+
+.RE
+.B
+\fBtry_expr_handlers(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of handler-clause subtrees of a \fItry_expr\fR node.
+
+.PP
+\fISee also: \fR\fItry_expr/4\fR.
+
+
+.RE
+.B
+\fBtuple([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract tuple.
+
+.PP
+If \fIElements\fR is \fI[X1, ..., Xn]\fR, the result represents "\fI{X1, ..., Xn}\fR".
+
+.PP
+\fBNOTE: \fRThe Erlang language has distinct 1-tuples, meaning \fI{X}\fR is always distinct from \fIX\fR itself.
+
+
+.PP
+\fISee also: \fR\fItuple_elements/1\fR, \fItuple_size/1\fR.
+
+
+.RE
+.B
+\fBtuple_elements(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of element subtrees of a \fItuple\fR node.
+
+.PP
+\fISee also: \fR\fItuple/1\fR.
+
+
+.RE
+.B
+\fBtuple_size(syntaxTree()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of elements of a \fItuple\fR node.
+
+.PP
+\fBNOTE: \fRThis is equivalent to \fIlength(tuple_elements(Node))\fR, but potentially more efficient.
+
+
+.PP
+\fISee also: \fR\fItuple/1\fR, \fItuple_elements/1\fR.
+
+
+.RE
+.B
+\fBtuple_type(any_size | [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract type tuple.
+
+.PP
+If \fIElements\fR is \fI[T1, ..., Tn]\fR, the result represents "\fI{T1, ..., Tn}\fR"; otherwise, if \fIElements\fR is \fIany_size\fR, it represents "\fItuple/0\fR".
+
+.PP
+\fISee also: \fR\fItuple_type_elements/1\fR.
+
+
+.RE
+.B
+\fBtuple_type_elements(syntaxTree()) -> any_size | [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of type element subtrees of a \fItuple_type\fR node.
+
+.PP
+If \fINode\fR represents "\fItuple/0\fR", \fIany_size\fR is returned; otherwise, if \fINode\fR represents "\fI{T1, ..., Tn}\fR", \fI[T1, ..., Tn]\fR is returned.
+
+.PP
+\fISee also: \fR\fItuple_type/0\fR, \fItuple_type/1\fR.
+
+
+.RE
+.B
+\fBtype(syntaxTree()) -> atom().\fR
+
+.br
+.RS
+.PP
+Returns the type tag of \fINode\fR.
+
+.PP
+If \fINode\fR does not represent a syntax tree, evaluation fails with reason \fIbadarg\fR. Node types currently defined by this module are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIapplication\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIannotated_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIarity_qualifier\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIatom\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIattribute\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIbinary\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIbinary_field\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIbitstring_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIblock_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcase_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcatch_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIchar\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIclass_qualifier\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIclause\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcomment\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIconjunction\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIconstrained_function_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIconstraint\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdisjunction\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIelse_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIeof_marker\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror_marker\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfloat\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIform_list\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfun_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfun_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfunction\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfunction_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgenerator\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIif_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIimplicit_fun\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinfix_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinteger\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinteger_range_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlist\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlist_comp\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImacro\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImap_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImap_field_assoc\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImap_field_exact\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImap_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImap_type_assoc\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImap_type_exact\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImatch_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaybe_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaybe_match_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImodule_qualifier\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInamed_fun_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInil\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIoperator\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIparentheses\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIprefix_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIreceive_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrecord_access\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrecord_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrecord_field\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrecord_index_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrecord_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrecord_type_field\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsize_qualifier\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstring\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItext\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItry_expr\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItuple\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItuple_type\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItyped_record_field\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItype_application\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItype_union\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIunderscore\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIuser_type_application\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIvariable\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwarning_marker\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIzip_generator\fR
+
+.RE
+
+.PP
+The user may (for special purposes) create additional nodes with other type tags, using the \fItree/2\fR function.
+
+.PP
+Note: The primary constructor functions for a node type should always have the same name as the node type itself.
+
+.PP
+\fISee also: \fR\fIannotated_type/2\fR, \fIapplication/3\fR, \fIarity_qualifier/2\fR, \fIatom/1\fR, \fIattribute/2\fR, \fIbinary/1\fR, \fIbinary_field/2\fR, \fIbitstring_type/2\fR, \fIblock_expr/1\fR, \fIcase_expr/2\fR, \fIcatch_expr/1\fR, \fIchar/1\fR, \fIclass_qualifier/2\fR, \fIclause/3\fR, \fIcomment/2\fR, \fIconjunction/1\fR, \fIconstrained_function_type/2\fR, \fIconstraint/2\fR, \fIdisjunction/1\fR, \fIelse_expr/1\fR, \fIeof_marker/0\fR, \fIerror_marker/1\fR, \fIfloat/1\fR, \fIform_list/1\fR, \fIfun_expr/1\fR, \fIfun_type/0\fR, \fIfunction/2\fR, \fIfunction_type/1\fR, \fIfunction_type/2\fR, \fIgenerator/2\fR, \fIif_expr/1\fR, \fIimplicit_fun/2\fR, \fIinfix_expr/3\fR, \fIinteger/1\fR, \fIinteger_range_type/2\fR, \fIlist/2\fR, \fIlist_comp/2\fR, \fImacro/2\fR, \fImap_expr/2\fR, \fImap_field_assoc/2\fR, \fImap_field_exact/2\fR, \fImap_type/0\fR, \fImap_type/1\fR, \fImap_type_assoc/2\fR, \fImap_type_exact/2\fR, \fImatch_expr/2\fR, \fImaybe_expr/1\fR, \fImaybe_expr/2\fR, \fImaybe_match_expr/2\fR, \fImodule_qualifier/2\fR, \fInamed_fun_expr/2\fR, \fInil/0\fR, \fIoperator/1\fR, \fIparentheses/1\fR, \fIprefix_expr/2\fR, \fIreceive_expr/3\fR, \fIrecord_access/3\fR, \fIrecord_expr/2\fR, \fIrecord_field/2\fR, \fIrecord_index_expr/2\fR, \fIrecord_type/2\fR, \fIrecord_type_field/2\fR, \fIsize_qualifier/2\fR, \fIstring/1\fR, \fItext/1\fR, \fItree/2\fR, \fItry_expr/3\fR, \fItuple/1\fR, \fItuple_type/0\fR, \fItuple_type/1\fR, \fItype_application/2\fR, \fItype_union/1\fR, \fItyped_record_field/2\fR, \fIunderscore/0\fR, \fIuser_type_application/2\fR, \fIvariable/1\fR, \fIwarning_marker/1\fR,\fIzip_generator/1\fR.
+
+
+.RE
+.B
+\fBtype_application(syntaxTree(), [syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract type application expression.
+
+.PP
+If \fIArguments\fR is \fI[T1, ..., Tn]\fR, the result represents "\fITypeName(T1, ...Tn)\fR".
+
+.PP
+\fISee also: \fR\fItype_application/3\fR, \fItype_application_arguments/1\fR, \fItype_application_name/1\fR, \fIuser_type_application/2\fR.
+
+
+.RE
+.B
+\fBtype_application(none | syntaxTree(),\fR
+\fB                       syntaxTree(),\fR
+\fB                       [syntaxTree()]) ->\fR
+\fB                          syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract type application expression.
+
+.PP
+If \fIModule\fR is \fInone\fR, this is call is equivalent to \fItype_application(TypeName, Arguments)\fR, otherwise it is equivalent to \fItype_application(module_qualifier(Module, TypeName), Arguments)\fR.
+
+.PP
+(This is a utility function.)
+
+.PP
+\fISee also: \fR\fImodule_qualifier/2\fR, \fItype_application/2\fR.
+
+
+.RE
+.B
+\fBtype_application_arguments(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the arguments subtrees of a \fItype_application\fR node.
+
+.PP
+\fISee also: \fR\fItype_application/2\fR.
+
+
+.RE
+.B
+\fBtype_application_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the type name subtree of a \fItype_application\fR node.
+
+.PP
+\fISee also: \fR\fItype_application/2\fR.
+
+
+.RE
+.B
+\fBtype_union([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract type union.
+
+.PP
+If \fITypes\fR is \fI[T1, ..., Tn]\fR, the result represents "\fIT1 | ... | Tn\fR".
+
+.PP
+\fISee also: \fR\fItype_union_types/1\fR.
+
+
+.RE
+.B
+\fBtype_union_types(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the list of type subtrees of a \fItype_union\fR node.
+
+.PP
+\fISee also: \fR\fItype_union/1\fR.
+
+
+.RE
+.B
+\fBtyped_record_field(syntaxTree(), syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract typed record field specification.
+
+.PP
+The result represents "\fIField :: Type\fR".
+
+.PP
+\fISee also: \fR\fItyped_record_field_body/1\fR, \fItyped_record_field_type/1\fR.
+
+
+.RE
+.B
+\fBtyped_record_field_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the field subtree of a \fItyped_record_field\fR node.
+
+.PP
+\fISee also: \fR\fItyped_record_field/2\fR.
+
+
+.RE
+.B
+\fBtyped_record_field_type(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the type subtree of a \fItyped_record_field\fR node.
+
+.PP
+\fISee also: \fR\fItyped_record_field/2\fR.
+
+
+.RE
+.B
+\fBunderscore() -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract universal pattern ("\fI_\fR").
+
+.PP
+The lexical representation is a single underscore character. Note that this is \fInot\fR a variable, lexically speaking.
+
+.PP
+\fISee also: \fR\fIvariable/1\fR.
+
+
+.RE
+.B
+\fBupdate_tree(syntaxTree(), [[syntaxTree()]]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates a syntax tree with the same type and attributes as the given tree.
+
+.PP
+This is equivalent to \fIcopy_attrs(Node, make_tree(type(Node), Groups))\fR.
+
+.PP
+\fISee also: \fR\fIcopy_attrs/2\fR, \fImake_tree/2\fR, \fItype/1\fR.
+
+
+.RE
+.B
+\fBuser_type_application(syntaxTree(), [syntaxTree()]) ->\fR
+\fB                               syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract user type.
+
+.PP
+If \fIArguments\fR is \fI[T1, ..., Tn]\fR, the result represents "\fITypeName(T1, ...Tn)\fR".
+
+.PP
+\fISee also: \fR\fItype_application/2\fR, \fIuser_type_application_arguments/1\fR, \fIuser_type_application_name/1\fR.
+
+
+.RE
+.B
+\fBuser_type_application_arguments(syntaxTree()) -> [syntaxTree()].\fR
+
+.br
+.RS
+.PP
+Returns the arguments subtrees of a \fIuser_type_application\fR node.
+
+.PP
+\fISee also: \fR\fIuser_type_application/2\fR.
+
+
+.RE
+.B
+\fBuser_type_application_name(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the type name subtree of a \fIuser_type_application\fR node.
+
+.PP
+\fISee also: \fR\fIuser_type_application/2\fR.
+
+
+.RE
+.B
+\fBvariable(atom() | string()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract variable with the given name.
+
+.PP
+\fIName\fR may be any atom or string that represents a lexically valid variable name, but \fInot\fR a single underscore character; see \fIunderscore/0\fR.
+
+.PP
+\fBNOTE: \fRNo check is performed to verify whether the character sequence represents a proper variable name, that is, whether its first character is an uppercase Erlang character, or whether it contains illegal characters such as control characters or whitespace.
+
+
+.PP
+\fISee also: \fR\fIunderscore/0\fR, \fIvariable_literal/1\fR, \fIvariable_name/1\fR.
+
+
+.RE
+.B
+\fBvariable_literal(syntaxTree()) -> string().\fR
+
+.br
+.RS
+.PP
+Returns the name of a \fIvariable\fR node as a string.
+
+.PP
+\fISee also: \fR\fIvariable/1\fR.
+
+
+.RE
+.B
+\fBvariable_name(syntaxTree()) -> atom().\fR
+
+.br
+.RS
+.PP
+Returns the name of a \fIvariable\fR node as an atom.
+
+.PP
+\fISee also: \fR\fIvariable/1\fR.
+
+
+.RE
+.B
+\fBwarning_marker(term()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract warning marker.
+
+.PP
+The result represents an occurrence of a possible problem in the source code, with an associated Erlang I/O ErrorInfo structure given by \fIError\fR (see module \fI//stdlib/io\fR for details). Warning markers are regarded as source code forms, but have no defined lexical form.
+
+.PP
+\fBNOTE: \fRThis is supported only for backwards compatibility with existing parsers and tools.
+
+
+.PP
+\fISee also: \fR\fIeof_marker/0\fR, \fIerror_marker/1\fR, \fIis_form/1\fR, \fIwarning_marker_info/1\fR.
+
+
+.RE
+.B
+\fBwarning_marker_info(syntaxTree()) -> term().\fR
+
+.br
+.RS
+.PP
+Returns the ErrorInfo structure of a \fIwarning_marker\fR node.
+
+.PP
+\fISee also: \fR\fIwarning_marker/1\fR.
+
+
+.RE
+.B
+\fBzip_generator([syntaxTree()]) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Creates an abstract zip_generator.
+
+.PP
+The result represents \fIG1 && ... Gn\fR, where each \fIG\fR is a generator.
+
+.PP
+\fISee also: \fR\fIbinary_comp/2\fR, \fIlist_comp/2\fR, \fImap_comp/2\fR, \fImap_generator_body/1\fR, \fImap_generator_pattern/1\fR.
+
+
+.RE
+.B
+\fBzip_generator_body(syntaxTree()) -> syntaxTree().\fR
+
+.br
+.RS
+.PP
+Returns the body subtree of a \fIzip_generator\fR node.
+
+.PP
+\fISee also: \fR\fIzip_generator/1\fR.
+
+
+.RE

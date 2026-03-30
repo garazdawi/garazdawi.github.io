@@ -1,0 +1,1171 @@
+.TH maps 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+maps \- Maps processing functions.
+
+.SH DESCRIPTION
+.PP
+This module contains functions for maps processing. The Efficiency Guide contains a chapter that describes how to use maps efficiently.
+
+.SH DATA TYPES
+.LP
+.B
+\fBiterator() :: iterator(term(), term()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque iterator(Key, Value) \fR
+
+.br
+.RS
+.PP
+An iterator representing the associations in a map with keys of type \fIKey\fR and values of type \fIValue\fR.
+
+.PP
+Created using \fImaps:iterator/1\fR or \fImaps:iterator/2\fR.
+
+.PP
+Consumed by:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaps:next/1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaps:filter/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaps:filtermap/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaps:fold/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaps:foreach/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaps:map/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaps:to_list/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBiterator_order() :: iterator_order(term()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBiterator_order(Key) ::\fR
+\fB          undefined | ordered | reversed |\fR
+\fB          fun((A :: Key, B :: Key) -> boolean()).\fR
+
+.br
+.RS
+.PP
+Key-based iterator order option that can be one of \fIundefined\fR (default for \fImaps:iterator/1\fR), \fIordered\fR (sorted in map-key order), \fIreversed\fR (sorted in reverse map-key order), or a custom sorting function.
+
+.PP
+Used by \fImaps:iterator/2\fR.
+
+.PP
+The Expressions section contains descriptions of how terms are ordered.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBfilter(Pred, MapOrIter) -> Map\fR
+\fB                when\fR
+\fB                    Pred :: fun((Key, Value) -> boolean()),\fR
+\fB                    MapOrIter :: #{Key => Value} | iterator(Key, Value),\fR
+\fB                    Map :: #{Key => Value}.\fR
+
+.br
+.RS
+.PP
+Returns a map \fIMap\fR where each key-value pair from \fIMapOrIter\fR satisfies the predicate \fIPred(Key, Value)\fR.
+
+.PP
+Unless \fIMapOrIter\fR is an ordered iterator returned by \fIiterator/2\fR, the order of the \fIPred(Key, Value)\fR calls is not defined.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMapOrIter\fR is not a map or valid iterator, or with \fIbadarg\fR if \fIPred\fR is not a function of arity 2.
+
+.SS "Examples"
+
+.IP
+.nf
+1> M = #{a => 2, b => 3, "a" => 1, "b" => 2}.
+2> Pred = fun(K, V) -> is_atom(K) andalso V rem 2 =:= 0 end.
+3> maps:filter(Pred, M).
+#{a => 2}
+
+.fi
+
+
+.RE
+.B
+\fBfiltermap(Fun, MapOrIter) -> Map\fR
+\fB                   when\fR
+\fB                       Fun ::\fR
+\fB                           fun((Key, Value1) ->\fR
+\fB                                   boolean() | {true, Value2}),\fR
+\fB                       MapOrIter ::\fR
+\fB                           #{Key => Value1} | iterator(Key, Value1),\fR
+\fB                       Map :: #{Key => Value1 | Value2}.\fR
+
+.br
+.RS
+.PP
+Calls \fIFun(Key, Value1)\fR on each key-value pair of \fIMapOrIter\fR to update or remove associations from \fIMapOrIter\fR.
+
+.PP
+If \fIFun(Key, Value1)\fR returns \fItrue\fR, the association is copied to the result map. If it returns \fIfalse\fR, the association is not copied. If it returns \fI{true, NewValue}\fR, the value for \fIKey\fR is replaced with \fINewValue\fR in the result map.
+
+.PP
+Unless \fIMapOrIter\fR is an ordered iterator returned by \fIiterator/2\fR, the order of the \fIFun(Key, Value1)\fR calls is not defined.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMapOrIter\fR is not a map or valid iterator, or with \fIbadarg\fR if \fIFun\fR is not a function of arity 2.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Fun = fun(K, V) when is_atom(K) -> {true, V*2};
+            (_, V) -> V rem 2 =:= 0
+   end.
+2> Map = #{k1 => 1, "k2" => 2, "k3" => 3}.
+3> maps:filtermap(Fun, Map).
+#{k1 => 2,"k2" => 2}
+
+.fi
+
+
+.RE
+.B
+\fBfind(Key, Map) -> {ok, Value} | error\fR
+\fB              when Map :: #{Key => Value, _ => _}.\fR
+
+.br
+.RS
+.PP
+Returns a tuple \fI{ok, Value}\fR, where \fIValue\fR is the value associated with \fIKey\fR, or \fIerror\fR if no value is associated with \fIKey\fR in \fIMap\fR.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{"hi" => 42}.
+2> Key = "hi".
+3> maps:find(Key, Map).
+{ok,42}
+
+.fi
+
+
+.RE
+.B
+\fBfold(Fun, Init, MapOrIter) -> Acc\fR
+\fB              when\fR
+\fB                  Fun :: fun((Key, Value, AccIn) -> AccOut),\fR
+\fB                  Init :: term(),\fR
+\fB                  Acc :: AccOut,\fR
+\fB                  AccIn :: Init | AccOut,\fR
+\fB                  MapOrIter :: #{Key => Value} | iterator(Key, Value).\fR
+
+.br
+.RS
+.PP
+Calls \fIFun(Key, Value, AccIn)\fR for every \fIKey\fR to value \fIValue\fR association in \fIMapOrIter\fR, starting with \fIAccIn\fR bound to \fIAcc0\fR.
+
+.PP
+The \fIFun/3\fR fun must return a new accumulator, which is passed to the next call. The function returns the final value of the accumulator. The initial accumulator value \fIInit\fR is returned if the map is empty.
+
+.PP
+Unless \fIMapOrIter\fR is an ordered iterator returned by \fIiterator/2\fR, the order of the \fIFun(Key, Value, AccIn)\fR calls is not defined.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMapOrIter\fR is not a map or valid iterator, or with \fIbadarg\fR if \fIFun\fR is not a function of arity 3.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Fun = fun(K, V, AccIn) -> AccIn + V end.
+2> Map = #{k1 => 1, k2 => 2, k3 => 3}.
+3> maps:fold(Fun, 0, Map).
+6
+
+.fi
+
+
+.RE
+.B
+\fBforeach(Fun, MapOrIter) -> ok\fR
+\fB                 when\fR
+\fB                     Fun :: fun((Key, Value) -> term()),\fR
+\fB                     MapOrIter :: #{Key => Value} | iterator(Key, Value).\fR
+
+.br
+.RS
+.PP
+Calls \fIFun(Key, Value)\fR for every \fIKey\fR to \fIValue\fR association in \fIMapOrIter\fR.
+
+.PP
+Unless \fIMapOrIter\fR is an ordered iterator returned by \fIiterator/2\fR, the order of the \fIFun(Key, Value)\fR calls is not defined.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMapOrIter\fR is not a map or valid iterator, or with \fIbadarg\fR if \fIFun\fR is not a function of arity 2.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Fun = fun(K, V) -> self() ! {K,V} end.
+2> Map = #{p => 1, q => 2,x => 10, y => 20, z => 30}.
+3> maps:foreach(Fun, maps:iterator(Map, ordered)).
+ok
+4> [receive X -> X end || _ <- [1,2,3,4,5]].
+[{p,1},{q,2},{x,10},{y,20},{z,30}]
+
+.fi
+
+
+.RE
+.B
+\fBfrom_keys(Keys, Value) -> Map\fR
+\fB                   when Keys :: list(), Value :: term(), Map :: map().\fR
+
+.br
+.RS
+.PP
+Takes a list of keys and a value and builds a map where all keys are associated with the same value.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Keys = ["a", "b", "c"].
+2> maps:from_keys(Keys, ok).
+#{"a" => ok,"b" => ok,"c" => ok}
+
+.fi
+
+
+.RE
+.B
+\fBfrom_list(List) -> Map\fR
+\fB                   when\fR
+\fB                       List :: [{Key, Value}],\fR
+\fB                       Key :: term(),\fR
+\fB                       Value :: term(),\fR
+\fB                       Map :: map().\fR
+
+.br
+.RS
+.PP
+Takes a list of key-value tuples and builds a map.
+
+.PP
+If the same key appears more than once, the last (rightmost) value is used, and previous values are ignored.
+
+.SS "Examples"
+
+.IP
+.nf
+1> List = [{"a",ignored},{1337,"value two"},{42,value_three},{"a",1}].
+2> maps:from_list(List).
+#{42 => value_three,1337 => "value two","a" => 1}
+
+.fi
+
+
+.RE
+.B
+\fBget(Key, Map) -> Value\fR
+\fB             when Key :: term(), Map :: map(), Value :: term().\fR
+
+.br
+.RS
+.PP
+Returns value \fIValue\fR associated with \fIKey\fR if \fIMap\fR contains \fIKey\fR.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap\fR is not a map, or with a \fI{badkey,Key}\fR exception if no value is associated with \fIKey\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Key = 1337.
+2> Map = #{42 => value_two,1337 => "value one","a" => 1}.
+3> maps:get(Key, Map).
+"value one"
+
+.fi
+
+
+.RE
+.B
+\fBget(Key, Map, Default) -> Value | Default\fR
+\fB             when Map :: #{Key => Value, _ => _}.\fR
+
+.br
+.RS
+.PP
+Returns the value associated with key \fIKey\fR in \fIMap\fR, or \fIDefault\fR if \fIKey\fR is not present in the map.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{key1 => val1, key2 => val2}.
+#{key1 => val1,key2 => val2}
+2> maps:get(key1, Map, "Default value").
+val1
+3> maps:get(key3, Map, "Default value").
+"Default value"
+
+.fi
+
+
+.RE
+.B
+\fBgroups_from_list(KeyFun, List) -> GroupsMap\fR
+\fB                          when\fR
+\fB                              KeyFun :: fun((Elem) -> Key),\fR
+\fB                              GroupsMap :: #{Key => Group},\fR
+\fB                              Key :: term(),\fR
+\fB                              List :: [Elem],\fR
+\fB                              Group :: [Elem],\fR
+\fB                              Elem :: term().\fR
+
+.br
+.RS
+.PP
+Partitions the given \fIList\fR into a map of groups.
+
+.PP
+The result is a map where each key is given by \fIKeyFun\fR and each value is a list of elements from the given \fIList\fR for which \fIKeyFun\fR returned the same key.
+
+.PP
+The order of elements within each group list is preserved from the original list.
+
+.SS "Examples"
+
+.IP
+.nf
+1> EvenOdd = fun(X) when X rem 2 =:= 0 -> even;
+                (_) -> odd
+             end.
+2> maps:groups_from_list(EvenOdd, [1, 2, 3]).
+#{even => [2], odd => [1, 3]}
+3> maps:groups_from_list(fun length/1, ["ant", "buffalo", "cat", "dingo"]).
+#{3 => ["ant", "cat"], 5 => ["dingo"], 7 => ["buffalo"]}
+
+.fi
+
+
+.RE
+.B
+\fBgroups_from_list(KeyFun, ValueFun, List) -> GroupsMap\fR
+\fB                          when\fR
+\fB                              KeyFun :: fun((Elem) -> Key),\fR
+\fB                              ValueFun :: fun((Elem) -> Value),\fR
+\fB                              GroupsMap :: #{Key := Group},\fR
+\fB                              Key :: term(),\fR
+\fB                              Value :: term(),\fR
+\fB                              List :: [Elem],\fR
+\fB                              Group :: [Value],\fR
+\fB                              Elem :: term().\fR
+
+.br
+.RS
+.PP
+Partitions the given \fIList\fR into a map of groups.
+
+.PP
+The result is a map where each key is given by \fIKeyFun\fR and each value is a list of elements from the given \fIList\fR, mapped via \fIValueFun\fR, for which \fIKeyFun\fR returned the same key.
+
+.PP
+The order of elements within each group list is preserved from the original list.
+
+.SS "Examples"
+
+.IP
+.nf
+1> EvenOdd = fun(X) -> case X rem 2 of 0 -> even; 1 -> odd end end.
+2> Square = fun(X) -> X * X end.
+3> maps:groups_from_list(EvenOdd, Square, [1, 2, 3]).
+#{even => [4], odd => [1, 9]}
+4> maps:groups_from_list(
+    fun length/1,
+    fun lists:reverse/1,
+    ["ant", "buffalo", "cat", "dingo"]).
+#{3 => ["tna", "tac"],5 => ["ognid"],7 => ["olaffub"]}
+
+.fi
+
+
+.RE
+.B
+\fBintersect(Map1, Map2) -> Map3\fR
+\fB                   when\fR
+\fB                       Map1 :: #{Key => term()},\fR
+\fB                       Map2 :: #{term() => Value2},\fR
+\fB                       Map3 :: #{Key => Value2}.\fR
+
+.br
+.RS
+.PP
+Computes the intersection of maps \fIMap1\fR and \fIMap2\fR, producing a single map \fIMap3\fR.
+
+.PP
+If a key exists in both maps, the value in \fIMap1\fR is superseded by the value in \fIMap2\fR. Keys existing in only one of the maps are discarded along with their values.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap1\fR or \fIMap2\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map1 = #{a => "one", b => "two"}.
+2> Map2 = #{a => 1, c => 3}.
+3> maps:intersect(Map1, Map2).
+#{a => 1}
+
+.fi
+
+
+.RE
+.B
+\fBintersect_with(Combiner, Map1, Map2) -> Map3\fR
+\fB                        when\fR
+\fB                            Map1 :: #{Key => Value1},\fR
+\fB                            Map2 :: #{term() => Value2},\fR
+\fB                            Combiner ::\fR
+\fB                                fun((Key, Value1, Value2) ->\fR
+\fB                                        CombineResult),\fR
+\fB                            Map3 :: #{Key => CombineResult}.\fR
+
+.br
+.RS
+.PP
+Computes the intersection of maps \fIMap1\fR and \fIMap2\fR, producing a single map \fIMap3\fR, where values having the same key are combined using the \fICombiner\fR fun.
+
+.PP
+When \fICombiner\fR is applied, the key that exists in both maps is the first parameter, the value from \fIMap1\fR is the second parameter, and the value from \fIMap2\fR is the third parameter.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap1\fR or \fIMap2\fR is not a map. The call fails with a \fIbadarg\fR exception if \fICombiner\fR is not a fun that takes three arguments.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map1 = #{a => "one", b => "two"}.
+2> Map2 = #{a => 1, c => 3}.
+3> maps:intersect_with(fun(_Key, Val1, Val2) -> {Val1, Val2} end, Map1, Map2).
+#{a => {"one",1}}
+
+.fi
+
+
+.RE
+.B
+\fBis_key(Key, Map) -> boolean() when Key :: term(), Map :: map().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if map \fIMap\fR contains \fIKey\fR; otherwise, returns \fIfalse\fR.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{"42" => value}.
+#{"42" => value}
+2> maps:is_key("42", Map).
+true
+3> maps:is_key(value, Map).
+false
+
+.fi
+
+
+.RE
+.B
+\fBiterator(Map) -> Iterator\fR
+\fB                  when\fR
+\fB                      Map :: #{Key => Value},\fR
+\fB                      Iterator :: iterator(Key, Value).\fR
+
+.br
+.RS
+.PP
+Returns a map iterator \fIIterator\fR that can be used by \fImaps:next/1\fR to traverse the key-value associations in a map.
+
+.PP
+The order of iteration is undefined. When iterating over a map, the memory usage is guaranteed to be bounded no matter the size of the map.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> M = #{ "foo" => 1, "bar" => 2 }.
+#{"foo" => 1,"bar" => 2}
+2> I = maps:iterator(M).
+3> {K1, V1, I2} = maps:next(I), {K1, V1}.
+{"bar",2}
+4> {K2, V2, I3} = maps:next(I2),{K2, V2}.
+{"foo",1}
+5> maps:next(I3).
+none
+
+.fi
+
+
+.RE
+.B
+\fBiterator(Map, Order) -> Iterator\fR
+\fB                  when\fR
+\fB                      Map :: #{Key => Value},\fR
+\fB                      Order :: iterator_order(Key),\fR
+\fB                      Iterator :: iterator(Key, Value).\fR
+
+.br
+.RS
+.PP
+Returns a map iterator \fIIterator\fR that can be used by \fImaps:next/1\fR to traverse the key-value associations in a map sorted by key using the given \fIOrder\fR.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap\fR is not a map, or with a \fIbadarg\fR exception if \fIOrder\fR is invalid.
+
+.SS "Examples"
+
+.PP
+Ordered iterator:
+
+.IP
+.nf
+1> M = #{a => 1, b => 2}.
+2> OrdI = maps:iterator(M, ordered).
+3> {K1, V1, OrdI2} = maps:next(OrdI), {K1, V1}.
+{a,1}
+4> {K2, V2, OrdI3} = maps:next(OrdI2),{K2, V2}.
+{b,2}
+5> maps:next(OrdI3).
+none
+
+.fi
+
+.PP
+Iterator ordered in reverse:
+
+.IP
+.nf
+1> M = #{a => 1, b => 2}.
+2> RevI = maps:iterator(M, reversed).
+3> {K2, V2, RevI2} = maps:next(RevI), {K2, V2}.
+{b,2}
+4> {K1, V1, RevI3} = maps:next(RevI2),{K1, V1}.
+{a,1}
+5> maps:next(RevI3).
+none
+6> maps:to_list(RevI).
+[{b,2},{a,1}]
+
+.fi
+
+.PP
+Using a custom ordering function that orders binaries by size:
+
+.IP
+.nf
+1> M = #{<<"abcde">> => d, <<"y">> => b, <<"x">> => a, <<"pqr">> => c}.
+2> SizeI = fun(A, B) when byte_size(A) < byte_size(B) -> true;
+              (A, B) when byte_size(A) > byte_size(B) -> false;
+              (A, B) -> A =< B
+           end.
+3> SizeOrdI = maps:iterator(M, SizeI).
+4> maps:to_list(SizeOrdI).
+[{<<"x">>,a},{<<"y">>,b},{<<"pqr">>,c},{<<"abcde">>,d}]
+
+.fi
+
+
+.RE
+.B
+\fBkeys(Map) -> Keys when Map :: #{Key => _}, Keys :: [Key].\fR
+
+.br
+.RS
+.PP
+Returns a complete list of keys contained in \fIMap\fR, in any order.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{42 => three,1337 => "two","a" => 1}.
+2> maps:keys(Map).
+[42,1337,"a"]
+
+.fi
+
+
+.RE
+.B
+\fBmap(Fun, MapOrIter) -> Map\fR
+\fB             when\fR
+\fB                 Fun :: fun((Key, Value1) -> Value2),\fR
+\fB                 MapOrIter :: #{Key => Value1} | iterator(Key, Value1),\fR
+\fB                 Map :: #{Key => Value2}.\fR
+
+.br
+.RS
+.PP
+Produces a new map \fIMap\fR by calling function \fIFun(Key, Value1)\fR for every \fIKey\fR to value \fIValue1\fR association in \fIMapOrIter\fR.
+
+.PP
+The \fIFun/2\fR fun must return value \fIValue2\fR to be associated with key \fIKey\fR for the new map \fIMap\fR.
+
+.PP
+Unless \fIMapOrIter\fR is an ordered iterator returned by \fIiterator/2\fR, the order of the \fIFun(Key, Value1)\fR calls is not defined.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMapOrIter\fR is not a map or valid iterator, or with \fIbadarg\fR if \fIFun\fR is not a function of arity 2.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Fun = fun(K,V1) when is_list(K) -> V1*2 end.
+2> Map = #{"k1" => 1, "k2" => 2, "k3" => 3}.
+3> maps:map(Fun, Map).
+#{"k1" => 2,"k2" => 4,"k3" => 6}
+
+.fi
+
+
+.RE
+.B
+\fBmerge(Map1, Map2) -> Map3\fR
+\fB               when Map1 :: map(), Map2 :: map(), Map3 :: map().\fR
+
+.br
+.RS
+.PP
+Merges maps \fIMap1\fR and \fIMap2\fR into a single map \fIMap3\fR, where values from \fIMap2\fR override those from \fIMap1\fR for duplicate keys.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap1\fR or \fIMap2\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map1 = #{a => "one", b => "two"}.
+2> Map2 = #{a => 1, c => 3}.
+3> maps:merge(Map1, Map2).
+#{a => 1,b => "two",c => 3}
+
+.fi
+
+
+.RE
+.B
+\fBmerge_with(Combiner, Map1, Map2) -> Map3\fR
+\fB                    when\fR
+\fB                        Map1 :: #{Key1 => Value1},\fR
+\fB                        Map2 :: #{Key2 => Value2},\fR
+\fB                        Combiner ::\fR
+\fB                            fun((Key1, Value1, Value2) -> CombineResult),\fR
+\fB                        Map3 ::\fR
+\fB                            #{Key1 => CombineResult,\fR
+\fB                              Key1 => Value1,\fR
+\fB                              Key2 => Value2}.\fR
+
+.br
+.RS
+.PP
+Merges maps \fIMap1\fR and \fIMap2\fR into a single map \fIMap3\fR, combining values for duplicate keys using the \fICombiner\fR fun.
+
+.PP
+When \fICombiner\fR is applied, the key that exists in both maps is the first parameter, the value from \fIMap1\fR is the second parameter, and the value from \fIMap2\fR is the third parameter.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap1\fR or \fIMap2\fR is not a map. The call fails with a \fIbadarg\fR exception if \fICombiner\fR is not a fun that takes three arguments.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map1 = #{a => 3, b => 5}.
+2> Map2 = #{a => 4, c => 17}.
+3> maps:merge_with(fun(_Key, Val1, Val2) -> Val1 + Val2 end, Map1, Map2).
+#{a => 7,b => 5,c => 17}
+
+.fi
+
+
+.RE
+.B
+\fBnew() -> Map when Map :: #{}.\fR
+
+.br
+.RS
+.PP
+Returns a new empty map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> maps:new().
+#{}
+
+.fi
+
+
+.RE
+.B
+\fBnext(Iterator) -> {Key, Value, NextIterator} | none\fR
+\fB              when\fR
+\fB                  Iterator :: iterator(Key, Value),\fR
+\fB                  NextIterator :: iterator(Key, Value).\fR
+
+.br
+.RS
+.PP
+Returns the next key-value association in \fIIterator\fR and a new iterator for the remaining associations in the iterator.
+
+.PP
+If there are no more associations in the iterator, \fInone\fR is returned.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{a => 1, b => 2, c => 3}.
+#{a => 1,b => 2,c => 3}
+2> I = maps:iterator(Map, ordered).
+3> {K1, V1, I1} = maps:next(I), {K1, V1}.
+{a,1}
+4> {K2, V2, I2} = maps:next(I1), {K2, V2}.
+{b,2}
+5> {K3, V3, I3} = maps:next(I2), {K3, V3}.
+{c,3}
+6> maps:next(I3).
+none
+
+.fi
+
+
+.RE
+.B
+\fBput(Key, Value, Map1) -> Map2\fR
+\fB             when\fR
+\fB                 Key :: term(),\fR
+\fB                 Value :: term(),\fR
+\fB                 Map1 :: map(),\fR
+\fB                 Map2 :: map().\fR
+
+.br
+.RS
+.PP
+Associates \fIKey\fR with \fIValue\fR in Map1, replacing any existing value, and returns a new map \fIMap2\fR with the updated association alongside the original entries from \fIMap1\fR.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap1\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{"a" => 1}.
+#{"a" => 1}
+2> maps:put("a", 42, Map).
+#{"a" => 42}
+3> maps:put("b", 1337, Map).
+#{"a" => 1,"b" => 1337}
+
+.fi
+
+
+.RE
+.B
+\fBremove(Key, Map1) -> Map2\fR
+\fB                when Key :: term(), Map1 :: map(), Map2 :: map().\fR
+
+.br
+.RS
+.PP
+Removes \fIKey\fR and its associated value from \fIMap1\fR, if it exists, and returns a new map \fIMap2\fR without \fIKey\fR.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap1\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{"a" => 1}.
+#{"a" => 1}
+2> maps:remove("a", Map).
+#{}
+3> maps:remove("b", Map).
+#{"a" => 1}
+
+.fi
+
+
+.RE
+.B
+\fBsize(Map) -> non_neg_integer() when Map :: map().\fR
+
+.br
+.RS
+.PP
+Returns the number of key-value associations in \fIMap\fR.
+
+.PP
+This operation occurs in constant time.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{42 => value_two,1337 => "value one","a" => 1}.
+2> maps:size(Map).
+3
+
+.fi
+
+
+.RE
+.B
+\fBtake(Key, Map1) -> {Value, Map2} | error\fR
+\fB              when Map1 :: #{Key => Value, _ => _}, Map2 :: #{_ => _}.\fR
+
+.br
+.RS
+.PP
+Removes \fIKey\fR and its associated value from \fIMap1\fR, if it exists, returning a tuple with the removed value \fIValue\fR and the new map \fIMap2\fR; otherwise, returns error.
+
+.PP
+The call will fail with a \fI{badmap,Map}\fR exception if \fIMap1\fR is not a map.
+
+.PP
+Example:
+
+.IP
+.nf
+1> Map = #{"a" => "hello", "b" => "world"}.
+#{"a" => "hello", "b" => "world"}
+2> maps:take("a", Map).
+{"hello",#{"b" => "world"}}
+3> maps:take("does not exist", Map).
+error
+
+.fi
+
+
+.RE
+.B
+\fBto_list(MapOrIterator) -> [{Key, Value}]\fR
+\fB                 when\fR
+\fB                     MapOrIterator ::\fR
+\fB                         #{Key => Value} | iterator(Key, Value).\fR
+
+.br
+.RS
+.PP
+Returns a list of pairs representing the key-value associations of \fIMapOrIterator\fR.
+
+.PP
+Unless \fIMapOrIter\fR is an ordered iterator returned by \fIiterator/2\fR, the order of the \fI{Key, Value}\fR tuples in the resulting list is not defined.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMapOrIterator\fR is not a map or an iterator obtained by a call to \fIiterator/1\fR or \fIiterator/2\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{42 => value_three,1337 => "value two","a" => 1}.
+2> maps:to_list(Map).
+[{42,value_three},{1337,"value two"},{"a",1}]
+
+.fi
+
+.PP
+Using an ordered iterator to return an ordered list:
+
+.IP
+.nf
+1> Map = #{z => 1, y => 2, x => 3}.
+2> maps:to_list(maps:iterator(Map, ordered)).
+[{x,3},{y,2},{z,1}]
+
+.fi
+
+
+.RE
+.B
+\fBupdate(Key, Value, Map1) -> Map2\fR
+\fB                when\fR
+\fB                    Map1 :: #{Key := _, _ => _},\fR
+\fB                    Map2 :: #{Key := Value, _ => _}.\fR
+
+.br
+.RS
+.PP
+If \fIKey\fR exists in \fIMap1\fR, its value is replaced with \fIValue\fR, and the function returns a new map \fIMap2\fR with the updated association.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap1\fR is not a map, or with a \fI{badkey,Key}\fR exception if no value is associated with \fIKey\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{"a" => 1}.
+#{"a" => 1}
+2> maps:update("a", 42, Map).
+#{"a" => 42}
+
+.fi
+
+
+.RE
+.B
+\fBupdate_with(Key, Fun, Map1) -> Map2\fR
+\fB                     when\fR
+\fB                         Map1 :: #{Key := Value1, _ => _},\fR
+\fB                         Map2 :: #{Key := Value2, _ => _},\fR
+\fB                         Fun :: fun((Value1) -> Value2).\fR
+
+.br
+.RS
+.PP
+Updates a value in a \fIMap1\fR associated with \fIKey\fR by calling \fIFun\fR on the old value to produce a new value.
+
+.PP
+The call fails with a \fI{badkey,Key}\fR exception if \fIKey\fR is not present in the map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{counter => 1}.
+2> Fun = fun(V) -> V + 1 end.
+3> maps:update_with(counter, Fun, Map).
+#{counter => 2}
+
+.fi
+
+
+.RE
+.B
+\fBupdate_with(Key, Fun, Init, Map1) -> Map2\fR
+\fB                     when\fR
+\fB                         Map1 :: #{Key => Value1, _ => _},\fR
+\fB                         Map2 :: #{Key := Value2 | Init, _ => _},\fR
+\fB                         Fun :: fun((Value1) -> Value2).\fR
+
+.br
+.RS
+.PP
+Updates the value in \fIMap1\fR for \fIKey\fR by applying \fIFun\fR to the old value or using \fIInit\fR if \fIKey\fR is not present in the map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{"counter" => 1}.
+2> Fun = fun(V) -> V + 1 end.
+3> maps:update_with("counter", Fun, 42, Map).
+#{"counter" => 2}
+4> maps:update_with("new counter", Fun, 42, Map).
+#{"counter" => 1,"new counter" => 42}
+
+.fi
+
+
+.RE
+.B
+\fBvalues(Map) -> Values when Map :: #{_ => Value}, Values :: [Value].\fR
+
+.br
+.RS
+.PP
+Returns a complete list of values contained in map \fIMap\fR, in any order.
+
+.PP
+The call fails with a \fI{badmap,Map}\fR exception if \fIMap\fR is not a map.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{42 => value_three,1337 => "value two","a" => 1}.
+2> maps:values(Map).
+[value_three,"value two",1]
+
+.fi
+
+
+.RE
+.B
+\fBwith(Ks, Map1) -> Map2\fR
+\fB              when\fR
+\fB                  Ks :: [K],\fR
+\fB                  Map1 :: #{K => V, _ => _},\fR
+\fB                  Map2 :: #{K => V}.\fR
+
+.br
+.RS
+.PP
+Returns a new map \fIMap2\fR with the keys \fIK1\fR through \fIKn\fR and their associated values from map \fIMap1\fR.
+
+.PP
+Any key in \fIKs\fR that does not exist in \fIMap1\fR is ignored.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{42 => value_three,1337 => "value two","a" => 1}.
+2> Keys = ["a",42,"other key"].
+3> maps:with(Keys, Map).
+#{42 => value_three,"a" => 1}
+
+.fi
+
+
+.RE
+.B
+\fBwithout(Ks, Map1) -> Map2\fR
+\fB                 when\fR
+\fB                     Ks :: [K],\fR
+\fB                     Map1 :: map(),\fR
+\fB                     Map2 :: map(),\fR
+\fB                     K :: term().\fR
+
+.br
+.RS
+.PP
+Returns a new map \fIMap2\fR without keys \fIK1\fR through \fIKn\fR and their associated values from map \fIMap1\fR.
+
+.PP
+Any key in \fIKs\fR that does not exist in \fIMap1\fR is ignored.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Map = #{42 => value_three, 1337 => "value two", "a" => 1}.
+2> Keys = ["a",42,"other key"].
+3> maps:without(Keys, Map).
+#{1337 => "value two"}
+
+.fi
+
+
+.RE

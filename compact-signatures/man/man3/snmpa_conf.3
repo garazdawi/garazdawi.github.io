@@ -1,0 +1,1631 @@
+.TH snmpa_conf 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpa_conf \- Utility functions for handling the agent config files.
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmpa_conf\fR contains various utility functions to use for manipulating (write/read/append) the config files of the SNMP agent.
+
+.SH DATA TYPES
+.LP
+.B
+\fB-opaque agent_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an entry in the 'agent' config.
+
+
+.RE
+.B
+\fB-opaque community_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an entry in the 'community' (agent) config.
+
+
+.RE
+.B
+\fB-opaque context_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an entry in the 'context' (agent) config.
+
+
+.RE
+.B
+\fBextended_transport_address() :: {inet:ip_address(), port_info()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBintAgentTransport() ::\fR
+\fB          {transportDomain(), transport_address()} |\fR
+\fB          {transportDomain(),\fR
+\fB           extended_transport_address(),\fR
+\fB           snmpa:transport_kind()} |\fR
+\fB          {transportDomain(),\fR
+\fB           extended_transport_address(),\fR
+\fB           transport_opts()} |\fR
+\fB          {transportDomain(),\fR
+\fB           extended_transport_address(),\fR
+\fB           snmpa:transport_kind(),\fR
+\fB           transport_opts()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBip_address() :: inet:ip_address() | snmp_ip_address().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque notify_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an entry in the 'notify' (agent) config.
+
+
+.RE
+.B
+\fBport_info() :: inet:port_number() | system | range() | ranges().\fR
+
+.br
+.RS
+.PP
+Port number \fI0\fR (zero) cannot be specified directly (it is used internally). Instead the atom \fI'system'\fR should be used.
+
+
+.RE
+.B
+\fBrange() :: {Min :: inet:port_number(), Max :: inet:port_number()}.\fR
+
+.br
+.RS
+.PP
+\fIMin < Max\fR
+
+
+.RE
+.B
+\fBranges() :: [inet:port_number() | range()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsnmp_ip_address() :: [non_neg_integer()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque standard_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an entry in the 'standard' (agent) config.
+
+
+.RE
+.B
+\fB-opaque target_addr_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an entry in the 'target address' (agent) config.
+
+
+.RE
+.B
+\fB-opaque target_params_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an entry in the 'target parameters' (agent) config.
+
+
+.RE
+.B
+\fBtransportAddress() ::\fR
+\fB          transportAddressIPv4() | transportAddressIPv6().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportAddressIPv4() ::\fR
+\fB          transportAddressIPv4WithPort() |\fR
+\fB          transportAddressIPv4WithoutPort().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportAddressIPv4WithPort() ::\fR
+\fB          {transportAddressIPv4WithoutPort(), inet:port_number()} |\fR
+\fB          [byte()].\fR
+
+.br
+.RS
+.PP
+Because of limitations of the Erlang type language we cannot define this type in detail. Instead, we describe it here.
+
+.PP
+The list variant, 4 bytes for address + 2 bytes for port:
+
+.PP
+\fI[byte() x 4, byte() x 2]\fR
+
+
+.RE
+.B
+\fBtransportAddressIPv4WithoutPort() :: inet:ip4_address() | [byte()].\fR
+
+.br
+.RS
+.PP
+Because of limitations of the Erlang type language we cannot define this type in detail. Instead, we describe it here.
+
+.PP
+The list variant, 4 bytes for address:
+
+.PP
+\fI[byte() x 4]\fR
+
+
+.RE
+.B
+\fBtransportAddressIPv6() ::\fR
+\fB          transportAddressIPv6WithPort() |\fR
+\fB          transportAddressIPv6WithoutPort().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportAddressIPv6WithPort() ::\fR
+\fB          {transportAddressIPv6WithoutPort(), inet:port_number()} |\fR
+\fB          [word() | inet:port_number()] |\fR
+\fB          [word() | byte()] |\fR
+\fB          [byte()].\fR
+
+.br
+.RS
+.PP
+Because of limitations of the Erlang type language we cannot define this type in detail. Instead, we describe it here.
+
+.PP
+First list variant, 8 words for address + 1 word for port:
+
+.PP
+\fI[word() x 8, inet:port_number()]\fR
+
+.PP
+Second list variant, 8 words for address + 2 bytes for port:
+
+.PP
+\fI[word() x 8, byte() x 2]\fR
+
+.PP
+Third list variant, 16 bytes for address + 2 bytes for port:
+
+.PP
+\fI[byte() x 16, byte() x 2]\fR
+
+
+.RE
+.B
+\fBtransportAddressIPv6WithoutPort() ::\fR
+\fB          inet:ip6_address() | [word()] | [byte()].\fR
+
+.br
+.RS
+.PP
+Because of limitations of the Erlang type language we cannot define this type in detail. Instead, we describe it here.
+
+.PP
+First list variant, 8 words for address:
+
+.PP
+\fI[word() x 8]\fR
+
+.PP
+Second list variant, 16 bytes for address:
+
+.PP
+\fI[byte() x 16]\fR
+
+
+.RE
+.B
+\fBtransportAddressMask() :: [] | transportAddressWithPort().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportAddressWithPort() ::\fR
+\fB          transportAddressIPv4WithPort() |\fR
+\fB          transportAddressIPv6WithPort().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportAddressWithoutPort() ::\fR
+\fB          transportAddressIPv4WithoutPort() |\fR
+\fB          transportAddressIPv6WithoutPort().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransportDomain() :: snmp:tdomain().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransport_address() ::\fR
+\fB          {ip_address(), inet:port_number()} | ip_address().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtransport_opts() :: list().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque usm_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an entry in the 'user based sm' (agent) config.
+
+
+.RE
+.B
+\fB-opaque vacm_acc_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an (access) entry in the 'vacm access' (agent) config.
+
+
+.RE
+.B
+\fBvacm_entry() ::\fR
+\fB          vacm_s2g_entry() | vacm_acc_entry() | vacm_vtf_entry().\fR
+
+.br
+.RS
+.PP
+An basically opaque term that represents an entry in the 'view based acm' (agent) config.
+
+
+.RE
+.B
+\fB-opaque vacm_s2g_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an (security to group) entry in the 'vacm security to group' (agent) config.
+
+
+.RE
+.B
+\fB-opaque vacm_vtf_entry() \fR
+
+.br
+.RS
+.PP
+An opaque term that represents an (tree family) entry in the 'vacm tree family' (agent) config.
+
+
+.RE
+.B
+\fBword() :: 0..65535.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBagent_entry(Tag, Val) -> AgentEntry\fR
+\fB                     when\fR
+\fB                         Tag ::\fR
+\fB                             intAgentTransports | intAgentUDPPort |\fR
+\fB                             snmpEngineMaxMessageSize | snmpEngineID,\fR
+\fB                         Val :: term(),\fR
+\fB                         AgentEntry :: agent_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent config file, \fIagent.conf\fR.
+
+.PP
+The type of \fIVal\fR depends on the value of \fITag\fR:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIintAgentTransports: \fR[\fIsnmpa_conf:intAgentTransport()\fR ] \fI<mandatory>\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIintAgentUDPPort: \fR\fIinet:port_number()\fR \fI<optional>\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIsnmpEngineMaxMessageSize: \fR\fIsnmp_framework_mib:max_message_size()\fR \fI<mandatory>\fR\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIsnmpEngineID: \fR\fIsnmp_framework_mib:engine_id()\fR \fI<mandatory>\fR\fR
+
+.RE
+
+.PP
+See Agent Information for more info.
+
+
+.RE
+.B
+\fBappend_agent_config(Dir, Conf) -> ok\fR
+\fB                             when\fR
+\fB                                 Dir :: snmp:dir(),\fR
+\fB                                 Conf :: [agent_entry()].\fR
+
+.br
+.RS
+.PP
+Append the config to the current agent config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Agent Information for more info.
+
+
+.RE
+.B
+\fBappend_community_config(Dir, Conf) -> ok\fR
+\fB                                 when\fR
+\fB                                     Dir :: snmp:dir(),\fR
+\fB                                     Conf :: [community_entry()].\fR
+
+.br
+.RS
+.PP
+Append the community config to the current agent community config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Community for more info.
+
+
+.RE
+.B
+\fBappend_context_config(Dir, Conf) -> ok\fR
+\fB                               when\fR
+\fB                                   Dir :: snmp:dir(),\fR
+\fB                                   Conf :: [context_entry()].\fR
+
+.br
+.RS
+.PP
+Append the context config to the current agent context config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Contexts for more info.
+
+
+.RE
+.B
+\fBappend_notify_config(Dir, Conf) -> ok\fR
+\fB                              when\fR
+\fB                                  Dir :: snmp:dir(),\fR
+\fB                                  Conf :: [notify_entry()].\fR
+
+.br
+.RS
+.PP
+Append the notify config to the current agent notify config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Notify Definitions for more info.
+
+
+.RE
+.B
+\fBappend_standard_config(Dir, Conf) -> ok\fR
+\fB                                when\fR
+\fB                                    Dir :: snmp:dir(),\fR
+\fB                                    Conf :: [standard_entry()].\fR
+
+.br
+.RS
+.PP
+Append the standard config to the current agent standard config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See System Information for more info.
+
+
+.RE
+.B
+\fBappend_target_addr_config(Dir, Conf) -> ok\fR
+\fB                                   when\fR
+\fB                                       Dir :: snmp:dir(),\fR
+\fB                                       Conf :: [target_addr_entry()].\fR
+
+.br
+.RS
+.PP
+Append the target_addr config to the current agent target_addr config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Target Address Definitions for more info.
+
+
+.RE
+.B
+\fBappend_target_params_config(Dir, Conf) -> ok\fR
+\fB                                     when\fR
+\fB                                         Dir :: snmp:dir(),\fR
+\fB                                         Conf :: [target_params_entry()].\fR
+
+.br
+.RS
+.PP
+Append the target_params config to the current agent target_params config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Target Parameters Definitions for more info.
+
+
+.RE
+.B
+\fBappend_usm_config(Dir, Conf) -> ok\fR
+\fB                           when Dir :: snmp:dir(), Conf :: [usm_entry()].\fR
+
+.br
+.RS
+.PP
+Append the usm config to the current agent usm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Security data for USM for more info.
+
+
+.RE
+.B
+\fBappend_vacm_config(Dir, Conf) -> ok\fR
+\fB                            when\fR
+\fB                                Dir :: snmp:dir(),\fR
+\fB                                Conf :: [vacm_entry()].\fR
+
+.br
+.RS
+.PP
+Append the vacm config to the current agent vacm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See MIB Views for VACM for more info.
+
+
+.RE
+.B
+\fBcommunity_entry(CommIndex) -> CommunityEntry\fR
+\fB                         when\fR
+\fB                             CommIndex ::\fR
+\fB                                 snmp_framework_mib:admin_string(),\fR
+\fB                             CommunityEntry :: community_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent community config file, \fIcommunity.conf\fR.
+
+.PP
+\fICommunityIndex\fR must be a \fInon-empty\fR string.
+
+.PP
+This function only accepts the following values of \fICommIndex\fR:
+
+"public"
+.RS 2
+Translates to the following call:
+
+.PP
+\fIcommunity_entry(CommunityIndex, CommunityIndex, "initial", "", "")\fR.
+
+
+.RE
+
+"all-rights"
+.RS 2
+Translates to the following call:
+
+.PP
+\fIcommunity_entry(CommunityIndex, CommunityIndex, CommunityIndex, "", "")\fR.
+
+
+.RE
+
+.PP
+See Community for more info.
+
+
+.RE
+.B
+\fBcommunity_entry(CommIndex, CommName, SecName, CtxName,\fR
+\fB                      TransportTag) ->\fR
+\fB                         CommunityEntry\fR
+\fB                         when\fR
+\fB                             CommIndex :: snmp_community_mib:index(),\fR
+\fB                             CommName :: snmp_community_mib:name(),\fR
+\fB                             SecName ::\fR
+\fB                                 snmp_community_mib:security_name(),\fR
+\fB                             CtxName ::\fR
+\fB                                 snmp_community_mib:context_name(),\fR
+\fB                             TransportTag ::\fR
+\fB                                 snmp_community_mib:transport_tag(),\fR
+\fB                             CommunityEntry :: community_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent community config file, \fIcommunity.conf\fR.
+
+.PP
+\fICommunityIndex\fR must be a \fInon-empty\fR string.
+
+.PP
+See Community for more info.
+
+
+.RE
+.B
+\fBcontext_entry(Ctx) -> ContextEntry\fR
+\fB                       when\fR
+\fB                           Ctx :: snmp_community_mib:context_name(),\fR
+\fB                           ContextEntry :: context_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent context config file, \fIcontext.conf\fR.
+
+.PP
+See Contexts for more info.
+
+
+.RE
+.B
+\fBnotify_entry(Name, Tag, Type) -> NotifyEntry\fR
+\fB                      when\fR
+\fB                          Name :: snmp_notification_mib:notify_name(),\fR
+\fB                          Tag :: snmp_notification_mib:notify_tag(),\fR
+\fB                          Type :: snmp_notification_mib:notify_type(),\fR
+\fB                          NotifyEntry :: notify_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent notify config file, \fInotify.conf\fR.
+
+.PP
+\fIName\fR must be a \fInon-empty\fR string.
+
+.PP
+See Notify Definitions for more info.
+
+
+.RE
+.B
+\fBread_agent_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                           when\fR
+\fB                               Dir :: snmp:dir(),\fR
+\fB                               Conf :: [agent_entry()],\fR
+\fB                               Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Agent Information for more info.
+
+
+.RE
+.B
+\fBread_community_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                               when\fR
+\fB                                   Dir :: snmp:dir(),\fR
+\fB                                   Conf :: [community_entry()],\fR
+\fB                                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent community config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Communities for more info.
+
+
+.RE
+.B
+\fBread_context_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 Dir :: snmp:dir(),\fR
+\fB                                 Conf :: [context_entry()],\fR
+\fB                                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent context config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Contexts for more info.
+
+
+.RE
+.B
+\fBread_notify_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                            when\fR
+\fB                                Dir :: snmp:dir(),\fR
+\fB                                Conf :: [notify_entry()],\fR
+\fB                                Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent notify config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Notify Definitions for more info.
+
+
+.RE
+.B
+\fBread_standard_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                              when\fR
+\fB                                  Dir :: snmp:dir(),\fR
+\fB                                  Conf :: [standard_entry()],\fR
+\fB                                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent standard config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See System Information for more info.
+
+
+.RE
+.B
+\fBread_target_addr_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                                 when\fR
+\fB                                     Dir :: snmp:dir(),\fR
+\fB                                     Conf :: [target_addr_entry()],\fR
+\fB                                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent target_addr config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Target Address Definitions for more info.
+
+
+.RE
+.B
+\fBread_target_params_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                                   when\fR
+\fB                                       Dir :: snmp:dir(),\fR
+\fB                                       Conf :: [target_params_entry()],\fR
+\fB                                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent target_params config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Target Parameters Definitions for more info.
+
+
+.RE
+.B
+\fBread_usm_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                         when\fR
+\fB                             Dir :: snmp:dir(),\fR
+\fB                             Conf :: [usm_entry()],\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent usm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Security data for USM for more info.
+
+
+.RE
+.B
+\fBread_vacm_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              Dir :: snmp:dir(),\fR
+\fB                              Conf :: [vacm_entry()],\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current agent vacm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See MIB Views for VACM for more info.
+
+
+.RE
+.B
+\fBstandard_entry(Tag, Val) -> StandardEntry\fR
+\fB                        when\fR
+\fB                            Tag ::\fR
+\fB                                sysDescr | sysObjectID | sysContact |\fR
+\fB                                sysName | sysLocation | sysServices |\fR
+\fB                                snmpEnableAuthenTraps,\fR
+\fB                            Val :: term(),\fR
+\fB                            StandardEntry :: standard_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent standard config file, \fIstandard.conf\fR.
+
+.PP
+The type of \fIVal\fR depends on the value of \fITag\fR:
+
+sysDescr: string() <mandatory>
+.RS 2
+
+\fIDisplayString (SIZE(0..255))\fR
+
+.RE
+
+sysObjectID: snmp:oid() <mandatory>
+.RS 2
+
+\fIOBJECT IDENTIFIER\fR
+
+.RE
+
+sysContact: string() <mandatory>
+.RS 2
+
+\fIDisplayString (SIZE(0..255))\fR
+
+.RE
+
+sysName: string() <mandatory>
+.RS 2
+
+\fIDisplayString (SIZE(0..255))\fR
+
+.RE
+
+sysLocation: string() <mandatory>
+.RS 2
+
+\fIDisplayString (SIZE(0..255))\fR
+
+.RE
+
+sysLocation: non_neg_integer() <mandatory>
+.RS 2
+"A value which indicates the set of services that this entity primarily offers."
+
+.PP
+\fIINTEGER (0..127)\fR
+
+
+.RE
+
+snmpEnableAuthenTraps: enabled | disabled <mandatory>
+.RS 2
+
+\fIINTEGER { enabled(1), disabled(2) }\fR
+
+.RE
+
+.PP
+See System Information for more info.
+
+
+.RE
+.B
+\fBtarget_addr_entry(Name, Domain, Addr, TagList, ParamsName,\fR
+\fB                        EngineId) ->\fR
+\fB                           TargetAddrEntry\fR
+\fB                           when\fR
+\fB                               Name :: snmp_target_mib:name(),\fR
+\fB                               Domain :: transportDomain(),\fR
+\fB                               Addr :: transportAddress(),\fR
+\fB                               TagList :: snmp_target_mib:tag_list(),\fR
+\fB                               ParamsName :: snmp_target_mib:params(),\fR
+\fB                               EngineId ::\fR
+\fB                                   snmp_framework_mib:engine_id(),\fR
+\fB                               TargetAddrEntry :: target_addr_entry();\fR
+\fB                       (Name, IP, TagList, ParamsName, EngineId, TMask) ->\fR
+\fB                           TargetAddrEntry\fR
+\fB                           when\fR
+\fB                               Name :: snmp_target_mib:name(),\fR
+\fB                               IP :: inet:ip_address(),\fR
+\fB                               TagList :: snmp_target_mib:tag_list(),\fR
+\fB                               ParamsName :: snmp_target_mib:params(),\fR
+\fB                               EngineId ::\fR
+\fB                                   snmp_framework_mib:engine_id(),\fR
+\fB                               TMask :: snmp_target_mib:tmask(),\fR
+\fB                               TargetAddrEntry :: target_addr_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent target_addr config file, \fItarget_addr.conf\fR.
+
+.PP
+\fIName\fR must be a \fInon-empty\fR string.
+
+.PP
+\fItarget_addr_entry/6\fR (1) translates to the following call: \fItarget_addr_entry(Name, Domain, Addr, TagList, ParamsName, EngineId, [])\fR.
+
+.PP
+\fItarget_addr_entry/6\fR (2) translates to the following call (with \fIDomain\fR and \fIAddr\fR built from \fIIP\fR and the default port number): \fItarget_addr_entry(Name, Domain, Addr, TagList, ParamsName, EngineId, TMask, 2048)\fR.
+
+.PP
+See Target Address Definitions for more info.
+
+
+.RE
+.B
+\fBtarget_addr_entry(Name, Domain, Addr, TagList, ParamsName,\fR
+\fB                        EngineId, TMask) ->\fR
+\fB                           TargetAddrEntry\fR
+\fB                           when\fR
+\fB                               Name :: snmp_target_mib:name(),\fR
+\fB                               Domain :: transportDomain(),\fR
+\fB                               Addr :: transportAddress(),\fR
+\fB                               TagList :: snmp_target_mib:tag_list(),\fR
+\fB                               ParamsName :: snmp_target_mib:params(),\fR
+\fB                               EngineId ::\fR
+\fB                                   snmp_framework_mib:engine_id(),\fR
+\fB                               TMask :: snmp_target_mib:tmask(),\fR
+\fB                               TargetAddrEntry :: target_addr_entry();\fR
+\fB                       (Name, IP, Port, TagList, ParamsName, EngineId,\fR
+\fB                        TMask) ->\fR
+\fB                           TargetAddrEntry\fR
+\fB                           when\fR
+\fB                               Name :: snmp_target_mib:name(),\fR
+\fB                               IP :: inet:ip_address(),\fR
+\fB                               Port :: inet:port_number(),\fR
+\fB                               TagList :: snmp_target_mib:tag_list(),\fR
+\fB                               ParamsName :: snmp_target_mib:params(),\fR
+\fB                               EngineId ::\fR
+\fB                                   snmp_framework_mib:engine_id(),\fR
+\fB                               TMask :: snmp_target_mib:tmask(),\fR
+\fB                               TargetAddrEntry :: target_addr_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent target_addr config file, \fItarget_addr.conf\fR.
+
+.PP
+\fIName\fR must be a \fInon-empty\fR string.
+
+.PP
+\fItarget_addr_entry/7\fR (1) translates to the following call: \fItarget_addr_entry(Name, Domain, Addr, TagList, ParamsName, EngineId, TMask, 2048)\fR.
+
+.PP
+\fItarget_addr_entry/7\fR (2) translates to the following call (with \fIDomain\fR and \fIAddr\fR built from \fIIP\fR and \fIPort\fR): \fItarget_addr_entry(Name, Domain, Addr, TagList, ParamsName, EngineId, TMask, 2048)\fR.
+
+.PP
+See Target Address Definitions for more info.
+
+
+.RE
+.B
+\fBtarget_addr_entry(Name, Domain, Addr, TagList, ParamsName,\fR
+\fB                        EngineId, TMask, MaxMessageSize) ->\fR
+\fB                           TargetAddrEntry\fR
+\fB                           when\fR
+\fB                               Name :: snmp_target_mib:name(),\fR
+\fB                               Domain :: transportDomain(),\fR
+\fB                               Addr :: transportAddress(),\fR
+\fB                               TagList :: snmp_target_mib:tag_list(),\fR
+\fB                               ParamsName :: snmp_target_mib:params(),\fR
+\fB                               EngineId ::\fR
+\fB                                   snmp_framework_mib:engine_id(),\fR
+\fB                               TMask :: snmp_target_mib:tmask(),\fR
+\fB                               MaxMessageSize :: snmp_target_mib:mms(),\fR
+\fB                               TargetAddrEntry :: target_addr_entry();\fR
+\fB                       (Name, IP, Port, TagList, ParamsName, EngineId,\fR
+\fB                        TMask, MaxMessageSize) ->\fR
+\fB                           TargetAddrEntry\fR
+\fB                           when\fR
+\fB                               Name :: snmp_target_mib:name(),\fR
+\fB                               IP :: inet:ip_address(),\fR
+\fB                               Port :: inet:port_number(),\fR
+\fB                               TagList :: snmp_target_mib:tag_list(),\fR
+\fB                               ParamsName :: snmp_target_mib:params(),\fR
+\fB                               EngineId ::\fR
+\fB                                   snmp_framework_mib:engine_id(),\fR
+\fB                               TMask :: snmp_target_mib:tmask(),\fR
+\fB                               MaxMessageSize :: snmp_target_mib:mms(),\fR
+\fB                               TargetAddrEntry :: target_addr_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent target_addr config file, \fItarget_addr.conf\fR.
+
+.PP
+\fIName\fR must be a \fInon-empty\fR string.
+
+.PP
+\fItarget_addr_entry/8\fR (1) translates to the following call: \fItarget_addr_entry(Name, Domain, Addr, 1500, 3, TagList, ParamsName, EngineId, TMask, MaxMessageSize)\fR.
+
+.PP
+\fItarget_addr_entry/8\fR (2) translates to the following call (with \fIDomain\fR and \fIAddr\fR built from \fIIP\fR and \fIPort\fR): \fItarget_addr_entry(Name, Domain, Addr, 1500, 3, TagList, ParamsName, EngineId, TMask, MaxMessageSize)\fR.
+
+.PP
+See Target Address Definitions for more info.
+
+
+.RE
+.B
+\fBtarget_addr_entry(Name, Domain, Addr, Timeout, RetryCount,\fR
+\fB                        TagList, ParamsName, EngineId, TMask,\fR
+\fB                        MaxMessageSize) ->\fR
+\fB                           TargetAddrEntry\fR
+\fB                           when\fR
+\fB                               Name :: snmp_target_mib:name(),\fR
+\fB                               Domain :: transportDomain(),\fR
+\fB                               Addr :: transportAddress(),\fR
+\fB                               Timeout :: snmp:time_interval(),\fR
+\fB                               RetryCount ::\fR
+\fB                                   snmp_target_mib:retry_count(),\fR
+\fB                               TagList :: snmp_target_mib:tag_list(),\fR
+\fB                               ParamsName ::\fR
+\fB                                   snmp_framework_mib:admin_string(),\fR
+\fB                               EngineId ::\fR
+\fB                                   snmp_framework_mib:engine_id(),\fR
+\fB                               TMask :: snmp_target_mib:tmask(),\fR
+\fB                               MaxMessageSize :: snmp_target_mib:mms(),\fR
+\fB                               TargetAddrEntry :: target_addr_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent target_addr config file, \fItarget_addr.conf\fR.
+
+.PP
+\fIName\fR must be a \fInon-empty\fR string.
+
+.PP
+See Target Address Definitions for more info.
+
+
+.RE
+.B
+\fBtarget_params_entry(Name, Vsn) -> TargetParamsEntry\fR
+\fB                             when\fR
+\fB                                 Name :: snmp_target_mib:name(),\fR
+\fB                                 Vsn :: snmp:version(),\fR
+\fB                                 TargetParamsEntry ::\fR
+\fB                                     target_params_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent target_params config file, \fItarget_params.conf\fR.
+
+.PP
+\fIName\fR must be a \fInon-empty\fR string.
+
+.PP
+\fItarget_params_entry/2\fR translates to the following call:
+
+.IP
+.nf
+	  target_params_entry(Name, Vsn, "initial", noAuthNoPriv)
+
+.fi
+
+.PP
+See Target Parameters Definitions for more info.
+
+
+.RE
+.B
+\fBtarget_params_entry(Name, Vsn, SecName, SecLevel) ->\fR
+\fB                             TargetParamsEntry\fR
+\fB                             when\fR
+\fB                                 Name :: snmp_target_mib:name(),\fR
+\fB                                 Vsn :: snmp:version(),\fR
+\fB                                 SecName ::\fR
+\fB                                     snmp_framework_mib:admin_string(),\fR
+\fB                                 SecLevel ::\fR
+\fB                                     snmp_framework_mib:security_level(),\fR
+\fB                                 TargetParamsEntry ::\fR
+\fB                                     target_params_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent target_params config file, \fItarget_params.conf\fR.
+
+.PP
+\fIName\fR must be a \fInon-empty\fR string.
+
+.PP
+\fIVsn\fR translates into \fIMPModel\fR and \fISecModel\fR as follows:
+
+.IP
+.nf
+	  Vsn = v1 => MPModel = v1,  SecModel = v1
+	  Vsn = v2 => MPModel = v2c, SecModel = v2c
+	  Vsn = v3 => MPModel = v3,  SecModel = usm
+
+.fi
+
+.PP
+\fItarget_params_entry/4\fR translates to the following call:
+
+.IP
+.nf
+	  target_params_entry(Name, MPModel, SecModel, SecName, SecLevel)
+
+.fi
+
+.PP
+Where \fIMPModel\fR and \fISecModel\fR is mapped from \fIVsn\fR, see above.
+
+.PP
+See Target Parameters Definitions for more info.
+
+
+.RE
+.B
+\fBtarget_params_entry(Name, MPModel, SecModel, SecName, SecLevel) ->\fR
+\fB                             TargetParamsEntry\fR
+\fB                             when\fR
+\fB                                 Name :: snmp_target_mib:name(),\fR
+\fB                                 MPModel ::\fR
+\fB                                     snmp_framework_mib:message_processing_model(),\fR
+\fB                                 SecModel ::\fR
+\fB                                     snmp_framework_mib:security_model(),\fR
+\fB                                 SecName ::\fR
+\fB                                     snmp_framework_mib:admin_string(),\fR
+\fB                                 SecLevel ::\fR
+\fB                                     snmp_framework_mib:security_level(),\fR
+\fB                                 TargetParamsEntry ::\fR
+\fB                                     target_params_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent target_params config file, \fItarget_params.conf\fR.
+
+.PP
+\fIName\fR must be a \fInon-empty\fR string.
+
+.PP
+See Target Parameters Definitions for more info.
+
+
+.RE
+.B
+\fBusm_entry(EngineID) -> UsmEntry\fR
+\fB                   when\fR
+\fB                       EngineID :: snmp_framework_mib:engine_id(),\fR
+\fB                       UsmEntry :: usm_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent usm config file, \fIusm.conf\fR.
+
+.PP
+\fIusm_entry/1\fR translates to the following call:
+
+.IP
+.nf
+	  usm_entry(EngineID,
+	            "initial", "initial", zeroDotZero,
+		    usmNoAuthProtocol, "", "",
+		    usmNoPrivProtocol, "", "",
+		    "", "", "").
+
+.fi
+
+.PP
+See Security data for USM for more info.
+
+
+.RE
+.B
+\fBusm_entry(EngineID, UserName, SecName, Clone, AuthP, AuthKeyC,\fR
+\fB                OwnAuthKeyC, PrivP, PrivKeyC, OwnPrivKeyC, Public,\fR
+\fB                AuthKey, PrivKey) ->\fR
+\fB                   UsmEntry\fR
+\fB                   when\fR
+\fB                       EngineID :: snmp_framework_mib:engine_id(),\fR
+\fB                       UserName :: snmp_user_based_sm_mib:name(),\fR
+\fB                       SecName :: snmp_framework_mib:admin_string(),\fR
+\fB                       Clone :: snmp_user_based_sm_mib:clone_from(),\fR
+\fB                       AuthP :: snmp_user_based_sm_mib:auth_protocol(),\fR
+\fB                       AuthKeyC :: snmp_user_based_sm_mib:key_change(),\fR
+\fB                       OwnAuthKeyC ::\fR
+\fB                           snmp_user_based_sm_mib:key_change(),\fR
+\fB                       PrivP :: snmp_user_based_sm_mib:priv_protocol(),\fR
+\fB                       PrivKeyC :: snmp_user_based_sm_mib:key_change(),\fR
+\fB                       OwnPrivKeyC ::\fR
+\fB                           snmp_user_based_sm_mib:key_change(),\fR
+\fB                       Public :: snmp_user_based_sm_mib:public(),\fR
+\fB                       AuthKey :: snmp_user_based_sm_mib:auth_key(),\fR
+\fB                       PrivKey :: snmp_user_based_sm_mib:priv_key(),\fR
+\fB                       UsmEntry :: usm_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the agent usm config file, \fIusm.conf\fR.
+
+.PP
+See Security data for USM for more info.
+
+
+.RE
+.B
+\fBvacm_acc_entry(GroupName, Prefix, SecModel, SecLevel, Match, RV,\fR
+\fB                     WV, NV) ->\fR
+\fB                        VacmAccEntry\fR
+\fB                        when\fR
+\fB                            GroupName ::\fR
+\fB                                snmp_framework_mib:admin_string(),\fR
+\fB                            Prefix ::\fR
+\fB                                snmp_view_based_acm_mib:context_prefix(),\fR
+\fB                            SecModel ::\fR
+\fB                                snmp_framework_mib:security_model(),\fR
+\fB                            SecLevel ::\fR
+\fB                                snmp_framework_mib:security_level(),\fR
+\fB                            Match ::\fR
+\fB                                snmp_view_based_acm_mib:context_match(),\fR
+\fB                            RV :: snmp_framework_mib:admin_string(),\fR
+\fB                            WV :: snmp_framework_mib:admin_string(),\fR
+\fB                            NV :: snmp_framework_mib:admin_string(),\fR
+\fB                            VacmAccEntry :: vacm_acc_entry().\fR
+
+.br
+.RS
+.PP
+Create an (access) entry for the agent vacm config file, \fIvacm.conf\fR.
+
+.PP
+See MIB Views for VACM for more info.
+
+
+.RE
+.B
+\fBvacm_s2g_entry(SecModel, SecName, GroupName) -> VacmS2GEntry\fR
+\fB                        when\fR
+\fB                            SecModel ::\fR
+\fB                                snmp_framework_mib:security_model(),\fR
+\fB                            SecName ::\fR
+\fB                                snmp_view_based_acm_mib:security_name(),\fR
+\fB                            GroupName ::\fR
+\fB                                snmp_framework_mib:admin_string(),\fR
+\fB                            VacmS2GEntry :: vacm_s2g_entry().\fR
+
+.br
+.RS
+.PP
+Create an (security to group) entry for the agent vacm config file, \fIvacm.conf\fR.
+
+.PP
+See MIB Views for VACM for more info.
+
+
+.RE
+.B
+\fBvacm_vtf_entry(ViewName, ViewSubtree) -> VacmVtfEntry\fR
+\fB                        when\fR
+\fB                            ViewName ::\fR
+\fB                                snmp_framework_mib:admin_string(),\fR
+\fB                            ViewSubtree :: snmp:oid(),\fR
+\fB                            VacmVtfEntry :: VacmVtfEntry.\fR
+
+.br
+.RS
+.PP
+Create an (view tree family) entry for the agent vacm config file, \fIvacm.conf\fR.
+
+.PP
+\fIvacm_vtf_entry/2\fR translates to the following call:
+
+.IP
+.nf
+	  vacm_vtf_entry(ViewIndex, ViewSubtree, included, null).
+
+.fi
+
+.PP
+See MIB Views for VACM for more info.
+
+
+.RE
+.B
+\fBvacm_vtf_entry(ViewName, ViewSubtree, ViewType, ViewMask) ->\fR
+\fB                        VacmVtfEntry\fR
+\fB                        when\fR
+\fB                            ViewName ::\fR
+\fB                                snmp_framework_mib:admin_string(),\fR
+\fB                            ViewSubtree :: snmp:oid(),\fR
+\fB                            ViewType ::\fR
+\fB                                snmp_view_based_acm_mib:view_type(),\fR
+\fB                            ViewMask ::\fR
+\fB                                null |\fR
+\fB                                snmp_view_based_acm_mib:view_mask(),\fR
+\fB                            VacmVtfEntry :: VacmVtfEntry.\fR
+
+.br
+.RS
+.PP
+Create an (view tree family) entry for the agent vacm config file, \fIvacm.conf\fR.
+
+.PP
+See MIB Views for VACM for more info.
+
+
+.RE
+.B
+\fBwrite_agent_config(Dir, Hdr, Conf) -> ok\fR
+\fB                            when\fR
+\fB                                Dir :: snmp:dir(),\fR
+\fB                                Hdr :: string(),\fR
+\fB                                Conf :: [agent_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent config to the agent config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Agent Information for more info.
+
+
+.RE
+.B
+\fBwrite_community_config(Dir, Hdr, Conf) -> ok\fR
+\fB                                when\fR
+\fB                                    Dir :: snmp:dir(),\fR
+\fB                                    Hdr :: string(),\fR
+\fB                                    Conf :: [community_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent community config to the agent community config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Community for more info.
+
+
+.RE
+.B
+\fBwrite_context_config(Dir, Hdr, Conf) -> ok\fR
+\fB                              when\fR
+\fB                                  Dir :: snmp:dir(),\fR
+\fB                                  Hdr :: string(),\fR
+\fB                                  Conf :: [context_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent context config to the agent context config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Contexts for more info.
+
+
+.RE
+.B
+\fBwrite_notify_config(Dir, Hdr, Conf) -> ok\fR
+\fB                             when\fR
+\fB                                 Dir :: snmp:dir(),\fR
+\fB                                 Hdr :: string(),\fR
+\fB                                 Conf :: [notify_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent notify config to the agent notify config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Notify Definitions for more info.
+
+
+.RE
+.B
+\fBwrite_standard_config(Dir, Hdr, Conf) -> ok\fR
+\fB                               when\fR
+\fB                                   Dir :: snmp:dir(),\fR
+\fB                                   Hdr :: string(),\fR
+\fB                                   Conf :: [standard_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent standard config to the agent standard config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See System Information for more info.
+
+
+.RE
+.B
+\fBwrite_target_addr_config(Dir, Hdr, Conf) -> ok\fR
+\fB                                  when\fR
+\fB                                      Dir :: snmp:dir(),\fR
+\fB                                      Hdr :: string(),\fR
+\fB                                      Conf :: [target_addr_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent target_addr config to the agent target_addr config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Target Address Definitions for more info.
+
+
+.RE
+.B
+\fBwrite_target_params_config(Dir, Hdr, Conf) -> ok\fR
+\fB                                    when\fR
+\fB                                        Dir :: snmp:dir(),\fR
+\fB                                        Hdr :: string(),\fR
+\fB                                        Conf :: [target_params_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent target_params config to the agent target_params config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Target Parameters Definitions for more info.
+
+
+.RE
+.B
+\fBwrite_usm_config(Dir, Hdr, Conf) -> ok\fR
+\fB                          when\fR
+\fB                              Dir :: snmp:dir(),\fR
+\fB                              Hdr :: string(),\fR
+\fB                              Conf :: [usm_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent usm config to the agent usm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Security data for USM for more info.
+
+
+.RE
+.B
+\fBwrite_vacm_config(Dir, Hdr, Conf) -> ok\fR
+\fB                           when\fR
+\fB                               Dir :: snmp:dir(),\fR
+\fB                               Hdr :: string(),\fR
+\fB                               Conf :: [vacm_entry()].\fR
+
+.br
+.RS
+.PP
+Write the agent vacm config to the agent vacm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See MIB Views for VACM for more info.
+
+
+.RE

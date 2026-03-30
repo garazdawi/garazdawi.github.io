@@ -1,0 +1,412 @@
+.TH systools 3 "sasl 4.3.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+systools \- A Set of Release Handling Tools
+
+.SH DESCRIPTION
+.PP
+This module contains functions to generate boot scripts (\fI.boot\fR, \fI.script\fR), a release upgrade file (\fIrelup\fR), and release packages.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIapp(4)\fR, \fIappup(4)\fR, \fIerl(1)\fR, \fIrel(4)\fR, \fIrelease_handler\fR, \fIrelup(4)\fR, \fIscript(4)\fR
+
+.SH FUNCTIONS
+.LP
+.B
+\fBmake_relup(Name, UpFrom, DownTo, [Opt]) -> Result\fR
+\fB                    when\fR
+\fB                        Name :: string(),\fR
+\fB                        UpFrom :: [Name | {Name, Descr}],\fR
+\fB                        DownTo :: [Name | {Name, Descr}],\fR
+\fB                        Descr :: term(),\fR
+\fB                        Opt ::\fR
+\fB                            {path, [Dir]} |\fR
+\fB                            restart_emulator | silent | noexec |\fR
+\fB                            {outdir, Dir} |\fR
+\fB                            warnings_as_errors,\fR
+\fB                        Dir :: string(),\fR
+\fB                        Result ::\fR
+\fB                            ok | error |\fR
+\fB                            {ok, Relup :: term(), Module, Warnings} |\fR
+\fB                            {error, Module, Error},\fR
+\fB                        Module :: atom(),\fR
+\fB                        Warnings :: term(),\fR
+\fB                        Error :: term().\fR
+
+.br
+.RS
+.PP
+Generates a release upgrade file \fIrelup\fR containing instructions for upgrading from or downgrading to one or more previous releases.
+
+.PP
+The instructions are used by \fIrelease_handler\fR when installing a new version of a release in runtime.
+
+.PP
+By default, the \fIrelup\fR file is located in the current working directory. If option \fI{outdir,Dir}\fR is specified, the \fIrelup\fR file is located in directory \fIDir\fR instead.
+
+.PP
+The release resource file \fIName.rel\fR is compared with all release resource files \fIName2.rel\fR, specified in \fIUpFrom\fR and \fIDownTo\fR. For each such pair, the following is deducted:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Which applications to be deleted, that is, applications listed in \fIName.rel\fR but not in \fIName2.rel\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Which applications to be added, that is, applications listed in \fIName2.rel\fR but not in \fIName.rel\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Which applications to be upgraded/downgraded, that is, applications listed in both \fIName.rel\fR and \fIName2.rel\fR but with different versions
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the emulator needs to be restarted after upgrading or downgrading, that is, if the ERTS version differs between \fIName.rel\fR and \fIName2.rel\fR
+
+.RE
+
+.PP
+Instructions for this are added to the \fIrelup\fR file in the above order. Instructions for upgrading or downgrading between application versions are fetched from the relevant application upgrade files \fIApp.appup\fR, sorted in the same order as when generating a boot script, see \fImake_script/1,2\fR. High-level instructions are translated into low-level instructions and the result is printed to the \fIrelup\fR file.
+
+.PP
+The optional \fIDescr\fR parameter is included "as is" in the \fIrelup\fR file, see \fIrelup(4)\fR. Defaults to the empty list.
+
+.PP
+All the files are searched for in the code path. It is assumed that the \fI.app\fR and \fI.appup\fR files for an application are located in the same directory.
+
+.PP
+If option \fI{path,[Dir]}\fR is specified, this path is appended to the current path. Wildcard \fI*\fR is expanded to all matching directories, for example, \fIlib/*/ebin\fR.
+
+.PP
+If option \fIrestart_emulator\fR is specified, a low-level instruction to restart the emulator is appended to the \fIrelup\fR file. This ensures that a complete reboot of the system is done when the system is upgraded or downgraded.
+
+.PP
+If an upgrade includes a change from an emulator earlier than OTP R15 to OTP R15 or later, the warning \fIpre_R15_emulator_upgrade\fR is issued. For more information about this, see Design Principles in \fISystem Documentation\fR.
+
+.PP
+By default, errors and warnings are printed to tty and the function returns \fIok\fR or \fIerror\fR. If option \fIsilent\fR is specified, the function instead either returns \fI{ok,Relup,Module,Warnings}\fR, where \fIRelup\fR is the release upgrade file, or \fI{error,Module,Error}\fR. Warnings and errors can be converted to strings by calling \fIModule:format_warning(Warnings)\fR or \fIModule:format_error(Error)\fR.
+
+.PP
+If option \fInoexec\fR is specified, the function returns the same values as for \fIsilent\fR but no \fIrelup\fR file is created.
+
+.PP
+If option \fIwarnings_as_errors\fR is specified, warnings are treated as errors.
+
+
+.RE
+.B
+\fBmake_script(Name, [Opt]) -> Result\fR
+\fB                     when\fR
+\fB                         Name :: string(),\fR
+\fB                         Opt ::\fR
+\fB                             src_tests |\fR
+\fB                             {path, [Dir]} |\fR
+\fB                             local |\fR
+\fB                             {variables, [Var]} |\fR
+\fB                             exref |\fR
+\fB                             {exref, [App]} |\fR
+\fB                             silent |\fR
+\fB                             {outdir, Dir} |\fR
+\fB                             no_dot_erlang | no_warn_sasl |\fR
+\fB                             warnings_as_errors |\fR
+\fB                             {script_name, Name},\fR
+\fB                         Dir :: string(),\fR
+\fB                         Var :: {VarName, Prefix},\fR
+\fB                         VarName :: string(),\fR
+\fB                         Prefix :: string(),\fR
+\fB                         App :: atom(),\fR
+\fB                         Result ::\fR
+\fB                             ok | error |\fR
+\fB                             {ok, Module, Warnings} |\fR
+\fB                             {error, Module, Error},\fR
+\fB                         Module :: atom(),\fR
+\fB                         Warnings :: term(),\fR
+\fB                         Error :: term().\fR
+
+.br
+.RS
+.PP
+Generates a boot script \fIName.script\fR and its binary version, the boot file \fIName.boot\fR, unless the \fI{script_name, ScriptName}\fR option is given, in which case the names are \fIScriptName.script\fR and \fIScriptName.boot\fR.
+
+.PP
+The boot file specifies which code to be loaded and which applications to be started when the Erlang runtime system is started. See \fIscript(4)\fR.
+
+.PP
+The release resource file \fIName.rel\fR is read to determine which applications are included in the release. Then the relevant application resource files \fIApp.app\fR are read to determine which modules to be loaded, and if and how the applications are to be started. (Keys \fImodules\fR and \fImod\fR, see \fIapp(4)\fR.
+
+.PP
+By default, the boot script and boot file are located in the same directory as \fIName.rel\fR. That is, in the current working directory unless \fIName\fR contains a path. If option \fI{outdir,Dir}\fR is specified, they are located in \fIDir\fR instead.
+
+.PP
+The correctness of each application is checked as follows:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The version of an application specified in the \fI.rel\fR file is to be the same as the version specified in the \fI.app\fR file.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are to be no undefined applications, that is, dependencies to applications that are not included in the release. (Key \fIapplications\fR in the \fI.app\fR file).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are to be no circular dependencies among the applications.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are to be no duplicated modules, that is, modules with the same name but belonging to different applications.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If option \fIsrc_tests\fR is specified, a warning is issued if the source code for a module is missing or is newer than the object code.
+
+.RE
+
+.PP
+The applications are sorted according to the dependencies between the applications. Where there are no dependencies, the order in the \fI.rel\fR file is kept.
+
+.PP
+The function fails if the mandatory applications Kernel and STDLIB are not included in the \fI.rel\fR file and have start type \fIpermanent\fR (which is default).
+
+.PP
+If SASL is not included as an application in the \fI.rel\fR file, a warning is issued because such a release cannot be used in an upgrade. To turn off this warning, add option \fIno_warn_sasl\fR.
+
+.PP
+All files are searched for in the current path. It is assumed that the \fI.app\fR and \fI.beam\fR files for an application are located in the same directory. The \fI.erl\fR files are also assumed to be located in this directory, unless it is an \fIebin\fR directory in which case they can be located in the corresponding \fIsrc\fR directory.
+
+.PP
+If option \fI{path,[Dir]}\fR is specified, this path is appended to the current path. A directory in the path can be specified with a wildcard \fI*\fR, this is expanded to all matching directories. Example: \fI"lib/*/ebin"\fR.
+
+.PP
+In the generated boot script all application directories are structured as \fIApp-Vsn/ebin\fR. They are assumed to be located in \fI$ROOT/lib\fR, where \fI$ROOT\fR is the root directory of the installed release. If option \fIlocal\fR is specified, the actual directories where the applications were found are used instead. This is a useful way to test a generated boot script locally.
+
+.PP
+Option \fIvariables\fR can be used to specify an installation directory other than \fI$ROOT/lib\fR for some of the applications. If a variable \fI{VarName,Prefix}\fR is specified and an application is found in a directory \fIPrefix/Rest/App[-Vsn]/ebin\fR, this application gets the path \fIVarName/Rest/App-Vsn/ebin\fR in the boot script. If an application is found in a directory \fIPrefix/Rest\fR, the path is \fIVarName/Rest/App-Vsn/ebin\fR. When starting Erlang, all variables \fIVarName\fR are given values using command-line flag \fIboot_var\fR.
+
+.PP
+\fIExample:\fR If option \fI{variables,[{"TEST","lib"}]}\fR is specified and \fImyapp.app\fR is found in \fIlib/myapp/ebin\fR, the path to this application in the boot script is \fI"$TEST/myapp-1/ebin"\fR. If \fImyapp.app\fR is found in \fIlib/test\fR, the path is \fI$TEST/test/myapp-1/ebin\fR.
+
+.PP
+The checks performed before the boot script is generated can be extended with some cross reference checks by specifying option \fIexref\fR. These checks are performed with the Xref tool. All applications, or the applications specified with \fI{exref,[App]}\fR, are checked by Xref and warnings are issued for calls to undefined functions.
+
+.PP
+By default, errors and warnings are printed to tty and the function returns \fIok\fR or \fIerror\fR. If option \fIsilent\fR is specified, the function instead returns \fI{ok,Module,Warnings}\fR or \fI{error,Module,Error}\fR. Warnings and errors can be converted to strings by calling \fIModule:format_warning(Warnings)\fR or \fIModule:format_error(Error)\fR.
+
+.PP
+If option \fIwarnings_as_errors\fR is specified, warnings are treated as errors.
+
+.PP
+If option \fIno_dot_erlang\fR is specified, the instruction to load the \fI.erlang\fR file during boot is \fInot\fR included.
+
+
+.RE
+.B
+\fBmake_tar(Name, Opts) -> Result\fR
+\fB                  when\fR
+\fB                      Name :: string(),\fR
+\fB                      Opts :: [Opt],\fR
+\fB                      Opt ::\fR
+\fB                          {dirs, [IncDir]} |\fR
+\fB                          {path, [Dir]} |\fR
+\fB                          {variables, [Var]} |\fR
+\fB                          {var_tar, VarTar} |\fR
+\fB                          {erts, Dir} |\fR
+\fB                          erts_all | src_tests | exref |\fR
+\fB                          {exref, [App]} |\fR
+\fB                          silent |\fR
+\fB                          {outdir, Dir} |\fR
+\fB                          no_warn_sasl | warnings_as_errors |\fR
+\fB                          {extra_files, ExtraFiles},\fR
+\fB                      Dir :: file:filename_all(),\fR
+\fB                      IncDir :: src | include | atom(),\fR
+\fB                      Var :: {VarName, PreFix},\fR
+\fB                      VarName :: string(),\fR
+\fB                      PreFix :: string(),\fR
+\fB                      VarTar :: include | ownfile | omit,\fR
+\fB                      App :: atom(),\fR
+\fB                      Result ::\fR
+\fB                          ok | error |\fR
+\fB                          {ok, Module :: module(), Warnings :: term()} |\fR
+\fB                          {error, Module :: module(), Error :: term()},\fR
+\fB                      ExtraFiles ::\fR
+\fB                          [{file:filename_all(), NameInArchive}],\fR
+\fB                      NameInArchive :: string().\fR
+
+.br
+.RS
+.PP
+Creates a release package file \fIName.tar.gz\fR.
+
+.PP
+This file must be uncompressed and unpacked on the target system using \fIrelease_handler\fR before the new release can be installed.
+
+.PP
+The release resource file \fIName.rel\fR is read to determine which applications are included in the release. Then the relevant application resource files \fIApp.app\fR are read to determine the version and modules of each application (keys \fIvsn\fR and \fImodules\fR, see \fIapp(4)\fR).
+
+.PP
+By default, the release package file is located in the same directory as \fIName.rel\fR. That is, in the current working directory unless \fIName\fR contains a path. If option \fI{outdir,Dir}\fR is specified, it is located in \fIDir\fR instead.
+
+.PP
+If SASL is not included as an application in the \fI.rel\fR file, a warning is issued because such a release cannot be used in an upgrade. To turn off this warning, add option \fIno_warn_sasl\fR.
+
+.PP
+By default, the release package contains the directories \fIlib/App-Vsn/ebin\fR and \fIlib/App-Vsn/priv\fR for each included application. If more directories are to be included, option \fIdirs\fR is specified, for example, \fI{dirs,[src,examples]}\fR.
+
+.PP
+All these files are searched for in the current path. If option \fI{path,[Dir]}\fR is specified, this path is appended to the current path. Wildcard \fI*\fR is expanded to all matching directories. Example: \fI"lib/*/ebin"\fR.
+
+.PP
+If the \fI{extra_files, ExtraFiles}\fR option is given then the \fIExtraFiles\fR are added to the tarball after everything else to be included has been added.
+
+.PP
+Option \fIvariables\fR can be used to specify an installation directory other than \fIlib\fR for some of the applications. If variable \fI{VarName,Prefix}\fR is specified and an application is found in directory \fIPrefix/Rest/App[-Vsn]/ebin\fR, this application is packed into a separate \fIVarName.tar.gz\fR file as \fIRest/App-Vsn/ebin\fR.
+
+.PP
+\fIExample:\fR If option \fI{variables,[{"TEST","lib"}]}\fR is specified and \fImyapp.app\fR is located in \fIlib/myapp-1/ebin\fR, application \fImyapp\fR is included in \fITEST.tar.gz\fR:
+
+.IP
+.nf
+% tar tf TEST.tar
+myapp-1/ebin/myapp.app
+...
+
+.fi
+
+.PP
+Option \fI{var_tar,VarTar}\fR can be used to specify if and where a separate package is to be stored. In this option \fIVarTar\fR is one of the following:
+
+include
+.RS 2
+Each separate (variable) package is included in the main 
+\fIReleaseName.tar.gz\fR file. This is the default.
+
+.RE
+
+ownfile
+.RS 2
+Each separate (variable) package is generated as a separate file in the same directory as the 
+\fIReleaseName.tar.gz\fR file.
+
+.RE
+
+omit
+.RS 2
+No separate (variable) packages are generated. Applications that are found underneath a variable directory are ignored.
+
+
+.RE
+
+.PP
+A directory \fIreleases\fR is also included in the release package, containing \fIName.rel\fR and a subdirectory \fIRelVsn\fR. \fIRelVsn\fR is the release version as specified in \fIName.rel\fR.
+
+.PP
+\fIreleases/RelVsn\fR contains the boot script \fIName.boot\fR renamed to \fIstart.boot\fR and, if found, the files \fIrelup\fR and \fIsys.config\fR or \fIsys.config.src\fR. These files are searched for in the same directory as \fIName.rel\fR, in the current working directory, and in any directories specified using option \fIpath\fR. In the case of \fIsys.config\fR it is not included if \fIsys.config.src\fR is found.
+
+.PP
+If the release package is to contain a new Erlang runtime system, the \fIerts-ErtsVsn/bin\fR directory of the specified runtime system \fI{erts,Dir}\fR is copied to \fIerts-ErtsVsn/bin\fR. Some erts executables are not copied by default, if you want to include all executables you can give the \fIerts_all\fR option.
+
+.PP
+All checks with function \fImake_script\fR are performed before the release package is created. Options \fIsrc_tests\fR and \fIexref\fR are also valid here.
+
+.PP
+The return value and the handling of errors and warnings are the same as described for \fImake_script\fR.
+
+
+.RE
+.B
+\fBscript2boot(File) -> ok | error when File :: string().\fR
+
+.br
+.RS
+.PP
+This function transforms the \fIFile.script\fR boot script to a binary term, which is stored in the \fIFile.boot\fR file.
+
+.PP
+The Erlang runtime system requires that the contents of the script used to boot the system is a binary Erlang term.
+
+.PP
+A boot script generated using \fImake_script\fR is already transformed to the binary form.
+
+
+.RE

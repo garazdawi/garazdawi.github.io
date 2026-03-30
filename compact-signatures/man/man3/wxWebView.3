@@ -1,0 +1,994 @@
+.TH wxWebView 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxWebView \- This control may be used to render web (HTML / CSS / javascript) documents.
+
+.SH DESCRIPTION
+.PP
+It is designed to allow the creation of multiple backends for each port, although currently just one is available. It differs from \fIwxHtmlWindow\fR in that each backend is actually a full rendering engine, Trident on MSW and Webkit on macOS and GTK. This allows the correct viewing of complex pages with javascript and css.
+
+.PP
+Backend Descriptions
+
+.PP
+Par:
+
+.PP
+The IE backend uses Microsoft's Trident rendering engine, specifically the version used by the locally installed copy of Internet Explorer. As such it is only available for the MSW port. By default recent versions of the WebBrowser control, which this backend uses, emulate Internet Explorer 7. This can be changed with a registry setting by wxWebView::MSWSetEmulationLevel() see this article for more information. This backend has full support for custom schemes and virtual file systems.
+
+.PP
+Par:
+
+.PP
+The Edge (Chromium) backend uses Microsoft's Edge WebView2. It is available for Windows 7 and newer. The following features are currently unsupported with this backend: virtual filesystems, custom urls, find.
+
+.PP
+This backend is not enabled by default, to build it follow these steps:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Visual Studio 2015, or newer, is required
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Download the WebView2 SDK nuget package (Version 0.9.488 or newer)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Extract the package (it's a zip archive) to \fIwxWidgets/3rdparty/webview2\fR (you should have \fI3rdparty/webview2/build/native/include/WebView2.h\fR file after unpacking it)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Enable \fIwxUSE_WEBVIEW_EDGE\fR in CMake or \fIsetup.h\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Build wxWidgets webview library
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Copy \fIWebView2Loader.dll\fR from the subdirectory corresponding to the architecture used (x86 or x64) of \fIwxWidgets/3rdparty/webview2/build/\fR to your applications executable
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+At runtime you can use \fIisBackendAvailable/1\fR to check if the backend can be used (it will be available if \fIWebView2Loader.dll\fR can be loaded and Edge (Chromium) is installed)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Make sure to add a note about using the WebView2 SDK to your application documentation, as required by its licence
+
+.RE
+
+.PP
+Par:
+
+.PP
+Under GTK the WebKit backend uses WebKitGTK+. The current minimum version required is 1.3.1 which ships by default with Ubuntu Natty and Debian Wheezy and has the package name libwebkitgtk-dev. Custom schemes and virtual files systems are supported under this backend, however embedded resources such as images and stylesheets are currently loaded using the data:// scheme.
+
+.PP
+Par:
+
+.PP
+Under GTK3 the WebKit2 version of WebKitGTK+ is used. In Ubuntu the required package name is libwebkit2gtk-4.0-dev and under Fedora it is webkitgtk4-devel. All wxWEBVIEW_WEBKIT features are supported except for clearing and enabling / disabling the history.
+
+.PP
+Par:
+
+.PP
+The macOS WebKit backend uses Apple's WebView class. This backend has full support for custom schemes and virtual file systems.
+
+.PP
+Asynchronous Notifications
+
+.PP
+Many of the methods in \fIwxWebView\fR are asynchronous, i.e. they return immediately and perform their work in the background. This includes functions such as \fIloadURL/2\fR and \fIreload/2\fR. To receive notification of the progress and completion of these functions you need to handle the events that are provided. Specifically \fIwxEVT_WEBVIEW_LOADED\fR notifies when the page or a sub-frame has finished loading and \fIwxEVT_WEBVIEW_ERROR\fR notifies that an error has occurred.
+
+.PP
+Virtual File Systems and Custom Schemes
+
+.PP
+\fIwxWebView\fR supports the registering of custom scheme handlers, for example \fIfile\fR or \fIhttp\fR. To do this create a new class which inherits from \fIwxWebViewHandler\fR (not implemented in wx), where wxWebHandler::GetFile() returns a pointer to a \fIwxFSFile\fR (not implemented in wx) which represents the given url. You can then register your handler with \fIRegisterHandler()\fR (not implemented in wx) it will be called for all pages and resources.
+
+.PP
+\fIwxWebViewFSHandler\fR (not implemented in wx) is provided to access the virtual file system encapsulated by \fIwxFileSystem\fR (not implemented in wx). The \fIwxMemoryFSHandler\fR (not implemented in wx) documentation gives an example of how this may be used.
+
+.PP
+\fIwxWebViewArchiveHandler\fR (not implemented in wx) is provided to allow the navigation of pages inside a zip archive. It supports paths of the form: \fIscheme:///C\fR:/example/docs.zip;protocol=zip/main.htm
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxWebView
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwebview_navigating\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwebview_navigated\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwebview_loaded\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwebview_error\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwebview_newwindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwebview_title_changed\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxWebView() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcanCopy(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if the current selection can be copied.
+
+.PP
+Note: This always returns \fItrue\fR on the macOS WebKit backend.
+
+
+.RE
+.B
+\fBcanCut(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if the current selection can be cut.
+
+.PP
+Note: This always returns \fItrue\fR on the macOS WebKit backend.
+
+
+.RE
+.B
+\fBcanGoBack(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if it is possible to navigate backward in the history of visited pages.
+
+
+.RE
+.B
+\fBcanGoForward(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if it is possible to navigate forward in the history of visited pages.
+
+
+.RE
+.B
+\fBcanPaste(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if data can be pasted.
+
+.PP
+Note: This always returns \fItrue\fR on the macOS WebKit backend.
+
+
+.RE
+.B
+\fBcanRedo(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if there is an action to redo.
+
+
+.RE
+.B
+\fBcanSetZoomType(This, Type) -> boolean()\fR
+\fB                        when This :: wxWebView(), Type :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Retrieve whether the current HTML engine supports a zoom type.
+
+.PP
+Return: Whether this type of zoom is supported by this HTML engine (and thus can be set through \fIsetZoomType/2\fR).
+
+
+.RE
+.B
+\fBcanUndo(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if there is an action to undo.
+
+
+.RE
+.B
+\fBclearHistory(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Clear the history, this will also remove the visible page.
+
+.PP
+Note: This is not implemented on the WebKit2GTK+ backend.
+
+
+.RE
+.B
+\fBclearSelection(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Clears the current selection.
+
+
+.RE
+.B
+\fBcopy(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Copies the current selection.
+
+
+.RE
+.B
+\fBcut(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Cuts the current selection.
+
+
+.RE
+.B
+\fBdeleteSelection(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Deletes the current selection.
+
+.PP
+Note that for \fIwxWEBVIEW_BACKEND_WEBKIT\fR the selection must be editable, either through SetEditable or the correct HTML attribute.
+
+
+.RE
+.B
+\fBenableContextMenu(This, [Option]) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxWebView(),\fR
+\fB                               Option :: {enable, boolean()}.\fR
+
+.br
+.RS
+.PP
+Enable or disable the right click context menu.
+
+.PP
+By default the standard context menu is enabled, this method can be used to disable it or re-enable it later.
+
+.PP
+Since: 2.9.5
+
+
+.RE
+.B
+\fBenableHistory(This, [Option]) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxWebView(),\fR
+\fB                           Option :: {enable, boolean()}.\fR
+
+.br
+.RS
+.PP
+Enable or disable the history.
+
+.PP
+This will also clear the history.
+
+.PP
+Note: This is not implemented on the WebKit2GTK+ backend.
+
+
+.RE
+.B
+\fBfind(This, Text, [Option]) -> integer()\fR
+\fB              when\fR
+\fB                  This :: wxWebView(),\fR
+\fB                  Text :: unicode:chardata(),\fR
+\fB                  Option :: {flags, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Finds a phrase on the current page and if found, the control will scroll the phrase into view and select it.
+
+.PP
+Return: If search phrase was not found in combination with the flags then \fIwxNOT_FOUND\fR is returned. If called for the first time with search phrase then the total number of results will be returned. Then for every time its called with the same search phrase it will return the number of the current match.
+
+.PP
+Note: This function will restart the search if the flags \fIwxWEBVIEW_FIND_ENTIRE_WORD\fR or \fIwxWEBVIEW_FIND_MATCH_CASE\fR are changed, since this will require a new search. To reset the search, for example resetting the highlights call the function with an empty search phrase. This always returns \fIwxNOT_FOUND\fR on the macOS WebKit backend.
+
+.PP
+Since: 2.9.5
+
+
+.RE
+.B
+\fBgetCurrentTitle(This) -> unicode:charlist()\fR
+\fB                         when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Get the title of the current web page, or its URL/path if title is not available.
+
+
+.RE
+.B
+\fBgetCurrentURL(This) -> unicode:charlist() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Get the URL of the currently displayed document.
+
+
+.RE
+.B
+\fBgetPageSource(This) -> unicode:charlist() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Get the HTML source code of the currently displayed document.
+
+.PP
+Return: The HTML source code, or an empty string if no page is currently shown.
+
+
+.RE
+.B
+\fBgetPageText(This) -> unicode:charlist() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Get the text of the current page.
+
+
+.RE
+.B
+\fBgetSelectedSource(This) -> unicode:charlist()\fR
+\fB                           when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected source, if any.
+
+
+.RE
+.B
+\fBgetSelectedText(This) -> unicode:charlist()\fR
+\fB                         when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected text, if any.
+
+
+.RE
+.B
+\fBgetZoom(This) -> wx:wx_enum() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Get the zoom level of the page.
+
+.PP
+See \fIgetZoomFactor/1\fR to get more precise zoom scale value other than as provided by \fIwxWebViewZoom\fR.
+
+.PP
+Return: The current level of zoom.
+
+
+.RE
+.B
+\fBgetZoomFactor(This) -> number() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Get the zoom factor of the page.
+
+.PP
+Return: The current factor of zoom.
+
+.PP
+Since: 3.1.4
+
+
+.RE
+.B
+\fBgetZoomType(This) -> wx:wx_enum() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Get how the zoom factor is currently interpreted.
+
+.PP
+Return: How the zoom factor is currently interpreted by the HTML engine.
+
+
+.RE
+.B
+\fBgoBack(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Navigate back in the history of visited pages.
+
+.PP
+Only valid if \fIcanGoBack/1\fR returns true.
+
+
+.RE
+.B
+\fBgoForward(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Navigate forward in the history of visited pages.
+
+.PP
+Only valid if \fIcanGoForward/1\fR returns true.
+
+
+.RE
+.B
+\fBhasSelection(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if there is a current selection.
+
+
+.RE
+.B
+\fBisBackendAvailable(Backend) -> boolean()\fR
+\fB                            when Backend :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Allows to check if a specific backend is currently available.
+
+.PP
+Since: 3.1.4
+
+
+.RE
+.B
+\fBisBusy(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns whether the web control is currently busy (e.g. loading a page).
+
+
+.RE
+.B
+\fBisContextMenuEnabled(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns true if a context menu will be shown on right click.
+
+.PP
+Since: 2.9.5
+
+
+.RE
+.B
+\fBisEditable(This) -> boolean() when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Returns whether the web control is currently editable.
+
+
+.RE
+.B
+\fBloadURL(This, Url) -> ok\fR
+\fB                 when This :: wxWebView(), Url :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Load a web page from a URL.
+
+.PP
+Note: Web engines generally report errors asynchronously, so if you wish to know whether loading the URL was successful, register to receive navigation error events.
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxWebView()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {url, unicode:chardata()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {backend, unicode:chardata()} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Factory function to create a new \fIwxWebView\fR using a \fIwxWebViewFactory\fR (not implemented in wx).
+
+.PP
+Return: The created \fIwxWebView\fR, or \fINULL\fR if the requested backend is not available
+
+.PP
+Since: 2.9.5
+
+
+.RE
+.B
+\fBpaste(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Pastes the current data.
+
+
+.RE
+.B
+\fBprint(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Opens a print dialog so that the user may print the currently displayed page.
+
+
+.RE
+.B
+\fBredo(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Redos the last action.
+
+
+.RE
+.B
+\fBreload(This, [Option]) -> ok\fR
+\fB                when\fR
+\fB                    This :: wxWebView(), Option :: {flags, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Reload the currently displayed URL.
+
+.PP
+Note: The flags are ignored by the edge backend.
+
+
+.RE
+.B
+\fBrunScript(This, Javascript) -> Result\fR
+\fB                   when\fR
+\fB                       Result ::\fR
+\fB                           {Res :: boolean(),\fR
+\fB                            Output :: unicode:charlist()},\fR
+\fB                       This :: wxWebView(),\fR
+\fB                       Javascript :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Runs the given JavaScript code.
+
+.PP
+JavaScript code is executed inside the browser control and has full access to DOM and other browser-provided functionality. For example, this code will replace the current page contents with the provided string.
+
+.PP
+If \fIoutput\fR is non-null, it is filled with the result of executing this code on success, e.g. a JavaScript value such as a string, a number (integer or floating point), a boolean or JSON representation for non-primitive types such as arrays and objects. For example:
+
+.PP
+This function has a few platform-specific limitations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When using WebKit v1 in wxGTK2, retrieving the result of JavaScript execution is unsupported and this function will always return false if \fIoutput\fR is non-null to indicate this. This functionality is fully supported when using WebKit v2 or later in wxGTK3.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When using WebKit under macOS, code execution is limited to at most 10MiB of memory and 10 seconds of execution time.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When using IE backend under MSW, scripts can only be executed when the current page is fully loaded (i.e. \fIwxEVT_WEBVIEW_LOADED\fR event was received). A script tag inside the page HTML is required in order to run JavaScript.
+
+.RE
+
+.PP
+Also notice that under MSW converting JavaScript objects to JSON is not supported in the default emulation mode. \fIwxWebView\fR implements its own object-to-JSON conversion as a fallback for this case, however it is not as full-featured, well-tested or performing as the implementation of this functionality in the browser control itself, so it is recommended to use MSWSetEmulationLevel() to change emulation level to a more modern one in which JSON conversion is done by the control itself.
+
+.PP
+Return: true if there is a result, false if there is an error.
+
+
+.RE
+.B
+\fBselectAll(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Selects the entire page.
+
+
+.RE
+.B
+\fBsetEditable(This, [Option]) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxWebView(),\fR
+\fB                         Option :: {enable, boolean()}.\fR
+
+.br
+.RS
+.PP
+Set the editable property of the web control.
+
+.PP
+Enabling allows the user to edit the page even if the \fIcontenteditable\fR attribute is not set. The exact capabilities vary with the backend being used.
+
+
+.RE
+.B
+\fBsetPage(This, Html, BaseUrl) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxWebView(),\fR
+\fB                     Html :: unicode:chardata(),\fR
+\fB                     BaseUrl :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the displayed page source to the contents of the given string.
+
+.PP
+Note: When using \fIwxWEBVIEW_BACKEND_IE\fR you must wait for the current page to finish loading before calling \fIsetPage/3\fR. The baseURL parameter is not used in this backend and the edge backend.
+
+
+.RE
+.B
+\fBsetZoom(This, Zoom) -> ok\fR
+\fB                 when This :: wxWebView(), Zoom :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Set the zoom level of the page.
+
+.PP
+See \fIsetZoomFactor/2\fR for more precise scaling other than the measured steps provided by \fIwxWebViewZoom\fR.
+
+
+.RE
+.B
+\fBsetZoomFactor(This, Zoom) -> ok\fR
+\fB                       when This :: wxWebView(), Zoom :: number().\fR
+
+.br
+.RS
+.PP
+Set the zoom factor of the page.
+
+.PP
+Note: zoom scale in IE will be converted into \fIwxWebViewZoom\fR levels for \fIwxWebViewZoomType\fR of \fIwxWEBVIEW_ZOOM_TYPE_TEXT\fR.
+
+.PP
+Since: 3.1.4
+
+
+.RE
+.B
+\fBsetZoomType(This, ZoomType) -> ok\fR
+\fB                     when This :: wxWebView(), ZoomType :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Set how to interpret the zoom factor.
+
+.PP
+Note: invoke \fIcanSetZoomType/2\fR first, some HTML renderers may not support all zoom types.
+
+
+.RE
+.B
+\fBstop(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Stop the current page loading process, if any.
+
+.PP
+May trigger an error event of type \fIwxWEBVIEW_NAV_ERR_USER_CANCELLED\fR. TODO: make \fIwxWEBVIEW_NAV_ERR_USER_CANCELLED\fR errors uniform across ports.
+
+
+.RE
+.B
+\fBundo(This) -> ok when This :: wxWebView().\fR
+
+.br
+.RS
+.PP
+Undos the last action.
+
+
+.RE

@@ -1,0 +1,3372 @@
+.TH erl_driver 3 "erts 16.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_driver \- API functions for an Erlang driver
+.SH DESCRIPTION
+.PP
+An Erlang driver is a library containing a set of native driver callback functions that the Erlang Virtual Machine calls when certain events occur. There can be multiple instances of a driver, each instance is associated with an Erlang port.
+
+.PP
+\fBWARNING: \fR\fIUse this functionality with extreme care.\fR A driver callback is executed as a direct extension of the native code of the VM. Execution is not made in a safe environment. The VM \fIcannot\fR provide the same services as provided when executing Erlang code, such as pre-emptive scheduling or memory protection. If the driver callback function does not behave well, the whole VM will misbehave.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+driver callback that crash will crash the whole VM.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An erroneously implemented driver callback can cause a VM internal state inconsistency, which can cause a crash of the VM, or miscellaneous misbehaviors of the VM at any point after the call to the driver callback.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+driver callback doing lengthy work before returning degrades responsiveness of the VM and can cause miscellaneous strange behaviors. Such strange behaviors include, but are not limited to, extreme memory usage and bad load balancing between schedulers. Strange behaviors that can occur because of lengthy work can also vary between Erlang/OTP releases.
+
+.RE
+
+
+.PP
+As from ERTS 5.5.3 the driver interface has been extended (see \fIextended marker\fR). The extended interface introduces version management, the possibility to pass capability flags (see \fIdriver_flags\fR) to the runtime system at driver initialization, and some new driver API functions.
+
+.PP
+\fBNOTE: \fRAs from ERTS 5.9 old drivers must be recompiled and use the extended interface. They must also be adjusted to the 64-bit capable driver interface.
+
+
+.PP
+The driver calls back to the emulator, using the API functions declared in \fIerl_driver.h\fR. They are used for outputting data from the driver, using timers, and so on.
+
+.PP
+Each driver instance is associated with a port. Every port has a port owner process. Communication with the port is normally done through the port owner process. Most of the functions take the \fIport\fR handle as an argument. This identifies the driver instance. Notice that this port handle must be stored by the driver, it is not given when the driver is called from the emulator (see \fIdriver_entry\fR).
+
+.PP
+Some of the functions take a parameter of type \fIErlDrvBinary\fR, a driver binary. It is to be both allocated and freed by the caller. Using a binary directly avoids one extra copying of data.
+
+.PP
+Many of the output functions have a "header buffer", with \fIhbuf\fR and \fIhlen\fR parameters. This buffer is sent as a list before the binary (or list, depending on port mode) that is sent. This is convenient when matching on messages received from the port. (Although in the latest Erlang versions there is the binary syntax, which enables you to match on the beginning of a binary.)
+
+.PP
+Drivers are locked either on driver level or port level (driver instance level). By default driver level locking will be used, that is, only one emulator thread will execute code in the driver at a time. If port level locking is used, multiple emulator threads can execute code in the driver at the same time. Only one thread at a time will call driver callbacks corresponding to the same port, though. To enable port level locking, set the \fIERL_DRV_FLAG_USE_PORT_LOCKING\fR driver flag in the \fIdriver_entry\fR used by the driver. When port level locking is used, the driver writer is responsible for synchronizing all accesses to data shared by the ports (driver instances).
+
+.PP
+Most drivers written before the runtime system with SMP support existed can run in the runtime system with SMP support, without being rewritten, if driver level locking is used.
+
+.PP
+\fBNOTE: \fRIt is assumed that drivers do not access other drivers. If drivers access each other, they must provide their own mechanism for thread-safe synchronization. Such "inter-driver communication" is strongly discouraged.
+
+
+.PP
+\fBNOTE: \fRRegardless of locking scheme used, calls to driver callbacks can be made from different threads.
+
+
+.PP
+Most functions in this API are \fInot\fR thread-safe, that is, they \fIcannot\fR be called from arbitrary threads. Functions that are not documented as thread-safe can only be called from driver callbacks or function calls descending from a driver callback call. Notice that driver callbacks can be called from different threads. This, however, is not a problem for any function in this API, as the emulator has control over these threads.
+
+.PP
+\fBWARNING: \fRFunctions not explicitly documented as thread-safe are \fInot\fR thread safe. A function not explicitly documented as thread-safe can, at some point in time, have a thread-safe implementation in the runtime system. Such an implementation can however change to a thread \fIunsafe\fR implementation at any time \fIwithout any notice\fR. \fIOnly use functions explicitly documented as thread-safe from arbitrary threads.\fR
+
+
+.PP
+As mentioned in the warning text at the beginning of this section, it is of vital importance that a driver callback returns relatively fast. It is difficult to give an exact maximum amount of time that a driver callback is allowed to work, but usually a well-behaving driver callback is to return within 1 millisecond. This can be achieved using different approaches. If you have full control over the code to execute in the driver callback, the best approach is to divide the work into multiple chunks of work, and trigger multiple calls to the time-out callback using zero time-outs. Function \fIerl_drv_consume_timeslice\fR can be useful to determine when to trigger such time-out callback calls. However, sometimes it cannot be implemented this way, for example when calling third-party libraries. In this case, you typically want to dispatch the work to another thread. Information about thread primitives is provided below.
+
+.SS "Functionality"
+
+.PP
+All functions that a driver needs to do with Erlang are performed through driver API functions. Functions exist for the following functionality:
+
+Timer functions
+.RS 2
+Control the timer that a driver can use. The timer has the emulator call the 
+\fItimeout\fR entry function after a specified time. Only one timer is available for each driver instance.
+
+.RE
+
+Queue handling
+.RS 2
+Every driver instance has an associated queue. This queue is a 
+\fISysIOVec\fR, which works as a buffer. It is mostly used for the driver to buffer data that is to be written to a device, it is a byte stream. If the port owner process closes the driver, and the queue is not empty, the driver is not closed. This enables the driver to flush its buffers before closing.
+.PP
+The queue can be manipulated from any threads if a port data lock is used. For more information, see \fIErlDrvPDL\fR.
+
+
+.RE
+
+Output functions
+.RS 2
+With these functions, the driver sends data back to the emulator. The data is received as messages by the port owner process, see 
+\fIerlang:open_port/2\fR. The vector function and the function taking a driver binary are faster, as they avoid copying the data buffer. There is also a fast way of sending terms from the driver, without going through the binary term format.
+
+.RE
+
+Failure
+.RS 2
+The driver can exit and signal errors up to Erlang. This is only for severe errors, when the driver cannot possibly keep open.
+
+
+.RE
+
+Asynchronous calls
+.RS 2
+Erlang/OTP R7B and later versions have provision for asynchronous function calls, using a thread pool provided by Erlang. There is also a select call, which can be used for asynchronous drivers.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB Multi-threading\fR  A POSIX thread like API for multi-threading is provided. The Erlang driver thread API only provides a subset of the functionality provided by the POSIX thread API. The subset provided is more or less the basic functionality needed for multi-threaded programming:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Threads
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Mutexes
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Condition variables
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Read/write locks
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Thread-specific data
+
+.RE
+
+.PP
+The Erlang driver thread API can be used in conjunction with the POSIX thread API on UN-ices and with the Windows native thread API on Windows. The Erlang driver thread API has the advantage of being portable, but there can exist situations where you want to use functionality from the POSIX thread API or the Windows native thread API.
+
+.PP
+The Erlang driver thread API only returns error codes when it is reasonable to recover from an error condition. If it is not reasonable to recover from an error condition, the whole runtime system is terminated. For example, if a create mutex operation fails, an error code is returned, but if a lock operation on a mutex fails, the whole runtime system is terminated.
+
+.PP
+Notice that there is no "condition variable wait with time-out" in the Erlang driver thread API. This because of issues with \fIpthread_cond_timedwait\fR. When the system clock suddenly is changed, it is not always guaranteed that you will wake up from the call as expected. An Erlang runtime system must be able to cope with sudden changes of the system clock. Therefore, we have omitted it from the Erlang driver thread API. In the Erlang driver case, time-outs can and are to be handled with the timer functionality of the Erlang driver API.
+
+.PP
+Notice that many functions in the Erlang driver API are \fInot\fR thread-safe. If a function is not documented as thread-safe, it is \fInot\fR thread-safe.
+
+.PP
+\fBNOTE: \fRWhen executing in an emulator thread, it is \fIvery important\fR that you unlock \fIall\fR locks you have locked before letting the thread out of your control; otherwise you are \fIvery likely\fR to deadlock the whole emulator. If you need to use thread-specific data in an emulator thread, only have the thread-specific data set while the thread is under your control, and clear the thread-specific data before you let the thread out of your control.
+
+
+.PP
+In the future, debug functionality will probably be integrated with the Erlang driver thread API. All functions that create entities take a \fIname\fR argument. Currently the \fIname\fR argument is unused, but it will be used when the debug functionality is implemented. If you name all entities created well, the debug functionality will be able to give you better error reports.
+
+.RE
+
+Adding/removing drivers
+.RS 2
+A driver can add and later remove drivers.
+
+
+.RE
+
+Monitoring processes
+.RS 2
+A driver can monitor a process that does not own a port.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB Version management\fR  Version management is enabled for drivers that have set the \fIextended_marker\fR field of their \fIdriver_entry\fR to \fIERL_DRV_EXTENDED_MARKER\fR. \fIerl_driver.h\fR defines:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIERL_DRV_EXTENDED_MARKER\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIERL_DRV_EXTENDED_MAJOR_VERSION\fR, which is incremented when driver incompatible changes are made to the Erlang runtime system. Normally it suffices to recompile drivers when \fIERL_DRV_EXTENDED_MAJOR_VERSION\fR has changed, but it can, under rare circumstances, mean that drivers must be slightly modified. If so, this will of course be documented.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIERL_DRV_EXTENDED_MINOR_VERSION\fR, which is incremented when new features are added. The runtime system uses the minor version of the driver to determine what features to use.
+
+.RE
+
+.PP
+The runtime system normally refuses to load a driver if the major versions differ, or if the major versions are equal and the minor version used by the driver is greater than the one used by the runtime system. Old drivers with lower major versions are however allowed after a bump of the major version during a transition period of two major releases. Such old drivers can, however, fail if deprecated features are used.
+
+.PP
+The emulator refuses to load a driver that does not use the extended driver interface, to allow for 64-bit capable drivers, as incompatible type changes for the callbacks \fIoutput\fR, \fIcontrol\fR, and \fIcall\fR were introduced in Erlang/OTP R15B. A driver written with the old types would compile with warnings and when called return garbage sizes to the emulator, causing it to read random memory and create huge incorrect result blobs.
+
+.PP
+Therefore it is not enough to only recompile drivers written with version management for pre R15B types; the types must be changed in the driver suggesting other rewrites, especially regarding size variables. \fIInvestigate all warnings when recompiling.\fR
+
+.PP
+Also, the API driver functions \fIdriver_output*\fR and \fIdriver_vec_to_buf\fR, \fIdriver_alloc/realloc*\fR, and the \fIdriver_*\fR queue functions were changed to have larger length arguments and return values. This is a lesser problem, as code that passes smaller types gets them auto-converted in the calls, and as long as the driver does not handle sizes that overflow an \fIint\fR, all will work as before.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB Time measurement\fR  Support for time measurement in drivers:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIErlDrvTime\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIErlDrvTimeUnit\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerl_drv_monotonic_time\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerl_drv_time_offset\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerl_drv_convert_time_unit\fR
+
+.RE
+
+.RE
+
+.SS "Rewrites for 64-Bit Driver Interface"
+
+.PP
+ERTS 5.9 introduced two new integer types, \fIErlDrvSizeT\fR and \fIErlDrvSSizeT\fR, which can hold 64-bit sizes if necessary.
+
+.PP
+To not update a driver and only recompile, it probably works when building for a 32-bit machine creating a false sense of security. Hopefully that will generate many important warnings. But when recompiling the same driver later on for a 64-bit machine, there \fIwill\fR be warnings and almost certainly crashes. So it is a \fIbad\fR idea to postpone updating the driver and not fixing the warnings.
+
+.PP
+When recompiling with \fIgcc\fR, use flag \fI-Wstrict-prototypes\fR to get better warnings. Try to find a similar flag if you use another compiler.
+
+.PP
+The following is a checklist for rewriting a pre ERTS 5.9 driver, most important first:
+
+Return types for driver callbacks
+.RS 2
+Rewrite driver callback 
+\fIcontrol\fR to use return type \fIErlDrvSSizeT\fR instead of \fIint\fR.
+.PP
+Rewrite driver callback \fIcall\fR to use return type \fIErlDrvSSizeT\fR instead of \fIint\fR.
+
+.PP
+\fBNOTE: \fRThese changes are essential not to crash the emulator or worse cause malfunction. Without them a driver can return garbage in the high 32 bits to the emulator, causing it to build a huge result from random bytes, either crashing on memory allocation or succeeding with a random result from the driver call.
+
+
+
+.RE
+
+Arguments to driver callbacks
+.RS 2
+Driver callback 
+\fIoutput\fR now gets \fIErlDrvSizeT\fR as 3rd argument instead of previously \fIint\fR.
+.PP
+Driver callback \fIcontrol\fR now gets \fIErlDrvSizeT\fR as 4th and 6th arguments instead of previously \fIint\fR.
+
+.PP
+Driver callback \fIcall\fR now gets \fIErlDrvSizeT\fR as 4th and 6th arguments instead of previously \fIint\fR.
+
+.PP
+Sane compiler's calling conventions probably make these changes necessary only for a driver to handle data chunks that require 64-bit size fields (mostly larger than 2 GB, as that is what an \fIint\fR of 32 bits can hold). But it is possible to think of non-sane calling conventions that would make the driver callbacks mix up the arguments causing malfunction.
+
+.PP
+\fBNOTE: \fRThe argument type change is from signed to unsigned. This can cause problems for, for example, loop termination conditions or error conditions if you only change the types all over the place.
+
+
+
+.RE
+
+Larger size field in ErlIOVec
+.RS 2
+The 
+\fIsize\fR field in \fIErlIOVec\fR has been changed to \fIErlDrvSizeT\fR from \fIint\fR. Check all code that use that field.
+.PP
+Automatic type-casting probably makes these changes necessary only for a driver that encounters sizes > 32 bits.
+
+.PP
+\fBNOTE: \fRThe \fIsize\fR field changed from signed to unsigned. This can cause problems for, for example, loop termination conditions or error conditions if you only change the types all over the place.
+
+
+
+.RE
+
+Arguments and return values in the driver API
+.RS 2
+Many driver API functions have changed argument type and/or return value to 
+\fIErlDrvSizeT\fR from mostly \fIint\fR. Automatic type-casting probably makes these changes necessary only for a driver that encounters sizes > 32 bits.
+driver_output
+.RS 2
+3rd argument
+
+
+.RE
+
+driver_output2
+.RS 2
+3rd and 5th arguments
+
+
+.RE
+
+driver_output_binary
+.RS 2
+3rd, 5th, and 6th arguments
+
+
+.RE
+
+driver_outputv
+.RS 2
+3rd and 5th arguments
+
+
+.RE
+
+driver_vec_to_buf
+.RS 2
+3rd argument and return value
+
+
+.RE
+
+driver_alloc
+.RS 2
+1st argument
+
+
+.RE
+
+driver_realloc
+.RS 2
+2nd argument
+
+
+.RE
+
+driver_alloc_binary
+.RS 2
+1st argument
+
+
+.RE
+
+driver_realloc_binary
+.RS 2
+2nd argument
+
+
+.RE
+
+driver_enq
+.RS 2
+3rd argument
+
+
+.RE
+
+driver_pushq
+.RS 2
+3rd argument
+
+
+.RE
+
+driver_deq
+.RS 2
+2nd argument and return value
+
+
+.RE
+
+driver_sizeq
+.RS 2
+Return value
+
+
+.RE
+
+driver_enq_bin
+.RS 2
+3rd and 4th arguments
+
+
+.RE
+
+driver_pushq_bin
+.RS 2
+3rd and 4th arguments
+
+
+.RE
+
+driver_enqv
+.RS 2
+3rd argument
+
+
+.RE
+
+driver_pushqv
+.RS 2
+3rd argument
+
+
+.RE
+
+driver_peekqv
+.RS 2
+Return value
+
+
+.RE
+
+.PP
+\fBNOTE: \fRThis is a change from signed to unsigned. This can cause problems for, for example, loop termination conditions and error conditions if you only change the types all over the place.
+
+
+
+.RE
+
+.SS "Data Types"
+
+ErlDrvSizeT
+.RS 2
+An unsigned integer type to be used as 
+\fIsize_t\fR.
+
+.RE
+
+ErlDrvSSizeT
+.RS 2
+A signed integer type, the size of 
+\fIErlDrvSizeT\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIErlDrvSysInfo\fR\fR
+
+.IP
+.nf
+typedef struct ErlDrvSysInfo {
+   int driver_major_version;
+   int driver_minor_version;
+   char *erts_version;
+   char *otp_release;
+   int thread_support;
+   int smp_support;
+   int async_threads;
+   int scheduler_threads;
+   int nif_major_version;
+   int nif_minor_version;
+   int dirty_scheduler_support;
+} ErlDrvSysInfo;
+
+.fi
+
+.PP
+The \fIErlDrvSysInfo\fR structure is used for storage of information about the Erlang runtime system. \fIdriver_system_info\fR writes the system information when passed a reference to a \fIErlDrvSysInfo\fR structure. The fields in the structure are as follows:
+
+driver_major_version
+.RS 2
+The value of 
+\fIERL_DRV_EXTENDED_MAJOR_VERSION\fR when the runtime system was compiled. This value is the same as the value of \fIERL_DRV_EXTENDED_MAJOR_VERSION\fR used when compiling the driver; otherwise the runtime system would have refused to load the driver.
+
+.RE
+
+driver_minor_version
+.RS 2
+The value of 
+\fIERL_DRV_EXTENDED_MINOR_VERSION\fR when the runtime system was compiled. This value can differ from the value of \fIERL_DRV_EXTENDED_MINOR_VERSION\fR used when compiling the driver.
+
+.RE
+
+erts_version
+.RS 2
+A string containing the version number of the runtime system (the same as returned by 
+\fIerlang:system_info(version)\fR).
+
+.RE
+
+otp_release
+.RS 2
+A string containing the OTP release number (the same as returned by 
+\fIerlang:system_info(otp_release)\fR).
+
+.RE
+
+thread_support
+.RS 2
+A value 
+\fI!= 0\fR if the runtime system has thread support; otherwise \fI0\fR.
+
+.RE
+
+smp_support
+.RS 2
+A value 
+\fI!= 0\fR if the runtime system has SMP support; otherwise \fI0\fR.
+
+.RE
+
+async_threads
+.RS 2
+The number of async threads in the async thread pool used by 
+\fIdriver_async\fR (the same as returned by \fIerlang:system_info(thread_pool_size)\fR).
+
+.RE
+
+scheduler_threads
+.RS 2
+The number of scheduler threads used by the runtime system (the same as returned by 
+\fIerlang:system_info(schedulers)\fR).
+
+.RE
+
+nif_major_version
+.RS 2
+The value of 
+\fIERL_NIF_MAJOR_VERSION\fR when the runtime system was compiled.
+
+.RE
+
+nif_minor_version
+.RS 2
+The value of 
+\fIERL_NIF_MINOR_VERSION\fR when the runtime system was compiled.
+
+.RE
+
+dirty_scheduler_support
+.RS 2
+A value 
+\fI!= 0\fR if the runtime system has support for dirty scheduler threads; otherwise \fI0\fR.
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIErlDrvBinary\fR\fR
+
+.IP
+.nf
+typedef struct ErlDrvBinary {
+   ErlDrvSint orig_size;
+   char orig_bytes[];
+} ErlDrvBinary;
+
+.fi
+
+.PP
+The \fIErlDrvBinary\fR structure is a binary, as sent between the emulator and the driver. All binaries are reference counted; when \fIdriver_binary_free\fR is called, the reference count is decremented, when it reaches zero, the binary is deallocated. \fIorig_size\fR is the binary size and \fIorig_bytes\fR is the buffer. \fIErlDrvBinary\fR has not a fixed size, its size is \fIorig_size + 2 * sizeof(int)\fR.
+
+.PP
+\fBNOTE: \fRThe \fIrefc\fR field has been removed. The reference count of an \fIErlDrvBinary\fR is now stored elsewhere. The reference count of an \fIErlDrvBinary\fR can be accessed through \fIdriver_binary_get_refc\fR, \fIdriver_binary_inc_refc\fR, and \fIdriver_binary_dec_refc\fR.
+
+
+.PP
+Some driver calls, such as \fIdriver_enq_binary\fR, increment the driver reference count, and others, such as \fIdriver_deq\fR decrement it.
+
+.PP
+Using a driver binary instead of a normal buffer is often faster, as the emulator needs not to copy the data, only the pointer is used.
+
+.PP
+A driver binary allocated in the driver, with \fIdriver_alloc_binary\fR, is to be freed in the driver (unless otherwise stated) with \fIdriver_free_binary\fR. (Notice that this does not necessarily deallocate it, if the driver is still referred in the emulator, the ref-count will not go to zero.)
+
+.PP
+Driver binaries are used in the \fIdriver_output2\fR and \fIdriver_outputv\fR calls, and in the queue. Also the driver callback \fIoutputv\fR uses driver binaries.
+
+.PP
+If the driver for some reason wants to keep a driver binary around, for example in a static variable, the reference count is to be incremented, and the binary can later be freed in the \fIstop\fR callback, with \fIdriver_free_binary\fR.
+
+.PP
+Notice that as a driver binary is shared by the driver and the emulator. A binary received from the emulator or sent to the emulator must not be changed by the driver.
+
+.PP
+Since ERTS 5.5 (Erlang/OTP R11B), \fIorig_bytes\fR is guaranteed to be properly aligned for storage of an array of doubles (usually 8-byte aligned).
+
+.RE
+
+ErlDrvData
+.RS 2
+A handle to driver-specific data, passed to the driver callbacks. It is a pointer, and is most often type cast to a specific pointer in the driver.
+
+
+.RE
+
+SysIOVec
+.RS 2
+A system I/O vector, as used by 
+\fIwritev\fR on Unix and \fIWSASend\fR on Win32. It is used in \fIErlIOVec\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIErlIOVec\fR\fR
+
+.IP
+.nf
+typedef struct ErlIOVec {
+  int vsize;
+  ErlDrvSizeT size;
+  SysIOVec* iov;
+  ErlDrvBinary** binv;
+} ErlIOVec;
+
+.fi
+
+.PP
+The I/O vector used by the emulator and drivers is a list of binaries, with a \fISysIOVec\fR pointing to the buffers of the binaries. It is used in \fIdriver_outputv\fR and the \fIoutputv\fR driver callback. Also, the driver queue is an \fIErlIOVec\fR.
+
+.RE
+
+ErlDrvMonitor
+.RS 2
+When a driver creates a monitor for a process, a 
+\fIErlDrvMonitor\fR is filled in. This is an opaque data type that can be assigned to, but not compared without using the supplied compare function (that is, it behaves like a struct).
+.PP
+The driver writer is to provide the memory for storing the monitor when calling \fIdriver_monitor_process\fR. The address of the data is not stored outside of the driver, so \fIErlDrvMonitor\fR can be used as any other data, it can be copied, moved in memory, forgotten, and so on.
+
+
+.RE
+
+ErlDrvNowData
+.RS 2
+The 
+\fIErlDrvNowData\fR structure holds a time stamp consisting of three values measured from some arbitrary point in the past. The three structure members are:
+megasecs
+.RS 2
+The number of whole megaseconds elapsed since the arbitrary point in time
+
+
+.RE
+
+secs
+.RS 2
+The number of whole seconds elapsed since the arbitrary point in time
+
+
+.RE
+
+microsecs
+.RS 2
+The number of whole microseconds elapsed since the arbitrary point in time
+
+
+.RE
+
+
+.RE
+
+ErlDrvPDL
+.RS 2
+If certain port-specific data must be accessed from other threads than those calling the driver callbacks, a port data lock can be used to synchronize the operations on the data. Currently, the only port-specific data that the emulator associates with the port data lock is the driver queue.
+
+.PP
+Normally a driver instance has no port data lock. If the driver instance wants to use a port data lock, it must create the port data lock by calling \fIdriver_pdl_create\fR.
+
+.PP
+\fBNOTE: \fROnce the port data lock has been created, every access to data associated with the port data lock must be done while the port data lock is locked. The port data lock is locked and unlocked by \fIdriver_pdl_lock\fR, and \fIdriver_pdl_unlock\fR, respectively.
+
+
+.PP
+A port data lock is reference counted, and when the reference count reaches zero, it is destroyed. The emulator at least increments the reference count once when the lock is created and decrements it once the port associated with the lock terminates. The emulator also increments the reference count when an async job is enqueued and decrements it when an async job has been invoked. Also, the driver is responsible for ensuring that the reference count does not reach zero before the last use of the lock by the driver has been made. The reference count can be read, incremented, and decremented by \fIdriver_pdl_get_refc\fR, \fIdriver_pdl_inc_refc\fR, and \fIdriver_pdl_dec_refc\fR, respectively.
+
+
+.RE
+
+ErlDrvTid
+.RS 2
+Thread identifier.
+
+.PP
+See also \fIerl_drv_thread_create\fR, \fIerl_drv_thread_exit\fR, \fIerl_drv_thread_join\fR, \fIerl_drv_thread_self\fR, and \fIerl_drv_equal_tids\fR.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIErlDrvThreadOpts\fR\fR
+
+.IP
+.nf
+int suggested_stack_size;
+
+.fi
+
+.PP
+Thread options structure passed to \fIerl_drv_thread_create\fR. The following field exists:
+
+suggested_stack_size
+.RS 2
+A suggestion, in kilowords, on how large a stack to use. A value < 0 means default size.
+
+
+.RE
+
+.PP
+See also \fIerl_drv_thread_opts_create\fR, \fIerl_drv_thread_opts_destroy\fR, and \fIerl_drv_thread_create\fR.
+
+.RE
+
+ErlDrvMutex
+.RS 2
+Mutual exclusion lock. Used for synchronizing access to shared data. Only one thread at a time can lock a mutex.
+
+.PP
+See also \fIerl_drv_mutex_create\fR, \fIerl_drv_mutex_destroy\fR, \fIerl_drv_mutex_lock\fR, \fIerl_drv_mutex_trylock\fR, and \fIerl_drv_mutex_unlock\fR.
+
+
+.RE
+
+ErlDrvCond
+.RS 2
+Condition variable. Used when threads must wait for a specific condition to appear before continuing execution. Condition variables must be used with associated mutexes.
+
+.PP
+See also \fIerl_drv_cond_create\fR, \fIerl_drv_cond_destroy\fR, \fIerl_drv_cond_signal\fR, \fIerl_drv_cond_broadcast\fR, and \fIerl_drv_cond_wait\fR.
+
+
+.RE
+
+ErlDrvRWLock
+.RS 2
+Read/write lock. Used to allow multiple threads to read shared data while only allowing one thread to write the same data. Multiple threads can read lock an rwlock at the same time, while only one thread can read/write lock an rwlock at a time.
+
+.PP
+See also \fIerl_drv_rwlock_create\fR, \fIerl_drv_rwlock_destroy\fR, \fIerl_drv_rwlock_rlock\fR, \fIerl_drv_rwlock_tryrlock\fR, \fIerl_drv_rwlock_runlock\fR, \fIerl_drv_rwlock_rwlock\fR, \fIerl_drv_rwlock_tryrwlock\fR, and \fIerl_drv_rwlock_rwunlock\fR.
+
+
+.RE
+
+ErlDrvTSDKey
+.RS 2
+Key that thread-specific data can be associated with.
+
+.PP
+See also \fIerl_drv_tsd_key_create\fR, \fIerl_drv_tsd_key_destroy\fR, \fIerl_drv_tsd_set\fR, and \fIerl_drv_tsd_get\fR.
+
+
+.RE
+
+ErlDrvTime
+.RS 2
+A signed 64-bit integer type for time representation.
+
+
+.RE
+
+ErlDrvTimeUnit
+.RS 2
+An enumeration of time units supported by the driver API:
+
+ERL_DRV_SEC
+.RS 2
+Seconds
+
+
+.RE
+
+ERL_DRV_MSEC
+.RS 2
+Milliseconds
+
+
+.RE
+
+ERL_DRV_USEC
+.RS 2
+Microseconds
+
+
+.RE
+
+ERL_DRV_NSEC
+.RS 2
+Nanoseconds
+
+
+.RE
+
+
+.RE
+
+.SS "add_driver_entry()"
+
+.IP
+.nf
+void add_driver_entry(ErlDrvEntry
+        *de);
+
+.fi
+
+.PP
+Adds a driver entry to the list of drivers known by Erlang. The \fIinit\fR function of parameter \fIde\fR is called.
+
+.PP
+\fBNOTE: \fRTo use this function for adding drivers residing in dynamically loaded code is dangerous. If the driver code for the added driver resides in the same dynamically loaded module (that is, \fI.so\fR file) as a normal dynamically loaded driver (loaded with the \fIerl_ddll\fR interface), the caller is to call \fIdriver_lock_driver\fR before adding driver entries. \fIUse of this function is generally deprecated.\fR
+
+
+.SS "driver_alloc()"
+
+.IP
+.nf
+void * driver_alloc(ErlDrvSizeT size);
+
+.fi
+
+.PP
+Allocates a memory block of the size specified in \fIsize\fR, and returns it. This fails only on out of memory, in which case \fINULL\fR is returned. (This is most often a wrapper for \fImalloc\fR).
+
+.PP
+Memory allocated must be explicitly freed with a corresponding call to \fIdriver_free\fR (unless otherwise stated).
+
+.PP
+This function is thread-safe.
+
+.SS "driver_alloc_binary()"
+
+.IP
+.nf
+ErlDrvBinary * driver_alloc_binary(ErlDrvSizeT size);
+
+.fi
+
+.PP
+Allocates a driver binary with a memory block of at least \fIsize\fR bytes, and returns a pointer to it, or \fINULL\fR on failure (out of memory). When a driver binary has been sent to the emulator, it must not be changed. Every allocated binary is to be freed by a corresponding call to \fIdriver_free_binary\fR (unless otherwise stated).
+
+.PP
+Notice that a driver binary has an internal reference counter. This means that calling \fIdriver_free_binary\fR, it may not actually dispose of it. If it is sent to the emulator, it can be referenced there.
+
+.PP
+The driver binary has a field, \fIorig_bytes\fR, which marks the start of the data in the binary.
+
+.PP
+This function is thread-safe.
+
+.SS "driver_async()"
+
+.IP
+.nf
+long driver_async(ErlDrvPort port, unsigned
+        int* key, void (*async_invoke)(void*), void* async_data, void
+        (*async_free)(void*));
+
+.fi
+
+.PP
+Performs an asynchronous call. The function \fIasync_invoke\fR is invoked in a thread separate from the emulator thread. This enables the driver to perform time-consuming, blocking operations without blocking the emulator.
+
+.PP
+The async thread pool size can be set with command-line argument \fI+A\fR in \fIerl(1)\fR. If an async thread pool is unavailable, the call is made synchronously in the thread calling \fIdriver_async\fR. The current number of async threads in the async thread pool can be retrieved through \fIdriver_system_info\fR.
+
+.PP
+If a thread pool is available, a thread is used. If argument \fIkey\fR is \fINULL\fR, the threads from the pool are used in a round-robin way, each call to \fIdriver_async\fR uses the next thread in the pool. With argument \fIkey\fR set, this behavior is changed. The two same values of \fI*key\fR always get the same thread.
+
+.PP
+To ensure that a driver instance always uses the same thread, the following call can be used:
+
+.IP
+.nf
+unsigned int myKey = driver_async_port_key(myPort);
+
+r = driver_async(myPort, &myKey, myData, myFunc);
+
+.fi
+
+.PP
+It is enough to initialize \fImyKey\fR once for each driver instance.
+
+.PP
+If a thread is already working, the calls are queued up and executed in order. Using the same thread for each driver instance ensures that the calls are made in sequence.
+
+.PP
+The \fIasync_data\fR is the argument to the functions \fIasync_invoke\fR and \fIasync_free\fR. It is typically a pointer to a structure containing a pipe or event that can be used to signal that the async operation completed. The data is to be freed in \fIasync_free\fR.
+
+.PP
+When the async operation is done, \fIready_async\fR driver entry function is called. If \fIready_async\fR is \fINULL\fR in the driver entry, the \fIasync_free\fR function is called instead.
+
+.PP
+The return value is \fI-1\fR if the \fIdriver_async\fR call fails.
+
+.PP
+\fBNOTE: \fRAs from ERTS 5.5.4.3 the default stack size for threads in the async-thread pool is 16 kilowords, that is, 64 kilobyte on 32-bit architectures. This small default size has been chosen because the amount of async-threads can be quite large. The default stack size is enough for drivers delivered with Erlang/OTP, but is possibly not sufficiently large for other dynamically linked-in drivers that use the \fIdriver_async\fR functionality. A suggested stack size for threads in the async-thread pool can be configured through command-line argument \fI+a\fR in \fIerl(1)\fR.
+
+
+.SS "driver_async_port_key()"
+
+.IP
+.nf
+unsigned int driver_async_port_key(ErlDrvPort port);
+
+.fi
+
+.PP
+Calculates a key for later use in \fIdriver_async\fR. The keys are evenly distributed so that a fair mapping between port IDs and async thread IDs is achieved.
+
+.PP
+\fBNOTE: \fRBefore Erlang/OTP R16, the port ID could be used as a key with proper casting, but after the rewrite of the port subsystem, this is no longer the case. With this function, you can achieve the same distribution based on port IDs as before Erlang/OTP R16.
+
+
+.PP
+Available since OTP R16B02
+
+.SS "driver_binary_dec_refc()"
+
+.IP
+.nf
+long driver_binary_dec_refc(ErlDrvBinary *bin);
+
+.fi
+
+.PP
+Decrements the reference count on \fIbin\fR and returns the reference count reached after the decrement.
+
+.PP
+This function is thread-safe.
+
+.PP
+\fBNOTE: \fRThe reference count of driver binary is normally to be decremented by calling \fIdriver_free_binary\fR. \fIdriver_binary_dec_refc\fR does \fInot\fR free the binary if the reference count reaches zero. \fIOnly\fR use \fIdriver_binary_dec_refc\fR when you are sure \fInot\fR to reach a reference count of zero.
+
+
+.SS "driver_binary_get_refc()"
+
+.IP
+.nf
+long driver_binary_get_refc(ErlDrvBinary *bin);
+
+.fi
+
+.PP
+Returns the current reference count on \fIbin\fR.
+
+.PP
+This function is thread-safe.
+
+.SS "driver_binary_inc_refc()"
+
+.IP
+.nf
+long driver_binary_inc_refc(ErlDrvBinary *bin);
+
+.fi
+
+.PP
+Increments the reference count on \fIbin\fR and returns the reference count reached after the increment.
+
+.PP
+This function is thread-safe.
+
+.SS "driver_caller()"
+
+.IP
+.nf
+ErlDrvTermData driver_caller(ErlDrvPort
+        port);
+
+.fi
+
+.PP
+Returns the process ID of the process that made the current call to the driver. The process ID can be used with \fIdriver_send_term\fR to send back data to the caller. \fIdriver_caller\fR only returns valid data when currently executing in one of the following driver callbacks:
+
+start
+.RS 2
+Called from 
+\fIerlang:open_port/2\fR.
+
+.RE
+
+output
+.RS 2
+Called from 
+\fIerlang:send/2\fR and \fIerlang:port_command/2\fR.
+
+.RE
+
+outputv
+.RS 2
+Called from 
+\fIerlang:send/2\fR and \fIerlang:port_command/2\fR.
+
+.RE
+
+control
+.RS 2
+Called from 
+\fIerlang:port_control/3\fR.
+
+.RE
+
+call
+.RS 2
+Called from 
+\fIerlang:port_call/3\fR.
+
+.RE
+
+.PP
+Notice that this function is \fInot\fR thread-safe.
+
+.SS "driver_cancel_timer()"
+
+.IP
+.nf
+int driver_cancel_timer(ErlDrvPort port);
+
+.fi
+
+.PP
+Cancels a timer set with \fIdriver_set_timer\fR.
+
+.PP
+The return value is \fI0\fR.
+
+.SS "driver_compare_monitors()"
+
+.IP
+.nf
+int driver_compare_monitors(const ErlDrvMonitor
+        *monitor1, const ErlDrvMonitor *monitor2);
+
+.fi
+
+.PP
+Compares two \fIErlDrvMonitor\fRs. Can also be used to imply some artificial order on monitors, for whatever reason.
+
+.PP
+Returns \fI0\fR if \fImonitor1\fR and \fImonitor2\fR are equal, < \fI0\fR if \fImonitor1\fR < \fImonitor2\fR, and > \fI0\fR if \fImonitor1\fR > \fImonitor2\fR.
+
+.SS "driver_connected()"
+
+.IP
+.nf
+ErlDrvTermData driver_connected(ErlDrvPort
+        port);
+
+.fi
+
+.PP
+Returns the port owner process.
+
+.PP
+Notice that this function is \fInot\fR thread-safe.
+
+.SS "driver_create_port()"
+
+.IP
+.nf
+ErlDrvPort driver_create_port(ErlDrvPort port,
+        ErlDrvTermData owner_pid, char* name,
+        ErlDrvData drv_data);
+
+.fi
+
+.PP
+Creates a new port executing the same driver code as the port creating the new port.
+
+port
+.RS 2
+The port handle of the port (driver instance) creating the new port.
+
+
+.RE
+
+owner_pid
+.RS 2
+The process ID of the Erlang process to become owner of the new port. This process will be linked to the new port. You usually want to use 
+\fIdriver_caller(port)\fR as \fIowner_pid\fR.
+
+.RE
+
+name
+.RS 2
+The port name of the new port. You usually want to use the same port name as the driver name ( 
+\fIdriver_name\fR field of the \fIdriver_entry\fR).
+
+.RE
+
+drv_data
+.RS 2
+The driver-defined handle that is passed in later calls to driver callbacks. Notice that the driver start callback is not called for this new driver instance. The driver-defined handle is normally created in the driver start callback when a port is created through 
+\fIerlang:open_port/2\fR.
+
+.RE
+
+.PP
+The caller of \fIdriver_create_port\fR is allowed to manipulate the newly created port when \fIdriver_create_port\fR has returned. When port level locking is used, the creating port is only allowed to manipulate the newly created port until the current driver callback, which was called by the emulator, returns.
+
+.SS "driver_demonitor_process()"
+
+.IP
+.nf
+int driver_demonitor_process(ErlDrvPort port,
+        const ErlDrvMonitor *monitor);
+
+.fi
+
+.PP
+Cancels a monitor created earlier.
+
+.PP
+Returns \fI0\fR if a monitor was removed and > 0 if the monitor no longer exists.
+
+.SS "driver_deq()"
+
+.IP
+.nf
+ErlDrvSizeT driver_deq(ErlDrvPort port,
+        ErlDrvSizeT size);
+
+.fi
+
+.PP
+Dequeues data by moving the head pointer forward in the driver queue by \fIsize\fR bytes. The data in the queue is deallocated.
+
+.PP
+Returns the number of bytes remaining in the queue on success, otherwise \fI-1\fR.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.SS "driver_enq()"
+
+.IP
+.nf
+int driver_enq(ErlDrvPort port, char* buf,
+        ErlDrvSizeT len);
+
+.fi
+
+.PP
+Enqueues data in the driver queue. The data in \fIbuf\fR is copied (\fIlen\fR bytes) and placed at the end of the driver queue. The driver queue is normally used in a FIFO way.
+
+.PP
+The driver queue is available to queue output from the emulator to the driver (data from the driver to the emulator is queued by the emulator in normal Erlang message queues). This can be useful if the driver must wait for slow devices, and so on, and wants to yield back to the emulator. The driver queue is implemented as an \fIErlIOVec\fR.
+
+.PP
+When the queue contains data, the driver does not close until the queue is empty.
+
+.PP
+The return value is \fI0\fR.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.SS "driver_enq_bin()"
+
+.IP
+.nf
+int driver_enq_bin(ErlDrvPort port,
+        ErlDrvBinary *bin, ErlDrvSizeT offset, ErlDrvSizeT len);
+
+.fi
+
+.PP
+Enqueues a driver binary in the driver queue. The data in \fIbin\fR at \fIoffset\fR with length \fIlen\fR is placed at the end of the queue. This function is most often faster than \fIdriver_enq\fR, because no data must be copied.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.PP
+The return value is \fI0\fR.
+
+.SS "driver_enqv()"
+
+.IP
+.nf
+int driver_enqv(ErlDrvPort port, ErlIOVec *ev,
+        ErlDrvSizeT skip);
+
+.fi
+
+.PP
+Enqueues the data in \fIev\fR, skipping the first \fIskip\fR bytes of it, at the end of the driver queue. It is faster than \fIdriver_enq\fR, because no data must be copied.
+
+.PP
+The return value is \fI0\fR.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.SS "driver_failure()"
+
+.SS "driver_failure_atom()"
+
+.SS "driver_failure_posix()"
+
+.IP
+.nf
+int driver_failure(ErlDrvPort port, int
+        error);
+
+.fi
+
+.IP
+.nf
+int driver_failure_atom(ErlDrvPort port, char
+        *string);
+
+.fi
+
+.IP
+.nf
+int driver_failure_posix(ErlDrvPort port, int
+        error);
+
+.fi
+
+.PP
+Signals to Erlang that the driver has encountered an error and is to be closed. The port is closed and the tuple \fI{'EXIT', error, Err}\fR is sent to the port owner process, where error is an error atom (\fIdriver_failure_atom\fR and \fIdriver_failure_posix\fR) or an integer (\fIdriver_failure\fR).
+
+.PP
+The driver is to fail only when in severe error situations, when the driver cannot possibly keep open, for example, buffer allocation gets out of memory. For normal errors it is more appropriate to send error codes with \fIdriver_output\fR.
+
+.PP
+The return value is \fI0\fR.
+
+.SS "driver_failure_eof()"
+
+.IP
+.nf
+int driver_failure_eof(ErlDrvPort
+        port);
+
+.fi
+
+.PP
+Signals to Erlang that the driver has encountered an EOF and is to be closed, unless the port was opened with option \fIeof\fR, in which case \fIeof\fR is sent to the port. Otherwise the port is closed and an \fI'EXIT'\fR message is sent to the port owner process.
+
+.PP
+The return value is \fI0\fR.
+
+.SS "driver_free()"
+
+.IP
+.nf
+void driver_free(void *ptr);
+
+.fi
+
+.PP
+Frees the memory pointed to by \fIptr\fR. The memory is to have been allocated with \fIdriver_alloc\fR. All allocated memory is to be deallocated, only once. There is no garbage collection in drivers.
+
+.PP
+This function is thread-safe.
+
+.SS "driver_free_binary()"
+
+.IP
+.nf
+void driver_free_binary(ErlDrvBinary *bin);
+
+.fi
+
+.PP
+Frees a driver binary \fIbin\fR, allocated previously with \fIdriver_alloc_binary\fR. As binaries in Erlang are reference counted, the binary can still be around.
+
+.PP
+This function is thread-safe.
+
+.SS "driver_get_monitored_process()"
+
+.IP
+.nf
+ErlDrvTermData driver_get_monitored_process(ErlDrvPort port, const
+        ErlDrvMonitor *monitor);
+
+.fi
+
+.PP
+Returns the process ID associated with a living monitor. It can be used in the \fIprocess_exit\fR callback to get the process identification for the exiting process.
+
+.PP
+Returns \fIdriver_term_nil\fR if the monitor no longer exists.
+
+.SS "driver_get_now()"
+
+.IP
+.nf
+int driver_get_now(ErlDrvNowData *now);
+
+.fi
+
+.PP
+\fBWARNING: \fR\fIThis function is deprecated. Do not use it.\fR Use \fIerl_drv_monotonic_time\fR (perhaps in combination with \fIerl_drv_time_offset\fR) instead.
+
+
+.PP
+Reads a time stamp into the memory pointed to by parameter \fInow\fR. For information about specific fields, see \fIErlDrvNowData\fR.
+
+.PP
+The return value is \fI0\fR, unless the \fInow\fR pointer is invalid, in which case it is < \fI0\fR.
+
+.SS "driver_lock_driver()"
+
+.IP
+.nf
+int driver_lock_driver(ErlDrvPort
+        port);
+
+.fi
+
+.PP
+Locks the driver used by the port \fIport\fR in memory for the rest of the emulator process' lifetime. After this call, the driver behaves as one of Erlang's statically linked-in drivers.
+
+.SS "driver_mk_atom()"
+
+.IP
+.nf
+ErlDrvTermData driver_mk_atom(char*
+        string);
+
+.fi
+
+.PP
+Returns an atom given a name \fIstring\fR. The atom is created and does not change, so the return value can be saved and reused, which is faster than looking up the atom several times.
+
+.PP
+Notice that this function is \fInot\fR thread-safe.
+
+.SS "driver_mk_port()"
+
+.IP
+.nf
+ErlDrvTermData driver_mk_port(ErlDrvPort
+        port);
+
+.fi
+
+.PP
+Converts a port handle to the Erlang term format, usable in \fIerl_drv_output_term\fR and \fIerl_drv_send_term\fR.
+
+.PP
+Notice that this function is \fInot\fR thread-safe.
+
+.SS "driver_monitor_process()"
+
+.IP
+.nf
+int driver_monitor_process(ErlDrvPort port,
+        ErlDrvTermData process, ErlDrvMonitor *monitor);
+
+.fi
+
+.PP
+Starts monitoring a process from a driver. When a process is monitored, a process exit results in a call to the provided \fIprocess_exit\fR callback in the \fIErlDrvEntry\fR structure. The \fIErlDrvMonitor\fR structure is filled in, for later removal or compare.
+
+.PP
+Parameter \fIprocess\fR is to be the return value of an earlier call to \fIdriver_caller\fR or \fIdriver_connected\fR call.
+
+.PP
+Returns \fI0\fR on success, < 0 if no callback is provided, and > 0 if the process is no longer alive.
+
+.SS "driver_output()"
+
+.IP
+.nf
+int driver_output(ErlDrvPort port, char *buf,
+        ErlDrvSizeT len);
+
+.fi
+
+.PP
+Sends data from the driver up to the emulator. The data is received as terms or binary data, depending on how the driver port was opened.
+
+.PP
+The data is queued in the port owner process' message queue. Notice that this does not yield to the emulator (as the driver and the emulator run in the same thread).
+
+.PP
+Parameter \fIbuf\fR points to the data to send, and \fIlen\fR is the number of bytes.
+
+.PP
+The return value for all output functions is \fI0\fR for normal use. If the driver is used for distribution, it can fail and return \fI-1\fR.
+
+.SS "driver_output_binary()"
+
+.IP
+.nf
+int driver_output_binary(ErlDrvPort port, char
+        *hbuf, ErlDrvSizeT hlen, ErlDrvBinary* bin, ErlDrvSizeT offset,
+        ErlDrvSizeT len);
+
+.fi
+
+.PP
+Sends data to a port owner process from a driver binary. It has a header buffer (\fIhbuf\fR and \fIhlen\fR) just like \fIdriver_output2\fR. Parameter \fIhbuf\fR can be \fINULL\fR.
+
+.PP
+Parameter \fIoffset\fR is an offset into the binary and \fIlen\fR is the number of bytes to send.
+
+.PP
+Driver binaries are created with \fIdriver_alloc_binary\fR.
+
+.PP
+The data in the header is sent as a list and the binary as an Erlang binary in the tail of the list.
+
+.PP
+For example, if \fIhlen\fR is \fI2\fR, the port owner process receives \fI[H1, H2 | <<T>>]\fR.
+
+.PP
+The return value is \fI0\fR for normal use.
+
+.PP
+Notice that, using the binary syntax in Erlang, the driver application can match the header directly from the binary, so the header can be put in the binary, and \fIhlen\fR can be set to \fI0\fR.
+
+.SS "driver_output_term()"
+
+.IP
+.nf
+int driver_output_term(ErlDrvPort port,
+        ErlDrvTermData* term, int n);
+
+.fi
+
+.PP
+\fBWARNING: \fR\fIThis function is deprecated.\fR Use \fIerl_drv_output_term\fRinstead.
+
+
+.PP
+Parameters \fIterm\fR and \fIn\fR work as in \fIerl_drv_output_term\fR.
+
+.PP
+Notice that this function is \fInot\fR thread-safe.
+
+.SS "driver_output2()"
+
+.IP
+.nf
+int driver_output2(ErlDrvPort port, char *hbuf,
+        ErlDrvSizeT hlen, char *buf, ErlDrvSizeT len);
+
+.fi
+
+.PP
+First sends \fIhbuf\fR (length in \fIhlen\fR) data as a list, regardless of port settings. Then sends \fIbuf\fR as a binary or list. For example, if \fIhlen\fR is \fI3\fR, the port owner process receives \fI[H1, H2, H3 | T]\fR.
+
+.PP
+The point of sending data as a list header, is to facilitate matching on the data received.
+
+.PP
+The return value is \fI0\fR for normal use.
+
+.SS "driver_outputv()"
+
+.IP
+.nf
+int driver_outputv(ErlDrvPort port, char* hbuf,
+        ErlDrvSizeT hlen, ErlIOVec *ev, ErlDrvSizeT skip);
+
+.fi
+
+.PP
+Sends data from an I/O vector, \fIev\fR, to the port owner process. It has a header buffer (\fIhbuf\fR and \fIhlen\fR), just like \fIdriver_output2\fR.
+
+.PP
+Parameter \fIskip\fR is a number of bytes to skip of the \fIev\fR vector from the head.
+
+.PP
+You get vectors of \fIErlIOVec\fR type from the driver queue (see below), and the \fIoutputv\fR driver entry function. You can also make them yourself, if you want to send several \fIErlDrvBinary\fR buffers at once. Often it is faster to use \fIdriver_output\fR or .
+
+.PP
+For example, if \fIhlen\fR is \fI2\fR and \fIev\fR points to an array of three binaries, the port owner process receives \fI[H1, H2, <<B1>>, <<B2>> | <<B3>>]\fR.
+
+.PP
+The return value is \fI0\fR for normal use.
+
+.PP
+The comment for \fIdriver_output_binary\fR also applies for \fIdriver_outputv\fR.
+
+.SS "driver_pdl_create()"
+
+.IP
+.nf
+ErlDrvPDL driver_pdl_create(ErlDrvPort port);
+
+.fi
+
+.PP
+Creates a port data lock associated with the \fIport\fR.
+
+.PP
+\fBNOTE: \fROnce a port data lock has been created, it must be locked during all operations on the driver queue of the \fIport\fR.
+
+
+.PP
+Returns a newly created port data lock on success, otherwise \fINULL\fR. The function fails if \fIport\fR is invalid or if a port data lock already has been associated with the \fIport\fR.
+
+.SS "driver_pdl_dec_refc()"
+
+.IP
+.nf
+long driver_pdl_dec_refc(ErlDrvPDL
+        pdl);
+
+.fi
+
+.PP
+Decrements the reference count of the port data lock passed as argument (\fIpdl\fR).
+
+.PP
+The current reference count after the decrement has been performed is returned.
+
+.PP
+This function is thread-safe.
+
+.SS "driver_pdl_get_refc()"
+
+.IP
+.nf
+long driver_pdl_get_refc(ErlDrvPDL pdl);
+
+.fi
+
+.PP
+Returns the current reference count of the port data lock passed as argument (\fIpdl\fR).
+
+.PP
+This function is thread-safe.
+
+.SS "driver_pdl_inc_refc()"
+
+.IP
+.nf
+long driver_pdl_inc_refc(ErlDrvPDL pdl);
+
+.fi
+
+.PP
+Increments the reference count of the port data lock passed as argument (\fIpdl\fR).
+
+.PP
+The current reference count after the increment has been performed is returned.
+
+.PP
+This function is thread-safe.
+
+.SS "driver_pdl_lock()"
+
+.IP
+.nf
+void driver_pdl_lock(ErlDrvPDL pdl);
+
+.fi
+
+.PP
+Locks the port data lock passed as argument (\fIpdl\fR).
+
+.PP
+This function is thread-safe.
+
+.SS "driver_pdl_unlock()"
+
+.IP
+.nf
+void driver_pdl_unlock(ErlDrvPDL pdl);
+
+.fi
+
+.PP
+Unlocks the port data lock passed as argument (\fIpdl\fR).
+
+.PP
+This function is thread-safe.
+
+.SS "driver_peekq()"
+
+.IP
+.nf
+SysIOVec * driver_peekq(ErlDrvPort port, int
+        *vlen);
+
+.fi
+
+.PP
+Retrieves the driver queue as a pointer to an array of \fISysIOVec\fRs. It also returns the number of elements in \fIvlen\fR. This is one of two ways to get data out of the queue.
+
+.PP
+Nothing is removed from the queue by this function, that must be done with \fIdriver_deq\fR.
+
+.PP
+The returned array is suitable to use with the Unix system call \fIwritev\fR.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.SS "driver_peekqv()"
+
+.IP
+.nf
+ErlDrvSizeT driver_peekqv(ErlDrvPort port,
+        ErlIOVec *ev);
+
+.fi
+
+.PP
+Retrieves the driver queue into a supplied \fIErlIOVec\fR \fIev\fR. It also returns the queue size. This is one of two ways to get data out of the queue.
+
+.PP
+If \fIev\fR is \fINULL\fR, all ones that is \fI-1\fR type cast to \fIErlDrvSizeT\fR are returned.
+
+.PP
+Nothing is removed from the queue by this function, that must be done with \fIdriver_deq\fR.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.PP
+Available since OTP R15B
+
+.SS "driver_pushq()"
+
+.IP
+.nf
+int driver_pushq(ErlDrvPort port, char* buf,
+        ErlDrvSizeT len);
+
+.fi
+
+.PP
+Puts data at the head of the driver queue. The data in \fIbuf\fR is copied (\fIlen\fR bytes) and placed at the beginning of the queue.
+
+.PP
+The return value is \fI0\fR.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.SS "driver_pushq_bin()"
+
+.IP
+.nf
+int driver_pushq_bin(ErlDrvPort port,
+        ErlDrvBinary *bin, ErlDrvSizeT offset, ErlDrvSizeT len);
+
+.fi
+
+.PP
+Puts data in the binary \fIbin\fR, at \fIoffset\fR with length \fIlen\fR at the head of the driver queue. It is most often faster than \fIdriver_pushq\fR, because no data must be copied.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.PP
+The return value is \fI0\fR.
+
+.SS "driver_pushqv()"
+
+.IP
+.nf
+int driver_pushqv(ErlDrvPort port, ErlIOVec
+        *ev, ErlDrvSizeT skip);
+
+.fi
+
+.PP
+Puts the data in \fIev\fR, skipping the first \fIskip\fR bytes of it, at the head of the driver queue. It is faster than \fIdriver_pushq\fR, because no data must be copied.
+
+.PP
+The return value is \fI0\fR.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.SS "driver_read_timer()"
+
+.IP
+.nf
+int driver_read_timer(ErlDrvPort port, unsigned
+        long *time_left);
+
+.fi
+
+.PP
+Reads the current time of a timer, and places the result in \fItime_left\fR. This is the time in milliseconds, before the time-out occurs.
+
+.PP
+The return value is \fI0\fR.
+
+.SS "driver_realloc()"
+
+.IP
+.nf
+void * driver_realloc(void *ptr, ErlDrvSizeT size);
+
+.fi
+
+.PP
+Resizes a memory block, either in place, or by allocating a new block, copying the data, and freeing the old block. A pointer is returned to the reallocated memory. On failure (out of memory), \fINULL\fR is returned. (This is most often a wrapper for \fIrealloc\fR.)
+
+.PP
+This function is thread-safe.
+
+.SS "driver_realloc_binary()"
+
+.IP
+.nf
+ErlDrvBinary * driver_realloc_binary(ErlDrvBinary *bin, ErlDrvSizeT size);
+
+.fi
+
+.PP
+Resizes a driver binary, while keeping the data.
+
+.PP
+Returns the resized driver binary on success. Returns \fINULL\fR on failure (out of memory).
+
+.PP
+This function is thread-safe.
+
+.SS "driver_select()"
+
+.IP
+.nf
+int driver_select(ErlDrvPort port, ErlDrvEvent
+        event, int mode, int on);
+
+.fi
+
+.PP
+This function is used by drivers to provide the emulator with events to check for. This enables the emulator to call the driver when something has occurred asynchronously.
+
+.PP
+Parameter \fIevent\fR identifies an OS-specific event object. On Unix systems, the functions \fIselect\fR/\fIpoll\fR are used. The event object must be a socket or pipe (or other object that \fIselect\fR/\fIpoll\fR can use). On Windows, the Win32 API function \fIWaitForMultipleObjects\fR is used. This places other restrictions on the event object; see the Win32 SDK documentation.
+
+.PP
+Parameter \fIon\fR is to be \fI1\fR for setting events and \fI0\fR for clearing them.
+
+.PP
+Parameter \fImode\fR is a bitwise OR combination of \fIERL_DRV_READ\fR, \fIERL_DRV_WRITE\fR, and \fIERL_DRV_USE\fR. The first two specify whether to wait for read events and/or write events. A fired read event calls \fIready_input\fR and a fired write event calls \fIready_output\fR.
+
+.PP
+\fBNOTE: \fRSome OS (Windows) do not differentiate between read and write events. The callback for a fired event then only depends on the value of \fImode\fR.
+
+
+.PP
+\fIERL_DRV_USE\fR specifies if we are using the event object or if we want to close it. It is not safe to clear all events and then close the event object after \fIdriver_select\fR has returned. Another thread can still be using the event object internally. To safely close an event object, call \fIdriver_select\fR with \fIERL_DRV_USE\fR and \fIon==0\fR, which clears all events and then either calls \fIstop_select\fR or schedules it to be called when it is safe to close the event object. \fIERL_DRV_USE\fR is to be set together with the first event for an event object. It is harmless to set \fIERL_DRV_USE\fR even if it already has been done. Clearing all events but keeping \fIERL_DRV_USE\fR set indicates that we are using the event object and probably will set events for it again.
+
+.PP
+\fBNOTE: \fR\fIERL_DRV_USE\fR was added in Erlang/OTP R13. Old drivers still work as before, but it is recommended to update them to use \fIERL_DRV_USE\fR and \fIstop_select\fR to ensure that event objects are closed in a safe way.
+
+
+.PP
+The return value is \fI0\fR, unless \fIready_input\fR/\fIready_output\fR is \fINULL\fR, in which case it is \fI-1\fR.
+
+.SS "driver_send_term()"
+
+.IP
+.nf
+int driver_send_term(ErlDrvPort port,
+        ErlDrvTermData receiver, ErlDrvTermData* term, int n);
+
+.fi
+
+.PP
+\fBWARNING: \fR\fIThis function is deprecated.\fR Use \fIerl_drv_send_term\fR instead.
+
+
+.PP
+\fBNOTE: \fRThe parameters of this function cannot be properly checked by the runtime system when executed by arbitrary threads. This can cause the function not to fail when it should.
+
+
+.PP
+Parameters \fIterm\fR and \fIn\fR work as in \fIerl_drv_output_term\fR.
+
+.PP
+This function is thread-safe.
+
+.SS "driver_set_timer()"
+
+.IP
+.nf
+int driver_set_timer(ErlDrvPort port, unsigned
+        long time);
+
+.fi
+
+.PP
+Sets a timer on the driver, which will count down and call the driver when it is timed out. Parameter \fItime\fR is the time in milliseconds before the timer expires.
+
+.PP
+When the timer reaches \fI0\fR and expires, the driver entry function \fItimeout\fR is called.
+
+.PP
+Notice that only one timer exists on each driver instance; setting a new timer replaces an older one.
+
+.PP
+Return value is \fI0\fR, unless the \fItimeout\fR driver function is \fINULL\fR, in which case it is \fI-1\fR.
+
+.SS "driver_sizeq()"
+
+.IP
+.nf
+ErlDrvSizeT driver_sizeq(ErlDrvPort port);
+
+.fi
+
+.PP
+Returns the number of bytes currently in the driver queue.
+
+.PP
+This function can be called from any thread if a port data lock associated with the \fIport\fR is locked by the calling thread during the call.
+
+.SS "driver_system_info()"
+
+.IP
+.nf
+void driver_system_info(ErlDrvSysInfo
+        *sys_info_ptr, size_t size);
+
+.fi
+
+.PP
+Writes information about the Erlang runtime system into the \fIErlDrvSysInfo\fR structure referred to by the first argument. The second argument is to be the size of the \fIErlDrvSysInfo\fR structure, that is, \fIsizeof(ErlDrvSysInfo)\fR.
+
+.PP
+For information about specific fields, see \fIErlDrvSysInfo\fR.
+
+.SS "driver_vec_to_buf()"
+
+.IP
+.nf
+ErlDrvSizeT driver_vec_to_buf(ErlIOVec *ev,
+        char *buf, ErlDrvSizeT len);
+
+.fi
+
+.PP
+Collects several segments of data, referenced by \fIev\fR, by copying them in order to the buffer \fIbuf\fR, of the size \fIlen\fR.
+
+.PP
+If the data is to be sent from the driver to the port owner process, it is faster to use \fIdriver_outputv\fR.
+
+.PP
+The return value is the space left in the buffer, that is, if \fIev\fR contains less than \fIlen\fR bytes it is the difference, and if \fIev\fR contains \fIlen\fR bytes or more, it is \fI0\fR. This is faster if there is more than one header byte, as the binary syntax can construct integers directly from the binary.
+
+.SS "erl_drv_busy_msgq_limits()"
+
+.IP
+.nf
+void erl_drv_busy_msgq_limits(ErlDrvPort port,
+        ErlDrvSizeT *low, ErlDrvSizeT *high);
+
+.fi
+
+.PP
+Sets and gets limits that will be used for controlling the busy state of the port message queue.
+
+.PP
+The port message queue is set into a busy state when the amount of command data queued on the message queue reaches the \fIhigh\fR limit. The port message queue is set into a not busy state when the amount of command data queued on the message queue falls below the \fIlow\fR limit. Command data is in this context data passed to the port using either \fIPort ! {Owner, {command, Data}}\fR or \fIport_command/[2,3]\fR. Notice that these limits only concerns command data that have not yet reached the port. The busy port feature can be used for data that has reached the port.
+
+.PP
+Valid limits are values in the range \fI[ERL_DRV_BUSY_MSGQ_LIM_MIN, ERL_DRV_BUSY_MSGQ_LIM_MAX]\fR. Limits are automatically adjusted to be sane. That is, the system adjusts values so that the low limit used is lower than or equal to the high limit used. By default the high limit is 8 kB and the low limit is 4 kB.
+
+.PP
+By passing a pointer to an integer variable containing the value \fIERL_DRV_BUSY_MSGQ_READ_ONLY\fR, the currently used limit is read and written back to the integer variable. A new limit can be set by passing a pointer to an integer variable containing a valid limit. The passed value is written to the internal limit. The internal limit is then adjusted. After this the adjusted limit is written back to the integer variable from which the new value was read. Values are in bytes.
+
+.PP
+The busy message queue feature can be disabled either by setting the \fIERL_DRV_FLAG_NO_BUSY_MSGQ\fR driver flag in the \fIdriver_entry\fR used by the driver, or by calling this function with \fIERL_DRV_BUSY_MSGQ_DISABLED\fR as a limit (either low or high). When this feature has been disabled, it cannot be enabled again. When reading the limits, both are \fIERL_DRV_BUSY_MSGQ_DISABLED\fR if this feature has been disabled.
+
+.PP
+Processes sending command data to the port are suspended if either the port is busy or if the port message queue is busy. Suspended processes are resumed when neither the port or the port message queue is busy.
+
+.PP
+For information about busy port functionality, see \fIset_busy_port\fR.
+
+.PP
+Available since OTP R16B
+
+.SS "erl_drv_cond_broadcast()"
+
+.IP
+.nf
+void erl_drv_cond_broadcast(ErlDrvCond
+        *cnd);
+
+.fi
+
+.PP
+Broadcasts on a condition variable. That is, if other threads are waiting on the condition variable being broadcast on, \fIall\fR of them are woken.
+
+.PP
+\fIcnd\fR is a pointer to a condition variable to broadcast on.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_cond_create()"
+
+.IP
+.nf
+ErlDrvCond * erl_drv_cond_create(char
+        *name);
+
+.fi
+
+.PP
+Creates a condition variable and returns a pointer to it.
+
+.PP
+\fIname\fR is a string identifying the created condition variable. It is used to identify the condition variable in planned future debug functionality.
+
+.PP
+Returns \fINULL\fR on failure. The driver creating the condition variable is responsible for destroying it before the driver is unloaded.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_cond_destroy()"
+
+.IP
+.nf
+void erl_drv_cond_destroy(ErlDrvCond
+        *cnd);
+
+.fi
+
+.PP
+Destroys a condition variable previously created by \fIerl_drv_cond_create\fR.
+
+.PP
+\fIcnd\fR is a pointer to a condition variable to destroy.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_cond_name()"
+
+.IP
+.nf
+char * erl_drv_cond_name(ErlDrvCond
+        *cnd);
+
+.fi
+
+.PP
+Returns a pointer to the name of the condition.
+
+.PP
+\fIcnd\fR is a pointer to an initialized condition.
+
+.PP
+\fBNOTE: \fRThis function is intended for debugging purposes only.
+
+
+.PP
+Available since OTP R16B02
+
+.SS "erl_drv_cond_signal()"
+
+.IP
+.nf
+void erl_drv_cond_signal(ErlDrvCond
+        *cnd);
+
+.fi
+
+.PP
+Signals on a condition variable. That is, if other threads are waiting on the condition variable being signaled, \fIone\fR of them is woken.
+
+.PP
+\fIcnd\fR is a pointer to a condition variable to signal on.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_cond_wait()"
+
+.IP
+.nf
+void erl_drv_cond_wait(ErlDrvCond *cnd,
+        ErlDrvMutex *mtx);
+
+.fi
+
+.PP
+Waits on a condition variable. The calling thread is blocked until another thread wakes it by signaling or broadcasting on the condition variable. Before the calling thread is blocked, it unlocks the mutex passed as argument. When the calling thread is woken, it locks the same mutex before returning. That is, the mutex currently must be locked by the calling thread when calling this function.
+
+.PP
+\fIcnd\fR is a pointer to a condition variable to wait on. \fImtx\fR is a pointer to a mutex to unlock while waiting.
+
+.PP
+\fBNOTE: \fR\fIerl_drv_cond_wait\fR can return even if no one has signaled or broadcast on the condition variable. Code calling \fIerl_drv_cond_wait\fR is always to be prepared for \fIerl_drv_cond_wait\fR returning even if the condition that the thread was waiting for has not occurred. That is, when returning from \fIerl_drv_cond_wait\fR, always check if the condition has occurred, and if not call \fIerl_drv_cond_wait\fR again.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_consume_timeslice()"
+
+.IP
+.nf
+int erl_drv_consume_timeslice(ErlDrvPort port,
+        int percent);
+
+.fi
+
+.PP
+Gives the runtime system a hint about how much CPU time the current driver callback call has consumed since the last hint, or since the the start of the callback if no previous hint has been given.
+
+port
+.RS 2
+Port handle of the executing port.
+
+
+.RE
+
+percent
+.RS 2
+Approximate consumed fraction of a full time-slice in percent.
+
+
+.RE
+
+.PP
+The time is specified as a fraction, in percent, of a full time-slice that a port is allowed to execute before it is to surrender the CPU to other runnable ports or processes. Valid range is \fI[1, 100]\fR. The scheduling time-slice is not an exact entity, but can usually be approximated to about 1 millisecond.
+
+.PP
+Notice that it is up to the runtime system to determine if and how to use this information. Implementations on some platforms can use other means to determine the consumed fraction of the time-slice. Lengthy driver callbacks should, regardless of this, frequently call this function to determine if it is allowed to continue execution or not.
+
+.PP
+This function returns a non-zero value if the time-slice has been exhausted, and zero if the callback is allowed to continue execution. If a non-zero value is returned, the driver callback is to return as soon as possible in order for the port to be able to yield.
+
+.PP
+This function is provided to better support co-operative scheduling, improve system responsiveness, and to make it easier to prevent misbehaviors of the VM because of a port monopolizing a scheduler thread. It can be used when dividing lengthy work into some repeated driver callback calls, without the need to use threads.
+
+.PP
+See also the important warning text at the beginning of this manual page.
+
+.PP
+Available since OTP R16B
+
+.SS "erl_drv_convert_time_unit()"
+
+.IP
+.nf
+ErlDrvTime erl_drv_convert_time_unit(ErlDrvTime
+        val, ErlDrvTimeUnit from, ErlDrvTimeUnit to);
+
+.fi
+
+.PP
+Converts the \fIval\fR value of time unit \fIfrom\fR to the corresponding value of time unit \fIto\fR. The result is rounded using the floor function.
+
+val
+.RS 2
+Value to convert time unit for.
+
+
+.RE
+
+from
+.RS 2
+Time unit of 
+\fIval\fR.
+
+.RE
+
+to
+.RS 2
+Time unit of returned value.
+
+
+.RE
+
+.PP
+Returns \fIERL_DRV_TIME_ERROR\fR if called with an invalid time unit argument.
+
+.PP
+See also \fIErlDrvTime\fR and \fIErlDrvTimeUnit\fR.
+
+.PP
+Available since OTP 18.3
+
+.SS "erl_drv_equal_tids()"
+
+.IP
+.nf
+int erl_drv_equal_tids(ErlDrvTid tid1,
+        ErlDrvTid tid2);
+
+.fi
+
+.PP
+Compares two thread identifiers, \fItid1\fR and \fItid2\fR, for equality.
+
+.PP
+Returns \fI0\fR it they are not equal, and a value not equal to \fI0\fR if they are equal.
+
+.PP
+\fBNOTE: \fRA thread identifier can be reused very quickly after a thread has terminated. Therefore, if a thread corresponding to one of the involved thread identifiers has terminated since the thread identifier was saved, the result of \fIerl_drv_equal_tids\fR does possibly not give the expected result.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_getenv()"
+
+.IP
+.nf
+int erl_drv_getenv(const char *key, char
+        *value, size_t *value_size);
+
+.fi
+
+.PP
+Retrieves the value of an environment variable.
+
+key
+.RS 2
+A 
+\fINULL\fR-terminated string containing the name of the environment variable.
+
+.RE
+
+value
+.RS 2
+A pointer to an output buffer.
+
+
+.RE
+
+value_size
+.RS 2
+A pointer to an integer. The integer is used both for passing input and output sizes (see below).
+
+
+.RE
+
+.PP
+When this function is called, \fI*value_size\fR is to contain the size of the \fIvalue\fR buffer.
+
+.PP
+On success, \fI0\fR is returned, the value of the environment variable has been written to the \fIvalue\fR buffer, and \fI*value_size\fR contains the string length (excluding the terminating \fINULL\fR character) of the value written to the \fIvalue\fR buffer.
+
+.PP
+On failure, that is, no such environment variable was found, a value < \fI0\fR is returned. When the size of the \fIvalue\fR buffer is too small, a value > \fI0\fR is returned and \fI*value_size\fR has been set to the buffer size needed.
+
+.PP
+\fBWARNING: \fRThis function reads the emulated environment used by \fIos:getenv/1\fR and not the environment used by libc's \fIgetenv(3)\fR or similar. Drivers that \fIrequire\fR that these are in sync will need to do so themselves, but keep in mind that they are segregated for a reason; \fIgetenv(3)\fR and its friends are \fInot thread-safe\fR and may cause unrelated code to misbehave or crash the emulator.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_init_ack()"
+
+.IP
+.nf
+void erl_drv_init_ack(ErlDrvPort port,
+        ErlDrvData res);
+
+.fi
+
+.PP
+Acknowledges the start of the port.
+
+port
+.RS 2
+The port handle of the port (driver instance) doing the acknowledgment.
+
+
+.RE
+
+res
+.RS 2
+The result of the port initialization. Can be the same values as the return value of 
+\fIstart\fR, that is, any of the error codes or the \fIErlDrvData\fR that is to be used for this port.
+
+.RE
+
+.PP
+When this function is called the initiating \fIerlang:open_port\fR call is returned as if the \fIstart\fR function had just been called. It can only be used when flag \fIERL_DRV_FLAG_USE_INIT_ACK\fR has been set on the linked-in driver.
+
+.PP
+Available since OTP 19.0
+
+.SS "erl_drv_monotonic_time()"
+
+.IP
+.nf
+ErlDrvTime erl_drv_monotonic_time(ErlDrvTimeUnit time_unit);
+
+.fi
+
+.PP
+Returns Erlang monotonic time. Notice that negative values are not uncommon.
+
+.PP
+\fItime_unit\fR is time unit of returned value.
+
+.PP
+Returns \fIERL_DRV_TIME_ERROR\fR if called with an invalid time unit argument, or if called from a thread that is not a scheduler thread.
+
+.PP
+See also \fIErlDrvTime\fR and \fIErlDrvTimeUnit\fR.
+
+.PP
+Available since OTP 18.3
+
+.SS "erl_drv_mutex_create()"
+
+.IP
+.nf
+ErlDrvMutex * erl_drv_mutex_create(char
+        *name);
+
+.fi
+
+.PP
+Creates a mutex and returns a pointer to it.
+
+.PP
+\fIname\fR is a string identifying the created mutex. It is used to identify the mutex in debug functionality (see note).
+
+.PP
+Returns \fINULL\fR on failure. The driver creating the mutex is responsible for destroying it before the driver is unloaded.
+
+.PP
+This function is thread-safe.
+
+.PP
+\fBNOTE: \fROne such debug functionality is the \fIlock checker\fR, which can detect locking order violations and thereby potential deadlock bugs. For the lock checker to work the \fIname\fR should be on the format \fI"App.Type"\fR or \fI"App.Type[Instance]"\fR, where App is the name of the application, Type is the name of the lock type and Instance is optional information about each lock instance. "App.Type" should be a unique name for the lock checker to detect lock order violations between locks of different types. The Instance information is currently ignored. For example, if we have mutexes of types "myapp.xtable" and "myapp.xitem" then the lock checker will make sure either "myapp.xtable" locks are never locked after "myapp.xitem" locks or vice versa.
+
+
+.SS "erl_drv_mutex_destroy()"
+
+.IP
+.nf
+void erl_drv_mutex_destroy(ErlDrvMutex
+        *mtx);
+
+.fi
+
+.PP
+Destroys a mutex previously created by \fIerl_drv_mutex_create\fR. The mutex must be in an unlocked state before it is destroyed.
+
+.PP
+\fImtx\fR is a pointer to a mutex to destroy.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_mutex_lock()"
+
+.IP
+.nf
+void erl_drv_mutex_lock(ErlDrvMutex
+        *mtx);
+
+.fi
+
+.PP
+Locks a mutex. The calling thread is blocked until the mutex has been locked. A thread that has currently locked the mutex \fIcannot\fR lock the same mutex again.
+
+.PP
+\fImtx\fR is a pointer to a mutex to lock.
+
+.PP
+\fBWARNING: \fRIf you leave a mutex locked in an emulator thread when you let the thread out of your control, you will \fIvery likely\fR deadlock the whole emulator.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_mutex_name()"
+
+.IP
+.nf
+char * erl_drv_mutex_name(ErlDrvMutex
+        *mtx);
+
+.fi
+
+.PP
+Returns a pointer to the mutex name.
+
+.PP
+\fImtx\fR is a pointer to an initialized mutex.
+
+.PP
+\fBNOTE: \fRThis function is intended for debugging purposes only.
+
+
+.PP
+Available since OTP R16B02
+
+.SS "erl_drv_mutex_trylock()"
+
+.IP
+.nf
+int erl_drv_mutex_trylock(ErlDrvMutex
+        *mtx);
+
+.fi
+
+.PP
+Tries to lock a mutex. A thread that has currently locked the mutex \fIcannot\fR try to lock the same mutex again.
+
+.PP
+\fImtx\fR is a pointer to a mutex to try to lock.
+
+.PP
+Returns \fI0\fR on success, otherwise \fIEBUSY\fR.
+
+.PP
+\fBWARNING: \fRIf you leave a mutex locked in an emulator thread when you let the thread out of your control, you will \fIvery likely\fR deadlock the whole emulator.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_mutex_unlock()"
+
+.IP
+.nf
+void erl_drv_mutex_unlock(ErlDrvMutex
+        *mtx);
+
+.fi
+
+.PP
+Unlocks a mutex. The mutex currently must be locked by the calling thread.
+
+.PP
+\fImtx\fR is a pointer to a mutex to unlock.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_output_term()"
+
+.IP
+.nf
+int erl_drv_output_term(ErlDrvTermData port,
+        ErlDrvTermData* term, int n);
+
+.fi
+
+.PP
+Sends data in the special driver term format to the port owner process. This is a fast way to deliver term data from a driver. It needs no binary conversion, so the port owner process receives data as normal Erlang terms. The \fIerl_drv_send_term\fR functions can be used for sending to any process on the local node.
+
+.PP
+\fBNOTE: \fRParameter \fIport\fR is \fInot\fR an ordinary port handle, but a port handle converted using \fIdriver_mk_port\fR.
+
+
+.PP
+Parameter \fIterm\fR points to an array of \fIErlDrvTermData\fR with \fIn\fR elements. This array contains terms described in the driver term format. Every term consists of 1-4 elements in the array. The first term has a term type and then arguments. Parameter \fIport\fR specifies the sending port.
+
+.PP
+Tuples, maps, and lists (except strings, see below) are built in reverse polish notation, so that to build a tuple, the elements are specified first, and then the tuple term, with a count. Likewise for lists and maps.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+tuple must be specified with the number of elements. (The elements precede the \fIERL_DRV_TUPLE\fR term.)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+map must be specified with the number of key-value pairs \fIN\fR. The key-value pairs must precede the \fIERL_DRV_MAP\fR in this order: \fIkey1,value1,key2,value2,...,keyN,valueN\fR. Duplicate keys are not allowed.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+list must be specified with the number of elements, including the tail, which is the last term preceding \fIERL_DRV_LIST\fR.
+
+.RE
+
+.PP
+The special term \fIERL_DRV_STRING_CONS\fR is used to "splice" in a string in a list, a string specified this way is not a list in itself, but the elements are elements of the surrounding list.
+
+.IP
+.nf
+Term type            Arguments
+---------            ---------
+ERL_DRV_NIL
+ERL_DRV_ATOM         ErlDrvTermData atom (from driver_mk_atom(char *string))
+ERL_DRV_INT          ErlDrvSInt integer
+ERL_DRV_UINT         ErlDrvUInt integer
+ERL_DRV_INT64        ErlDrvSInt64 *integer_ptr
+ERL_DRV_UINT64       ErlDrvUInt64 *integer_ptr
+ERL_DRV_PORT         ErlDrvTermData port (from driver_mk_port(ErlDrvPort port))
+ERL_DRV_BINARY       ErlDrvBinary *bin, ErlDrvUInt len, ErlDrvUInt offset
+ERL_DRV_BUF2BINARY   char *buf, ErlDrvUInt len
+ERL_DRV_STRING       char *str, int len
+ERL_DRV_TUPLE        int sz
+ERL_DRV_LIST         int sz
+ERL_DRV_PID          ErlDrvTermData pid (from driver_connected(ErlDrvPort port)
+                     or driver_caller(ErlDrvPort port))
+ERL_DRV_STRING_CONS  char *str, int len
+ERL_DRV_FLOAT        double *dbl
+ERL_DRV_EXT2TERM     char *buf, ErlDrvUInt len
+ERL_DRV_MAP          int sz
+
+.fi
+
+.PP
+The unsigned integer data type \fIErlDrvUInt\fR and the signed integer data type \fIErlDrvSInt\fR are 64 bits wide on a 64-bit runtime system and 32 bits wide on a 32-bit runtime system. They were introduced in ERTS 5.6 and replaced some of the \fIint\fR arguments in the list above.
+
+.PP
+The unsigned integer data type \fIErlDrvUInt64\fR and the signed integer data type \fIErlDrvSInt64\fR are always 64 bits wide. They were introduced in ERTS 5.7.4.
+
+.PP
+To build the tuple \fI{tcp, Port, [100 | Binary]}\fR, the following call can be made.
+
+.IP
+.nf
+ErlDrvBinary* bin = ...
+ErlDrvPort port = ...
+ErlDrvTermData spec[] = {
+    ERL_DRV_ATOM, driver_mk_atom("tcp"),
+    ERL_DRV_PORT, driver_mk_port(drvport),
+        ERL_DRV_INT, 100,
+        ERL_DRV_BINARY, bin, 50, 0,
+        ERL_DRV_LIST, 2,
+    ERL_DRV_TUPLE, 3,
+};
+erl_drv_output_term(driver_mk_port(drvport), spec, sizeof(spec) / sizeof(spec[0]));
+
+.fi
+
+.PP
+Here \fIbin\fR is a driver binary of length at least 50 and \fIdrvport\fR is a port handle. Notice that \fIERL_DRV_LIST\fR comes after the elements of the list, likewise \fIERL_DRV_TUPLE\fR.
+
+.PP
+The \fIERL_DRV_STRING_CONS\fR term is a way to construct strings. It works differently from how \fIERL_DRV_STRING\fR works. \fIERL_DRV_STRING_CONS\fR builds a string list in reverse order (as opposed to how \fIERL_DRV_LIST\fR works), concatenating the strings added to a list. The tail must be specified before \fIERL_DRV_STRING_CONS\fR.
+
+.PP
+\fIERL_DRV_STRING\fR constructs a string, and ends it. (So it is the same as \fIERL_DRV_NIL\fR followed by \fIERL_DRV_STRING_CONS\fR.)
+
+.IP
+.nf
+/* to send [x, "abc", y] to the port: */
+ErlDrvTermData spec[] = {
+    ERL_DRV_ATOM, driver_mk_atom("x"),
+    ERL_DRV_STRING, (ErlDrvTermData)"abc", 3,
+    ERL_DRV_ATOM, driver_mk_atom("y"),
+    ERL_DRV_NIL,
+    ERL_DRV_LIST, 4
+};
+erl_drv_output_term(driver_mk_port(drvport), spec, sizeof(spec) / sizeof(spec[0]));
+
+.fi
+
+.IP
+.nf
+/* to send "abc123" to the port: */
+ErlDrvTermData spec[] = {
+    ERL_DRV_NIL,        /* with STRING_CONS, the tail comes first */
+    ERL_DRV_STRING_CONS, (ErlDrvTermData)"123", 3,
+    ERL_DRV_STRING_CONS, (ErlDrvTermData)"abc", 3,
+};
+erl_drv_output_term(driver_mk_port(drvport), spec, sizeof(spec) / sizeof(spec[0]));
+
+.fi
+
+.PP
+The \fIERL_DRV_EXT2TERM\fR term type is used for passing a term encoded with the external format, that is, a term that has been encoded by \fIerlang:term_to_binary()\fR, \fIerl_interface:ei(3)\fR, and so on. For example, if \fIbinp\fR is a pointer to an \fIErlDrvBinary\fR that contains term \fI{17, 4711}\fR encoded with the external format, and you want to wrap it in a two-tuple with the tag \fImy_tag\fR, that is, \fI{my_tag, {17, 4711}}\fR, you can do as follows:
+
+.IP
+.nf
+ErlDrvTermData spec[] = {
+        ERL_DRV_ATOM, driver_mk_atom("my_tag"),
+        ERL_DRV_EXT2TERM, (ErlDrvTermData) binp->orig_bytes, binp->orig_size
+    ERL_DRV_TUPLE, 2,
+};
+erl_drv_output_term(driver_mk_port(drvport), spec, sizeof(spec) / sizeof(spec[0]));
+
+.fi
+
+.PP
+To build the map \fI#{key1 => 100, key2 => {200, 300}}\fR, the following call can be made.
+
+.IP
+.nf
+ErlDrvPort port = ...
+ErlDrvTermData spec[] = {
+    ERL_DRV_ATOM, driver_mk_atom("key1"),
+        ERL_DRV_INT, 100,
+    ERL_DRV_ATOM, driver_mk_atom("key2"),
+        ERL_DRV_INT, 200,
+        ERL_DRV_INT, 300,
+    ERL_DRV_TUPLE, 2,
+    ERL_DRV_MAP, 2
+};
+erl_drv_output_term(driver_mk_port(drvport), spec, sizeof(spec) / sizeof(spec[0]));
+
+.fi
+
+.PP
+If you want to pass a binary and do not already have the content of the binary in an \fIErlDrvBinary\fR, you can benefit from using \fIERL_DRV_BUF2BINARY\fR instead of creating an \fIErlDrvBinary\fR through \fIdriver_alloc_binary\fR and then pass the binary through \fIERL_DRV_BINARY\fR. The runtime system often allocates binaries smarter if \fIERL_DRV_BUF2BINARY\fR is used. However, if the content of the binary to pass already resides in an \fIErlDrvBinary\fR, it is normally better to pass the binary using \fIERL_DRV_BINARY\fR and the \fIErlDrvBinary\fR in question.
+
+.PP
+The \fIERL_DRV_UINT\fR, \fIERL_DRV_BUF2BINARY\fR, and \fIERL_DRV_EXT2TERM\fR term types were introduced in ERTS 5.6.
+
+.PP
+This function is thread-safe.
+
+.PP
+Available since OTP R16B
+
+.SS "erl_drv_putenv()"
+
+.IP
+.nf
+int erl_drv_putenv(const char *key, char
+        *value);
+
+.fi
+
+.PP
+Sets the value of an environment variable.
+
+.PP
+\fIkey\fR is a \fINULL\fR-terminated string containing the name of the environment variable.
+
+.PP
+\fIvalue\fR is a \fINULL\fR-terminated string containing the new value of the environment variable.
+
+.PP
+Returns \fI0\fR on success, otherwise a value \fI!= 0\fR.
+
+.PP
+\fBNOTE: \fRThe result of passing the empty string (\fI""\fR) as a value is platform-dependent. On some platforms the variable value is set to the empty string, on others the environment variable is removed.
+
+
+.PP
+\fBWARNING: \fRThis function modifies the emulated environment used by \fIos:putenv/2\fR and not the environment used by libc's \fIputenv(3)\fR or similar. Drivers that \fIrequire\fR that these are in sync will need to do so themselves, but keep in mind that they are segregated for a reason; \fIputenv(3)\fR and its friends are \fInot thread-safe\fR and may cause unrelated code to misbehave or crash the emulator.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_rwlock_create()"
+
+.IP
+.nf
+ErlDrvRWLock * erl_drv_rwlock_create(char
+        *name);
+
+.fi
+
+.PP
+Creates an rwlock and returns a pointer to it.
+
+.PP
+\fIname\fR is a string identifying the created rwlock. It is used to identify the rwlock in debug functionality (see note about the lock checker).
+
+.PP
+Returns \fINULL\fR on failure. The driver creating the rwlock is responsible for destroying it before the driver is unloaded.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_rwlock_destroy()"
+
+.IP
+.nf
+void erl_drv_rwlock_destroy(ErlDrvRWLock
+        *rwlck);
+
+.fi
+
+.PP
+Destroys an rwlock previously created by \fIerl_drv_rwlock_create\fR. The rwlock must be in an unlocked state before it is destroyed.
+
+.PP
+\fIrwlck\fR is a pointer to an rwlock to destroy.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_rwlock_name()"
+
+.IP
+.nf
+char * erl_drv_rwlock_name(ErlDrvRWLock
+        *rwlck);
+
+.fi
+
+.PP
+Returns a pointer to the name of the rwlock.
+
+.PP
+\fIrwlck\fR is a pointer to an initialized rwlock.
+
+.PP
+\fBNOTE: \fRThis function is intended for debugging purposes only.
+
+
+.PP
+Available since OTP R16B02
+
+.SS "erl_drv_rwlock_rlock()"
+
+.IP
+.nf
+void erl_drv_rwlock_rlock(ErlDrvRWLock
+        *rwlck);
+
+.fi
+
+.PP
+Read locks an rwlock. The calling thread is blocked until the rwlock has been read locked. A thread that currently has read or read/write locked the rwlock \fIcannot\fR lock the same rwlock again.
+
+.PP
+\fIrwlck\fR is a pointer to the rwlock to read lock.
+
+.PP
+\fBWARNING: \fRIf you leave an rwlock locked in an emulator thread when you let the thread out of your control, you will \fIvery likely\fR deadlock the whole emulator.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_rwlock_runlock()"
+
+.IP
+.nf
+void erl_drv_rwlock_runlock(ErlDrvRWLock
+        *rwlck);
+
+.fi
+
+.PP
+Read unlocks an rwlock. The rwlock currently must be read locked by the calling thread.
+
+.PP
+\fIrwlck\fR is a pointer to an rwlock to read unlock.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_rwlock_rwlock()"
+
+.IP
+.nf
+void erl_drv_rwlock_rwlock(ErlDrvRWLock
+        *rwlck);
+
+.fi
+
+.PP
+Read/write locks an rwlock. The calling thread is blocked until the rwlock has been read/write locked. A thread that currently has read or read/write locked the rwlock \fIcannot\fR lock the same rwlock again.
+
+.PP
+\fIrwlck\fR is a pointer to an rwlock to read/write lock.
+
+.PP
+\fBWARNING: \fRIf you leave an rwlock locked in an emulator thread when you let the thread out of your control, you will \fIvery likely\fR deadlock the whole emulator.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_rwlock_rwunlock()"
+
+.IP
+.nf
+void erl_drv_rwlock_rwunlock(ErlDrvRWLock
+        *rwlck);
+
+.fi
+
+.PP
+Read/write unlocks an rwlock. The rwlock currently must be read/write locked by the calling thread.
+
+.PP
+\fIrwlck\fR is a pointer to an rwlock to read/write unlock.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_rwlock_tryrlock()"
+
+.IP
+.nf
+int erl_drv_rwlock_tryrlock(ErlDrvRWLock
+        *rwlck);
+
+.fi
+
+.PP
+Tries to read lock an rwlock.
+
+.PP
+\fIrwlck\fR is a pointer to an rwlock to try to read lock.
+
+.PP
+Returns \fI0\fR on success, otherwise \fIEBUSY\fR. A thread that currently has read or read/write locked the rwlock \fIcannot\fR try to lock the same rwlock again.
+
+.PP
+\fBWARNING: \fRIf you leave an rwlock locked in an emulator thread when you let the thread out of your control, you will \fIvery likely\fR deadlock the whole emulator.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_rwlock_tryrwlock()"
+
+.IP
+.nf
+int erl_drv_rwlock_tryrwlock(ErlDrvRWLock
+        *rwlck);
+
+.fi
+
+.PP
+Tries to read/write lock an rwlock. A thread that currently has read or read/write locked the rwlock \fIcannot\fR try to lock the same rwlock again.
+
+.PP
+\fIrwlck\fRis pointer to an rwlock to try to read/write lock.
+
+.PP
+Returns \fI0\fR on success, otherwise \fIEBUSY\fR.
+
+.PP
+\fBWARNING: \fRIf you leave an rwlock locked in an emulator thread when you let the thread out of your control, you will \fIvery likely\fR deadlock the whole emulator.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_send_term()"
+
+.IP
+.nf
+int erl_drv_send_term(ErlDrvTermData port,
+        ErlDrvTermData receiver, ErlDrvTermData* term, int n);
+
+.fi
+
+.PP
+This function is the only way for a driver to send data to \fIother\fR processes than the port owner process. Parameter \fIreceiver\fR specifies the process to receive the data.
+
+.PP
+\fBNOTE: \fRParameter \fIport\fR is \fInot\fR an ordinary port handle, but a port handle converted using \fIdriver_mk_port\fR.
+
+
+.PP
+Parameters \fIport\fR, \fIterm\fR, and \fIn\fR work as in \fIerl_drv_output_term\fR.
+
+.PP
+This function is thread-safe.
+
+.PP
+Available since OTP R16B
+
+.SS "erl_drv_set_os_pid()"
+
+.IP
+.nf
+void erl_drv_set_os_pid(ErlDrvPort port,
+        ErlDrvSInt pid);
+
+.fi
+
+.PP
+Sets the \fIos_pid\fR seen when doing \fIerlang:port_info/2\fR on this port.
+
+.PP
+\fIport\fR is the port handle of the port (driver instance) to set the pid on. \fIpid\fRis the pid to set.
+
+.PP
+Available since OTP 19.0
+
+.SS "erl_drv_thread_create()"
+
+.IP
+.nf
+int erl_drv_thread_create(char *name, ErlDrvTid
+        *tid, void * (*func)(void *), void *arg, ErlDrvThreadOpts
+        *opts);
+
+.fi
+
+.PP
+Creates a new thread.
+
+name
+.RS 2
+A string identifying the created thread. It is used to identify the thread in planned future debug functionality.
+
+
+.RE
+
+tid
+.RS 2
+A pointer to a thread identifier variable.
+
+
+.RE
+
+func
+.RS 2
+A pointer to a function to execute in the created thread.
+
+
+.RE
+
+arg
+.RS 2
+A pointer to argument to the 
+\fIfunc\fR function.
+
+.RE
+
+opts
+.RS 2
+A pointer to thread options to use or 
+\fINULL\fR.
+
+.RE
+
+.PP
+Returns \fI0\fR on success, otherwise an \fIerrno\fR value is returned to indicate the error. The newly created thread begins executing in the function pointed to by \fIfunc\fR, and \fIfunc\fR is passed \fIarg\fR as argument. When \fIerl_drv_thread_create\fR returns, the thread identifier of the newly created thread is available in \fI*tid\fR. \fIopts\fR can be either a \fINULL\fR pointer, or a pointer to an \fIErlDrvThreadOpts\fR structure. If \fIopts\fR is a \fINULL\fR pointer, default options are used, otherwise the passed options are used.
+
+.PP
+\fBWARNING: \fRYou are not allowed to allocate the \fIErlDrvThreadOpts\fR structure by yourself. It must be allocated and initialized by \fIerl_drv_thread_opts_create\fR.
+
+
+.PP
+The created thread terminates either when \fIfunc\fR returns or if \fIerl_drv_thread_exit\fR is called by the thread. The exit value of the thread is either returned from \fIfunc\fR or passed as argument to \fIerl_drv_thread_exit\fR. The driver creating the thread is responsible for joining the thread, through \fIerl_drv_thread_join\fR, before the driver is unloaded. "Detached" threads cannot be created, that is, threads that do not need to be joined.
+
+.PP
+\fBWARNING: \fRAll created threads must be joined by the driver before it is unloaded. If the driver fails to join all threads created before it is unloaded, the runtime system most likely crashes when the driver code is unloaded.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_thread_exit()"
+
+.IP
+.nf
+void erl_drv_thread_exit(void
+        *exit_value);
+
+.fi
+
+.PP
+Terminates the calling thread with the exit value passed as argument. \fIexit_value\fR is a pointer to an exit value or \fINULL\fR.
+
+.PP
+You are only allowed to terminate threads created with \fIerl_drv_thread_create\fR.
+
+.PP
+The exit value can later be retrieved by another thread through \fIerl_drv_thread_join\fR.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_thread_join()"
+
+.IP
+.nf
+int erl_drv_thread_join(ErlDrvTid tid, void
+        **exit_value);
+
+.fi
+
+.PP
+Joins the calling thread with another thread, that is, the calling thread is blocked until the thread identified by \fItid\fR has terminated.
+
+.PP
+\fItid\fR is the thread identifier of the thread to join. \fIexit_value\fR is a pointer to a pointer to an exit value, or \fINULL\fR.
+
+.PP
+Returns \fI0\fR on success, otherwise an \fIerrno\fR value is returned to indicate the error.
+
+.PP
+A thread can only be joined once. The behavior of joining more than once is undefined, an emulator crash is likely. If \fIexit_value == NULL\fR, the exit value of the terminated thread is ignored, otherwise the exit value of the terminated thread is stored at \fI*exit_value\fR.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_thread_name()"
+
+.IP
+.nf
+char * erl_drv_thread_name(ErlDrvTid
+        tid);
+
+.fi
+
+.PP
+Returns a pointer to the name of the thread.
+
+.PP
+\fItid\fR is a thread identifier.
+
+.PP
+\fBNOTE: \fRThis function is intended for debugging purposes only.
+
+
+.PP
+Available since OTP R16B02
+
+.SS "erl_drv_thread_opts_create()"
+
+.IP
+.nf
+ErlDrvThreadOpts * erl_drv_thread_opts_create(char *name);
+
+.fi
+
+.PP
+Allocates and initializes a thread option structure.
+
+.PP
+\fIname\fR is a string identifying the created thread options. It is used to identify the thread options in planned future debug functionality.
+
+.PP
+Returns \fINULL\fR on failure. A thread option structure is used for passing options to \fIerl_drv_thread_create\fR. If the structure is not modified before it is passed to \fIerl_drv_thread_create\fR, the default values are used.
+
+.PP
+\fBWARNING: \fRYou are not allowed to allocate the \fIErlDrvThreadOpts\fR structure by yourself. It must be allocated and initialized by \fIerl_drv_thread_opts_create\fR.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_thread_opts_destroy()"
+
+.IP
+.nf
+void erl_drv_thread_opts_destroy(ErlDrvThreadOpts *opts);
+
+.fi
+
+.PP
+Destroys thread options previously created by \fIerl_drv_thread_opts_create\fR.
+
+.PP
+\fIopts\fR is a pointer to thread options to destroy.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_thread_self()"
+
+.IP
+.nf
+ErlDrvTid erl_drv_thread_self(void);
+
+.fi
+
+.PP
+Returns the thread identifier of the calling thread.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_time_offset()"
+
+.IP
+.nf
+ErlDrvTime erl_drv_time_offset(ErlDrvTimeUnit
+        time_unit);
+
+.fi
+
+.PP
+Returns the current time offset between Erlang monotonic time and Erlang system time converted into the \fItime_unit\fR passed as argument.
+
+.PP
+\fItime_unit\fR is time unit of returned value.
+
+.PP
+Returns \fIERL_DRV_TIME_ERROR\fR if called with an invalid time unit argument, or if called from a thread that is not a scheduler thread.
+
+.PP
+See also \fIErlDrvTime\fR and \fIErlDrvTimeUnit\fR.
+
+.PP
+Available since OTP 18.3
+
+.SS "erl_drv_tsd_get()"
+
+.IP
+.nf
+void * erl_drv_tsd_get(ErlDrvTSDKey
+        key);
+
+.fi
+
+.PP
+Returns the thread-specific data associated with \fIkey\fR for the calling thread.
+
+.PP
+\fIkey\fR is a thread-specific data key.
+
+.PP
+Returns \fINULL\fR if no data has been associated with \fIkey\fR for the calling thread.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_tsd_key_create()"
+
+.IP
+.nf
+int erl_drv_tsd_key_create(char *name,
+        ErlDrvTSDKey *key);
+
+.fi
+
+.PP
+Creates a thread-specific data key.
+
+.PP
+\fIname\fR is a string identifying the created key. It is used to identify the key in planned future debug functionality.
+
+.PP
+\fIkey\fR is a pointer to a thread-specific data key variable.
+
+.PP
+Returns \fI0\fR on success, otherwise an \fIerrno\fR value is returned to indicate the error. The driver creating the key is responsible for destroying it before the driver is unloaded.
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_tsd_key_destroy()"
+
+.IP
+.nf
+void erl_drv_tsd_key_destroy(ErlDrvTSDKey
+        key);
+
+.fi
+
+.PP
+Destroys a thread-specific data key previously created by \fIerl_drv_tsd_key_create\fR. All thread-specific data using this key in all threads must be cleared (see \fIerl_drv_tsd_set\fR) before the call to \fIerl_drv_tsd_key_destroy\fR.
+
+.PP
+\fIkey\fR is a thread-specific data key to destroy.
+
+.PP
+\fBWARNING: \fRA destroyed key is very likely to be reused soon. Therefore, if you fail to clear the thread-specific data using this key in a thread before destroying the key, you will \fIvery likely\fR get unexpected errors in other parts of the system.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_drv_tsd_set()"
+
+.IP
+.nf
+void erl_drv_tsd_set(ErlDrvTSDKey key, void
+        *data);
+
+.fi
+
+.PP
+Sets thread-specific data associated with \fIkey\fR for the calling thread. You are only allowed to set thread-specific data for threads while they are fully under your control. For example, if you set thread-specific data in a thread calling a driver callback function, it must be cleared, that is, set to \fINULL\fR, before returning from the driver callback function.
+
+.PP
+\fIkey\fR is a thread-specific data key.
+
+.PP
+\fIdata\fR is a pointer to data to associate with \fIkey\fR in the calling thread.
+
+.PP
+\fBWARNING: \fRIf you fail to clear thread-specific data in an emulator thread before letting it out of your control, you might never be able to clear this data with later unexpected errors in other parts of the system as a result.
+
+
+.PP
+This function is thread-safe.
+
+.SS "erl_errno_id()"
+
+.IP
+.nf
+char * erl_errno_id(int error);
+
+.fi
+
+.PP
+Returns the atom name of the Erlang error, given the error number in \fIerror\fR. The error atoms are \fIeinval\fR, \fIenoent\fR, and so on. It can be used to make error terms from the driver.
+
+.SS "remove_driver_entry()"
+
+.IP
+.nf
+int remove_driver_entry(ErlDrvEntry
+        *de);
+
+.fi
+
+.PP
+Removes a driver entry \fIde\fR previously added with \fIadd_driver_entry\fR.
+
+.PP
+Driver entries added by the \fIerl_ddll\fR Erlang interface cannot be removed by using this interface.
+
+.SS "set_busy_port()"
+
+.IP
+.nf
+void set_busy_port(ErlDrvPort port, int
+        on);
+
+.fi
+
+.PP
+Sets and unsets the busy state of the port. If \fIon\fR is non-zero, the port is set to busy. If it is zero, the port is set to not busy. You typically want to combine this feature with the busy port message queue functionality.
+
+.PP
+Processes sending command data to the port are suspended if either the port or the port message queue is busy. Suspended processes are resumed when neither the port or the port message queue is busy. Command data is in this context data passed to the port using either \fIPort ! {Owner, {command, Data}}\fR or \fIport_command/[2,3]\fR.
+
+.PP
+If the ERL_DRV_FLAG_SOFT_BUSY has been set in the \fIdriver_entry\fR, data can be forced into the driver through \fIerlang:port_command(Port, Data, [force])\fR even if the driver has signaled that it is busy.
+
+.PP
+For information about busy port message queue functionality, see \fIerl_drv_busy_msgq_limits\fR.
+
+.SS "set_port_control_flags()"
+
+.IP
+.nf
+void set_port_control_flags(ErlDrvPort port,
+        int flags);
+
+.fi
+
+.PP
+Sets flags for how the \fIcontrol\fR driver entry function will return data to the port owner process. (The \fIcontrol\fR function is called from \fIerlang:port_control/3\fR.)
+
+.PP
+Currently there are only two meaningful values for \fIflags\fR: \fI0\fR means that data is returned in a list, and \fIPORT_CONTROL_FLAG_BINARY\fR means data is returned as a binary from \fIcontrol\fR.
+
+.SS "See Also"
+
+.PP
+\fIdriver_entry(3)\fR, \fIerlang\fR, \fIerl_ddll\fR, section How to Implement an Alternative Carrier for the Erlang Distribution in the User's Guide
+

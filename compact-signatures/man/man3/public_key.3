@@ -1,0 +1,1688 @@
+.TH public_key 3 "public_key 1.20.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+public_key \- API module for public-key infrastructure.
+
+.SH DESCRIPTION
+.PP
+Provides functions to handle public-key infrastructure, for details see public_key application.
+
+.PP
+\fBNOTE: \fRAll records used in this Reference Manual are generated from ASN.1 specifications and are documented in the User's Guide. See Public-key Records.
+
+
+.PP
+Use the following include directive to get access to the records and constant macros described here and in the User's Guide:
+
+.IP
+.nf
+ -include_lib("public_key/include/public_key.hrl").
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBasn1_type() :: atom().\fR
+
+.br
+.RS
+.PP
+ASN.1 type present in the Public Key applications ASN.1 specifications.
+
+
+.RE
+.B
+\fBbad_cert_reason() ::\fR
+\fB          cert_expired | invalid_issuer | invalid_signature |\fR
+\fB          name_not_permitted | missing_basic_constraint |\fR
+\fB          invalid_key_usage | duplicate_cert_in_path |\fR
+\fB          {key_usage_mismatch, term()} |\fR
+\fB          {policy_requirement_not_met, term()} |\fR
+\fB          {invalid_policy_mapping, term()} |\fR
+\fB          {revoked, crl_reason()} |\fR
+\fB          invalid_validity_dates |\fR
+\fB          {revocation_status_undetermined, term()} |\fR
+\fB          atom().\fR
+
+.br
+.RS
+.PP
+The reason that a certifcate gets rejected by the certificate path validation.
+
+
+.RE
+.B
+\fBcert() :: der_encoded() | #'OTPCertificate'{}.\fR
+
+.br
+.RS
+.PP
+An encoded or decode certificate.
+
+
+.RE
+.B
+\fBcert_id() :: {SerialNr :: integer(), issuer_name()}.\fR
+
+.br
+.RS
+.PP
+A certificate is identified by its serial-number and Issuer Name.
+
+
+.RE
+.B
+\fBcert_opt() ::\fR
+\fB          {digest, digest_type()} |\fR
+\fB          {key,\fR
+\fB           {namedCurve, oid()} |\fR
+\fB           #'ECParameters'{} |\fR
+\fB           {rsa, Size :: pos_integer(), Prime :: pos_integer()} |\fR
+\fB           private_key()} |\fR
+\fB          {validity,\fR
+\fB           {From :: erlang:timestamp(), To :: erlang:timestamp()}} |\fR
+\fB          {extensions, [#'Extension'{}]}.\fR
+
+.br
+.RS
+.PP
+Options to customize generated test certificates
+
+
+.RE
+.B
+\fBchain_opts() ::\fR
+\fB          #{root := [cert_opt()],\fR
+\fB            intermediates => [[cert_opt()]],\fR
+\fB            peer := [cert_opt()]}.\fR
+
+.br
+.RS
+.PP
+Certificate customize options for diffrent parts of the certificate test chain.
+
+
+.RE
+.B
+\fBcombined_cert() :: #cert{}.\fR
+
+.br
+.RS
+.PP
+A record that can be used to provide the certificate on both the DER encoded and the OTP decode format.
+
+.PP
+Such a construct can be useful to avoid conversions and problems that can arise due to relaxed decoding rules.
+
+
+.RE
+.B
+\fBconf_opt() ::\fR
+\fB          {cert, der_encoded()} |\fR
+\fB          {key, private_key() | {both, public_key(), private_key()}} |\fR
+\fB          {cacerts, [der_encoded()]}.\fR
+
+.br
+.RS
+.PP
+Configuration options for the generated certificate test chain.
+
+
+.RE
+.B
+\fBcrl_reason() ::\fR
+\fB          unspecified | keyCompromise | cACompromise |\fR
+\fB          affiliationChanged | superseded | cessationOfOperation |\fR
+\fB          certificateHold | privilegeWithdrawn | aACompromise.\fR
+
+.br
+.RS
+.PP
+The reason that a certifcate has been revoked as define by RFC 5280.
+
+
+.RE
+.B
+\fBcustom_key_opts() :: [term()].\fR
+
+.br
+.RS
+.PP
+Can be provided together with a custom private key, that specifies a key fun, to provide additional options understood by the fun.
+
+
+.RE
+.B
+\fBder_encoded() :: binary().\fR
+
+.br
+.RS
+.PP
+ASN.1 DER encoded entity.
+
+
+.RE
+.B
+\fBdigest_type() ::\fR
+\fB          crypto:sha2() | crypto:sha1() | legacy_digest_type() | none.\fR
+
+.br
+.RS
+.PP
+Hash function used to create a message digest
+
+
+.RE
+.B
+\fBdsa_private_key() :: #'DSAPrivateKey'{}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined private key format for the DSA algorithm.
+
+
+.RE
+.B
+\fBdsa_public_key() :: {dss_public_key(), #'Dss-Parms'{}}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined public key format for the DSA algorithm.
+
+
+.RE
+.B
+\fBdss_public_key() :: pos_integer().\fR
+
+.br
+.RS
+.PP
+ASN.1 defined public key format for the DSS algorithm (part of DSA key).
+
+
+.RE
+.B
+\fBecdsa_private_key() :: #'ECPrivateKey'{}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined private key format for the ECDSA algorithm.
+
+
+.RE
+.B
+\fBecdsa_public_key() ::\fR
+\fB          {#'ECPoint'{}, {namedCurve, oid()} | #'ECParameters'{}}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined public key format for the ECDSA algorithm.
+
+
+.RE
+.B
+\fBeddsa_private_key() ::\fR
+\fB          #'ECPrivateKey'{parameters :: {namedCurve, oid()}}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined private key format for the EDDSA algorithm, possible oids: ?'id-Ed25519' | ?'id-Ed448'
+
+
+.RE
+.B
+\fBeddsa_public_key() :: {#'ECPoint'{}, {namedCurve, oid()}}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined public key format for the EDDSA algorithm, possible oids: ?'id-Ed25519' | ?'id-Ed448'
+
+
+.RE
+.B
+\fBissuer_name() :: {rdnSequence, [[#'AttributeTypeAndValue'{}]]}.\fR
+
+.br
+.RS
+.PP
+The value of the issuer part of a certificate.
+
+
+.RE
+.B
+\fBkey_params() ::\fR
+\fB          'NULL' |\fR
+\fB          #'RSASSA-PSS-params'{} |\fR
+\fB          {namedCurve, oid()} |\fR
+\fB          #'ECParameters'{} |\fR
+\fB          #'Dss-Parms'{}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined parameters for public key algorithms.
+
+
+.RE
+.B
+\fBlegacy_digest_type() :: md5 | md2.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmldsa_private_key() :: #'ML-DSAPrivateKey'{}.\fR
+
+.br
+.RS
+.PP
+ML-DSA private key
+
+
+.RE
+.B
+\fBmldsa_public_key() :: #'ML-DSAPublicKey'{}.\fR
+
+.br
+.RS
+.PP
+ML-DSA public key
+
+
+.RE
+.B
+\fBoid() :: tuple().\fR
+
+.br
+.RS
+.PP
+Object identifier, a tuple of integers as generated by the \fIASN.1\fR compiler.
+
+
+.RE
+.B
+\fBpem_entry() ::\fR
+\fB          {pki_asn1_type(),\fR
+\fB           DerOrDerEncrypted :: binary(),\fR
+\fB           not_encrypted |\fR
+\fB           {Cipher :: iodata(),\fR
+\fB            Salt ::\fR
+\fB                binary() |\fR
+\fB                {#'PBEParameter'{}, digest_type()} |\fR
+\fB                #'PBES2-params'{}}}.\fR
+
+.br
+.RS
+.PP
+Possible \fICiphers\fR are "RC2-CBC" | "DES-CBC" | "DES-EDE3-CBC" \fISalt\fR could be generated with \fIcrypto:strong_rand_bytes(8)\fR.
+
+
+.RE
+.B
+\fBpki_asn1_type() ::\fR
+\fB          'Certificate' | 'RSAPrivateKey' | 'RSAPublicKey' |\fR
+\fB          'SubjectPublicKeyInfo' | 'DSAPrivateKey' | 'DHParameter' |\fR
+\fB          'PrivateKeyInfo' | 'CertificationRequest' | 'ContentInfo' |\fR
+\fB          'CertificateList' | 'ECPrivateKey' | 'OneAsymmetricKey' |\fR
+\fB          'EcpkParameters'.\fR
+
+.br
+.RS
+.PP
+ASN.1 type that can be found in PEM files that can be decode by the public_key application.
+
+
+.RE
+.B
+\fBpolicy_node() ::\fR
+\fB          #{valid_policy := oid(),\fR
+\fB            qualifier_set := [#'UserNotice'{} | {uri, string()}],\fR
+\fB            expected_policy_set := [oid()]}.\fR
+
+.br
+.RS
+.PP
+Certificate policy information.
+
+
+.RE
+.B
+\fBprivate_key() ::\fR
+\fB          rsa_private_key() |\fR
+\fB          rsa_pss_private_key() |\fR
+\fB          dsa_private_key() |\fR
+\fB          ecdsa_private_key() |\fR
+\fB          eddsa_private_key() |\fR
+\fB          mldsa_private_key() |\fR
+\fB          slh_dsa_private_key() |\fR
+\fB          #{algorithm :=\fR
+\fB                slh_dsa | mldsa | eddsa | rsa_pss_pss | ecdsa | rsa |\fR
+\fB                dsa,\fR
+\fB            sign_fun => fun()}.\fR
+
+.br
+.RS
+.PP
+Supported private keys
+
+
+.RE
+.B
+\fBpublic_key() ::\fR
+\fB          rsa_public_key() |\fR
+\fB          rsa_pss_public_key() |\fR
+\fB          dsa_public_key() |\fR
+\fB          ecdsa_public_key() |\fR
+\fB          eddsa_public_key() |\fR
+\fB          mldsa_public_key() |\fR
+\fB          slh_dsa_public_key().\fR
+
+.br
+.RS
+.PP
+Supported public keys
+
+
+.RE
+.B
+\fBpublic_key_info() ::\fR
+\fB          {oid(),\fR
+\fB           rsa_public_key() | #'ECPoint'{} | dss_public_key(),\fR
+\fB           key_params()}.\fR
+
+.br
+.RS
+.PP
+Information a certificates public key.
+
+.PP
+Possible oids: ?'rsaEncryption' | ?'id-RSASSA-PSS' | ?'id-ecPublicKey' | ?'id-Ed25519' | ?'id-Ed448' | ?'id-dsa'
+
+
+.RE
+.B
+\fBrsa_private_key() ::\fR
+\fB          #'RSAPrivateKey'{} | #{algorithm := rsa, encrypt_fun => fun()}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined private key format plain RSA algorithm or customization fun.
+
+
+.RE
+.B
+\fBrsa_pss_private_key() ::\fR
+\fB          {#'RSAPrivateKey'{}, #'RSASSA-PSS-params'{}}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined private key format the RSSASSA-PSS algorithm or customization fun.
+
+
+.RE
+.B
+\fBrsa_pss_public_key() :: {rsa_public_key(), #'RSASSA-PSS-params'{}}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined public key format for the RSSASSA-PSS algorithm.
+
+
+.RE
+.B
+\fBrsa_public_key() :: #'RSAPublicKey'{}.\fR
+
+.br
+.RS
+.PP
+ASN.1 defined public key format for plain RSA algorithm.
+
+
+.RE
+.B
+\fBslh_dsa_private_key() :: #'SLH-DSAPrivateKey'{}.\fR
+
+.br
+.RS
+.PP
+SLH-DSA private key
+
+
+.RE
+.B
+\fBslh_dsa_public_key() :: #'SLH-DSAPublicKey'{}.\fR
+
+.br
+.RS
+.PP
+SLH-DSA public key
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcacerts_clear() -> boolean().\fR
+
+.br
+.RS
+.PP
+Clears any loaded CA certificates, returns true if any was loaded.
+
+
+.RE
+.B
+\fBcacerts_get() -> [combined_cert()].\fR
+
+.br
+.RS
+.PP
+Returns the trusted CA certificates if any are loaded, otherwise uses \fIcacerts_load/0\fR to load them. The function fails if no \fIcacerts\fR could be loaded.
+
+
+.RE
+.B
+\fBcacerts_load() -> ok | {error, Reason :: term()}.\fR
+
+.br
+.RS
+.PP
+Loads the OS supplied trusted CA certificates.
+
+.PP
+This can be overridden by setting the \fIcacerts_path\fR environment key of the \fIpublic_key\fR application with the location of an alternative certificate. You can set it via the command line as:
+
+.IP
+.nf
+erl -public_key cacerts_path '"/path/to/certs.pem"'
+
+.fi
+
+.PP
+Use it with care. It is your responsibility to ensure that the certificates found in this alternative path can be trusted by the running system.
+
+
+.RE
+.B
+\fBcacerts_load(File :: file:filename_all()) ->\fR
+\fB                      ok | {error, Reason :: term()}.\fR
+
+.br
+.RS
+.PP
+Loads the trusted CA certificates from a file.
+
+
+.RE
+.B
+\fBcompute_key(OthersECDHkey, MyECDHkey) -> SharedSecret\fR
+\fB                     when\fR
+\fB                         OthersECDHkey :: #'ECPoint'{},\fR
+\fB                         MyECDHkey :: #'ECPrivateKey'{},\fR
+\fB                         SharedSecret :: binary().\fR
+
+.br
+.RS
+.PP
+Computes shared secret.
+
+
+.RE
+.B
+\fBcompute_key(OthersDHkey, MyDHkey, DHparms) -> SharedSecret\fR
+\fB                     when\fR
+\fB                         OthersDHkey :: crypto:dh_public(),\fR
+\fB                         MyDHkey :: crypto:dh_private(),\fR
+\fB                         DHparms :: #'DHParameter'{},\fR
+\fB                         SharedSecret :: binary().\fR
+
+.br
+.RS
+.PP
+Computes shared secret.
+
+
+.RE
+.B
+\fBdecrypt_private(CipherText, Key, Options) -> PlainText\fR
+\fB                         when\fR
+\fB                             CipherText :: binary(),\fR
+\fB                             Key :: rsa_private_key(),\fR
+\fB                             Options :: crypto:pk_encrypt_decrypt_opts(),\fR
+\fB                             PlainText :: binary().\fR
+
+.br
+.RS
+.PP
+Public-key decryption using the private key. See also \fIcrypto:private_decrypt/4\fR
+
+.PP
+\fBWARNING: \fRThis is a legacy function, for security reasons do not use with rsa_pkcs1_padding.
+
+
+
+.RE
+.B
+\fBdecrypt_public(CipherText, Key, Options) -> PlainText\fR
+\fB                        when\fR
+\fB                            CipherText :: binary(),\fR
+\fB                            Key :: rsa_public_key(),\fR
+\fB                            Options :: crypto:pk_encrypt_decrypt_opts(),\fR
+\fB                            PlainText :: binary().\fR
+
+.br
+.RS
+.PP
+Public-key decryption using the public key. See also \fIcrypto:public_decrypt/4\fR
+
+.PP
+\fBWARNING: \fRThis is a legacy function, for security reasons do not use  with rsa_pkcs1_padding. For digital signatures the use of \fIverify/4\fR together with \fIsign/3\fR is a prefered solution.
+
+
+
+.RE
+.B
+\fBder_decode(Asn1Type, Der) -> Entity\fR
+\fB                    when\fR
+\fB                        Asn1Type :: asn1_type(),\fR
+\fB                        Der :: der_encoded(),\fR
+\fB                        Entity :: term().\fR
+
+.br
+.RS
+.PP
+Decodes a public-key ASN.1 DER encoded entity.
+
+
+.RE
+.B
+\fBder_encode(Asn1Type, Entity) -> Der\fR
+\fB                    when\fR
+\fB                        Asn1Type :: asn1_type(),\fR
+\fB                        Entity :: term(),\fR
+\fB                        Der :: binary().\fR
+
+.br
+.RS
+.PP
+Encodes a public-key entity with ASN.1 DER encoding.
+
+
+.RE
+.B
+\fBdh_gex_group(MinSize, SuggestedSize, MaxSize, Groups) ->\fR
+\fB                      {ok, {Size, Group}} | {error, term()}\fR
+\fB                      when\fR
+\fB                          MinSize :: pos_integer(),\fR
+\fB                          SuggestedSize :: pos_integer(),\fR
+\fB                          MaxSize :: pos_integer(),\fR
+\fB                          Groups :: undefined | [{Size, [Group]}],\fR
+\fB                          Size :: pos_integer(),\fR
+\fB                          Group :: {G, P},\fR
+\fB                          G :: pos_integer(),\fR
+\fB                          P :: pos_integer().\fR
+
+.br
+.RS
+.PP
+Selects a group for Diffie-Hellman key exchange with the key size in the range \fIMinSize...MaxSize\fR and as close to \fISuggestedSize\fR as possible. If \fIGroups == undefined\fR a default set will be used, otherwise the group is selected from \fIGroups\fR.
+
+.PP
+First a size, as close as possible to SuggestedSize, is selected. Then one group with that key size is randomly selected from the specified set of groups. If no size within the limits of \fIMinSize\fR and \fIMaxSize\fR is available, \fI{error,no_group_found}\fR is returned.
+
+.PP
+The default set of groups is listed in \fIlib/public_key/priv/moduli\fR. This file may be regenerated like this:
+
+.IP
+.nf
+	$> cd $ERL_TOP/lib/public_key/priv/
+	$> generate
+         ---- wait until all background jobs has finished. It may take several days !
+	$> cat moduli-* > moduli
+	$> cd ..; make
+
+.fi
+
+
+.RE
+.B
+\fBencrypt_private(PlainText, Key, Options) -> CipherText\fR
+\fB                         when\fR
+\fB                             PlainText :: binary(),\fR
+\fB                             Key :: rsa_private_key(),\fR
+\fB                             Options ::\fR
+\fB                                 crypto:pk_encrypt_decrypt_opts() |\fR
+\fB                                 custom_key_opts(),\fR
+\fB                             CipherText :: binary().\fR
+
+.br
+.RS
+.PP
+Public-key encryption using the private key.
+
+.PP
+See also \fIcrypto:private_encrypt/4\fR. The key can, besides a standard RSA key, be a map specifing the key algorithm \fIrsa\fR and a fun to handle the encryption operation.  This may be used for customized the encryption operation with for instance hardware security modules (HSM) or trusted platform modules (TPM).
+
+.PP
+\fBWARNING: \fRThis is a legacy function, for security reasons do not use with rsa_pkcs1_padding. For digital signatures use of \fIsign/3\fR together with \fIverify/4\fR  is the prefered solution.
+
+
+
+.RE
+.B
+\fBencrypt_public(PlainText, Key, Options) -> CipherText\fR
+\fB                        when\fR
+\fB                            PlainText :: binary(),\fR
+\fB                            Key :: rsa_public_key(),\fR
+\fB                            Options :: crypto:pk_encrypt_decrypt_opts(),\fR
+\fB                            CipherText :: binary().\fR
+
+.br
+.RS
+.PP
+Public-key encryption using the public key. See also \fIcrypto:public_encrypt/4\fR.
+
+.PP
+\fBWARNING: \fRThis is a legacy function, for security reasons do not use with rsa_pkcs1_padding.
+
+
+
+.RE
+.B
+\fBgenerate_key(DHparams | ECparams | RSAparams | MLDSA | SLHDSA) ->\fR
+\fB                      DHkeys | ECkey | RSAkey | MLDSAKeys | SLHDSAKeys\fR
+\fB                      when\fR
+\fB                          DHparams :: #'DHParameter'{},\fR
+\fB                          DHkeys ::\fR
+\fB                              {PublicDH :: binary(),\fR
+\fB                               PrivateDH :: binary()},\fR
+\fB                          ECparams ::\fR
+\fB                              {namedCurve, oid() | atom()} |\fR
+\fB                              #'ECParameters'{},\fR
+\fB                          ECkey :: #'ECPrivateKey'{},\fR
+\fB                          RSAparams :: {rsa, Size, PubExp},\fR
+\fB                          Size :: pos_integer(),\fR
+\fB                          PubExp :: pos_integer(),\fR
+\fB                          RSAkey :: #'RSAPrivateKey'{},\fR
+\fB                          MLDSA :: crypto:mldsa(),\fR
+\fB                          MLDSAKeys ::\fR
+\fB                              {#'ML-DSAPublicKey'{},\fR
+\fB                               #'ML-DSAPrivateKey'{}},\fR
+\fB                          SLHDSA :: crypto:slh_dsa(),\fR
+\fB                          SLHDSAKeys ::\fR
+\fB                              {#'SLH-DSAPublicKey'{},\fR
+\fB                               #'SLH-DSAPrivateKey'{}}.\fR
+
+.br
+.RS
+.PP
+Generates a new key pair. Note that except for Diffie-Hellman the public key is included in the private key structure. See also \fIcrypto:generate_key/2\fR
+
+
+.RE
+.B
+\fBpem_decode(binary()) -> [pem_entry()].\fR
+
+.br
+.RS
+.PP
+Decodes PEM binary data and returns entries as ASN.1 DER encoded entities.
+
+.PP
+Example \fI{ok, PemBin} = file:read_file("cert.pem"). PemEntries = public_key:pem_decode(PemBin).\fR
+
+
+.RE
+.B
+\fBpem_encode([pem_entry()]) -> binary().\fR
+
+.br
+.RS
+.PP
+Creates a PEM binary.
+
+
+.RE
+.B
+\fBpem_entry_decode(PemEntry, Password) -> term()\fR
+\fB                          when\fR
+\fB                              PemEntry :: pem_entry(),\fR
+\fB                              Password :: iodata() | fun(() -> iodata()).\fR
+
+.br
+.RS
+.PP
+Decodes a PEM entry. \fIpem_decode/1\fR returns a list of PEM entries. Notice that if the PEM entry is of type 'SubjectPublickeyInfo', it is further decoded to an \fIrsa_public_key/0\fR or \fIdsa_public_key/0\fR.
+
+.PP
+Password can be either an octet string or function which returns same type.
+
+
+.RE
+.B
+\fBpem_entry_encode(Asn1Type, Entity, InfoPwd) -> pem_entry()\fR
+\fB                          when\fR
+\fB                              Asn1Type :: pki_asn1_type(),\fR
+\fB                              Entity :: term(),\fR
+\fB                              InfoPwd :: {CipherInfo, Password},\fR
+\fB                              CipherInfo ::\fR
+\fB                                  {Cipher :: iodata(),\fR
+\fB                                   Salt ::\fR
+\fB                                       binary() |\fR
+\fB                                       {#'PBEParameter'{},\fR
+\fB                                        digest_type()} |\fR
+\fB                                       #'PBES2-params'{}},\fR
+\fB                              Password :: iodata().\fR
+
+.br
+.RS
+.PP
+Creates a PEM entry that can be feed to \fIpem_encode/1\fR.
+
+.PP
+If \fIAsn1Type\fR is \fI'SubjectPublicKeyInfo'\fR, \fIEntity\fR must be either an \fIrsa_public_key/0\fR, \fIdsa_public_key/0\fR or an \fIecdsa_public_key/0\fR and this function creates the appropriate \fI'SubjectPublicKeyInfo'\fR entry.
+
+
+.RE
+.B
+\fBpkix_crl_issuer(CRL) -> Issuer\fR
+\fB                         when\fR
+\fB                             CRL :: der_encoded() | #'CertificateList'{},\fR
+\fB                             Issuer :: issuer_name().\fR
+
+.br
+.RS
+.PP
+Returns the issuer of the \fICRL\fR.
+
+
+.RE
+.B
+\fBpkix_crl_verify(CRL, Cert) -> boolean()\fR
+\fB                         when\fR
+\fB                             CRL :: der_encoded() | #'CertificateList'{},\fR
+\fB                             Cert :: cert().\fR
+
+.br
+.RS
+.PP
+Verify that \fICert\fR is the \fICRL\fR signer.
+
+
+.RE
+.B
+\fBpkix_crls_validate(OTPcertificate, DPandCRLs, Options) ->\fR
+\fB                            CRLstatus\fR
+\fB                            when\fR
+\fB                                OTPcertificate :: #'OTPCertificate'{},\fR
+\fB                                DPandCRLs :: [DPandCRL],\fR
+\fB                                DPandCRL :: {DP, {DerCRL, CRL}},\fR
+\fB                                DP :: #'DistributionPoint'{},\fR
+\fB                                DerCRL :: der_encoded(),\fR
+\fB                                CRL :: #'CertificateList'{},\fR
+\fB                                Options :: [{atom(), term()}],\fR
+\fB                                CRLstatus ::\fR
+\fB                                    valid | {bad_cert, BadCertReason},\fR
+\fB                                BadCertReason ::\fR
+\fB                                    revocation_status_undetermined |\fR
+\fB                                    {revocation_status_undetermined,\fR
+\fB                                     Reason :: term()} |\fR
+\fB                                    {revoked, crl_reason()}.\fR
+
+.br
+.RS
+.PP
+Performs CRL validation. It is intended to be called from the verify fun of pkix_path_validation/3 .
+
+.PP
+Available options:
+
+{update_crl, fun()}
+.RS 2
+The fun has the following type specification:
+
+.IP
+.nf
+ fun(#'DistributionPoint'{}, #'CertificateList'{}) ->
+        #'CertificateList'{}
+
+.fi
+
+.PP
+The fun uses the information in the distribution point to access the latest possible version of the CRL. If this fun is not specified, Public Key uses the default implementation:
+
+.IP
+.nf
+ fun(_DP, CRL) -> CRL end
+
+.fi
+
+
+.RE
+
+{issuer_fun, {fun(), UserState::term()}}
+.RS 2
+The fun has the following type specification:
+
+.IP
+.nf
+fun(#'DistributionPoint'{}, #'CertificateList'{},
+    {rdnSequence,[#'AttributeTypeAndValue'{}]}, UserState::term()) ->
+	{ok, #'OTPCertificate'{}, [der_encoded]}
+
+.fi
+
+.PP
+The fun returns the root certificate and certificate chain that has signed the CRL.
+
+.IP
+.nf
+ fun(DP, CRL, Issuer, UserState) -> {ok, RootCert, CertChain}
+
+.fi
+
+
+.RE
+
+{undetermined_details, boolean()}
+.RS 2
+Defaults to false. When revocation status cannot be determined, and this option is set to true, details of why no CRLs where accepted are included in the return value.
+
+
+.RE
+
+
+.RE
+.B
+\fBpkix_decode_cert(Cert, Type) ->\fR
+\fB                          #'Certificate'{} | #'OTPCertificate'{}\fR
+\fB                          when\fR
+\fB                              Cert :: der_encoded(),\fR
+\fB                              Type :: plain | otp | relaxed.\fR
+
+.br
+.RS
+.PP
+Decodes an ASN.1 DER-encoded PKIX certificate.
+
+.PP
+Option \fIotp\fR uses the customized ASN.1 specification OTP-PKIX.asn1 for decoding and also recursively decode most of the standard parts.
+
+.PP
+Option \fIrelaxed\fR is similar to option \fIotp\fR but also allows for empty RDNs in issuer and subject.
+
+
+.RE
+.B
+\fBpkix_dist_point(Cert) -> DistPoint\fR
+\fB                         when\fR
+\fB                             Cert :: cert(),\fR
+\fB                             DistPoint :: #'DistributionPoint'{}.\fR
+
+.br
+.RS
+.PP
+Creates a distribution point for CRLs issued by the same issuer as \fICert\fR. Can be used as input to \fIpkix_crls_validate/3\fR
+
+
+.RE
+.B
+\fBpkix_dist_points(Cert) -> DistPoints\fR
+\fB                          when\fR
+\fB                              Cert :: cert(),\fR
+\fB                              DistPoints :: [#'DistributionPoint'{}].\fR
+
+.br
+.RS
+.PP
+Extracts distribution points from the certificates extensions.
+
+
+.RE
+.B
+\fBpkix_encode(Asn1Type, Entity, Type) -> Der\fR
+\fB                     when\fR
+\fB                         Asn1Type :: asn1_type(),\fR
+\fB                         Entity :: term(),\fR
+\fB                         Type :: otp | plain,\fR
+\fB                         Der :: der_encoded().\fR
+
+.br
+.RS
+.PP
+DER encodes a PKIX x509 certificate or part of such a certificate.
+
+.PP
+This function must be used for encoding certificates or parts of certificates that are decoded/created in the \fIotp\fR format, whereas for the plain format this function directly calls \fIder_encode/2\fR.
+
+.PP
+\fBNOTE: \fRSubtle ASN-1 encoding errors in certificates may be worked around when decoding, this may have the affect that the encoding a certificate back to DER may generate different bytes then the supplied original.
+
+
+
+.RE
+.B
+\fBpkix_hash_type(HashOid :: oid()) -> DigestType :: digest_type().\fR
+
+.br
+.RS
+.PP
+Translates OID to Erlang digest type
+
+
+.RE
+.B
+\fBpkix_is_fixed_dh_cert(Cert) -> boolean() when Cert :: cert().\fR
+
+.br
+.RS
+.PP
+Checks if a certificate is a fixed Diffie-Hellman certificate.
+
+
+.RE
+.B
+\fBpkix_is_issuer(CertorCRL, IssuerCert) -> boolean()\fR
+\fB                        when\fR
+\fB                            CertorCRL :: cert() | #'CertificateList'{},\fR
+\fB                            IssuerCert :: cert().\fR
+
+.br
+.RS
+.PP
+Checks if \fIIssuerCert\fR issued \fICert\fR.
+
+
+.RE
+.B
+\fBpkix_is_self_signed(Cert) -> boolean() when Cert :: cert().\fR
+
+.br
+.RS
+.PP
+Checks if a certificate is self-signed.
+
+
+.RE
+.B
+\fBpkix_issuer_id(Cert, IssuedBy) ->\fR
+\fB                        {ok, ID :: cert_id()} | {error, Reason}\fR
+\fB                        when\fR
+\fB                            Cert :: cert(),\fR
+\fB                            IssuedBy :: self | other,\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns the x509 certificate issuer id, if it can be determined.
+
+
+.RE
+.B
+\fBpkix_match_dist_point(CRL, DistPoint) -> boolean()\fR
+\fB                               when\fR
+\fB                                   CRL ::\fR
+\fB                                       der_encoded() |\fR
+\fB                                       #'CertificateList'{},\fR
+\fB                                   DistPoint :: #'DistributionPoint'{}.\fR
+
+.br
+.RS
+.PP
+Checks whether the given distribution point matches the Issuing Distribution Point of the CRL, as described in RFC 5280.
+
+.PP
+If the CRL doesn't have an Issuing Distribution Point extension, the distribution point always matches.
+
+
+.RE
+.B
+\fBpkix_normalize_name(Issuer) -> Normalized\fR
+\fB                             when\fR
+\fB                                 Issuer :: issuer_name() | der_encoded(),\fR
+\fB                                 Normalized :: issuer_name().\fR
+
+.br
+.RS
+.PP
+Normalizes an issuer name so that it can be easily compared to another issuer name.
+
+
+.RE
+.B
+\fBpkix_ocsp_validate(Cert, IssuerCert, OcspRespDer, NonceExt,\fR
+\fB                         Options) ->\fR
+\fB                            {ok, Details} | {error, {bad_cert, Reason}}\fR
+\fB                            when\fR
+\fB                                Cert :: cert(),\fR
+\fB                                IssuerCert :: cert(),\fR
+\fB                                OcspRespDer :: der_encoded(),\fR
+\fB                                NonceExt :: undefined | binary(),\fR
+\fB                                Options ::\fR
+\fB                                    [{is_trusted_responder_fun,\fR
+\fB                                      fun((combined_cert()) -> boolean)}],\fR
+\fB                                Details :: list(),\fR
+\fB                                Reason :: bad_cert_reason().\fR
+
+.br
+.RS
+.PP
+Perform OCSP response validation according to RFC 6960. Returns {'ok', Details} when OCSP response is successfully validated and {error, {bad_cert, Reason}} otherwise.
+
+.PP
+Available options:
+
+{is_trusted_responder_fun, fun()}
+.RS 2
+The fun has the following type specification:
+
+.IP
+.nf
+ fun(#cert{}) ->
+	  boolean()
+
+.fi
+
+.PP
+The fun returns the \fItrue\fR if certificate in the argument is trusted. If this fun is not specified, Public Key uses the default implementation:
+
+.IP
+.nf
+ fun(_) -> false end
+
+.fi
+
+
+.RE
+
+.PP
+\fBNOTE: \fROCSP response can be provided without a nonce value - even if it was requested by the client. In such cases {missing, ocsp_nonce} will be returned in Details list.
+
+
+
+.RE
+.B
+\fBpkix_path_validation(Cert, CertChain, Options) ->\fR
+\fB                              {ok,\fR
+\fB                               {PublicKeyInfo, ConstrainedPolicyNodes}} |\fR
+\fB                              {error,\fR
+\fB                               {bad_cert, Reason :: bad_cert_reason()}}\fR
+\fB                              when\fR
+\fB                                  Cert ::\fR
+\fB                                      cert() | combined_cert() | atom(),\fR
+\fB                                  CertChain ::\fR
+\fB                                      [cert() | combined_cert()],\fR
+\fB                                  Options ::\fR
+\fB                                      [{max_path_length, integer()} |\fR
+\fB                                       {verify_fun, {fun(), term()}}],\fR
+\fB                                  PublicKeyInfo :: public_key_info(),\fR
+\fB                                  ConstrainedPolicyNodes ::\fR
+\fB                                      [policy_node()].\fR
+
+.br
+.RS
+.PP
+Performs a basic path validation according to RFC 5280.
+
+.PP
+However, CRL validation is done separately by pkix_crls_validate/3 and is to be called from the supplied \fIverify_fun\fR. The policy tree check was added in OTP-26.2 and if the certificates include policies the constrained policy set with potential qualifiers will be returned, these values are derived from the policy tree created as part of the path validation algorithm. The constrained set can be constrained only by the Certificate Authorities or also by the user when the option \fIpolicy_set\fR is provided to this function. The qualifiers convey information about the valid policy and is intended as information to end users.
+
+.PP
+Available options:
+
+{verify_fun, {fun(), UserState::term()}
+.RS 2
+The fun must be defined as:
+
+.IP
+.nf
+fun(OtpCert :: #'OTPCertificate'{},
+    Event :: {bad_cert, Reason :: bad_cert_reason() | {revoked, atom()}} |
+             {extension, #'Extension'{}},
+    UserState :: term()) ->
+	{valid, UserState :: term()} |
+	{valid_peer, UserState :: term()} |
+	{fail, Reason :: term()} |
+	{unknown, UserState :: term()}.
+
+.fi
+
+.PP
+or as:
+
+.IP
+.nf
+fun(OtpCert :: #'OTPCertificate'{},
+    DerCert :: der_encoded(),
+    Event :: {bad_cert, Reason :: bad_cert_reason() | {revoked, atom()}} |
+             {extension, #'Extension'{}},
+    UserState :: term()) ->
+	{valid, UserState :: term()} |
+	{valid_peer, UserState :: term()} |
+	{fail, Reason :: term()} |
+	{unknown, UserState :: term()}.
+
+.fi
+
+.PP
+The verify callback can have 3 or 4 arguments in case the DER encoded version is needed by the callback.
+
+.PP
+If the verify callback fun returns \fI{fail, Reason}\fR, the verification process is immediately stopped. If the verify callback fun returns \fI{valid, UserState}\fR, the verification process is continued. This can be used to accept specific path validation errors, such as \fIselfsigned_peer\fR, as well as verifying application-specific extensions. If called with an extension unknown to the user application, the return value \fI{unknown, UserState}\fR is to be used.
+
+.PP
+\fBNOTE: \fRIf you need the DER encoded version of the certificate and have the OTP decoded version encoding it back can fail to give the correct result, due to work arounds for common misbehaving encoders. So it is recommended to call \fIpkix_path_validation\fR with \fICert\fR and \fICertChain\fR arguments as \fIder_encoded() | #cert{}\fR and \fI[der_encoded() | #cert{}]\fR. Also note that the path validation itself needs both the encoded and the decoded version of the certificate.
+
+
+.PP
+\fBWARNING: \fRNote that user defined custom \fIverify_fun\fR may alter original path validation error (e.g \fIselfsigned_peer\fR). Use with caution.
+
+
+
+.RE
+
+{max_path_length, integer()}
+.RS 2
+The 
+\fImax_path_length\fR is the maximum number of non-self-issued intermediate certificates that can follow the peer certificate in a valid certification path. So, if \fImax_path_length\fR is 0, the PEER must be signed by the trusted ROOT-CA directly, if it is 1, the path can be PEER, CA, ROOT-CA, if it is 2, the path can be PEER, CA, CA, ROOT-CA, and so on.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB{policy_set, [oid()]}\fR(Since OTP 26.2)  The set of policies that will be accepted, defaults to the special value \fI[?anyPolicy]\fR that will accept all policies.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB{explicit_policy, boolean()}\fR(Since OTP 26.2)  Explicitly require that each certificate in the path must include at least one of the certificate policies in the \fIpolicy_set\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB{inhibit_policy_mapping, boolean()}\fR(Since OTP 26.2)  Prevent policies to be mapped to other policies.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB{inhibit_any_policy, boolean()}\fR(Since OTP 26.2)  Prevent the special policy \fI?anyPolicy\fR from being accepted.
+
+.RE
+
+.PP
+Explanations of reasons for a bad certificate:
+
+cert_expired
+.RS 2
+Certificate is no longer valid as its expiration date has passed.
+
+
+.RE
+
+invalid_issuer
+.RS 2
+Certificate issuer name does not match the name of the issuer certificate in the chain.
+
+
+.RE
+
+invalid_signature
+.RS 2
+Certificate was not signed by its issuer certificate in the chain.
+
+
+.RE
+
+name_not_permitted
+.RS 2
+Invalid Subject Alternative Name extension.
+
+
+.RE
+
+missing_basic_constraint
+.RS 2
+Certificate, required to have the basic constraints extension, does not have a basic constraints extension.
+
+
+.RE
+
+invalid_key_usage
+.RS 2
+Certificate key is used in an invalid way according to the key-usage extension.
+
+
+.RE
+
+{revoked, crl_reason()}
+.RS 2
+Certificate has been revoked.
+
+
+.RE
+
+invalid_validity_dates
+.RS 2
+The validity section of the X.509 certificate(s) contains invalid date formats not matching the RFC.
+
+
+.RE
+
+atom()
+.RS 2
+Application-specific error reason that is to be checked by the 
+\fIverify_fun\fR.
+
+.RE
+
+
+.RE
+.B
+\fBpkix_sign(Cert, Key) -> Der\fR
+\fB                   when\fR
+\fB                       Cert :: #'OTPTBSCertificate'{},\fR
+\fB                       Key :: private_key(),\fR
+\fB                       Der :: der_encoded().\fR
+
+.br
+.RS
+.PP
+Signs an 'OTPTBSCertificate'. Returns the corresponding DER-encoded certificate.
+
+
+.RE
+.B
+\fBpkix_sign_types(AlgorithmId) -> {DigestType, SignatureType}\fR
+\fB                         when\fR
+\fB                             AlgorithmId :: oid(),\fR
+\fB                             DigestType :: digest_type(),\fR
+\fB                             SignatureType ::\fR
+\fB                                 rsa | dsa | ecdsa | eddsa |\fR
+\fB                                 crypto:mldsa() |\fR
+\fB                                 crypto:slh_dsa().\fR
+
+.br
+.RS
+.PP
+Translates signature algorithm OID to Erlang digest and signature types.
+
+.PP
+The \fIAlgorithmId\fR is the signature OID from a certificate or a certificate revocation list.
+
+
+.RE
+.B
+\fBpkix_subject_id(Cert) -> ID when Cert :: cert(), ID :: cert_id().\fR
+
+.br
+.RS
+.PP
+Returns the X509 certificate subject id.
+
+
+.RE
+.B
+\fBpkix_test_data(ChainConf) -> TestConf\fR
+\fB                        when\fR
+\fB                            ChainConf ::\fR
+\fB                                #{server_chain := chain_opts(),\fR
+\fB                                  client_chain := chain_opts()} |\fR
+\fB                                chain_opts(),\fR
+\fB                            TestConf ::\fR
+\fB                                #{server_config := [conf_opt()],\fR
+\fB                                  client_config := [conf_opt()]} |\fR
+\fB                                [conf_opt()].\fR
+
+.br
+.RS
+.PP
+Creates certificate configuration(s) consisting of certificate and its private key plus CA certificate bundle, for a client and a server, intended to facilitate automated testing of applications using X509-certificates, often through SSL/TLS. The test data can be used when you have control over both the client and the server in a test scenario.
+
+.PP
+When this function is called with a map containing client and server chain specifications; it generates both a client and a server certificate chain where the \fIcacerts\fR returned for the server contains the root cert the server should trust and the intermediate certificates the server should present to connecting clients. The root cert the server should trust is the one used as root of the client certificate chain. Vice versa applies to the \fIcacerts\fR returned for the client. The root cert(s) can either be pre-generated with pkix_test_root_cert/2 , or if options are specified; it is (they are) generated.
+
+.PP
+When this function is called with a list of certificate options; it generates a configuration with just one node certificate where \fIcacerts\fR contains the root cert and the intermediate certs that should be presented to a peer. In this case the same root cert must be used for all peers. This is useful in for example an Erlang distributed cluster where any node, towards another node, acts either as a server or as a client depending on who connects to whom. The generated certificate contains a subject altname, which is not needed in a client certificate, but makes the certificate useful for both roles.
+
+.PP
+Explanation of the options used to customize certificates in the generated chains:
+
+{digest, digest_type()}
+.RS 2
+Hash algorithm to be used for signing the certificate together with the key option. Defaults to sha that is sha1.
+
+
+.RE
+
+{key,  ec_params()| {rsa, Size:pos_integer(), Prime::pos_integer()} | private_key()}
+.RS 2
+Parameters to be used to call public_key:generate_key/1, to generate a key, or an existing key. Defaults to generating an ECDSA key. Note this could fail if Erlang/OTP is compiled with a very old cryptolib.
+
+
+.RE
+
+{validity, {From::erlang:timestamp(), To::erlang:timestamp()}}
+.RS 2
+The validity period of the certificate.
+
+
+.RE
+
+{extensions, [#'Extension'{}]}
+.RS 2
+Extensions to include in the certificate.
+
+.PP
+Default extensions included in CA certificates if not otherwise specified are:
+
+.IP
+.nf
+[#'Extension'{extnID = ?'id-ce-keyUsage',
+              extnValue = [keyCertSign, cRLSign],
+              critical = false},
+#'Extension'{extnID = ?'id-ce-basicConstraints',
+             extnValue = #'BasicConstraints'{cA = true},
+             critical = true}]
+
+.fi
+
+.PP
+Default extensions included in the server peer cert if not otherwise specified are:
+
+.IP
+.nf
+[#'Extension'{extnID = ?'id-ce-keyUsage',
+              extnValue = [digitalSignature, keyAgreement],
+              critical = false},
+#'Extension'{extnID = ?'id-ce-subjectAltName',
+             extnValue = [{dNSName, Hostname}],
+             critical = false}]
+
+.fi
+
+.PP
+Hostname is the result of calling net_adm:localhost() in the Erlang node where this function is called.
+
+
+.RE
+
+.PP
+\fBNOTE: \fRNote that the generated certificates and keys does not provide a formally correct PKIX-trust-chain and they cannot be used to achieve real security. This function is provided for testing purposes only.
+
+
+
+.RE
+.B
+\fBpkix_test_root_cert(Name, Options) -> RootCertAndKey\fR
+\fB                             when\fR
+\fB                                 Name :: string(),\fR
+\fB                                 Options :: [cert_opt()],\fR
+\fB                                 RootCertAndKey ::\fR
+\fB                                     #{cert := der_encoded(),\fR
+\fB                                       key := private_key()}.\fR
+
+.br
+.RS
+.PP
+Generates a root certificate that can be used in multiple calls to \fIpkix_test_data/1\fR when you want the same root certificate for several generated certificates.
+
+
+.RE
+.B
+\fBpkix_verify(Cert, Key) -> boolean()\fR
+\fB                     when Cert :: der_encoded(), Key :: public_key().\fR
+
+.br
+.RS
+.PP
+Verifies PKIX x.509 certificate signature.
+
+
+.RE
+.B
+\fBpkix_verify_hostname(Cert, ReferenceIDs, Options) -> boolean()\fR
+\fB                              when\fR
+\fB                                  Cert :: cert(),\fR
+\fB                                  ReferenceIDs ::\fR
+\fB                                      [{uri_id | dns_id | ip | srv_id |\fR
+\fB                                        atom() |\fR
+\fB                                        oid(),\fR
+\fB                                        string()} |\fR
+\fB                                       {ip,\fR
+\fB                                        inet:ip_address() | string()}],\fR
+\fB                                  Options ::\fR
+\fB                                      [{match_fun | fail_callback |\fR
+\fB                                        fqdn_fun,\fR
+\fB                                        fun()}].\fR
+
+.br
+.RS
+.PP
+This function checks that the \fIPresented Identifier\fR (e.g hostname) in a peer certificate is in agreement with at least one of the \fIReference Identifier\fR that the client expects to be connected to.
+
+.PP
+The function is intended to be added as an extra client check of the peer certificate when performing public_key:pkix_path_validation/3
+
+.PP
+See RFC 6125 for detailed information about hostname verification. The User's Guide and code examples describes this function more detailed.
+
+.PP
+The option funs are described here:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fImatch_fun\fR\fR
+
+.IP
+.nf
+fun(ReferenceId::ReferenceId() | FQDN::string(),
+    PresentedId::{dNSName,string()} | {uniformResourceIdentifier,string() |
+                 {iPAddress,list(byte())} | {OtherId::atom()|oid(),term()}})
+
+.fi
+
+.PP
+This function replaces the default host name matching rules. The fun should return a boolean to tell if the Reference ID and Presented ID matches or not. The match fun can also return a third value, value, the atom \fIdefault\fR, if the default matching rules shall apply. This makes it possible to augment the tests with a special case:
+
+.IP
+.nf
+fun(....) -> true;   % My special case
+   (_, _) -> default % all others falls back to the inherit tests
+end
+
+.fi
+
+.PP
+See \fIpkix_verify_hostname_match_fun/1\fR for a function that takes a protocol name as argument and returns a \fIfun/2\fR suitable for this option and Re-defining the match operation in the User's Guide for an example.
+
+.PP
+\fBNOTE: \fRReference Id values given as binaries will be converted to strings, and ip references may be given in string format that is "10.0.1.1" or "1234::5678:9012" as well as on the format \fIinet:ip_address/0\fR
+
+
+.RE
+
+fail_callback
+.RS 2
+If a matching fails, there could be circumstances when the certificate should be accepted anyway. Think for example of a web browser where you choose to accept an outdated certificate. This option enables implementation of such an exception but for hostnames. This 
+\fIfun/1\fR is called when no \fIReferenceID\fR matches. The return value of the fun (a \fIboolean/0\fR) decides the outcome. If \fItrue\fR the the certificate is accepted otherwise it is rejected. See "Pinning" a Certificate in the User's Guide.
+
+.RE
+
+fqdn_fun
+.RS 2
+This option augments the host name extraction from URIs and other Reference IDs. It could for example be a very special URI that is not standardised. The fun takes a Reference ID as argument and returns one of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the hostname
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the atom \fIdefault\fR: the default host name extract function will be used
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the atom \fIundefined\fR: a host name could not be extracted. The pkix_verify_hostname/3 will return \fIfalse\fR.
+
+.RE
+
+.PP
+For an example, see Hostname extraction in the User's Guide.
+
+
+.RE
+
+
+.RE
+.B
+\fBpkix_verify_hostname_match_fun(Protocol) -> Result\fR
+\fB                                        when\fR
+\fB                                            Protocol :: https,\fR
+\fB                                            Result :: fun().\fR
+
+.br
+.RS
+.PP
+The return value of calling this function is intended to be used in the \fImatch_fun\fR option in \fIpkix_verify_hostname/3\fR.
+
+.PP
+The returned fun augments the verify hostname matching according to the specific rules for the protocol in the argument.
+
+.PP
+\fBNOTE: \fRCurrently supported https fun will allow wildcard certificate matching as specified by the HTTP standard. Note that for instance LDAP have a different set of wildcard matching rules. If you do not want to allow wildcard certificates (recommended from a security perspective) or otherwise customize the hostname match the default match function used by ssl application will be sufficient.
+
+
+
+.RE
+.B
+\fBshort_name_hash(Name) -> string() when Name :: issuer_name().\fR
+
+.br
+.RS
+.PP
+Generates a short hash of an issuer name. The hash is returned as a string containing eight hexadecimal digits.
+
+.PP
+The return value of this function is the same as the result of the commands \fIopenssl crl -hash\fR and \fIopenssl x509 -issuer_hash\fR, when passed the issuer name of a CRL or a certificate, respectively. This hash is used by the \fIc_rehash\fR tool to maintain a directory of symlinks to CRL files, in order to facilitate looking up a CRL by its issuer name.
+
+
+.RE
+.B
+\fBsign(Msg, DigestType, Key, Options) -> Signature\fR
+\fB              when\fR
+\fB                  Msg :: binary() | {digest, binary()},\fR
+\fB                  DigestType :: digest_type(),\fR
+\fB                  Key :: private_key(),\fR
+\fB                  Options ::\fR
+\fB                      crypto:pk_sign_verify_opts() | custom_key_opts(),\fR
+\fB                  Signature :: binary().\fR
+
+.br
+.RS
+.PP
+Creates a digital signature.
+
+.PP
+The \fIMsg\fR is either the binary "plain text" data to be signed or it is the hashed value of "plain text", that is, the digest. The key can, besides a standard key, be a map specifing a key algorithm and a fun that should handle the signing. This may be used for customized signing with for instance hardware security modules (HSM) or trusted platform modules (TPM).
+
+
+.RE
+.B
+\fBverify(Msg, DigestType, Signature, Key, Options) -> boolean()\fR
+\fB                when\fR
+\fB                    Msg :: binary() | {digest, binary()},\fR
+\fB                    DigestType :: digest_type(),\fR
+\fB                    Signature :: binary(),\fR
+\fB                    Key :: public_key(),\fR
+\fB                    Options :: crypto:pk_sign_verify_opts().\fR
+
+.br
+.RS
+.PP
+Verifies a digital signature.
+
+.PP
+The \fIMsg\fR is either the binary "plain text" data or it is the hashed value of "plain text", that is, the digest.
+
+
+.RE

@@ -1,0 +1,3847 @@
+.TH xref 3 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+xref \- A Cross Reference Tool for analyzing dependencies between functions, modules, applications, and releases.
+
+.SH DESCRIPTION
+.PP
+Calls between functions are either \fIlocal calls\fR such as \fIf()\fR, or \fIexternal calls\fR such as \fImod:f()\fR.
+
+.PP
+\fIModule data\fR, which are extracted from BEAM files, include local functions, exported functions, local calls, and external calls. By default, calls to built-in functions (BIF) are ignored, but if the option \fIbuiltins\fR, accepted by some of this module's functions, is set to \fItrue\fR, calls to BIFs are included as well. It is the analyzing OTP version that decides what functions are BIFs. Functional objects are assumed to be called where they are created (and nowhere else).
+
+.PP
+\fIUnresolved calls\fR are calls to \fIapply\fR or \fIspawn\fR with variable module, variable function, or variable arguments. Examples are \fIM:F(a)\fR, \fIapply(M, f, [a])\fR, and \fIspawn(m, f(), Args)\fR. Unresolved calls are represented by calls where variable modules have been replaced with the atom \fI'$M_EXPR'\fR, variable functions have been replaced with the atom \fI'$F_EXPR'\fR, and variable number of arguments have been replaced with the number \fI-1\fR. The above mentioned examples are represented by calls to \fI'$M_EXPR':'$F_EXPR'/1\fR, \fI'$M_EXPR':f/1\fR, and \fI'$F_EXPR'/-1\fR. The unresolved calls are a subset of the external calls.
+
+.PP
+\fBWARNING: \fRUnresolved calls make module data incomplete, which implies that the results of analyses may be invalid.
+
+
+.PP
+\fIApplications\fR are collections of modules. The BEAM files for the modules are located in the \fIebin\fR subdirectory of the application directory. The name of the application directory determines the name and version of the application.
+
+.PP
+\fIReleases\fR are collections of applications located in the \fIlib\fR subdirectory of the release directory. There is more to read about applications and releases in the Design Principles book.
+
+.PP
+\fIXref servers\fR are identified by names, supplied when creating new servers. Each Xref server holds a set of releases, a set of applications, and a set of modules with module data. Xref servers are independent of each other, and all analyses are evaluated in the context of one single Xref server (exceptions are the functions \fIm/1\fR and \fId/1\fR which do not use servers at all).
+
+.PP
+The \fImode\fR of an Xref server determines what module data are extracted from BEAM files as modules are added to the server. BEAM files compiled with the option \fIdebug_info\fR contain  "debug information", which is an abstract representation of the code.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In \fIfunctions\fR mode, which is the default mode, function calls and line numbers are extracted from debug information.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In \fImodules\fR mode, debug information is ignored if present, but dependencies between modules are extracted from other parts of the BEAM files. The \fImodules\fR mode is significantly less time and space consuming than the \fIfunctions\fR mode, but the analyses that can be done are limited.
+
+.RE
+
+.PP
+An \fIanalyzed module\fR is a module that has been added to an Xref server together with its module data. A \fIlibrary module\fR is a module located in some directory mentioned in the \fIlibrary path\fR. A library module is said to be used if some of its exported functions are used by some analyzed module. An \fIunknown module\fR is a module that is neither an analyzed module nor a library module, but whose exported functions are used by some analyzed module.
+
+.PP
+An \fIunknown function\fR is a used function that is neither local or exported by any analyzed module nor exported by any library module. An \fIundefined function\fR is an externally used function that is not exported by any analyzed module or library module. With this notion, a local function can be an undefined function, namely if it is externally used from some module. All unknown functions are also undefined functions; there is a figure in the User's Guide that illustrates this relationship.
+
+.PP
+The module attribute \fIignore_xref\fR can be used to suppress warnings for certain modules or functions in your modules. The following forms are understood by Xref:
+
+.IP
+.nf
+-ignore_xref(module).
+-ignore_xref([module1, module2, module3]).
+
+-ignore_xref(function/0).
+-ignore_xref([function1/0, function2/1, function3/2]).
+-ignore_xref({function,0}).
+-ignore_xref([{function1,0}, {function2,1}, {function3,2}]).
+
+%% ignoring calls/references to other modules from the current
+-ignore_xref({other_mod1, func1, 0}).
+-ignore_xref([{other_mod1, func1, 0}, {other_mod2, func2, 1}]).
+
+.fi
+
+.PP
+The module attribute tag \fIdeprecated\fR can be used to inform Xref about \fIdeprecated functions\fR and optionally when functions are planned to be removed. A few examples show the idea:
+
+-deprecated({f,1}).
+.RS 2
+The exported function 
+\fIf/1\fR is deprecated. Nothing is said whether \fIf/1\fR will be removed or not.
+
+.RE
+
+-deprecated({f,1,"Use g/1 instead"}).
+.RS 2
+As above but with a descriptive string. The string is currently unused by 
+\fIxref\fR but other tools can make use of it.
+
+.RE
+
+-deprecated({f,'_'}).
+.RS 2
+All exported functions 
+\fIf/0\fR, \fIf/1\fR, and so on are deprecated.
+
+.RE
+
+-deprecated(module).
+.RS 2
+All exported functions in the module are deprecated. Equivalent to 
+\fI-deprecated({'_','_'}).\fR.
+
+.RE
+
+-deprecated([{g,1,next_version}]).
+.RS 2
+The function 
+\fIg/1\fR is deprecated and will be removed in next version.
+
+.RE
+
+-deprecated([{g,2,next_major_release}]).
+.RS 2
+The function 
+\fIg/2\fR is deprecated and will be removed in next major release.
+
+.RE
+
+-deprecated([{g,3,eventually}]).
+.RS 2
+The function 
+\fIg/3\fR is deprecated and will eventually be removed.
+
+.RE
+
+-deprecated({'_','_',eventually}).
+.RS 2
+All exported functions in the module are deprecated and will eventually be removed.
+
+
+.RE
+
+.PP
+Before any analysis can take place, module data must be \fIset up\fR. For instance, the cross reference and the unknown functions are computed when all module data are known. The functions that need complete data (\fIanalyze/2,3\fR, \fIq/2,3\fR, \fIvariables/1,2\fR take care of setting up data automatically. Module data need to be set up (again) after calls to any of the \fIadd\fR, \fIreplace\fR, \fIremove\fR, \fIset_library_path/2,3\fR, or \fIupdate/1,2\fR functions.
+
+.PP
+The result of setting up module data is the \fICall Graph\fR. A (directed) graph consists of a set of vertices and a set of (directed) edges. The edges represent \fIcalls\fR (From, To) between functions, modules, applications, or releases. From is said to call To, and To is said to be used by From. The vertices of the Call Graph are the functions of all module data: local and exported functions of analyzed modules; used BIFs; used exported functions of library modules; and unknown functions. The functions \fImodule_info/0,1\fR added by the compiler are included among the exported functions, but only when called from some module. The edges are the function calls of all module data. A consequence of the edges being a set is that there is only one edge if a function is locally or externally used several times on one and the same line of code.
+
+.PP
+The Call Graph is  represented by Erlang terms (the sets are lists), which is suitable for many analyses. But for analyses that look at chains of calls, a list representation is much too slow. Instead the representation offered by the \fIdigraph\fR module is used. The translation of the list representation of the Call Graph - or a subgraph thereof - to the \fIdigraph\fR representation does not come for free, so the language used for expressing queries to be described below has a special operator for this task and a possibility to save the \fIdigraph\fR representation for subsequent analyses.
+
+.PP
+In addition to the Call Graph there is a graph called the \fIInter Call Graph\fR. This is a graph of calls (From, To) such that there is a chain of calls from From to To in the Call Graph, and every From and To is an exported function or an unused local function. The vertices are the same as for the Call Graph.
+
+.PP
+Calls between modules, applications and releases are also directed graphs. The \fItypes\fR of the vertices and edges of these graphs are (ranging from the most special to the most general): \fIFun\fR for functions; \fIMod\fR for modules; \fIApp\fR for applications; and \fIRel\fR for releases. The following paragraphs will describe the different constructs of the language used for selecting and analyzing parts of the graphs, beginning with the \fIconstants\fR:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= Constants
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Constants ::= Consts | Consts \fI:\fR Type | RegExpr
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Consts ::= Constant | \fI[\fRConstant\fI,\fR ...\fI]\fR | \fI{\fRConstant\fI,\fR ...\fI}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Constant ::= Call | Const
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Call ::= FunSpec \fI->\fR FunSpec | \fI{\fRMFA\fI,\fR MFA\fI}\fR | AtomConst \fI->\fR AtomConst | \fI{\fRAtomConst\fI,\fR AtomConst\fI}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Const ::= AtomConst | FunSpec | MFA
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+AtomConst ::= Application | Module | Release
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+FunSpec ::= Module \fI:\fR Function \fI/\fR Arity
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+MFA ::= \fI{\fRModule\fI,\fR Function\fI,\fR Arity\fI}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RegExpr ::= RegString \fI:\fR Type | RegFunc | RegFunc \fI:\fR Type
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RegFunc ::= RegModule \fI:\fR RegFunction \fI/\fR RegArity
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RegModule ::= RegAtom
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RegFunction ::= RegAtom
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RegArity ::= RegString | Number | \fI_\fR | \fI-1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RegAtom ::= RegString | Atom | \fI_\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RegString ::= - a regular expression, as described in the \fIre\fR module, enclosed in double quotes -
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Type ::= \fIFun\fR | \fIMod\fR | \fIApp\fR | \fIRel\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Function ::= Atom
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Application ::= Atom
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Module ::= Atom
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Release ::= Atom
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Arity ::= Number | \fI-1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Atom ::= - same as Erlang atoms -
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Number ::= - same as non-negative Erlang integers -
+
+.RE
+
+.PP
+Examples of constants are: \fIkernel\fR, \fIkernel->stdlib\fR, \fI[kernel, sasl]\fR, \fI[pg -> mnesia, {tv, mnesia}] : Mod\fR. It is an error if an instance of \fIConst\fR does not match any vertex of any graph. If there are more than one vertex matching an untyped instance of \fIAtomConst\fR, then the one of the most general type is chosen. A list of constants is interpreted as a set of constants, all of the same type. A tuple of constants constitute a chain of calls (which may, but does not have to, correspond to an actual chain of calls of some graph). Assigning a type to a list or tuple of \fIConstant\fR is equivalent to assigning the type to each \fIConstant\fR.
+
+.PP
+\fIRegular expressions\fR are used as a means to select some of the vertices of a graph. A \fIRegExpr\fR consisting of a \fIRegString\fR and a type - an example is \fI"xref_.*" : Mod\fR - is interpreted as those modules (or applications or releases, depending on the type) that match the expression. Similarly, a \fIRegFunc\fR is interpreted as those vertices of the Call Graph that match the expression. An example is \fI"xref_.*":"add_.*"/"(2|3)"\fR, which matches all \fIadd\fR functions of arity two or three of any of the xref modules. Another example, one that matches all functions of arity 10 or more: \fI_:_/"[1-9].+"\fR. Here \fI_\fR is an abbreviation for \fI".*"\fR, that is, the regular expression that matches anything.
+
+.PP
+The syntax of \fIvariables\fR is simple:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= Variable
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Variable ::= - same as Erlang variables -
+
+.RE
+
+.PP
+There are two kinds of variables:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBPredefined variables\fR  - hold module data, and cannot be assigned to but only used in queries.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBUser variables\fR  - can be assigned to, and are typically used for temporary results while evaluating a query, and for keeping results of queries for use in subsequent queries.
+
+.RE
+
+.PP
+The predefined variables are (variables marked with (*) are available in \fIfunctions\fR mode only):
+
+E
+.RS 2
+Call Graph Edges (*).
+
+
+.RE
+
+V
+.RS 2
+Call Graph Vertices (*).
+
+
+.RE
+
+M
+.RS 2
+Modules. All modules: analyzed modules, used library modules, and unknown modules.
+
+
+.RE
+
+A
+.RS 2
+Applications.
+
+
+.RE
+
+R
+.RS 2
+Releases.
+
+
+.RE
+
+ME
+.RS 2
+Module Edges. All module calls.
+
+
+.RE
+
+AE
+.RS 2
+Application Edges. All application calls.
+
+
+.RE
+
+RE
+.RS 2
+Release Edges. All release calls.
+
+
+.RE
+
+L
+.RS 2
+Local Functions (*). All local functions of analyzed modules.
+
+
+.RE
+
+X
+.RS 2
+Exported Functions. All exported functions of analyzed modules and all used exported functions of library modules.
+
+
+.RE
+
+F
+.RS 2
+Functions (*).
+
+
+.RE
+
+B
+.RS 2
+Used BIFs. 
+\fIB\fR is empty if \fIbuiltins\fR is \fIfalse\fR for all analyzed modules.
+
+.RE
+
+U
+.RS 2
+Unknown Functions.
+
+
+.RE
+
+UU
+.RS 2
+Unused Functions (*). All local and exported functions of analyzed modules that have not been used.
+
+
+.RE
+
+XU
+.RS 2
+Externally Used Functions. Functions of all modules - including local functions - that have been used in some external call.
+
+
+.RE
+
+LU
+.RS 2
+Locally Used Functions (*). Functions of all modules that have been used in some local call.
+
+
+.RE
+
+OL
+.RS 2
+Functions with an attribute tag 
+\fIon_load\fR (*).
+
+.RE
+
+LC
+.RS 2
+Local Calls (*).
+
+
+.RE
+
+XC
+.RS 2
+External Calls (*).
+
+
+.RE
+
+AM
+.RS 2
+Analyzed Modules.
+
+
+.RE
+
+UM
+.RS 2
+Unknown Modules.
+
+
+.RE
+
+LM
+.RS 2
+Used Library Modules.
+
+
+.RE
+
+UC
+.RS 2
+Unresolved Calls. Empty in 
+\fImodules\fR mode.
+
+.RE
+
+EE
+.RS 2
+Inter Call Graph Edges (*).
+
+
+.RE
+
+DF
+.RS 2
+Deprecated Functions. All deprecated exported functions and all used deprecated BIFs.
+
+
+.RE
+
+DF_1
+.RS 2
+Deprecated Functions. All deprecated functions to be removed in next version.
+
+
+.RE
+
+DF_2
+.RS 2
+Deprecated Functions. All deprecated functions to be removed in next version or next major release.
+
+
+.RE
+
+DF_3
+.RS 2
+Deprecated Functions. All deprecated functions to be removed in next version, next major release, or later.
+
+
+.RE
+
+.PP
+These are a few  facts about the predefined variables (the set operators \fI+\fR (union) and \fI-\fR (difference) as well as the cast operator \fI(\fRType\fI)\fR are described below):
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIF\fR is equal to \fIL + X\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIV\fR is equal to \fIX + L + B + U\fR, where \fIX\fR, \fIL\fR, \fIB\fR and \fIU\fR are pairwise disjoint (that is, have no elements in common).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUU\fR is equal to \fIV - (XU + LU)\fR, where \fILU\fR and \fIXU\fR may have elements in common. Put in another way:
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIV\fR is equal to \fIUU + XU + LU\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIOL\fR is a subset of \fIF\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIE\fR is equal to \fILC + XC\fR. Note that \fILC\fR and \fIXC\fR may have elements in common, namely if some function is locally and externally used from one and the same function.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIU\fR is a subset of \fIXU\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIB\fR is a subset of \fIXU\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fILU\fR is equal to \fIrange LC\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIXU\fR is equal to \fIrange XC\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fILU\fR is a subset of \fIF\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUU\fR is a subset of \fIF\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrange UC\fR is a subset of \fIU\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIM\fR is equal to \fIAM + LM + UM\fR, where \fIAM\fR, \fILM\fR and \fIUM\fR are pairwise disjoint.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIME\fR is equal to \fI(Mod) E\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIAE\fR is equal to \fI(App) E\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIRE\fR is equal to \fI(Rel) E\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI(Mod) V\fR is a subset of \fIM\fR. Equality holds if all analyzed modules have some local, exported, or unknown function.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI(App) M\fR is a subset of \fIA\fR. Equality holds if all applications have some module.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI(Rel) A\fR is a subset of \fIR\fR. Equality holds if all releases have some application.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDF_1\fR is a subset of \fIDF_2\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDF_2\fR is a subset of \fIDF_3\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDF_3\fR is a subset of \fIDF\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDF\fR is a subset of \fIX + B\fR.
+
+.RE
+
+.PP
+An important notion is that of \fIconversion\fR of expressions. The syntax of a cast expression is:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= \fI(\fR Type \fI)\fR Expression
+
+.RE
+
+.PP
+The interpretation of the cast operator depends on the named type \fIType\fR, the type of \fIExpression\fR, and the structure of the elements of the interpretation of \fIExpression\fR. If the named type is equal to the expression type, no conversion is done. Otherwise, the conversion is done one step at a time; \fI(Fun) (App) RE\fR, for instance, is equivalent to \fI(Fun) (Mod) (App) RE\fR. Now assume that the interpretation of \fIExpression\fR is a set of constants (functions, modules, applications or releases). If the named type is more general than the expression type, say \fIMod\fR and \fIFun\fR respectively, then the interpretation of the cast expression is the set of modules that have at least one of their functions mentioned in the interpretation of the expression. If the named type is more special than the expression type, say \fIFun\fR and \fIMod\fR, then the interpretation is the set of all the functions of the modules (in \fImodules\fR mode, the conversion is partial since the local functions are not known). The conversions to and from applications and releases work analogously. For instance, \fI(App) "xref_.*" : Mod\fR returns all applications containing at least one module such that \fIxref_\fR is a prefix of the module name.
+
+.PP
+Now assume that the interpretation of \fIExpression\fR is a set of calls. If the named type is more general than the expression type, say \fIMod\fR and \fIFun\fR respectively, then the interpretation of the cast expression is the set of calls (M1, M2) such that the interpretation of the expression contains a call from some function of M1 to some function of M2. If the named type is more special than the expression type, say \fIFun\fR and \fIMod\fR, then the interpretation is the set of all function calls (F1, F2) such that the interpretation of the expression contains a call (M1, M2) and F1 is a function of M1 and F2 is a function of M2 (in \fImodules\fR mode, there are no functions calls, so a cast to \fIFun\fR always yields an empty set). Again, the conversions to and from applications and releases work analogously.
+
+.PP
+The interpretation of constants and variables are sets, and those sets can be used as the basis for forming new sets by the application of \fIset operators\fR. The syntax:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= Expression BinarySetOp Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+BinarySetOp ::= \fI+\fR | \fI*\fR | \fI-\fR
+
+.RE
+
+.PP
+\fI+\fR, \fI*\fR and \fI-\fR are interpreted as union, intersection and difference respectively: the union of two sets contains the elements of both sets; the intersection of two sets contains the elements common to both sets; and the difference of two sets contains the elements of the first set that are not members of the second set. The elements of the two sets must be of the same structure; for instance, a function call cannot be combined with a function. But if a cast operator can make the elements compatible, then the more general elements are converted to the less general element type. For instance, \fIM + F\fR is equivalent to \fI(Fun) M + F\fR, and \fIE - AE\fR is equivalent to \fIE - (Fun) AE\fR. One more example: \fIX * xref : Mod\fR is interpreted as the set of functions exported by the module \fIxref\fR; \fIxref : Mod\fR is converted to the more special type of \fIX\fR (\fIFun\fR, that is) yielding all functions of \fIxref\fR, and the intersection with \fIX\fR (all functions exported by analyzed modules and library modules) is interpreted as those functions that are exported by some module \fIand\fR functions of \fIxref\fR.
+
+.PP
+There are also unary set operators:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= UnarySetOp Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+UnarySetOp ::= \fIdomain\fR | \fIrange\fR | \fIstrict\fR
+
+.RE
+
+.PP
+Recall that a call is a pair (From, To). \fIdomain\fR applied to a set of calls is interpreted as the set of all vertices From, and \fIrange\fR as the set of all vertices To. The interpretation of the \fIstrict\fR operator is the operand with all calls of the form (A, A) removed.
+
+.PP
+The interpretation of the \fIrestriction operators\fR is a subset of the first operand, a set of calls. The second operand, a set of vertices, is converted to the type of the first operand. The syntax of the restriction operators:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= Expression RestrOp Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RestrOp ::= \fI|\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RestrOp ::= \fI||\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RestrOp ::= \fI|||\fR
+
+.RE
+
+.PP
+The interpretation in some detail for the three operators:
+
+|
+.RS 2
+The subset of calls from any of the vertices.
+
+
+.RE
+
+||
+.RS 2
+The subset of calls to any of the vertices.
+
+
+.RE
+
+|||
+.RS 2
+The subset of calls to and from any of the vertices. For all sets of calls 
+\fICS\fR and all sets of vertices \fIVS\fR, \fICS ||| VS \fR is equivalent to \fICS | VS * CS || VS\fR.
+
+.RE
+
+.PP
+Two functions (modules, applications, releases) belong to the same strongly connected component if they call each other (in)directly. The interpretation of the \fIcomponents\fR operator is the set of strongly connected components of a set of calls. The \fIcondensation\fR of a set of calls is a new set of calls between the strongly connected components such that there is an edge between two components if there is some constant of the first component that calls some constant of the second component.
+
+.PP
+The interpretation of the \fIof\fR operator is a chain of calls of the second operand (a set of calls) that passes throw all of the vertices of the first operand (a tuple of constants), in the given order. The second operand is converted to the type of the first operand. For instance, the \fIof\fR operator can be used for finding out whether a function calls another function indirectly, and the chain of calls demonstrates how. The syntax of the graph analyzing operators:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= Expression BinaryGraphOp Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= UnaryGraphOp Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+UnaryGraphOp ::= \fIcomponents\fR | \fIcondensation\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+BinaryGraphOp ::= \fIof\fR
+
+.RE
+
+.PP
+As was mentioned before, the graph analyses operate on the \fIdigraph\fR representation of graphs. By default, the \fIdigraph\fR representation is created when needed (and deleted when no longer used), but it can also be created explicitly by use of the \fIclosure\fR operator:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= ClosureOp Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ClosureOp ::= \fIclosure\fR
+
+.RE
+
+.PP
+The interpretation of the \fIclosure\fR operator is the transitive closure of the operand.
+
+.PP
+The restriction operators are defined for closures as well; \fIclosure E | xref : Mod\fR is interpreted as the direct or indirect function calls from the \fIxref\fR module, while the interpretation of \fIE | xref : Mod\fR is the set of direct calls from \fIxref\fR. If some graph is to be used in several graph analyses, it saves time to assign the \fIdigraph\fR representation of the graph to a user variable, and then make sure that every graph analysis operates on that variable instead of the list representation of the graph.
+
+.PP
+The lines where functions are defined (more precisely: where the first clause begins) and the lines where functions are used are available in \fIfunctions\fR mode. The line numbers refer to the files where the functions are defined. This holds also for files included with the \fI-include\fR and \fI-include_lib\fR directives, which may result in functions defined apparently in the same line. The \fIline operators\fR are used for assigning line numbers to functions and for assigning sets of line numbers to function calls. The syntax is similar to the one of the cast operator:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= \fI(\fR LineOp\fI)\fR Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= \fI(\fR XLineOp\fI)\fR Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+LineOp ::= \fILin\fR | \fIELin\fR | \fILLin\fR | \fIXLin\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+XLineOp ::= \fIXXL\fR
+
+.RE
+
+.PP
+The interpretation of the \fILin\fR operator applied to a set of functions assigns to each function the line number where the function is defined. Unknown functions and functions of library modules are assigned the number 0.
+
+.PP
+The interpretation of some LineOp operator applied to a set of function calls assigns to each call the set of line numbers where the first function calls the second function. Not all calls are assigned line numbers by all operators:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the \fILin\fR operator is defined for Call Graph Edges;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the \fILLin\fR operator is defined for Local Calls.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the \fIXLin\fR operator is defined for External Calls.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the \fIELin\fR operator is defined for Inter Call Graph Edges.
+
+.RE
+
+.PP
+The \fILin\fR (\fILLin\fR, \fIXLin\fR) operator assigns the lines where calls (local calls, external calls) are made. The \fIELin\fR operator assigns to each call (From, To), for which it is defined, every line L such that there is a chain of calls from From to To beginning with a call on line L.
+
+.PP
+The \fIXXL\fR operator is defined for the interpretation of any of the LineOp operators applied to a set of function calls. The result is that of replacing the function call with a line numbered function call, that is, each of the two functions of the call is replaced by a pair of the function and the line where the function is defined. The effect of the \fIXXL\fR operator can be undone by the LineOp operators. For instance, \fI(Lin) (XXL) (Lin) E\fR is equivalent to \fI(Lin) E\fR.
+
+.PP
+The \fI+\fR, \fI-\fR, \fI*\fR, and \fI#\fR operators are defined for line number expressions, provided the operands are compatible. The LineOp operators are also defined for modules, applications, and releases; the operand is implicitly converted to functions. Similarly, the cast operator is defined for the interpretation of the LineOp operators.
+
+.PP
+The interpretation of the \fIcounting operator\fR is the number of elements of a set. The operator is undefined for closures. The \fI+\fR, \fI-\fR and \fI*\fR operators are interpreted as the obvious arithmetical operators when applied to numbers. The syntax of the counting operator:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= CountOp Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+CountOp ::= \fI#\fR
+
+.RE
+
+.PP
+All binary operators are left associative; for instance, \fIA | B  || C\fR is equivalent to \fI(A | B) || C\fR. The following is a list of all operators, in increasing order of \fIprecedence\fR:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI+\fR, \fI-\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI*\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI#\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI|\fR, \fI||\fR, \fI|||\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIof\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI(\fRType\fI)\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIclosure\fR, \fIcomponents\fR, \fIcondensation\fR, \fIdomain\fR, \fIrange\fR, \fIstrict\fR
+
+.RE
+
+.PP
+Parentheses are used for grouping, either to make an expression more readable or to override the default precedence of operators:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Expression ::= \fI(\fR Expression \fI)\fR
+
+.RE
+
+.PP
+A \fIquery\fR is a non-empty sequence of statements. A statement is either an assignment of a user variable or an expression. The value of an assignment is the value of the right hand side expression. It makes no sense to put a plain expression anywhere else but last in queries. The syntax of queries is summarized by these productions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Query ::= Statement\fI,\fR ...
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Statement ::= Assignment | Expression
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Assignment ::= Variable \fI:=\fR Expression | Variable \fI=\fR Expression
+
+.RE
+
+.PP
+A variable cannot be assigned a new value unless first removed. Variables assigned to by the \fI=\fR operator are removed at the end of the query, while variables assigned to by the \fI:=\fR operator can only be removed by calls to \fIforget\fR. There are no user variables when module data need to be set up again; if any of the functions that make it necessary to set up module data again is called, all user variables are forgotten.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIbeam_lib\fR, \fIdigraph\fR, \fIdigraph_utils\fR, \fIre\fR, User's Guide for Xref
+
+.SH DATA TYPES
+.LP
+.B
+\fBadd_dir_rsn() ::\fR
+\fB          {file_error, file(), file_error()} |\fR
+\fB          {invalid_filename, term()} |\fR
+\fB          {invalid_options, term()} |\fR
+\fB          {unrecognized_file, file()} |\fR
+\fB          beam_lib:chnk_rsn().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBadd_mod_rsn() ::\fR
+\fB          {file_error, file(), file_error()} |\fR
+\fB          {invalid_filename, term()} |\fR
+\fB          {invalid_options, term()} |\fR
+\fB          {module_clash, {module(), file(), file()}} |\fR
+\fB          {no_debug_info, file()} |\fR
+\fB          beam_lib:chnk_rsn().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalysis() ::\fR
+\fB          undefined_function_calls | undefined_functions |\fR
+\fB          locals_not_used | exports_not_used |\fR
+\fB          deprecated_function_calls |\fR
+\fB          {deprecated_function_calls, DeprFlag :: depr_flag()} |\fR
+\fB          deprecated_functions |\fR
+\fB          {deprecated_functions, DeprFlag :: depr_flag()} |\fR
+\fB          {call, FuncSpec :: func_spec()} |\fR
+\fB          {use, FuncSpec :: func_spec()} |\fR
+\fB          {module_call, ModSpec :: mod_spec()} |\fR
+\fB          {module_use, ModSpec :: mod_spec()} |\fR
+\fB          {application_call, AppSpec :: app_spec()} |\fR
+\fB          {application_use, AppSpec :: app_spec()} |\fR
+\fB          {release_call, RelSpec :: rel_spec()} |\fR
+\fB          {release_use, RelSpec :: rel_spec()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyze_rsn() ::\fR
+\fB          {invalid_options, term()} |\fR
+\fB          {parse_error, string_position(), term()} |\fR
+\fB          {unavailable_analysis, term()} |\fR
+\fB          {unknown_analysis, term()} |\fR
+\fB          {unknown_constant, string()} |\fR
+\fB          {unknown_variable, variable()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanswer() ::\fR
+\fB          false |\fR
+\fB          [constant()] |\fR
+\fB          [(Call :: call()) |\fR
+\fB           (ComponentCall :: {component(), component()})] |\fR
+\fB          [Component :: component()] |\fR
+\fB          non_neg_integer() |\fR
+\fB          [DefineAt :: define_at()] |\fR
+\fB          [CallAt :: {funcall(), LineNumbers :: [non_neg_integer()]}] |\fR
+\fB          [AllLines ::\fR
+\fB               {{define_at(), define_at()},\fR
+\fB                LineNumbers :: [non_neg_integer()]}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBapp_spec() :: application() | [application()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBapplication() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcall() :: {atom(), atom()} | funcall().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcomponent() :: [constant()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBconstant() :: xmfa() | module() | application() | release().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdefine_at() :: {xmfa(), LineNumber :: non_neg_integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdepr_flag() :: next_version | next_major_release | eventually.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdirectory() :: atom() | file:filename().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfile() :: file:filename().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfile_error() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfunc_spec() :: xmfa() | [xmfa()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfuncall() :: {xmfa(), xmfa()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfunction_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBinfo() ::\fR
+\fB          {application, Application :: [application()]} |\fR
+\fB          {builtins, boolean()} |\fR
+\fB          {directory, directory()} |\fR
+\fB          {library_path, library_path()} |\fR
+\fB          {mode, mode()} |\fR
+\fB          {no_analyzed_modules, non_neg_integer()} |\fR
+\fB          {no_applications, non_neg_integer()} |\fR
+\fB          {no_calls,\fR
+\fB           {NoResolved :: non_neg_integer(),\fR
+\fB            NoUnresolved :: non_neg_integer()}} |\fR
+\fB          {no_function_calls,\fR
+\fB           {NoLocal :: non_neg_integer(),\fR
+\fB            NoResolvedExternal :: non_neg_integer(),\fR
+\fB            NoUnresolved :: non_neg_integer()}} |\fR
+\fB          {no_functions,\fR
+\fB           {NoLocal :: non_neg_integer(),\fR
+\fB            NoExternal :: non_neg_integer()}} |\fR
+\fB          {no_inter_function_calls, non_neg_integer()} |\fR
+\fB          {no_releases, non_neg_integer()} |\fR
+\fB          {release, Release :: [release()]} |\fR
+\fB          {version, Version :: [non_neg_integer()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlibrary() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlibrary_path() :: path() | code_path.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmod_spec() :: module() | [module()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmode() :: functions | modules.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBpath() :: [file()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBq_rsn() ::\fR
+\fB          {invalid_options, term()} |\fR
+\fB          {parse_error, string_position(), term()} |\fR
+\fB          {type_error, string()} |\fR
+\fB          {type_mismatch, string(), string()} |\fR
+\fB          {unknown_analysis, term()} |\fR
+\fB          {unknown_constant, string()} |\fR
+\fB          {unknown_variable, variable()} |\fR
+\fB          {variable_reassigned, string()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrel_spec() :: release() | [release()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrelease() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstring_position() :: pos_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBvariable() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxarity() :: arity() | -1.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxmfa() :: {module(), function_name(), xarity()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxref() :: atom() | pid().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_application(XrefServer, Directory, Options) ->\fR
+\fB                         {ok, application()} | {error, module(), Reason}\fR
+\fB                         when\fR
+\fB                             XrefServer :: xref(),\fR
+\fB                             Directory :: directory(),\fR
+\fB                             Options :: Option | [Option],\fR
+\fB                             Option ::\fR
+\fB                                 {builtins, boolean()} |\fR
+\fB                                 {name, application()} |\fR
+\fB                                 {verbose, boolean()} |\fR
+\fB                                 {warnings, boolean()} |\fR
+\fB                                 builtins | verbose | warnings,\fR
+\fB                             Reason ::\fR
+\fB                                 {application_clash,\fR
+\fB                                  {application(),\fR
+\fB                                   directory(),\fR
+\fB                                   directory()}} |\fR
+\fB                                 add_dir_rsn().\fR
+
+.br
+.RS
+.PP
+Adds an application, the modules of the application, and module data of the modules to an Xref server.
+
+.PP
+The modules will be members of the application. The default is to use the base name of the directory with the version removed as application name, but this can be overridden by the \fIname\fR option. Returns the name of the application.
+
+.PP
+If the given directory has a subdirectory named \fIebin\fR, modules (BEAM files) are searched for in that directory, otherwise modules are searched for in the given directory.
+
+.PP
+If the mode of the Xref server is \fIfunctions\fR, BEAM files that contain no debug information are ignored.
+
+
+.RE
+.B
+\fBadd_directory(XrefServer, Directory, Options) ->\fR
+\fB                       {ok, Modules} | {error, module(), Reason}\fR
+\fB                       when\fR
+\fB                           XrefServer :: xref(),\fR
+\fB                           Directory :: directory(),\fR
+\fB                           Options :: Option | [Option],\fR
+\fB                           Option ::\fR
+\fB                               {builtins, boolean()} |\fR
+\fB                               {recurse, boolean()} |\fR
+\fB                               {verbose, boolean()} |\fR
+\fB                               {warnings, boolean()} |\fR
+\fB                               builtins | recurse | verbose | warnings,\fR
+\fB                           Modules :: [module()],\fR
+\fB                           Reason :: add_dir_rsn().\fR
+
+.br
+.RS
+.PP
+Adds the modules found in the given directory and the modules' data to an Xref server.
+
+.PP
+The default is not to examine subdirectories, but if the option \fIrecurse\fR has the value \fItrue\fR, modules are searched for in subdirectories on all levels as well as in the given directory. Returns a sorted list of the names of the added modules.
+
+.PP
+The modules added will not be members of any applications.
+
+.PP
+If the mode of the Xref server is \fIfunctions\fR, BEAM files that contain no debug information are ignored.
+
+
+.RE
+.B
+\fBadd_module(XrefServer, File, Options) ->\fR
+\fB                    {ok, module()} | {error, module(), Reason}\fR
+\fB                    when\fR
+\fB                        XrefServer :: xref(),\fR
+\fB                        File :: file:filename(),\fR
+\fB                        Options :: Option | [Option],\fR
+\fB                        Option ::\fR
+\fB                            {builtins, boolean()} |\fR
+\fB                            {verbose, boolean()} |\fR
+\fB                            {warnings, boolean()} |\fR
+\fB                            builtins | verbose | warnings,\fR
+\fB                        Reason :: add_mod_rsn().\fR
+
+.br
+.RS
+.PP
+Adds a module and its module data to an Xref server.
+
+.PP
+The module will not be member of any application. Returns the name of the module.
+
+.PP
+If the mode of the Xref server is \fIfunctions\fR, and the BEAM file contains no debug information, the error message \fIno_debug_info\fR is returned.
+
+
+.RE
+.B
+\fBadd_release(XrefServer, Directory, Options) ->\fR
+\fB                     {ok, release()} | {error, module(), Reason}\fR
+\fB                     when\fR
+\fB                         XrefServer :: xref(),\fR
+\fB                         Directory :: directory(),\fR
+\fB                         Options :: Option | [Option],\fR
+\fB                         Option ::\fR
+\fB                             {builtins, boolean()} |\fR
+\fB                             {name, release()} |\fR
+\fB                             {verbose, boolean()} |\fR
+\fB                             {warnings, boolean()} |\fR
+\fB                             builtins | verbose | warnings,\fR
+\fB                         Reason ::\fR
+\fB                             {application_clash,\fR
+\fB                              {application(), directory(), directory()}} |\fR
+\fB                             {release_clash,\fR
+\fB                              {release(), directory(), directory()}} |\fR
+\fB                             add_dir_rsn().\fR
+
+.br
+.RS
+.PP
+Adds a release, the applications of the release, the modules of the applications, and module data of the modules to an Xref server.
+
+.PP
+The applications will be members of the release, and the modules will be members of the applications. The default is to use the base name of the directory as release name, but this can be overridden by the \fIname\fR option. Returns the name of the release.
+
+.PP
+If the given directory has a subdirectory named \fIlib\fR, the directories in that directory are assumed to be application directories, otherwise all subdirectories of the given directory are assumed to be application directories. If there are several versions of some application, the one with the highest version is chosen.
+
+.PP
+If the mode of the Xref server is \fIfunctions\fR, BEAM files that contain no debug information are ignored.
+
+
+.RE
+.B
+\fBanalyze(XrefServer, Analysis, Options) ->\fR
+\fB                 {ok, Answer} | {error, module(), Reason}\fR
+\fB                 when\fR
+\fB                     XrefServer :: xref(),\fR
+\fB                     Analysis :: analysis(),\fR
+\fB                     Options :: Option | [Option],\fR
+\fB                     Option :: {verbose, boolean()} | verbose,\fR
+\fB                     Answer :: [term()],\fR
+\fB                     Reason :: analyze_rsn().\fR
+
+.br
+.RS
+.PP
+Evaluates a predefined analysis.
+
+.PP
+Returns a sorted list without duplicates of \fIcall/0\fR or \fIconstant/0\fR, depending on the chosen analysis.  The predefined analyses, which operate on all analyzed modules, are (analyses marked with (*) are available only in mode \fIfunctions\fR):
+
+undefined_function_calls(*)
+.RS 2
+Returns a list of calls to undefined functions.
+
+
+.RE
+
+undefined_functions
+.RS 2
+Returns a list of undefined functions.
+
+
+.RE
+
+locals_not_used(*)
+.RS 2
+Returns a list of local functions that have not been locally used.
+
+
+.RE
+
+exports_not_used
+.RS 2
+Returns a list of exported functions that have not been externally used. Note that in 
+\fImodules\fR mode, \fIM:behaviour_info/1\fR is never reported as unused.
+
+.RE
+
+deprecated_function_calls(*)
+.RS 2
+Returns a list of external calls to deprecated functions.
+
+
+.RE
+
+{deprecated_function_calls, DeprFlag}(*)
+.RS 2
+Returns a list of external calls to deprecated functions. If 
+\fIDeprFlag\fR is equal to \fInext_version\fR, calls to functions to be removed in next version are returned. If \fIDeprFlag\fR is equal to \fInext_major_release\fR, calls to functions to be removed in next major release are returned as well as calls to functions to be removed in next version. Finally, if \fIDeprFlag\fR is equal to \fIeventually\fR, all calls to functions to be removed are returned, including calls to functions to be removed in next version or next major release.
+
+.RE
+
+deprecated_functions
+.RS 2
+Returns a list of externally used deprecated functions.
+
+
+.RE
+
+{deprecated_functions, DeprFlag}
+.RS 2
+Returns a list of externally used deprecated functions. If 
+\fIDeprFlag\fR is equal to \fInext_version\fR, functions to be removed in next version are returned. If \fIDeprFlag\fR is equal to \fInext_major_release\fR, functions to be removed in next major release are returned as well as functions to be removed in next version. Finally, if \fIDeprFlag\fR is equal to \fIeventually\fR, all functions to be removed are returned, including functions to be removed in next version or next major release.
+
+.RE
+
+{call, FuncSpec}(*)
+.RS 2
+Returns a list of functions called by some of the given functions.
+
+
+.RE
+
+{use, FuncSpec}(*)
+.RS 2
+Returns a list of functions that use some of the given functions.
+
+
+.RE
+
+{module_call, ModSpec}
+.RS 2
+Returns a list of modules called by some of the given modules.
+
+
+.RE
+
+{module_use, ModSpec}
+.RS 2
+Returns a list of modules that use some of the given modules.
+
+
+.RE
+
+{application_call, AppSpec}
+.RS 2
+Returns a list of applications called by some of the given applications.
+
+
+.RE
+
+{application_use, AppSpec}
+.RS 2
+Returns a list of applications that use some of the given applications.
+
+
+.RE
+
+{release_call, RelSpec}
+.RS 2
+Returns a list of releases called by some of the given releases.
+
+
+.RE
+
+{release_use, RelSpec}
+.RS 2
+Returns a list of releases that use some of the given releases.
+
+
+.RE
+
+
+.RE
+.B
+\fBd(Directory) ->\fR
+\fB           [DebugInfoResult] |\fR
+\fB           [NoDebugInfoResult] |\fR
+\fB           {error, module(), Reason}\fR
+\fB           when\fR
+\fB               Directory :: directory(),\fR
+\fB               DebugInfoResult ::\fR
+\fB                   {deprecated, [funcall()]} |\fR
+\fB                   {undefined, [funcall()]} |\fR
+\fB                   {unused, [mfa()]},\fR
+\fB               NoDebugInfoResult ::\fR
+\fB                   {deprecated, [xmfa()]} | {undefined, [xmfa()]},\fR
+\fB               Reason ::\fR
+\fB                   {file_error, file(), file_error()} |\fR
+\fB                   {invalid_filename, term()} |\fR
+\fB                   {unrecognized_file, file()} |\fR
+\fB                   beam_lib:chnk_rsn().\fR
+
+.br
+.RS
+.PP
+The modules found in the given directory are checked for calls to deprecated functions, calls to undefined functions, and for unused local functions.
+
+.PP
+The code path is used as library path.
+
+.PP
+If some of the found BEAM files contain debug information, then those modules are checked and a list of tuples is returned. The first element of each tuple is one of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdeprecated\fR, the second element is a sorted list of calls to deprecated functions;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIundefined\fR, the second element is a sorted list of calls to undefined functions;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIunused\fR, the second element is a sorted list of unused local functions.
+
+.RE
+
+.PP
+If no BEAM file contains debug information, then a list of tuples is returned. The first element of each tuple is one of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdeprecated\fR, the second element is a sorted list of externally used deprecated functions;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIundefined\fR, the second element is a sorted list of undefined functions.
+
+.RE
+
+
+.RE
+.B
+\fBforget(XrefServer) -> ok when XrefServer :: xref().\fR
+
+.br
+.RS
+.PP
+Removes all user variables of an Xref server.
+
+
+.RE
+.B
+\fBforget(XrefServer, Variables) -> ok | {error, module(), Reason}\fR
+\fB                when\fR
+\fB                    XrefServer :: xref(),\fR
+\fB                    Variables :: variable() | [variable()],\fR
+\fB                    Reason :: {not_user_variable, term()}.\fR
+
+.br
+.RS
+.PP
+Removes the user variables given by \fIVariables\fR from an Xref server.
+
+
+.RE
+.B
+\fBformat_error(Error) -> io_lib:chars()\fR
+\fB                      when Error :: {error, module(), Reason :: term()}.\fR
+
+.br
+.RS
+.PP
+Given the error returned by any function of this module, the function \fIformat_error\fR returns a descriptive string of the error in English.
+
+.PP
+For file errors, the function \fIfile:format_error/1\fR is called.
+
+
+.RE
+.B
+\fBget_default(XrefServer) -> [{Option, Value}]\fR
+\fB                     when\fR
+\fB                         XrefServer :: xref(),\fR
+\fB                         Option ::\fR
+\fB                             builtins | recurse | verbose | warnings,\fR
+\fB                         Value :: boolean().\fR
+
+.br
+.RS
+.PP
+Returns a list of all options and their default values.
+
+
+.RE
+.B
+\fBget_default(XrefServer, Option) ->\fR
+\fB                     {ok, Value} | {error, module(), Reason}\fR
+\fB                     when\fR
+\fB                         XrefServer :: xref(),\fR
+\fB                         Option ::\fR
+\fB                             builtins | recurse | verbose | warnings,\fR
+\fB                         Value :: boolean(),\fR
+\fB                         Reason :: {invalid_options, term()}.\fR
+
+.br
+.RS
+.PP
+Returns the default value for option \fIOption\fR.
+
+
+.RE
+.B
+\fBget_library_path(XrefServer) -> {ok, LibraryPath}\fR
+\fB                          when\fR
+\fB                              XrefServer :: xref(),\fR
+\fB                              LibraryPath :: library_path().\fR
+
+.br
+.RS
+.PP
+Returns the library path.
+
+
+.RE
+.B
+\fBinfo(XrefServer) -> [Info]\fR
+\fB              when XrefServer :: xref(), Info :: info().\fR
+
+.br
+.RS
+.PP
+The \fIinfo/1\fR function returns information as a list of pairs \fI{Tag, term()\fR in some order about the state and the module data of an Xref server.
+
+.PP
+\fIinfo/1\fR returns information with the following tags (tags marked with (*) are only available in \fIfunctions\fR mode):
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlibrary_path\fR, the library path;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImode\fR, the mode;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_releases\fR, number of releases;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_applications\fR, total number of applications (of all releases);
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_analyzed_modules\fR, total number of analyzed modules;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_calls\fR (*), total number of calls (in all modules), regarding instances of one function call in different lines as separate calls;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_function_calls\fR (*), total number of local calls, resolved external calls and unresolved calls;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_functions\fR (*), total number of local and exported functions;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_inter_function_calls\fR (*), total number of calls of the Inter Call Graph.
+
+.RE
+
+
+.RE
+.B
+\fBinfo(XrefServer, Category) ->\fR
+\fB              [{Item, [Info]}] |\fR
+\fB              {error, module(), {no_such_info, Category}}\fR
+\fB              when\fR
+\fB                  XrefServer :: xref(),\fR
+\fB                  Category ::\fR
+\fB                      modules | applications | releases | libraries,\fR
+\fB                  Item ::\fR
+\fB                      module() | application() | release() | library(),\fR
+\fB                  Info :: info().\fR
+
+.br
+.RS
+.PP
+Returns information about all items belonging to category \fICategory\fR. See \fIinfo/3\fR for details.
+
+
+.RE
+.B
+\fBinfo(XrefServer, Category, Items) ->\fR
+\fB              [{Item, [Info]}] | {error, module(), Reason}\fR
+\fB              when\fR
+\fB                  XrefServer :: xref(),\fR
+\fB                  Category ::\fR
+\fB                      modules | applications | releases | libraries,\fR
+\fB                  Items :: Item | [Item],\fR
+\fB                  Item ::\fR
+\fB                      module() | application() | release() | library(),\fR
+\fB                  Info :: info(),\fR
+\fB                  Reason ::\fR
+\fB                      {no_such_application, Item} |\fR
+\fB                      {no_such_info, Category} |\fR
+\fB                      {no_such_library, Item} |\fR
+\fB                      {no_such_module, Item} |\fR
+\fB                      {no_such_release, Item}.\fR
+
+.br
+.RS
+.PP
+The \fIinfo\fR functions return information as a list of pairs \fI{Tag, term()}\fR in some order about the state and the module data of an Xref server.
+
+.PP
+\fIinfo/2\fR and \fIinfo/3\fR return information about all or some of the analyzed modules, applications, releases, or library modules of an Xref server. The following information is returned for every analyzed module:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIapplication\fR, an empty list if the module does not belong to any application, otherwise a list of the application name;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIbuiltins\fR, whether calls to BIFs are included in the module's data;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdirectory\fR, the directory where the module's BEAM file is located;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_calls\fR (*), number of calls, regarding instances of one function call in different lines as separate calls;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_function_calls\fR (*), number of local calls, resolved external calls and unresolved calls;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_functions\fR (*), number of local and exported functions;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_inter_function_calls\fR (*), number of calls of the Inter Call Graph;
+
+.RE
+
+.PP
+The following information is returned for every application:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdirectory\fR, the directory where the modules' BEAM files are located;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_analyzed_modules\fR, number of analyzed modules;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_calls\fR (*), number of calls of the application's modules, regarding instances of one function call in different lines as separate calls;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_function_calls\fR (*), number of local calls, resolved external calls and unresolved calls of the application's modules;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_functions\fR (*), number of local and exported functions of the application's modules;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_inter_function_calls\fR (*), number of calls of the Inter Call Graph of the application's modules;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrelease\fR, an empty list if the application does not belong to any release, otherwise a list of the release name;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIversion\fR, the application's version as a list of numbers. For instance, the directory "kernel-2.6" results in the application name \fIkernel\fR and the application version [2,6]; "kernel" yields the name \fIkernel\fR and the version [].
+
+.RE
+
+.PP
+The following information is returned for every release:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdirectory\fR, the release directory;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_analyzed_modules\fR, number of analyzed modules;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_applications\fR, number of applications;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_calls\fR (*), number of calls of the release's modules, regarding instances of one function call in different lines as separate calls;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_function_calls\fR (*), number of local calls, resolved external calls and unresolved calls of the release's modules;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_functions\fR (*), number of local and exported functions of the release's modules;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_inter_function_calls\fR (*), number of calls of the Inter Call Graph of the release's modules.
+
+.RE
+
+.PP
+The following information is returned for every library module:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdirectory\fR, the directory where the library module's BEAM file is located.
+
+.RE
+
+.PP
+For every number of calls, functions, and so on returned by the \fIno_\fR tags, there is a query returning the same number. Listed below are examples of such queries. Some of the queries return the sum of a two or more of the \fIno_\fR tags numbers. \fImod\fR (\fIapp\fR, \fIrel\fR) refers to any module (application, release).
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_analyzed_modules\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# AM"\fR (info/1)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# (Mod) app:App"\fR (application)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# (Mod) rel:Rel"\fR (release)
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_applications\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# A"\fR (info/1)
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_calls\fR. The sum of the number of resolved and unresolved calls:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# (XLin) E + # (LLin) E"\fR (info/1)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"T = E | mod:Mod, # (LLin) T + # (XLin) T"\fR (module)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"T = E | app:App, # (LLin) T + # (XLin) T"\fR (application)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"T = E | rel:Rel, # (LLin) T + # (XLin) T"\fR (release)
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_functions\fR. Functions in library modules and the functions \fImodule_info/0,1\fR are not counted by \fIinfo\fR. Assuming that \fI"Extra := _:module_info/\\"(0|1)\\" + LM"\fR has been evaluated, the sum of the number of local and exported functions are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# (F - Extra)"\fR (info/1)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# (F * mod:Mod - Extra)"\fR (module)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# (F * app:App - Extra)"\fR (application)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# (F * rel:Rel - Extra)"\fR (release)
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_function_calls\fR. The sum of the number of local calls, resolved external calls and unresolved calls:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# LC + # XC"\fR (info/1)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# LC | mod:Mod + # XC | mod:Mod"\fR (module)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# LC | app:App + # XC | app:App"\fR (application)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# LC | rel:Rel + # XC | mod:Rel"\fR (release)
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_inter_function_calls\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# EE"\fR (info/1)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# EE | mod:Mod"\fR (module)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# EE | app:App"\fR (application)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# EE | rel:Rel"\fR (release)
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIno_releases\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI"# R"\fR (info/1)
+
+.RE
+
+.RE
+
+
+.RE
+.B
+\fBm(FileOrModule) ->\fR
+\fB           [DebugInfoResult] |\fR
+\fB           [NoDebugInfoResult] |\fR
+\fB           {error, module(), Reason}\fR
+\fB           when\fR
+\fB               FileOrModule :: file:filename() | module(),\fR
+\fB               DebugInfoResult ::\fR
+\fB                   {deprecated, [funcall()]} |\fR
+\fB                   {undefined, [funcall()]} |\fR
+\fB                   {unused, [mfa()]},\fR
+\fB               NoDebugInfoResult ::\fR
+\fB                   {deprecated, [xmfa()]} | {undefined, [xmfa()]},\fR
+\fB               Reason ::\fR
+\fB                   {cover_compiled, Module :: module()} |\fR
+\fB                   {file_error, file(), file_error()} |\fR
+\fB                   {interpreted, Module :: module()} |\fR
+\fB                   {invalid_filename, term()} |\fR
+\fB                   {no_such_module, Module :: module()} |\fR
+\fB                   beam_lib:chnk_rsn().\fR
+
+.br
+.RS
+.PP
+The given BEAM file (with or without the \fI.beam\fR extension) or the file found by calling \fIcode:which(Module)\fR is checked for calls to deprecated functions, calls to undefined functions, and for unused local functions.
+
+.PP
+The code path is used as library path.
+
+.PP
+If the BEAM file contains debug information, a list of tuples is returned. The first element of each tuple is one of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdeprecated\fR, the second element is a sorted list of calls to deprecated functions;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIundefined\fR, the second element is a sorted list of calls to undefined functions;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIunused\fR, the second element is a sorted list of unused local functions.
+
+.RE
+
+.PP
+If the BEAM file does not contain debug information, a list of tuples is returned. The first element of each tuple is one of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdeprecated\fR, the second element is a sorted list of externally used deprecated functions;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIundefined\fR, the second element is a sorted list of undefined functions.
+
+.RE
+
+
+.RE
+.B
+\fBq(XrefServer, Query, Options) ->\fR
+\fB           {ok, Answer} | {error, module(), Reason}\fR
+\fB           when\fR
+\fB               XrefServer :: xref(),\fR
+\fB               Query :: string() | atom(),\fR
+\fB               Options :: Option | [Option],\fR
+\fB               Option :: {verbose, boolean()} | verbose,\fR
+\fB               Answer :: answer(),\fR
+\fB               Reason :: q_rsn().\fR
+
+.br
+.RS
+.PP
+Evaluates a query in the context of an Xref server, and returns the value of the last statement.
+
+.PP
+The syntax of the value depends on the expression:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set of calls is represented by a sorted list without duplicates of \fIcall/0\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set of constants is represented by a sorted list without duplicates of \fIconstant/0\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set of strongly connected components is a sorted list without duplicates of \fIComponent\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set of calls between strongly connected components is a sorted list without duplicates of \fIComponentCall\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+chain of calls is represented by a list of \fIconstant/0\fR. The list contains the From vertex of every call and the To vertex of the last call.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIof\fR operator returns \fIfalse\fR if no chain of calls between the given constants can be found.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The value of the \fIclosure\fR operator (the \fIdigraph\fR representation) is represented by the atom \fI'closure()'\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set of line numbered functions is represented by a sorted list without duplicates of \fIDefineAt\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set of line numbered function calls is represented by a sorted list without duplicates of \fICallAt\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set of line numbered functions and function calls is represented by a sorted list without duplicates of \fIAllLines\fR.
+
+.RE
+
+.PP
+For both \fICallAt\fR and \fIAllLines\fR it holds that for no list element is \fILineNumbers\fR an empty list; such elements have been removed. The constants of \fIcomponent\fR and the integers of \fILineNumbers\fR are sorted and without duplicates.
+
+
+.RE
+.B
+\fBremove_application(XrefServer, Applications) ->\fR
+\fB                            ok | {error, module(), Reason}\fR
+\fB                            when\fR
+\fB                                XrefServer :: xref(),\fR
+\fB                                Applications ::\fR
+\fB                                    application() | [application()],\fR
+\fB                                Reason ::\fR
+\fB                                    {no_such_application, application()}.\fR
+
+.br
+.RS
+.PP
+Removes applications and their modules and module data from an Xref server.
+
+
+.RE
+.B
+\fBremove_module(XrefServer, Modules) ->\fR
+\fB                       ok | {error, module(), Reason}\fR
+\fB                       when\fR
+\fB                           XrefServer :: xref(),\fR
+\fB                           Modules :: module() | [module()],\fR
+\fB                           Reason :: {no_such_module, module()}.\fR
+
+.br
+.RS
+.PP
+Removes analyzed modules and module data from an Xref server.
+
+
+.RE
+.B
+\fBremove_release(XrefServer, Releases) ->\fR
+\fB                        ok | {error, module(), Reason}\fR
+\fB                        when\fR
+\fB                            XrefServer :: xref(),\fR
+\fB                            Releases :: release() | [release()],\fR
+\fB                            Reason :: {no_such_release, release()}.\fR
+
+.br
+.RS
+.PP
+Removes releases and their applications, modules, and module data from an Xref server.
+
+
+.RE
+.B
+\fBreplace_application(XrefServer, Application, Directory, Options) ->\fR
+\fB                             {ok, Application} |\fR
+\fB                             {error, module(), Reason}\fR
+\fB                             when\fR
+\fB                                 XrefServer :: xref(),\fR
+\fB                                 Application :: application(),\fR
+\fB                                 Directory :: directory(),\fR
+\fB                                 Options :: Option | [Option],\fR
+\fB                                 Option ::\fR
+\fB                                     {builtins, boolean()} |\fR
+\fB                                     {verbose, boolean()} |\fR
+\fB                                     {warnings, boolean()} |\fR
+\fB                                     builtins | verbose | warnings,\fR
+\fB                                 Reason ::\fR
+\fB                                     {application_clash,\fR
+\fB                                      {application(),\fR
+\fB                                       directory(),\fR
+\fB                                       directory()}} |\fR
+\fB                                     {no_such_application, Application} |\fR
+\fB                                     add_dir_rsn().\fR
+
+.br
+.RS
+.PP
+Replaces the modules of an application with other modules read from an application directory.
+
+.PP
+Release membership of the application is retained. Note that the name of the application is kept; the name of the given directory is not used.
+
+
+.RE
+.B
+\fBreplace_module(XrefServer, Module, File, Options) ->\fR
+\fB                        {ok, Module} | {error, module(), Reason}\fR
+\fB                        when\fR
+\fB                            XrefServer :: xref(),\fR
+\fB                            Module :: module(),\fR
+\fB                            File :: file(),\fR
+\fB                            Options :: Option | [Option],\fR
+\fB                            Option ::\fR
+\fB                                {verbose, boolean()} |\fR
+\fB                                {warnings, boolean()} |\fR
+\fB                                verbose | warnings,\fR
+\fB                            Reason ::\fR
+\fB                                {module_mismatch, Module,\fR
+\fB                                 ReadModule :: module()} |\fR
+\fB                                {no_such_module, Module} |\fR
+\fB                                add_mod_rsn().\fR
+
+.br
+.RS
+.PP
+Replaces module data of an analyzed module with data read from a BEAM file.
+
+.PP
+Application membership of the module is retained, and so is the value of the \fIbuiltins\fR option of the module. An error is returned if the name of the read module differs from the given module.
+
+.PP
+The \fIupdate\fR function is an alternative for updating module data of recompiled modules.
+
+
+.RE
+.B
+\fBset_default(XrefServer, OptionValues) ->\fR
+\fB                     ok | {error, module(), Reason}\fR
+\fB                     when\fR
+\fB                         XrefServer :: xref(),\fR
+\fB                         OptionValues :: OptionValue | [OptionValue],\fR
+\fB                         OptionValue :: {Option, Value},\fR
+\fB                         Option ::\fR
+\fB                             builtins | recurse | verbose | warnings,\fR
+\fB                         Value :: boolean(),\fR
+\fB                         Reason :: {invalid_options, term()}.\fR
+
+.br
+.RS
+.PP
+Sets default values for multiple options given by \fIOptionValues\fR.
+
+.PP
+See \fIset_default/3\fR for the name of options and their allowed values.
+
+
+.RE
+.B
+\fBset_default(XrefServer, Option, Value) ->\fR
+\fB                     {ok, OldValue} | {error, module(), Reason}\fR
+\fB                     when\fR
+\fB                         XrefServer :: xref(),\fR
+\fB                         Option ::\fR
+\fB                             builtins | recurse | verbose | warnings,\fR
+\fB                         Value :: boolean(),\fR
+\fB                         OldValue :: boolean(),\fR
+\fB                         Reason :: {invalid_options, term()}.\fR
+
+.br
+.RS
+.PP
+Sets the default value of one or more options.
+
+.PP
+The options that can be set this way are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIbuiltins\fR, with initial default value \fIfalse\fR;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrecurse\fR, with initial default value \fIfalse\fR;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIverbose\fR, with initial default value \fIfalse\fR;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwarnings\fR, with initial default value \fItrue\fR.
+
+.RE
+
+.PP
+The initial default values are set when creating an Xref server.
+
+
+.RE
+.B
+\fBset_library_path(XrefServer, LibraryPath, Options) ->\fR
+\fB                          ok | {error, module(), Reason}\fR
+\fB                          when\fR
+\fB                              XrefServer :: xref(),\fR
+\fB                              LibraryPath :: library_path(),\fR
+\fB                              Options :: Option | [Option],\fR
+\fB                              Option :: {verbose, boolean()} | verbose,\fR
+\fB                              Reason ::\fR
+\fB                                  {invalid_options, term()} |\fR
+\fB                                  {invalid_path, term()}.\fR
+
+.br
+.RS
+.PP
+Sets the library path.
+
+.PP
+If the given path is a list of directories, the set of library modules is determined by choosing the first module encountered while traversing the directories in the given order, for those modules that occur in more than one directory. By default, the library path is an empty list.
+
+.PP
+The library path \fIcode_path\fR is used by the functions \fIm/1\fR and \fId/1\fR, but can also be set explicitly. However, note that the code path will be traversed once for each used library module while setting up module data. On the other hand, if there are only a few modules that are used but not analyzed, using \fIcode_path\fR may be faster than setting the library path to \fIcode:get_path/0\fR.
+
+.PP
+If the library path is set to \fIcode_path\fR, the set of library modules is not determined, and the \fIinfo\fR functions will return empty lists of library modules.
+
+
+.RE
+.B
+\fBstart(NameOrOptions) ->\fR
+\fB               {ok, pid()} | {error, {already_started, pid()}}\fR
+\fB               when\fR
+\fB                   NameOrOptions :: Name | Options,\fR
+\fB                   Name :: atom(),\fR
+\fB                   Options :: Option | [Option],\fR
+\fB                   Option :: {xref_mode, mode()} | term().\fR
+
+.br
+.RS
+.PP
+Creates an Xref server.
+
+.PP
+The process can optionally be given a name. The default mode is \fIfunctions\fR. Options that are not recognized by Xref are passed on to \fIgen_server:start/4\fR.
+
+
+.RE
+.B
+\fBstart(Name, Options) ->\fR
+\fB               {ok, pid()} | {error, {already_started, pid()}}\fR
+\fB               when\fR
+\fB                   Name :: atom(),\fR
+\fB                   Options :: Option | [Option],\fR
+\fB                   Option :: {xref_mode, mode()} | term().\fR
+
+.br
+.RS
+.PP
+Creates an Xref server with a given name.
+
+.PP
+The default mode is \fIfunctions\fR. Options that are not recognized by Xref are passed on to \fIgen_server:start/4\fR.
+
+
+.RE
+.B
+\fBstop(XrefServer) -> stopped when XrefServer :: xref().\fR
+
+.br
+.RS
+.PP
+Stops an Xref server.
+
+
+.RE
+.B
+\fBupdate(XrefServer, Options) ->\fR
+\fB                {ok, Modules} | {error, module(), Reason}\fR
+\fB                when\fR
+\fB                    XrefServer :: xref(),\fR
+\fB                    Options :: Option | [Option],\fR
+\fB                    Option ::\fR
+\fB                        {verbose, boolean()} |\fR
+\fB                        {warnings, boolean()} |\fR
+\fB                        verbose | warnings,\fR
+\fB                    Modules :: [module()],\fR
+\fB                    Reason ::\fR
+\fB                        {module_mismatch,\fR
+\fB                         module(),\fR
+\fB                         ReadModule :: module()} |\fR
+\fB                        add_mod_rsn().\fR
+
+.br
+.RS
+.PP
+Replaces the module data of all analyzed modules the BEAM files of which have been modified since last read by an \fIadd\fR function or \fIupdate\fR.
+
+.PP
+Application membership of the modules is retained, and so is the value of the \fIbuiltins\fRoption. Returns a sorted list of the names of the replaced modules.
+
+
+.RE
+.B
+\fBvariables(XrefServer, Options) -> {ok, [VariableInfo]}\fR
+\fB                   when\fR
+\fB                       XrefServer :: xref(),\fR
+\fB                       Options :: Option | [Option],\fR
+\fB                       Option ::\fR
+\fB                           predefined | user |\fR
+\fB                           {verbose, boolean()} |\fR
+\fB                           verbose,\fR
+\fB                       VariableInfo ::\fR
+\fB                           {predefined, [variable()]} |\fR
+\fB                           {user, [variable()]}.\fR
+
+.br
+.RS
+.PP
+Returns a sorted lists of the names of the variables of an Xref server.
+
+.PP
+The default is to return only the user variables.
+
+
+.RE

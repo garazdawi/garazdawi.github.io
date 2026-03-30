@@ -1,0 +1,2297 @@
+.TH lists 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+lists \- List processing functions.
+
+.SH DESCRIPTION
+.PP
+This module contains functions for list processing.
+
+.PP
+Unless otherwise stated, all functions assume that position numbering starts at 1. That is, the first element of a list is at position 1.
+
+.PP
+Two terms \fIT1\fR and \fIT2\fR compare equal if \fIT1 == T2\fR evaluates to \fItrue\fR. They match if \fIT1 =:= T2\fR evaluates to \fItrue\fR.
+
+.PP
+Whenever an \fIordering function\fR \fIF\fR is expected as argument, it is assumed that the following properties hold of \fIF\fR for all x, y, and z:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If x \fIF\fR y and y \fIF\fR x, then x = y (\fIF\fR is antisymmetric).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If x \fIF\fR y and y \fIF\fR z, then x \fIF\fR z (\fIF\fR is transitive).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIF\fR y or y \fIF\fR x (\fIF\fR is total).
+
+.RE
+
+.PP
+An example of a typical ordering function is less than or equal to: \fI=</2\fR.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBall(Pred, List) -> boolean()\fR
+\fB             when\fR
+\fB                 Pred :: fun((Elem :: T) -> boolean()),\fR
+\fB                 List :: [T],\fR
+\fB                 T :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIPred(Elem)\fR returns \fItrue\fR for all elements \fIElem\fR in \fIList\fR; otherwise, returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> IsEven = fun(N) -> N rem 2 =:= 0 end.
+2> lists:all(IsEven, [2,4,5]).
+false
+3> lists:all(IsEven, [2,4,6]).
+true
+
+.fi
+
+
+.RE
+.B
+\fBany(Pred, List) -> boolean()\fR
+\fB             when\fR
+\fB                 Pred :: fun((Elem :: T) -> boolean()),\fR
+\fB                 List :: [T],\fR
+\fB                 T :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIPred(Elem)\fR returns \fItrue\fR for at least one element \fIElem\fR in \fIList\fR; otherwise, returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> IsEven = fun(N) -> N rem 2 =:= 0 end.
+2> lists:any(IsEven, [3,5,7]).
+false
+3> lists:any(IsEven, [2,3,5,7]).
+true
+
+.fi
+
+
+.RE
+.B
+\fBappend(ListOfLists) -> List1\fR
+\fB                when\fR
+\fB                    ListOfLists :: [List],\fR
+\fB                    List :: [T],\fR
+\fB                    List1 :: [T],\fR
+\fB                    T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list in which all sublists of \fIListOfLists\fR have been concatenated.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:append([[1, 2, 3], [a, b], [4, 5, 6]]).
+[1,2,3,a,b,4,5,6]
+
+.fi
+
+
+.RE
+.B
+\fBappend(List1, List2) -> List3\fR
+\fB                when\fR
+\fB                    List1 :: [T],\fR
+\fB                    List2 :: [T],\fR
+\fB                    List3 :: [T],\fR
+\fB                    T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a new list, \fIList3\fR, consisting of the elements of \fIList1\fR, followed by the elements of \fIList2\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:append("abc", "def").
+"abcdef"
+
+.fi
+
+.PP
+\fIlists:append(A, B)\fR is equivalent to \fIA ++ B\fR.
+
+
+.RE
+.B
+\fBconcat(Things) -> string()\fR
+\fB                when\fR
+\fB                    Things :: [Thing],\fR
+\fB                    Thing :: atom() | integer() | float() | string().\fR
+
+.br
+.RS
+.PP
+Concatenates the text representation of the elements of \fIThings\fR.
+
+.PP
+The elements of \fIThings\fR can be atoms, integers, floats, or strings.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:concat([doc, '/', file, '.', 3]).
+"doc/file.3"
+
+.fi
+
+
+.RE
+.B
+\fBdelete(Elem, List1) -> List2\fR
+\fB                when Elem :: T, List1 :: [T], List2 :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a copy of \fIList1\fR where the first element matching \fIElem\fR is removed, if there is such an element.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:delete(b, [a,b,c]).
+[a,c]
+2> lists:delete(x, [a,b,c]).
+[a,b,c]
+
+.fi
+
+
+.RE
+.B
+\fBdroplast(List) -> InitList\fR
+\fB                  when List :: [T, ...], InitList :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Drops the last element of a \fIList\fR.
+
+.PP
+The list must be non-empty; otherwise, the function raises a \fIfunction_clause\fR exception.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:droplast([1]).
+[]
+2> lists:droplast([1,2,3]).
+[1,2]
+3> lists:droplast([]).
+** exception error: no function clause matching lists:droplast([])
+
+.fi
+
+
+.RE
+.B
+\fBdropwhile(Pred, List1) -> List2\fR
+\fB                   when\fR
+\fB                       Pred :: fun((Elem :: T) -> boolean()),\fR
+\fB                       List1 :: [T],\fR
+\fB                       List2 :: [T],\fR
+\fB                       T :: term().\fR
+
+.br
+.RS
+.PP
+Drops elements \fIElem\fR from \fIList1\fR while \fIPred(Elem)\fR returns \fItrue\fR, and then returns the remaining list.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:dropwhile(fun is_atom/1, [a,b,c,1,2,3,x,y,z]).
+[1,2,3,x,y,z]
+2> lists:dropwhile(fun is_integer/1, [a,b,c,1,2,3,x,y,z]).
+[a,b,c,1,2,3,x,y,z]
+
+.fi
+
+
+.RE
+.B
+\fBduplicate(N, Elem) -> List\fR
+\fB                   when\fR
+\fB                       N :: non_neg_integer(),\fR
+\fB                       Elem :: T,\fR
+\fB                       List :: [T],\fR
+\fB                       T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list containing \fIN\fR copies of term \fIElem\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:duplicate(5, xx).
+[xx,xx,xx,xx,xx]
+
+.fi
+
+
+.RE
+.B
+\fBenumerate(Index, Step, List1) -> List2\fR
+\fB                   when\fR
+\fB                       List1 :: [T],\fR
+\fB                       List2 :: [{Index, T}],\fR
+\fB                       Index :: integer(),\fR
+\fB                       Step :: integer(),\fR
+\fB                       T :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fIList1\fR with each element \fIH\fR replaced by a tuple of form \fI{I, H}\fR, where \fII\fR is the position of \fIH\fR in \fIList1\fR.
+
+.PP
+The enumeration starts with \fIIndex\fR and increases by \fIStep\fR in each step.
+
+.PP
+That is, \fIenumerate/3\fR behaves as if it were defined as follows:
+
+.IP
+.nf
+enumerate(I, S, List) ->
+  {List1, _ } = lists:mapfoldl(fun(T, Acc) -> {{Acc, T}, Acc+S} end, I, List),
+  List1.
+
+.fi
+
+.PP
+The default values for \fIIndex\fR and \fIStep\fR are both \fI1\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:enumerate([a,b,c]).
+[{1,a},{2,b},{3,c}]
+2> lists:enumerate(10, [a,b,c]).
+[{10,a},{11,b},{12,c}]
+3> lists:enumerate(0, -2, [a,b,c]).
+[{0,a},{-2,b},{-4,c}]
+
+.fi
+
+
+.RE
+.B
+\fBfilter(Pred, List1) -> List2\fR
+\fB                when\fR
+\fB                    Pred :: fun((Elem :: T) -> boolean()),\fR
+\fB                    List1 :: [T],\fR
+\fB                    List2 :: [T],\fR
+\fB                    T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list of elements \fIElem\fR in \fIList1\fR for which \fIPred(Elem)\fR returns \fItrue\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> IsEven = fun(N) -> N rem 2 =:= 0 end.
+2> lists:filter(IsEven, [1,2,3,4,5]).
+[2,4]
+
+.fi
+
+
+.RE
+.B
+\fBfiltermap(Fun, List1) -> List2\fR
+\fB                   when\fR
+\fB                       Fun :: fun((Elem) -> boolean() | {true, Value}),\fR
+\fB                       List1 :: [Elem],\fR
+\fB                       List2 :: [Elem | Value],\fR
+\fB                       Elem :: term(),\fR
+\fB                       Value :: term().\fR
+
+.br
+.RS
+.PP
+Calls \fIFun(Elem)\fR on successive elements \fIElem\fR of \fIList1\fR to update or remove elements from \fIList1\fR.
+
+.PP
+\fIFun/1\fR must return either a Boolean or a tuple \fI{true, Value}\fR. The function returns the list of elements for which \fIFun\fR returns a new value, with \fItrue\fR being equivalent to \fI{true, Elem}\fR.
+
+.PP
+That is, \fIfiltermap\fR behaves as if it were defined as follows:
+
+.IP
+.nf
+filtermap(Fun, List1) ->
+    lists:flatmap(fun(Elem) ->
+                          case Fun(Elem) of
+                              false -> [];
+                              true -> [Elem];
+                              {true,Value} -> [Value]
+                          end
+                  end, List1).
+
+.fi
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:filtermap(fun(X) ->
+                           case X rem 2 of
+                               0 -> {true, X div 2};
+                               1 -> false
+                           end
+                   end, [1,2,3,4,5]).
+[1,2]
+
+.fi
+
+
+.RE
+.B
+\fBflatlength(DeepList) -> non_neg_integer()\fR
+\fB                    when DeepList :: [term() | DeepList].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIlength(flatten(DeepList))\fR, but more efficient.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:flatlength([a,[b,c,[d,e]],f,[[g,h,i]]]).
+9
+2> lists:flatlength([[[]]]).
+0
+
+.fi
+
+
+.RE
+.B
+\fBflatmap(Fun, List1) -> List2\fR
+\fB                 when\fR
+\fB                     Fun :: fun((A) -> [B]),\fR
+\fB                     List1 :: [A],\fR
+\fB                     List2 :: [B],\fR
+\fB                     A :: term(),\fR
+\fB                     B :: term().\fR
+
+.br
+.RS
+.PP
+Takes a function from \fIA\fRs to lists of \fIB\fRs, and a list of \fIA\fRs (\fIList1\fR), producing a list of \fIB\fRs by applying the function to each element in \fIList1\fR and appending the resulting lists.
+
+.PP
+That is, \fIflatmap\fR behaves as if it were defined as follows:
+
+.IP
+.nf
+flatmap(Fun, List1) ->
+    lists:append(lists:map(Fun, List1)).
+
+.fi
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:flatmap(fun(X)-> [X,X] end, [a,b,c]).
+[a,a,b,b,c,c]
+2> F = fun(N) when is_integer(N) -> [10 * N];
+          (_) -> []
+       end, ok.
+3> lists:flatmap(F, [1,2,a,b,c,3]).
+[10,20,30]
+
+.fi
+
+
+.RE
+.B
+\fBflatten(DeepList) -> List\fR
+\fB                 when DeepList :: [term() | DeepList], List :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns a flattened version of \fIDeepList\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:flatten([a,[b,c,[d,e]],f]).
+[a,b,c,d,e,f]
+
+.fi
+
+
+.RE
+.B
+\fBflatten(DeepList, Tail) -> List\fR
+\fB                 when\fR
+\fB                     DeepList :: [term() | DeepList],\fR
+\fB                     Tail :: [term()],\fR
+\fB                     List :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns a flattened version of \fIDeepList\fR with tail \fITail\fR appended.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:flatten([a,[b,c,[d,e]],f], [g,h,i]).
+[a,b,c,d,e,f,g,h,i]
+
+.fi
+
+
+.RE
+.B
+\fBfoldl(Fun, Acc0, List) -> Acc1\fR
+\fB               when\fR
+\fB                   Fun :: fun((Elem :: T, AccIn) -> AccOut),\fR
+\fB                   Acc0 :: term(),\fR
+\fB                   Acc1 :: term(),\fR
+\fB                   AccIn :: term(),\fR
+\fB                   AccOut :: term(),\fR
+\fB                   List :: [T],\fR
+\fB                   T :: term().\fR
+
+.br
+.RS
+.PP
+Calls \fIFun(Elem, AccIn)\fR on successive elements \fIA\fR of \fIList\fR, starting with \fIAccIn\fR bound to \fIAcc0\fR.
+
+.PP
+\fIFun/2\fR must return a new accumulator, which is passed to the next call. The function returns the final value of the accumulator. \fIAcc0\fR is returned if the list is empty.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:foldl(fun(X, Sum) -> X + Sum end, 0, [1,2,3,4,5]).
+15
+2> lists:foldl(fun(X, Prod) -> X * Prod end, 1, [1,2,3,4,5]).
+120
+
+.fi
+
+
+.RE
+.B
+\fBfoldr(Fun, Acc0, List) -> Acc1\fR
+\fB               when\fR
+\fB                   Fun :: fun((Elem :: T, AccIn) -> AccOut),\fR
+\fB                   Acc0 :: term(),\fR
+\fB                   Acc1 :: term(),\fR
+\fB                   AccIn :: term(),\fR
+\fB                   AccOut :: term(),\fR
+\fB                   List :: [T],\fR
+\fB                   T :: term().\fR
+
+.br
+.RS
+.PP
+Like \fIfoldl/3\fR, but the list is traversed from right to left.
+
+.SS "Examples"
+
+.IP
+.nf
+1> P = fun(A, AccIn) -> [A|AccIn] end.
+2> lists:foldl(P, [], [1,2,3]).
+[3,2,1]
+3> lists:foldr(P, [], [1,2,3]).
+[1,2,3]
+
+.fi
+
+.PP
+\fIfoldl/3\fR is tail-recursive and is usually preferred to \fIfoldr/3\fR.
+
+
+.RE
+.B
+\fBforeach(Fun, List) -> ok\fR
+\fB                 when\fR
+\fB                     Fun :: fun((Elem :: T) -> term()),\fR
+\fB                     List :: [T],\fR
+\fB                     T :: term().\fR
+
+.br
+.RS
+.PP
+Calls \fIFun(Elem)\fR for each element \fIElem\fR in \fIList\fR, ignoring the return value.
+
+.PP
+This function is used for its side effects and the evaluation order is defined to be the same as the order of the elements in the list.
+
+
+.RE
+.B
+\fBjoin(Sep, List1) -> List2\fR
+\fB              when Sep :: T, List1 :: [T], List2 :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Inserts \fISep\fR between each element in \fIList1\fR.
+
+.PP
+Has no effect on an empty list or a singleton list.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:join(x, [a,b,c]).
+[a,x,b,x,c]
+2> lists:join(x, [a]).
+[a]
+3> lists:join(x, []).
+[]
+
+.fi
+
+
+.RE
+.B
+\fBkeydelete(Key, N, TupleList1) -> TupleList2\fR
+\fB                   when\fR
+\fB                       Key :: term(),\fR
+\fB                       N :: pos_integer(),\fR
+\fB                       TupleList1 :: [Tuple],\fR
+\fB                       TupleList2 :: [Tuple],\fR
+\fB                       Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns a copy of \fITupleList1\fR, where the first occurrence of a tuple whose \fIN\fRth element compares equal to \fIKey\fR is removed, if there is such a tuple.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:keydelete(c, 1, [{b,1}, {c,55}, {d,75}]).
+[{b,1},{d,75}]
+2> lists:keydelete(unknown, 1, [{b,1}, {c,55}, {d,75}]).
+[{b,1},{c,55},{d,75}]
+
+.fi
+
+
+.RE
+.B
+\fBkeyfind(Key, N, TupleList) -> Tuple | false\fR
+\fB                 when\fR
+\fB                     Key :: term(),\fR
+\fB                     N :: pos_integer(),\fR
+\fB                     TupleList :: [Tuple],\fR
+\fB                     Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Searches the list of tuples \fITupleList\fR for a tuple whose \fIN\fRth element compares equal to \fIKey\fR.
+
+.PP
+Returns \fITuple\fR if such a tuple is found; otherwise, returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:keyfind(b, 1, [{a,10}, {b,20}, {c,30}]).
+{b,20}
+2> lists:keyfind(unknown, 1, [{a,10}, {b,20}, {c,30}]).
+false
+
+.fi
+
+
+.RE
+.B
+\fBkeymap(Fun, N, TupleList1) -> TupleList2\fR
+\fB                when\fR
+\fB                    Fun :: fun((Term1 :: term()) -> Term2 :: term()),\fR
+\fB                    N :: pos_integer(),\fR
+\fB                    TupleList1 :: [Tuple],\fR
+\fB                    TupleList2 :: [Tuple],\fR
+\fB                    Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns a list of tuples where, for each tuple in \fITupleList1\fR, the \fIN\fRth element \fITerm1\fR of the tuple has been replaced with the result of calling \fIFun(Term1)\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Fun = fun(Atom) -> atom_to_list(Atom) end.
+2> lists:keymap(Fun, 2, [{name,jane,22},{name,lizzie,20},{name,lydia,15}]).
+[{name,"jane",22},{name,"lizzie",20},{name,"lydia",15}]
+
+.fi
+
+
+.RE
+.B
+\fBkeymember(Key, N, TupleList) -> boolean()\fR
+\fB                   when\fR
+\fB                       Key :: term(),\fR
+\fB                       N :: pos_integer(),\fR
+\fB                       TupleList :: [Tuple],\fR
+\fB                       Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fITupleList\fR contains a tuple whose \fIN\fRth element compares equal to \fIKey\fR; otherwise, returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:keymember(b, 1, [{a,10}, {b,20}, {c,30}]).
+true
+2> lists:keymember(unknown, 1, [{a,10}, {b,20}, {c,30}]).
+false
+
+.fi
+
+
+.RE
+.B
+\fBkeymerge(N, TupleList1, TupleList2) -> TupleList3\fR
+\fB                  when\fR
+\fB                      N :: pos_integer(),\fR
+\fB                      TupleList1 :: [T1],\fR
+\fB                      TupleList2 :: [T2],\fR
+\fB                      TupleList3 :: [T1 | T2],\fR
+\fB                      T1 :: Tuple,\fR
+\fB                      T2 :: Tuple,\fR
+\fB                      Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns the sorted list formed by merging \fITupleList1\fR and \fITupleList2\fR.
+
+.PP
+The merge is performed on the \fIN\fRth element of each tuple. Both \fITupleList1\fR and \fITupleList2\fR must be key-sorted before evaluating this function. When the key elements of the two tuples compare equal, the tuple from \fITupleList1\fR is picked before the tuple from \fITupleList2\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:keymerge(2, [{b, 50}], [{c, 20}, {a, 50}]).
+[{c,20},{b,50},{a,50}]
+
+.fi
+
+
+.RE
+.B
+\fBkeyreplace(Key, N, TupleList1, NewTuple) -> TupleList2\fR
+\fB                    when\fR
+\fB                        Key :: term(),\fR
+\fB                        N :: pos_integer(),\fR
+\fB                        TupleList1 :: [Tuple],\fR
+\fB                        TupleList2 :: [Tuple],\fR
+\fB                        NewTuple :: Tuple,\fR
+\fB                        Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns a copy of \fITupleList1\fR where the first occurrence of a tuple \fIT\fR whose \fIN\fRth element compares equal to \fIKey\fR is replaced with \fINewTuple\fR, if there is such a tuple \fIT\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:keyreplace(c, 1, [{b,1}, {c,55}, {d,75}], {new,tuple}).
+[{b,1},{new,tuple},{d,75}]
+2> lists:keyreplace(unknown, 1, [{b,1}, {c,55}, {d,75}], {new,tuple}).
+[{b,1},{c,55},{d,75}]
+
+.fi
+
+
+.RE
+.B
+\fBkeysearch(Key, N, TupleList) -> {value, Tuple} | false\fR
+\fB                   when\fR
+\fB                       Key :: term(),\fR
+\fB                       N :: pos_integer(),\fR
+\fB                       TupleList :: [Tuple],\fR
+\fB                       Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Searches the list of tuples \fITupleList\fR for a tuple whose \fIN\fRth element compares equal to \fIKey\fR.
+
+.PP
+Returns \fI{value, Tuple}\fR if such a tuple is found; otherwise, returns \fIfalse\fR.
+
+.PP
+\fBNOTE: \fRThis function is retained for backward compatibility. Function \fIkeyfind/3\fR is easier to use and more efficient.
+
+
+
+.RE
+.B
+\fBkeysort(N, TupleList1) -> TupleList2\fR
+\fB                 when\fR
+\fB                     N :: pos_integer(),\fR
+\fB                     TupleList1 :: [Tuple],\fR
+\fB                     TupleList2 :: [Tuple],\fR
+\fB                     Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns a list of the elements in \fITupleList1\fR, sorted by the \fIN\fRth element of each tuple.
+
+.PP
+The sort is stable.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:keysort(2, [{a, 99}, {b, 17}, {c, 50}, {d, 50}]).
+[{b,17},{c,50},{d,50},{a,99}]
+
+.fi
+
+
+.RE
+.B
+\fBkeystore(Key, N, TupleList1, NewTuple) -> TupleList2\fR
+\fB                  when\fR
+\fB                      Key :: term(),\fR
+\fB                      N :: pos_integer(),\fR
+\fB                      TupleList1 :: [Tuple],\fR
+\fB                      TupleList2 :: [Tuple, ...],\fR
+\fB                      NewTuple :: Tuple,\fR
+\fB                      Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns a copy of \fITupleList1\fR with the first tuple whose \fIN\fRth element compares equal to \fIKey\fR replaced by \fINewTuple\fR, or with \fI[NewTuple]\fR appended if no such tuple exists.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:keystore(b, 1, [{a, 10}, {b, 23}, {c, 99}], {bb, 1}).
+[{a, 10}, {bb, 1}, {c, 99}]
+2> lists:keystore(z, 1, [{a, 10}, {b, 23}, {c, 99}], {z, 2}).
+[{a, 10}, {b, 23}, {c, 99}, {z, 2}]
+
+.fi
+
+
+.RE
+.B
+\fBkeytake(Key, N, TupleList1) -> {value, Tuple, TupleList2} | false\fR
+\fB                 when\fR
+\fB                     Key :: term(),\fR
+\fB                     N :: pos_integer(),\fR
+\fB                     TupleList1 :: [tuple()],\fR
+\fB                     TupleList2 :: [tuple()],\fR
+\fB                     Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Searches the list of tuples \fITupleList1\fR for a tuple whose \fIN\fRth element compares equal to \fIKey\fR, returning \fI{value, Tuple, TupleList2}\fR if found, where \fITupleList2\fR is a copy of \fITupleList1\fR with the first occurrence of \fITuple\fR removed.
+
+.PP
+Otherwise, returns \fIfalse\fR if no such tuple is found.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:keytake(b, 1, [{a, 10}, {b, 23}, {c, 99}]).
+{value,{b,23},[{a, 10},{c, 99}]}
+2> lists:keytake(z, 1, [{a, 10}, {b, 23}, {c, 99}]).
+false
+
+.fi
+
+
+.RE
+.B
+\fBlast(List) -> Last when List :: [T, ...], Last :: T, T :: term().\fR
+
+.br
+.RS
+.PP
+Returns the last element in \fIList\fR.
+
+.PP
+The list must be non-empty; otherwise, the function raises a \fIfunction_clause\fR exception.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:last([1]).
+1
+2> lists:last([1,2,3]).
+3
+3> lists:last([]).
+** exception error: no function clause matching lists:last([])
+
+.fi
+
+
+.RE
+.B
+\fBmap(Fun, List1) -> List2\fR
+\fB             when\fR
+\fB                 Fun :: fun((A) -> B),\fR
+\fB                 List1 :: [A],\fR
+\fB                 List2 :: [B],\fR
+\fB                 A :: term(),\fR
+\fB                 B :: term().\fR
+
+.br
+.RS
+.PP
+Takes a function from \fIA\fRs to \fIB\fRs and a list of \fIA\fRs, producing a list of \fIB\fRs by applying the function to each element in the list.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:map(fun(N) -> N + 1 end, [1,2,3]).
+[2,3,4]
+
+.fi
+
+
+.RE
+.B
+\fBmapfoldl(Fun, Acc0, List1) -> {List2, Acc1}\fR
+\fB                  when\fR
+\fB                      Fun :: fun((A, AccIn) -> {B, AccOut}),\fR
+\fB                      Acc0 :: term(),\fR
+\fB                      Acc1 :: term(),\fR
+\fB                      AccIn :: term(),\fR
+\fB                      AccOut :: term(),\fR
+\fB                      List1 :: [A],\fR
+\fB                      List2 :: [B],\fR
+\fB                      A :: term(),\fR
+\fB                      B :: term().\fR
+
+.br
+.RS
+.PP
+Combines the operations of \fImap/2\fR and \fIfoldl/3\fR into one pass.
+
+.SS "Examples"
+
+.PP
+Summing the elements in a list and double them at the same time:
+
+.IP
+.nf
+1> lists:mapfoldl(fun(X, Sum) -> {2*X, X+Sum} end, 0, [1,2,3,4,5]).
+{[2,4,6,8,10],15}
+
+.fi
+
+
+.RE
+.B
+\fBmapfoldr(Fun, Acc0, List1) -> {List2, Acc1}\fR
+\fB                  when\fR
+\fB                      Fun :: fun((A, AccIn) -> {B, AccOut}),\fR
+\fB                      Acc0 :: term(),\fR
+\fB                      Acc1 :: term(),\fR
+\fB                      AccIn :: term(),\fR
+\fB                      AccOut :: term(),\fR
+\fB                      List1 :: [A],\fR
+\fB                      List2 :: [B],\fR
+\fB                      A :: term(),\fR
+\fB                      B :: term().\fR
+
+.br
+.RS
+.PP
+Combines the operations of \fImap/2\fR and \fIfoldr/3\fR into one pass.
+
+.PP
+\fBNOTE: \fRUnless the order in which the elements are accumulated is important, prefer \fImapfoldl/3\fR as it is slightly more efficient.
+
+
+.SS "Examples"
+
+.PP
+Doubling the elements in list and producing a list of squares at the same time:
+
+.IP
+.nf
+1> lists:mapfoldr(fun(X, Acc) -> {2*X, [X*X|Acc]} end, [], [1,2,3,4,5]).
+{[2,4,6,8,10],[1,4,9,16,25]}
+
+.fi
+
+
+.RE
+.B
+\fBmax(List) -> Max when List :: [T, ...], Max :: T, T :: term().\fR
+
+.br
+.RS
+.PP
+Returns the first element of \fIList\fR that compares greater than or equal to all other elements of \fIList\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:max([17,19,7,55]).
+55
+2> lists:max([]).
+** exception error: no function clause matching lists:max([])
+
+.fi
+
+
+.RE
+.B
+\fBmember(Elem, List) -> boolean()\fR
+\fB                when Elem :: T, List :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIElem\fR matches some element of \fIList\fR; otherwise, returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:member(2, [1,2,3]).
+true
+2> lists:member(nope, [1,2,3]).
+false
+
+.fi
+
+
+.RE
+.B
+\fBmerge(ListOfLists) -> List1\fR
+\fB               when\fR
+\fB                   ListOfLists :: [List],\fR
+\fB                   List :: [T],\fR
+\fB                   List1 :: [T],\fR
+\fB                   T :: term().\fR
+
+.br
+.RS
+.PP
+Returns the sorted list formed by merging all sublists of \fIListOfLists\fR.
+
+.PP
+All sublists must be sorted before evaluating this function.
+
+.PP
+When two elements compare equal, the element from the sublist with the lowest position in \fIListOfLists\fR is picked before the other element.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:merge([[b,l,l], [g,k,q]]).
+[b,g,k,l,l,q]
+
+.fi
+
+
+.RE
+.B
+\fBmerge(List1, List2) -> List3\fR
+\fB               when\fR
+\fB                   List1 :: [X],\fR
+\fB                   List2 :: [Y],\fR
+\fB                   List3 :: [X | Y],\fR
+\fB                   X :: term(),\fR
+\fB                   Y :: term().\fR
+
+.br
+.RS
+.PP
+Returns the sorted list formed by merging \fIList1\fR and \fIList2\fR.
+
+.PP
+Both \fIList1\fR and \fIList2\fR must be sorted before evaluating this function.
+
+.PP
+When two elements compare equal, the element from \fIList1\fR is picked before the element from \fIList2\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:merge([a,o], [b,x]).
+[a,b,o,x]
+
+.fi
+
+
+.RE
+.B
+\fBmerge(Fun, List1, List2) -> List3\fR
+\fB               when\fR
+\fB                   Fun :: fun((A, B) -> boolean()),\fR
+\fB                   List1 :: [A],\fR
+\fB                   List2 :: [B],\fR
+\fB                   List3 :: [A | B],\fR
+\fB                   A :: term(),\fR
+\fB                   B :: term().\fR
+
+.br
+.RS
+.PP
+Returns a sorted list formed by merging \fIList1\fR and \fIList2\fR based on \fIFun\fR.
+
+.PP
+Both \fIList1\fR and \fIList2\fR must be sorted according to the ordering function \fIFun\fR before evaluating this function.
+
+.PP
+\fIFun(A, B)\fR is to return \fItrue\fR if \fIA\fR compares less than or equal to \fIB\fR in the ordering, otherwise \fIfalse\fR. When two elements compare equal, the element from \fIList1\fR is picked before the element from \fIList2\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> F = fun(A, B) -> tuple_size(A) =< tuple_size(B) end.
+2> lists:merge(F, [{x, y}, {a, b, c}], [{q, w}]).
+[{x,y},{q,w},{a,b,c}]
+
+.fi
+
+
+.RE
+.B
+\fBmerge3(List1, List2, List3) -> List4\fR
+\fB                when\fR
+\fB                    List1 :: [X],\fR
+\fB                    List2 :: [Y],\fR
+\fB                    List3 :: [Z],\fR
+\fB                    List4 :: [X | Y | Z],\fR
+\fB                    X :: term(),\fR
+\fB                    Y :: term(),\fR
+\fB                    Z :: term().\fR
+
+.br
+.RS
+.PP
+Returns the sorted list formed by merging \fIList1\fR, \fIList2\fR, and \fIList3\fR.
+
+.PP
+All of \fIList1\fR, \fIList2\fR, and \fIList3\fR must be sorted before evaluating this function.
+
+.PP
+When two elements compare equal, the element from \fIList1\fR, if there is such an element, is picked before the other element, otherwise the element from \fIList2\fR is picked before the element from \fIList3\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:merge3([a,o], [g,q], [j]).
+[a,g,j,o,q]
+
+.fi
+
+
+.RE
+.B
+\fBmin(List) -> Min when List :: [T, ...], Min :: T, T :: term().\fR
+
+.br
+.RS
+.PP
+Returns the first element of \fIList\fR that compares less than or equal to all other elements of \fIList\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:min([17,19,7,55]).
+7
+2> lists:min([]).
+** exception error: no function clause matching lists:min([])
+
+.fi
+
+
+.RE
+.B
+\fBnth(N, List) -> Elem\fR
+\fB             when\fR
+\fB                 N :: pos_integer(),\fR
+\fB                 List :: [T, ...],\fR
+\fB                 Elem :: T,\fR
+\fB                 T :: term().\fR
+
+.br
+.RS
+.PP
+Returns the \fIN\fRth element of \fIList\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:nth(3, [a, b, c, d, e]).
+c
+
+.fi
+
+
+.RE
+.B
+\fBnthtail(N, List) -> Tail\fR
+\fB                 when\fR
+\fB                     N :: non_neg_integer(),\fR
+\fB                     List :: [T],\fR
+\fB                     Tail :: [T],\fR
+\fB                     T :: term().\fR
+
+.br
+.RS
+.PP
+Returns the \fIN\fRth tail of \fIList\fR, meaning the sublist of \fIList\fR starting at \fIN+1\fR and continuing to the end of the list.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:nthtail(3, [a, b, c, d, e]).
+[d,e]
+2> tl(tl(tl([a, b, c, d, e]))).
+[d,e]
+3> lists:nthtail(0, [a, b, c, d, e]).
+[a,b,c,d,e]
+4> lists:nthtail(5, [a, b, c, d, e]).
+[]
+
+.fi
+
+
+.RE
+.B
+\fBpartition(Pred, List) -> {Satisfying, NotSatisfying}\fR
+\fB                   when\fR
+\fB                       Pred :: fun((Elem :: T) -> boolean()),\fR
+\fB                       List :: [T],\fR
+\fB                       Satisfying :: [T],\fR
+\fB                       NotSatisfying :: [T],\fR
+\fB                       T :: term().\fR
+
+.br
+.RS
+.PP
+Partitions \fIList\fR into two lists: the first containing elements for which \fIPred(Elem)\fR returns \fItrue\fR, and the second containing elements for which \fIPred(Elem)\fR returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:partition(fun(A) -> A rem 2 =:= 1 end, [1,2,3,4,5,6,7]).
+{[1,3,5,7],[2,4,6]}
+2> lists:partition(fun(A) -> is_atom(A) end, [a,b,1,c,d,2,3,4,e]).
+{[a,b,c,d,e],[1,2,3,4]}
+
+.fi
+
+.PP
+For a different way to partition a list, see \fIsplitwith/2\fR.
+
+
+.RE
+.B
+\fBprefix(List1, List2) -> boolean()\fR
+\fB                when List1 :: [T], List2 :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIList1\fR is a prefix of \fIList2\fR; otherwise, returns \fIfalse\fR.
+
+.PP
+A prefix of a list is the first part of the list, starting from the beginning and stopping at any point.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:prefix("abc", "abcdef").
+true
+2> lists:prefix("def", "abcdef").
+false
+3> lists:prefix([], "any list").
+true
+4> lists:prefix("abc", "abc").
+true
+
+.fi
+
+
+.RE
+.B
+\fBreverse(List1) -> List2\fR
+\fB                 when List1 :: [T], List2 :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list containing the elements in \fIList1\fR in reverse order.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:reverse([1,2,3]).
+[3,2,1]
+
+.fi
+
+
+.RE
+.B
+\fBreverse(List1, Tail) -> List2\fR
+\fB                 when\fR
+\fB                     List1 :: [T],\fR
+\fB                     Tail :: term(),\fR
+\fB                     List2 :: [T],\fR
+\fB                     T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list containing the elements of \fIList1\fR in reverse order, with tail \fITail\fR appended.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:reverse([1, 2, 3, 4], [a, b, c]).
+[4,3,2,1,a,b,c]
+
+.fi
+
+
+.RE
+.B
+\fBsearch(Pred, List) -> {value, Value} | false\fR
+\fB                when\fR
+\fB                    Pred :: fun((T) -> boolean()),\fR
+\fB                    List :: [T],\fR
+\fB                    Value :: T.\fR
+
+.br
+.RS
+.PP
+If there is a \fIValue\fR in \fIList\fR such that \fIPred(Value)\fR returns \fItrue\fR, returns \fI{value, Value}\fR for the first such \fIValue\fR; otherwise, returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:search(fun is_atom/1, [1,2,3,a,b,c]).
+{value,a}
+2> lists:search(fun(#{a := V}) -> V =:= 42 end,
+     [#{a => 1}, #{a => 42}, #{a => 100}]).
+{value,#{a => 42}}
+
+.fi
+
+
+.RE
+.B
+\fBseq(From, To, Incr) -> Seq\fR
+\fB             when\fR
+\fB                 From :: integer(),\fR
+\fB                 To :: integer(),\fR
+\fB                 Incr :: integer(),\fR
+\fB                 Seq :: [integer()].\fR
+
+.br
+.RS
+.PP
+Returns a sequence of integers that starts with \fIFrom\fR and contains the successive results of adding \fIIncr\fR to the previous element, until \fITo\fR is reached or passed (in the latter case, \fITo\fR is not an element of the sequence).
+
+.PP
+\fIIncr\fR defaults to 1.
+
+.PP
+Failures:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fITo < From - Incr\fR and \fIIncr > 0\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fITo > From - Incr\fR and \fIIncr < 0\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIIncr =:= 0\fR and \fIFrom =/= To\fR.
+
+.RE
+
+.PP
+The following equalities hold for all sequences:
+
+.IP
+.nf
+length(lists:seq(From, To)) =:= To - From + 1
+length(lists:seq(From, To, Incr)) =:= (To - From + Incr) div Incr
+
+.fi
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:seq(1, 10).
+[1,2,3,4,5,6,7,8,9,10]
+2> lists:seq(1, 20, 3).
+[1,4,7,10,13,16,19]
+3> lists:seq(1, 0, 1).
+[]
+4> lists:seq(10, 6, 4).
+[]
+5> lists:seq(1, 1, 0).
+[1]
+
+.fi
+
+
+.RE
+.B
+\fBsort(List1) -> List2 when List1 :: [T], List2 :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list containing the sorted elements of \fIList1\fR.
+
+.PP
+The sort is stable.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:sort([4,1,3,2]).
+[1,2,3,4]
+2> lists:sort([a,4,3,b,9]).
+[3,4,9,a,b]
+
+.fi
+
+.PP
+Since the sort is stable, the relative order of elements that compare equal is not changed:
+
+.IP
+.nf
+1> lists:sort([1.0,1]).
+[1.0,1]
+2> lists:sort([1,1.0]).
+[1,1.0]
+
+.fi
+
+
+.RE
+.B
+\fBsort(Fun, List1) -> List2\fR
+\fB              when\fR
+\fB                  Fun :: fun((A :: T, B :: T) -> boolean()),\fR
+\fB                  List1 :: [T],\fR
+\fB                  List2 :: [T],\fR
+\fB                  T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list of the elements in \fIList1\fR, sorted according to the ordering function \fIFun\fR, where \fIFun(A, B)\fR returns \fItrue\fR if \fIA\fR compares less than or equal to \fIB\fR in the ordering; otherwise, it returns \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> F = fun(A, B) -> tuple_size(A) =< tuple_size(B) end.
+2> lists:sort(F, [{a, b, c}, {x, y}, {q, w}]).
+[{x,y},{q,w},{a,b,c}]
+
+.fi
+
+
+.RE
+.B
+\fBsplit(N, List1) -> {List2, List3}\fR
+\fB               when\fR
+\fB                   N :: non_neg_integer(),\fR
+\fB                   List1 :: [T],\fR
+\fB                   List2 :: [T],\fR
+\fB                   List3 :: [T],\fR
+\fB                   T :: term().\fR
+
+.br
+.RS
+.PP
+Splits \fIList1\fR into \fIList2\fR, containing the first \fIN\fR elements, and \fIList3\fR, containing the rest.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:split(3, [1,2,3,4,5,6,7]).
+{[1,2,3],[4,5,6,7]}
+
+.fi
+
+
+.RE
+.B
+\fBsplitwith(Pred, List) -> {List1, List2}\fR
+\fB                   when\fR
+\fB                       Pred :: fun((T) -> boolean()),\fR
+\fB                       List :: [T],\fR
+\fB                       List1 :: [T],\fR
+\fB                       List2 :: [T],\fR
+\fB                       T :: term().\fR
+
+.br
+.RS
+.PP
+Partitions \fIList\fR into two lists according to \fIPred\fR.
+
+.PP
+\fIsplitwith/2\fR behaves as if it were defined as follows:
+
+.IP
+.nf
+splitwith(Pred, List) ->
+    {takewhile(Pred, List), dropwhile(Pred, List)}.
+
+.fi
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:splitwith(fun(A) -> A rem 2 =:= 1 end, [1,2,3,4,5,6,7]).
+{[1],[2,3,4,5,6,7]}
+2> lists:splitwith(fun(A) -> is_atom(A) end, [a,b,1,c,d,2,3,4,e]).
+{[a,b],[1,c,d,2,3,4,e]}
+
+.fi
+
+.PP
+For a different way to partition a list, see \fIpartition/2\fR.
+
+
+.RE
+.B
+\fBsublist(List1, Len) -> List2\fR
+\fB                 when\fR
+\fB                     List1 :: [T],\fR
+\fB                     List2 :: [T],\fR
+\fB                     Len :: non_neg_integer(),\fR
+\fB                     T :: term().\fR
+
+.br
+.RS
+.PP
+Returns the sublist of \fIList1\fR starting at position 1 and with no more than \fILen\fR elements.
+
+.PP
+It is not an error for \fILen\fR to exceed the length of the list, in which case the whole list is returned.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:sublist([1,2,3,4,5], 2).
+[1,2]
+2> lists:sublist([1,2,3,4,5], 99).
+[1,2,3,4,5]
+
+.fi
+
+
+.RE
+.B
+\fBsublist(List1, Start, Len) -> List2\fR
+\fB                 when\fR
+\fB                     List1 :: [T],\fR
+\fB                     List2 :: [T],\fR
+\fB                     Start :: pos_integer(),\fR
+\fB                     Len :: non_neg_integer(),\fR
+\fB                     T :: term().\fR
+
+.br
+.RS
+.PP
+Returns the sublist of \fIList1\fR starting at \fIStart\fR and with no more than \fILen\fR elements.
+
+.PP
+It is not an error for \fIStart+Len\fR to exceed the length of the list.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:sublist([1,2,3,4], 2, 2).
+[2,3]
+2> lists:sublist([1,2,3,4], 2, 5).
+[2,3,4]
+3> lists:sublist([1,2,3,4], 5, 2).
+[]
+
+.fi
+
+
+.RE
+.B
+\fBsubtract(List1, List2) -> List3\fR
+\fB                  when\fR
+\fB                      List1 :: [T],\fR
+\fB                      List2 :: [T],\fR
+\fB                      List3 :: [T],\fR
+\fB                      T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a new list, \fIList3\fR, which is a copy of \fIList1\fR with the following modification: for each element in \fIList2\fR, its first occurrence in \fIList1\fR is removed.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:subtract("123212", "212").
+"312"
+
+.fi
+
+.PP
+\fIlists:subtract(A, B)\fR is equivalent to \fIA -- B\fR.
+
+
+.RE
+.B
+\fBsuffix(List1, List2) -> boolean()\fR
+\fB                when List1 :: [T], List2 :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIList1\fR is a suffix of \fIList2\fR; otherwise, returns \fIfalse\fR.
+
+.PP
+A suffix of a list is the last part of the list, starting from any position and going all the way to the end.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:suffix("abc", "abcdef").
+false
+2> lists:suffix("def", "abcdef").
+true
+3> lists:suffix([], "any list").
+true
+4> lists:suffix("abc", "abc").
+true
+
+.fi
+
+
+.RE
+.B
+\fBsum(List) -> number() when List :: [number()].\fR
+
+.br
+.RS
+.PP
+Returns the sum of the elements in \fIList\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:sum([]).
+0
+2> lists:sum([1,2,3]).
+6
+
+.fi
+
+
+.RE
+.B
+\fBtakewhile(Pred, List1) -> List2\fR
+\fB                   when\fR
+\fB                       Pred :: fun((Elem :: T) -> boolean()),\fR
+\fB                       List1 :: [T],\fR
+\fB                       List2 :: [T],\fR
+\fB                       T :: term().\fR
+
+.br
+.RS
+.PP
+Takes elements \fIElem\fR from \fIList1\fR while \fIPred(Elem)\fR returns \fItrue\fR, returning the longest prefix in which all elements satisfy the predicate.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:takewhile(fun is_atom/1, [a,b,c,1,2,3,x,y,z]).
+[a,b,c]
+2> lists:takewhile(fun is_integer/1, [a,b,c,1,2,3,x,y,z]).
+[]
+
+.fi
+
+
+.RE
+.B
+\fBukeymerge(N, TupleList1, TupleList2) -> TupleList3\fR
+\fB                   when\fR
+\fB                       N :: pos_integer(),\fR
+\fB                       TupleList1 :: [T1],\fR
+\fB                       TupleList2 :: [T2],\fR
+\fB                       TupleList3 :: [T1 | T2],\fR
+\fB                       T1 :: Tuple,\fR
+\fB                       T2 :: Tuple,\fR
+\fB                       Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns the sorted list formed by merging \fITupleList1\fR and \fITupleList2\fR based on the \fIN\fRth element of each tuple.
+
+.PP
+Both \fITupleList1\fR and \fITupleList2\fR must be key-sorted without duplicates before evaluating this function.
+
+.PP
+When the \fIN\fRth elements of two tuples compare equal, the tuple from \fITupleList1\fR is picked and the one from \fITupleList2\fR is removed.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:ukeymerge(1, [{a, 33}, {c, 15}], [{a, 59}, {d, 39}]).
+[{a,33},{c,15},{d,39}]
+
+.fi
+
+
+.RE
+.B
+\fBukeysort(N, TupleList1) -> TupleList2\fR
+\fB                  when\fR
+\fB                      N :: pos_integer(),\fR
+\fB                      TupleList1 :: [Tuple],\fR
+\fB                      TupleList2 :: [Tuple],\fR
+\fB                      Tuple :: tuple().\fR
+
+.br
+.RS
+.PP
+Returns a sorted list of the elements in \fITupleList1\fR, keeping only the first occurrence of tuples whose \fIN\fRth elements compare equal.
+
+.PP
+Sorting is performed on the \fIN\fRth element of the tuples.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:ukeysort(2, [{a, 27}, {d, 23}, {e, 23}]).
+[{d,23}, {a, 27}]
+
+.fi
+
+
+.RE
+.B
+\fBumerge(ListOfLists) -> List1\fR
+\fB                when\fR
+\fB                    ListOfLists :: [List],\fR
+\fB                    List :: [T],\fR
+\fB                    List1 :: [T],\fR
+\fB                    T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a sorted list formed by merging all sublists in \fIListOfLists\fR, while removing duplicates.
+
+.PP
+All sublists must be sorted and contain no duplicates before evaluating this function.
+
+.PP
+When two elements compare equal, the element from the sublist with the lowest position in \fIListOfLists\fR is picked and the other is removed.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:umerge([[a,b], [a,d,e]]).
+[a,b,d,e]
+
+.fi
+
+
+.RE
+.B
+\fBumerge(List1, List2) -> List3\fR
+\fB                when\fR
+\fB                    List1 :: [X],\fR
+\fB                    List2 :: [Y],\fR
+\fB                    List3 :: [X | Y],\fR
+\fB                    X :: term(),\fR
+\fB                    Y :: term().\fR
+
+.br
+.RS
+.PP
+Returns the sorted list formed by merging \fIList1\fR and \fIList2\fR, while removing duplicates.
+
+.PP
+Both \fIList1\fR and \fIList2\fR must be sorted and contain no duplicates before evaluating this function.
+
+.PP
+When two elements compare equal, the element from \fIList1\fR is picked and the one from \fIList2\fR is removed.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:umerge([a,b], [a,d,e]).
+[a,b,d,e]
+
+.fi
+
+
+.RE
+.B
+\fBumerge(Fun, List1, List2) -> List3\fR
+\fB                when\fR
+\fB                    Fun :: fun((A, B) -> boolean()),\fR
+\fB                    List1 :: [A],\fR
+\fB                    List2 :: [B],\fR
+\fB                    List3 :: [A | B],\fR
+\fB                    A :: term(),\fR
+\fB                    B :: term().\fR
+
+.br
+.RS
+.PP
+Returns a sorted list by merging \fIList1\fR and \fIList2\fR using ordering function \fIFun\fR, assuming both lists are pre-sorted according to \fIFun\fR and contain no duplicates.
+
+.PP
+\fIFun(A, B)\fR is to return \fItrue\fR if \fIA\fR compares less than or equal to \fIB\fR in the ordering; otherwise, it should return \fIfalse\fR. When two elements compare equal, the element from \fIList1\fR is picked and the one from \fIList2\fR is removed.
+
+.SS "Examples"
+
+.IP
+.nf
+1> F = fun(A, B) -> tuple_size(A) =< tuple_size(B) end.
+2> lists:umerge(F, [{x, y}, {a, b, c}], [{q, w}, {x, y, z, w}]).
+[{x,y},{a,b,c},{x,y,z,w}]
+
+.fi
+
+
+.RE
+.B
+\fBumerge3(List1, List2, List3) -> List4\fR
+\fB                 when\fR
+\fB                     List1 :: [X],\fR
+\fB                     List2 :: [Y],\fR
+\fB                     List3 :: [Z],\fR
+\fB                     List4 :: [X | Y | Z],\fR
+\fB                     X :: term(),\fR
+\fB                     Y :: term(),\fR
+\fB                     Z :: term().\fR
+
+.br
+.RS
+.PP
+Returns the sorted list formed by merging \fIList1\fR, \fIList2\fR, and \fIList3\fR, while removing duplicates.
+
+.PP
+All of \fIList1\fR, \fIList2\fR, and \fIList3\fR must be sorted and contain no duplicates before evaluating this function.
+
+.PP
+When two elements compare equal, the element from \fIList1\fR is picked if there is such an element, otherwise the element from \fIList2\fR is picked, and the other is removed.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:umerge3([a,b], [a,d,e], [b,f]).
+[a,b,d,e,f]
+
+.fi
+
+
+.RE
+.B
+\fBuniq(List1) -> List2 when List1 :: [T], List2 :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list containing the elements of \fIList1\fR with duplicated elements removed (preserving the order of the elements).
+
+.PP
+The first occurrence of each element is kept.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:uniq([3, 3, 1, 2, 1, 2, 3]).
+[3,1,2]
+2> lists:uniq([a, a, 1, b, 2, a, 3]).
+[a, 1, b, 2, 3]
+
+.fi
+
+
+.RE
+.B
+\fBuniq(Fun, List1) -> List2\fR
+\fB              when\fR
+\fB                  Fun :: fun((T) -> any()),\fR
+\fB                  List1 :: [T],\fR
+\fB                  List2 :: [T],\fR
+\fB                  T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list containing the elements of \fIList1\fR without the elements for which \fIFun\fR returned duplicate values (preserving the order of the elements).
+
+.PP
+The first occurrence of each element is kept.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:uniq(fun({X, _}) -> X end, [{b, 2}, {a, 1}, {c, 3}, {a, 2}]).
+[{b, 2}, {a, 1}, {c, 3}]
+
+.fi
+
+
+.RE
+.B
+\fBunzip(List1) -> {List2, List3}\fR
+\fB               when\fR
+\fB                   List1 :: [{A, B}],\fR
+\fB                   List2 :: [A],\fR
+\fB                   List3 :: [B],\fR
+\fB                   A :: term(),\fR
+\fB                   B :: term().\fR
+
+.br
+.RS
+.PP
+"Unzips" a list of two-tuples into two lists, where the first list contains the first element of each tuple, and the second list contains the second element of each tuple.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:unzip([{1, a}, {2, b}]).
+{[1,2],[a,b]}
+
+.fi
+
+
+.RE
+.B
+\fBunzip3(List1) -> {List2, List3, List4}\fR
+\fB                when\fR
+\fB                    List1 :: [{A, B, C}],\fR
+\fB                    List2 :: [A],\fR
+\fB                    List3 :: [B],\fR
+\fB                    List4 :: [C],\fR
+\fB                    A :: term(),\fR
+\fB                    B :: term(),\fR
+\fB                    C :: term().\fR
+
+.br
+.RS
+.PP
+"Unzips" a list of three-tuples into three lists, where the first list contains the first element of each tuple, the second list contains the second element of each tuple, and the third list contains the third element of each tuple.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:unzip3([{a, 1, 2}, {b, 777, 999}]).
+{[a,b],[1,777],[2,999]}
+
+.fi
+
+
+.RE
+.B
+\fBusort(List1) -> List2 when List1 :: [T], List2 :: [T], T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a sorted list of the elements of \fIList1\fR, keeping only the first occurrence of elements that compare equal.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:usort([a,x,y,b,c,x,a]).
+[a,b,c,x,y]
+2> lists:usort([3,2,a,3,2,a,1,3,b,2,2,1]).
+[1,2,3,a,b]
+3> lists:usort([1.0,1]).
+[1.0]
+4> lists:usort([1,1.0]).
+[1]
+
+.fi
+
+
+.RE
+.B
+\fBusort(Fun, List1) -> List2\fR
+\fB               when\fR
+\fB                   Fun :: fun((T, T) -> boolean()),\fR
+\fB                   List1 :: [T],\fR
+\fB                   List2 :: [T],\fR
+\fB                   T :: term().\fR
+
+.br
+.RS
+.PP
+Returns a list containing the sorted elements of \fIList1\fR where all except the first element of the elements comparing equal according to the ordering function \fIFun\fR have been removed.
+
+.PP
+\fIFun(A, B)\fR is to return \fItrue\fR if \fIA\fR compares less than or equal to \fIB\fR in the ordering, otherwise \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> F = fun(A, B) -> tuple_size(A) =< tuple_size(B) end.
+2> lists:usort(F, [{a, b, c}, {x, y}, {q, w}]).
+[{x,y},{a,b,c}]
+
+.fi
+
+
+.RE
+.B
+\fBzip(List1, List2, How) -> List3\fR
+\fB             when\fR
+\fB                 List1 :: [A],\fR
+\fB                 List2 :: [B],\fR
+\fB                 List3 :: [{A | DefaultA, B | DefaultB}],\fR
+\fB                 A :: term(),\fR
+\fB                 B :: term(),\fR
+\fB                 How :: fail | trim | {pad, {DefaultA, DefaultB}},\fR
+\fB                 DefaultA :: term(),\fR
+\fB                 DefaultB :: term().\fR
+
+.br
+.RS
+.PP
+"Zips" two lists into one list of two-tuples, where the first element of each tuple is taken from the first list and the second element is taken from the corresponding element in the second list.
+
+.PP
+The \fIHow\fR parameter specifies the behavior if the given lists are of different lengths.
+
+fail
+.RS 2
+The call will fail if the given lists are not of equal length. This is the default.
+
+
+.RE
+
+trim
+.RS 2
+Surplus elements from the longer list will be ignored.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:zip([a, b], [1, 2, 3], trim).
+[{a,1},{b,2}]
+2> lists:zip([a, b, c], [1, 2], trim).
+[{a,1},{b,2}]
+
+.fi
+
+
+.RE
+
+{pad, Defaults}
+.RS 2
+The shorter list will be padded to the length of the longer list, using the respective elements from the given 
+\fIDefaults\fR tuple.
+.SS "Examples"
+
+.IP
+.nf
+1> lists:zip([a, b], [1, 2, 3], {pad, {x, 0}}).
+[{a,1},{b,2},{x,3}]
+2> lists:zip([a, b, c], [1, 2], {pad, {x, 0}}).
+[{a,1},{b,2},{c,0}]
+
+.fi
+
+
+.RE
+
+
+.RE
+.B
+\fBzip3(List1, List2, List3, How) -> List4\fR
+\fB              when\fR
+\fB                  List1 :: [A],\fR
+\fB                  List2 :: [B],\fR
+\fB                  List3 :: [C],\fR
+\fB                  List4 :: [{A | DefaultA, B | DefaultB, C | DefaultC}],\fR
+\fB                  A :: term(),\fR
+\fB                  B :: term(),\fR
+\fB                  C :: term(),\fR
+\fB                  How ::\fR
+\fB                      fail | trim |\fR
+\fB                      {pad, {DefaultA, DefaultB, DefaultC}},\fR
+\fB                  DefaultA :: term(),\fR
+\fB                  DefaultB :: term(),\fR
+\fB                  DefaultC :: term().\fR
+
+.br
+.RS
+.PP
+"Zips" three lists into one list of three-tuples, where the first element of each tuple is taken from the first list, the second element is taken from the corresponding element in the second list, and the third element is taken from the corresponding element in the third list.
+
+.PP
+For a description of the \fIHow\fR parameter, see \fIzip/3\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:zip3([a], [1, 2, 3], [17, 19], trim).
+[{a,1,17}]
+2> lists:zip3([a], [1, 2, 3], [17, 19], {pad, {z, 0, 0}}).
+[{a,1,17}, {z,2,19}, {z,3,0}]
+
+.fi
+
+
+.RE
+.B
+\fBzipwith(Combine, List1, List2, How) -> List3\fR
+\fB                 when\fR
+\fB                     Combine :: fun((X | DefaultX, Y | DefaultY) -> T),\fR
+\fB                     List1 :: [X],\fR
+\fB                     List2 :: [Y],\fR
+\fB                     List3 :: [T],\fR
+\fB                     X :: term(),\fR
+\fB                     Y :: term(),\fR
+\fB                     How :: fail | trim | {pad, {DefaultX, DefaultY}},\fR
+\fB                     DefaultX :: term(),\fR
+\fB                     DefaultY :: term(),\fR
+\fB                     T :: term().\fR
+
+.br
+.RS
+.PP
+Combines the elements of two lists into a single list using the \fICombine\fR fun.
+
+.PP
+For each pair \fIX, Y\fR of list elements from the two lists, the element in the result list is \fICombine(X, Y)\fR.
+
+.PP
+For a description of the \fIHow\fR parameter, see \fIzip/3\fR.
+
+.PP
+\fIzipwith(fun(X, Y) -> {X,Y} end, List1, List2)\fR is equivalent to \fIzip(List1, List2)\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:zipwith(fun(X, Y) -> X+Y end, [1,2,3], [4,5,6], fail).
+[5,7,9]
+
+.fi
+
+
+.RE
+.B
+\fBzipwith3(Combine, List1, List2, List3, How) -> List4\fR
+\fB                  when\fR
+\fB                      Combine ::\fR
+\fB                          fun((X | DefaultX, Y | DefaultY, Z | DefaultZ) ->\fR
+\fB                                  T),\fR
+\fB                      List1 :: [X],\fR
+\fB                      List2 :: [Y],\fR
+\fB                      List3 :: [Z],\fR
+\fB                      List4 :: [T],\fR
+\fB                      X :: term(),\fR
+\fB                      Y :: term(),\fR
+\fB                      Z :: term(),\fR
+\fB                      How ::\fR
+\fB                          fail | trim |\fR
+\fB                          {pad, {DefaultX, DefaultY, DefaultZ}},\fR
+\fB                      DefaultX :: term(),\fR
+\fB                      DefaultY :: term(),\fR
+\fB                      DefaultZ :: term(),\fR
+\fB                      T :: term().\fR
+
+.br
+.RS
+.PP
+Combines the elements of three lists into a single list using the \fICombine\fR fun.
+
+.PP
+For each triple \fIX, Y, Z\fR of list elements from the three lists, the element in the result list is \fICombine(X, Y, Z)\fR.
+
+.PP
+For a description of the \fIHow\fR parameter, see \fIzip/3\fR.
+
+.PP
+\fIzipwith3(fun(X, Y, Z) -> {X,Y,Z} end, List1, List2, List3)\fR is equivalent to \fIzip3(List1, List2, List3)\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> lists:zipwith3(fun(X, Y, Z) -> X+Y+Z end, [1,2,3], [4,5,6], [7,8,9], fail).
+[12,15,18]
+2> lists:zipwith3(fun(X, Y, Z) -> [X,Y,Z] end, [a,b,c], [x,y,z], [1,2,3], fail).
+[[a,x,1],[b,y,2],[c,z,3]]
+
+.fi
+
+
+.RE

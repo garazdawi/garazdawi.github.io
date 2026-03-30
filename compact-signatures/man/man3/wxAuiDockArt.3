@@ -1,0 +1,146 @@
+.TH wxAuiDockArt 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxAuiDockArt \- \fIwxAuiDockArt\fR is part of the wxAUI class framework.
+
+.SH DESCRIPTION
+.PP
+See also overview_aui.
+
+.PP
+\fIwxAuiDockArt\fR is the art provider: provides all drawing functionality to the wxAui dock manager. This allows the dock manager to have a pluggable look-and-feel.
+
+.PP
+By default, a \fIwxAuiManager\fR uses an instance of this class called \fIwxAuiDefaultDockArt\fR (not implemented in wx) which provides bitmap art and a colour scheme that is adapted to the major platforms' look. You can either derive from that class to alter its behaviour or write a completely new dock art class. Call \fIwxAuiManager:setArtProvider/2\fR to force wxAUI to use your new dock art provider.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxAuiManager\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxAuiPaneInfo\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxAuiDockArt
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxAuiDockArt() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetColour(This, Id) -> wx:wx_colour4()\fR
+\fB                   when This :: wxAuiDockArt(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Get the colour of a certain setting.
+
+.PP
+\fIid\fR can be one of the colour values of \fIwxAuiPaneDockArtSetting\fR.
+
+
+.RE
+.B
+\fBgetFont(This, Id) -> wxFont:wxFont()\fR
+\fB                 when This :: wxAuiDockArt(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Get a font setting.
+
+
+.RE
+.B
+\fBgetMetric(This, Id) -> integer()\fR
+\fB                   when This :: wxAuiDockArt(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Get the value of a certain setting.
+
+.PP
+\fIid\fR can be one of the size values of \fIwxAuiPaneDockArtSetting\fR.
+
+
+.RE
+.B
+\fBsetColour(This, Id, Colour) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxAuiDockArt(),\fR
+\fB                       Id :: integer(),\fR
+\fB                       Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Set a certain setting with the value \fIcolour\fR.
+
+.PP
+\fIid\fR can be one of the colour values of \fIwxAuiPaneDockArtSetting\fR.
+
+
+.RE
+.B
+\fBsetFont(This, Id, Font) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxAuiDockArt(),\fR
+\fB                     Id :: integer(),\fR
+\fB                     Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Set a font setting.
+
+
+.RE
+.B
+\fBsetMetric(This, Id, New_val) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxAuiDockArt(),\fR
+\fB                       Id :: integer(),\fR
+\fB                       New_val :: integer().\fR
+
+.br
+.RS
+.PP
+Set a certain setting with the value \fInew\\_val\fR.
+
+.PP
+\fIid\fR can be one of the size values of \fIwxAuiPaneDockArtSetting\fR.
+
+
+.RE

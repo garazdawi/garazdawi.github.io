@@ -1,0 +1,187 @@
+.TH diameter_make 3 "diameter 2.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+diameter_make \- Diameter dictionary compilation.
+
+.SH DESCRIPTION
+.PP
+The function \fIcodec/2\fR is used to compile a diameter dictionary file into Erlang source. The resulting source implements the interface diameter requires to encode and decode the dictionary's messages and AVPs.
+
+.PP
+The utility diameterc(1) provides an alternate compilation interface.
+
+.SS "BUGS"
+
+.PP
+Unrecognized options are silently ignored.
+
+.SS "SEE ALSO"
+
+.PP
+diameterc(1), diameter_dict(4)
+
+.SH DATA TYPES
+.LP
+.B
+\fBdict() :: iolist() | binary() | parsed().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBopt() ::\fR
+\fB          {include | outdir | name | prefix | inherits, string()} |\fR
+\fB          return | verbose | parse | forms | erl | hrl.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBparsed() :: list().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcodec(File, [opt()]) -> ok | {ok, list()} | {error, Reason}\fR
+\fB               when\fR
+\fB                   File :: dict() | {path, file:name_all()},\fR
+\fB                   Reason :: string().\fR
+
+.br
+.RS
+.PP
+Compile a single dictionary file.
+
+.PP
+The input \fIFile\fR can be either a path or a literal dictionary, the occurrence of newline (ascii NL) or carriage return (ascii CR) identifying the latter. \fIOpt\fR determines the format of the results and whether they are written to file or returned, and can have the following types.
+
+parse | forms | erl | hrl
+.RS 2
+Specifies an output format. Whether the output is returned or written to file depends on whether or not option 
+\fIreturn\fR is specified. When written to file, the resulting file(s) will have extensions \fI.D\fR, \fI.F\fR, \fI.erl\fR, and \fI.hrl\fR respectively, basenames defaulting to \fIdictionary\fR if the input dictionary is literal and does not specify \fI@name\fR. When returned, results are in the order of the corresponding format options. Format options default to \fIerl\fR and \fIhrl\fR (in this order) if unspecified.
+.PP
+The \fIparse\fR format is an internal representation that can be passed to \fIflatten/1\fR and \fIformat/1\fR, while the \fIforms\fR format can be passed to \fIcompile:forms/2\fR. The \fIerl\fR and \fIhrl\fR formats are returned as iolists.
+
+
+.RE
+
+{include, string()}
+.RS 2
+Prepend the specified directory to the code path. Use to point at beam files compiled from inherited dictionaries, 
+\fI@inherits\fR in a dictionary file creating a beam dependency, not an erl/hrl dependency.
+.PP
+Multiple \fIinclude\fR options can be specified.
+
+
+.RE
+
+{outdir, string()}
+.RS 2
+Write generated source to the specified directory. Defaults to the current working directory. Has no effect if option 
+\fIreturn\fR is specified.
+
+.RE
+
+return
+.RS 2
+Return results in a 
+\fI{ok, [Out]}\fR tuple instead of writing to file and returning \fIok\fR.
+
+.RE
+
+{name|prefix, string()}
+.RS 2
+Transform the input dictionary before compilation, setting 
+\fI@name\fR or \fI@prefix\fR to the specified string.
+
+.RE
+
+{inherits, string()}
+.RS 2
+Transform the input dictionary before compilation, appending 
+\fI@inherits\fR of the specified string.
+.PP
+Two forms have special meaning:
+
+.IP
+.nf
+{inherits, "-"}
+{inherits, "Prev/Mod"}
+
+.fi
+
+.PP
+The first has the effect of clearing any previous inherits, the second of replacing a previous inherits of \fIPrev\fR to one of \fIMod\fR. This allows the semantics of the input dictionary to be changed without modifying the file itself.
+
+.PP
+Multiple \fIinherits\fR options can be specified.
+
+
+.RE
+
+indirect_inherits
+.RS 2
+This option makes compiler support automatic recursive inheritance. When a dictionary file inherits another 
+\fI.dia\fR, all ancestors of that \fI.dia\fR will also be considered in code generation. This enhancement removes the requirement to explicitly list all parent dictionaries via \fI@inherits\fR, preventing missing AVP/message encodings and runtime errors.
+.PP
+\fBExample\fR \fIC.dia\fR inherits \fIB.dia\fR and \fIB.dia\fR inherits \fIA.dia\fR.
+
+.PP
+\fBBefore (without indirect_inherits):\fR
+
+.PP
+If \fIC.dia\fR references AVPs from \fIA.dia\fR without directly inheriting it, the generated code will lack necessary definitions, causing encoding failures.
+
+.PP
+\fBAfter (with indirect_inherits):\fR
+
+.PP
+\fIC.dia\fR can reference AVPs from \fIA.dia\fR without directly inheriting it, compiler will resolve the entire inheritance chain automatically, ensuring all relevant descendant definitions from \fIA.dia\fR are available without additional user declarations.  
+
+
+.RE
+
+.PP
+Note that a dictionary's \fI@name\fR, together with the \fIoutdir\fR option, determine the output paths when the \fIreturn\fR option is not specified. The \fI@name\fR of a literal input dictionary defaults to \fIdictionary\fR.
+
+.PP
+A returned error reason can be converted into a readable string using \fIformat_error/1\fR.
+
+
+.RE
+.B
+\fBflatten(parsed()) -> parsed().\fR
+
+.br
+.RS
+.PP
+Reconstitute a parsed dictionary, as returned by \fIcodec/2\fR, without using \fI@inherits\fR. That is, construct an equivalent dictionary in which all AVP's are definined in the dictionary itself. The return value is also a parsed dictionary.
+
+
+.RE
+.B
+\fBformat(parsed()) -> iolist().\fR
+
+.br
+.RS
+.PP
+Turns a parsed dictionary, as returned by \fIcodec/2\fR, back into the dictionary format.
+
+
+.RE
+.B
+\fBformat_error(Reason) -> FormattedReason\fR
+\fB                      when Reason :: term(), FormattedReason :: string().\fR
+
+.br
+.RS
+.PP
+Turn an error reason returned by \fIcodec/2\fR into a readable string.
+
+
+.RE

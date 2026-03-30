@@ -1,0 +1,272 @@
+.TH wxChoice 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxChoice \- A choice item is used to select one of a list of strings.
+
+.SH DESCRIPTION
+.PP
+Unlike a \fIwxListBox\fR, only the selection is visible until the user pulls down the menu of choices.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCB_SORT: Sorts the entries alphabetically.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListBox\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxComboBox\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControlWithItems\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxChoice
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_choice_selected\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxChoice() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Pos, Size, Choices, [Option]) ->\fR
+\fB                boolean()\fR
+\fB                when\fR
+\fB                    This :: wxChoice(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Pos :: {X :: integer(), Y :: integer()},\fR
+\fB                    Size :: {W :: integer(), H :: integer()},\fR
+\fB                    Choices :: [unicode:chardata()],\fR
+\fB                    Option ::\fR
+\fB                        {style, integer()} | {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdelete(This, N) -> ok when This :: wxChoice(), N :: integer().\fR
+
+.br
+.RS
+.PP
+Deletes an item from the control.
+
+.PP
+The client data associated with the item will be also deleted if it is owned by the control. Note that it is an error (signalled by an assert failure in debug builds) to remove an item with the index negative or greater or equal than the number of items in the control.
+
+.PP
+If there is a currently selected item below the item being deleted, i.e. if \fIwxControlWithItems:getSelection/1\fR returns a valid index greater than or equal to \fIn\fR, the selection is invalidated when this function is called. However if the selected item appears before the item being deleted, the selection is preserved unchanged.
+
+.PP
+See: \fIwxControlWithItems:clear/1\fR
+
+
+.RE
+.B
+\fBdestroy(This :: wxChoice()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetColumns(This) -> integer() when This :: wxChoice().\fR
+
+.br
+.RS
+.PP
+Gets the number of columns in this choice item.
+
+.PP
+Remark: This is implemented for GTK and Motif only and always returns 1 for the other platforms.
+
+
+.RE
+.B
+\fBnew() -> wxChoice().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+.PP
+See: \fIcreate/7\fR
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxChoice()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {choices, [unicode:chardata()]} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a choice.
+
+.PP
+See: \fIcreate/7\fR
+
+
+.RE
+.B
+\fBsetColumns(This, [Option]) -> ok\fR
+\fB                    when This :: wxChoice(), Option :: {n, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the number of columns in this choice item.
+
+.PP
+Remark: This is implemented for GTK and Motif only and doesn’t do anything under other platforms.
+
+
+.RE

@@ -1,0 +1,128 @@
+.TH wxDropFilesEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxDropFilesEvent \- This class is used for drop files events, that is, when files have been dropped onto the window.
+
+.SH DESCRIPTION
+.PP
+The window must have previously been enabled for dropping by calling \fIwxWindow:dragAcceptFiles/2\fR.
+
+.PP
+Important note: this is a separate implementation to the more general drag and drop implementation documented in the overview_dnd. It uses the older, Windows message-based approach of dropping files.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow:dragAcceptFiles/2\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxDropFilesEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxDropFilesEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxDropFiles() :: #wxDropFiles{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxDropFilesEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxDropFilesEventType() :: drop_files.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetFiles(This) -> [unicode:charlist()]\fR
+\fB                  when This :: wxDropFilesEvent().\fR
+
+.br
+.RS
+.PP
+Returns an array of filenames.
+
+
+.RE
+.B
+\fBgetNumberOfFiles(This) -> integer()\fR
+\fB                          when This :: wxDropFilesEvent().\fR
+
+.br
+.RS
+.PP
+Returns the number of files dropped.
+
+
+.RE
+.B
+\fBgetPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                     when This :: wxDropFilesEvent().\fR
+
+.br
+.RS
+.PP
+Returns the position at which the files were dropped.
+
+.PP
+Returns an array of filenames.
+
+
+.RE

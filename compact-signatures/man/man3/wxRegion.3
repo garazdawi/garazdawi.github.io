@@ -1,0 +1,475 @@
+.TH wxRegion 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxRegion \- A \fIwxRegion\fR represents a simple or complex region on a device context or window.
+
+.SH DESCRIPTION
+.PP
+This class uses reference counting and copy-on-write internally so that assignments between two instances of this class are very cheap. You can therefore use actual objects instead of pointers without efficiency problems. If an instance of this class is changed it will create its own data internally so that other instances, which previously shared the data using the reference counting, are not affected.
+
+.PP
+Predefined objects (include wx.hrl):
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxNullRegion
+
+.RE
+
+.PP
+wxWidgets docs: wxRegion
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxRegion() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fB'Xor'(This, Rect) -> boolean()\fR
+\fB               when\fR
+\fB                   This :: wxRegion(),\fR
+\fB                   Rect ::\fR
+\fB                       {X :: integer(),\fR
+\fB                        Y :: integer(),\fR
+\fB                        W :: integer(),\fR
+\fB                        H :: integer()};\fR
+\fB           (This, Region) -> boolean()\fR
+\fB               when This :: wxRegion(), Region :: wxRegion().\fR
+
+.br
+.RS
+.PP
+Finds the Xor of this region and another region.
+
+.PP
+This method can be used even if this region is invalid and has the natural behaviour in this case, i.e. makes this region equal to the given \fIregion\fR.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: This operation creates a region that combines all of this region and the second region, except for any overlapping areas. The result is stored in this region.
+
+
+.RE
+.B
+\fB'Xor'(This, X, Y, Width, Height) -> boolean()\fR
+\fB               when\fR
+\fB                   This :: wxRegion(),\fR
+\fB                   X :: integer(),\fR
+\fB                   Y :: integer(),\fR
+\fB                   Width :: integer(),\fR
+\fB                   Height :: integer().\fR
+
+.br
+.RS
+.PP
+Finds the Xor of this region and another, rectangular region, specified using position and size.
+
+.PP
+This method can be used even if this region is invalid and has the natural behaviour in this case, i.e. makes this region equal to the given rectangle.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: This operation creates a region that combines all of this region and the second region, except for any overlapping areas. The result is stored in this region.
+
+
+.RE
+.B
+\fBclear(This) -> ok when This :: wxRegion().\fR
+
+.br
+.RS
+.PP
+Clears the current region.
+
+.PP
+The object becomes invalid, or null, after being cleared.
+
+
+.RE
+.B
+\fBcontains(This, Pt) -> wx:wx_enum()\fR
+\fB                  when\fR
+\fB                      This :: wxRegion(),\fR
+\fB                      Pt :: {X :: integer(), Y :: integer()};\fR
+\fB              (This, Rect) -> wx:wx_enum()\fR
+\fB                  when\fR
+\fB                      This :: wxRegion(),\fR
+\fB                      Rect ::\fR
+\fB                          {X :: integer(),\fR
+\fB                           Y :: integer(),\fR
+\fB                           W :: integer(),\fR
+\fB                           H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Returns a value indicating whether the given rectangle is contained within the region.
+
+.PP
+This method always returns \fIwxOutRegion\fR for an invalid region but may, nevertheless, be safely called in this case.
+
+.PP
+Return: One of ?wxOutRegion, ?wxPartRegion or ?wxInRegion.
+
+.PP
+Note: On Windows, only ?wxOutRegion and ?wxInRegion are returned; a value ?wxInRegion then indicates that all or some part of the region is contained in this region.
+
+
+.RE
+.B
+\fBcontains(This, X, Y) -> wx:wx_enum()\fR
+\fB                  when\fR
+\fB                      This :: wxRegion(), X :: integer(), Y :: integer().\fR
+
+.br
+.RS
+.PP
+Returns a value indicating whether the given point is contained within the region.
+
+.PP
+This method always returns \fIwxOutRegion\fR for an invalid region but may, nevertheless, be safely called in this case.
+
+.PP
+Return: The return value is one of \fIwxOutRegion\fR and \fIwxInRegion\fR.
+
+
+.RE
+.B
+\fBcontains(This, X, Y, Width, Height) -> wx:wx_enum()\fR
+\fB                  when\fR
+\fB                      This :: wxRegion(),\fR
+\fB                      X :: integer(),\fR
+\fB                      Y :: integer(),\fR
+\fB                      Width :: integer(),\fR
+\fB                      Height :: integer().\fR
+
+.br
+.RS
+.PP
+Returns a value indicating whether the given rectangle is contained within the region.
+
+.PP
+This method always returns \fIwxOutRegion\fR for an invalid region but may, nevertheless, be safely called in this case.
+
+.PP
+Return: One of ?wxOutRegion, ?wxPartRegion or ?wxInRegion.
+
+.PP
+Note: On Windows, only ?wxOutRegion and ?wxInRegion are returned; a value ?wxInRegion then indicates that all or some part of the region is contained in this region.
+
+
+.RE
+.B
+\fBconvertToBitmap(This) -> wxBitmap:wxBitmap()\fR
+\fB                         when This :: wxRegion().\fR
+
+.br
+.RS
+.PP
+Convert the region to a black and white bitmap with the white pixels being inside the region.
+
+.PP
+This method can't be used for invalid region.
+
+
+.RE
+.B
+\fBdestroy(This :: wxRegion()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetBox(This) ->\fR
+\fB                {X :: integer(),\fR
+\fB                 Y :: integer(),\fR
+\fB                 W :: integer(),\fR
+\fB                 H :: integer()}\fR
+\fB                when This :: wxRegion().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBintersect(This, Rect) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxRegion(),\fR
+\fB                       Rect ::\fR
+\fB                           {X :: integer(),\fR
+\fB                            Y :: integer(),\fR
+\fB                            W :: integer(),\fR
+\fB                            H :: integer()};\fR
+\fB               (This, Region) -> boolean()\fR
+\fB                   when This :: wxRegion(), Region :: wxRegion().\fR
+
+.br
+.RS
+.PP
+Finds the intersection of this region and another region.
+
+.PP
+This method always fails, i.e. returns false, if this region is invalid but may nevertheless be safely used even in this case.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: Creates the intersection of the two regions, that is, the parts which are in both regions. The result is stored in this region.
+
+
+.RE
+.B
+\fBintersect(This, X, Y, Width, Height) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxRegion(),\fR
+\fB                       X :: integer(),\fR
+\fB                       Y :: integer(),\fR
+\fB                       Width :: integer(),\fR
+\fB                       Height :: integer().\fR
+
+.br
+.RS
+.PP
+Finds the intersection of this region and another, rectangular region, specified using position and size.
+
+.PP
+This method always fails, i.e. returns false, if this region is invalid but may nevertheless be safely used even in this case.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: Creates the intersection of the two regions, that is, the parts which are in both regions. The result is stored in this region.
+
+
+.RE
+.B
+\fBisEmpty(This) -> boolean() when This :: wxRegion().\fR
+
+.br
+.RS
+.PP
+Returns true if the region is empty, false otherwise.
+
+.PP
+Always returns true if the region is invalid.
+
+
+.RE
+.B
+\fBnew() -> wxRegion().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+.PP
+This constructor creates an invalid, or null, object, i.e. calling IsOk() on it returns false and \fIisEmpty/1\fR returns true.
+
+
+.RE
+.B
+\fBnew(Rect) -> wxRegion()\fR
+\fB             when\fR
+\fB                 Rect ::\fR
+\fB                     {X :: integer(),\fR
+\fB                      Y :: integer(),\fR
+\fB                      W :: integer(),\fR
+\fB                      H :: integer()};\fR
+\fB         (Bmp) -> wxRegion() when Bmp :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Constructs a region using a bitmap.
+
+.PP
+See \fIunion/5\fR for more details.
+
+
+.RE
+.B
+\fBnew(TopLeft, BottomRight) -> wxRegion()\fR
+\fB             when\fR
+\fB                 TopLeft :: {X :: integer(), Y :: integer()},\fR
+\fB                 BottomRight :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Constructs a rectangular region from the top left point and the bottom right point.
+
+
+.RE
+.B
+\fBnew(X, Y, Width, Height) -> wxRegion()\fR
+\fB             when\fR
+\fB                 X :: integer(),\fR
+\fB                 Y :: integer(),\fR
+\fB                 Width :: integer(),\fR
+\fB                 Height :: integer().\fR
+
+.br
+.RS
+.PP
+Constructs a rectangular region with the given position and size.
+
+
+.RE
+.B
+\fBoffset(This, Pt) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxRegion(),\fR
+\fB                    Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoffset(This, X, Y) -> boolean()\fR
+\fB                when This :: wxRegion(), X :: integer(), Y :: integer().\fR
+
+.br
+.RS
+.PP
+Moves the region by the specified offsets in horizontal and vertical directions.
+
+.PP
+This method can't be called if the region is invalid as it doesn't make sense to offset it then. Attempts to do it will result in assert failure.
+
+.PP
+Return: true if successful, false otherwise (the region is unchanged then).
+
+
+.RE
+.B
+\fBsubtract(This, Rect) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxRegion(),\fR
+\fB                      Rect ::\fR
+\fB                          {X :: integer(),\fR
+\fB                           Y :: integer(),\fR
+\fB                           W :: integer(),\fR
+\fB                           H :: integer()};\fR
+\fB              (This, Region) -> boolean()\fR
+\fB                  when This :: wxRegion(), Region :: wxRegion().\fR
+
+.br
+.RS
+.PP
+Subtracts a region from this region.
+
+.PP
+This method always fails, i.e. returns false, if this region is invalid but may nevertheless be safely used even in this case.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: This operation combines the parts of 'this' region that are not part of the second region. The result is stored in this region.
+
+
+.RE
+.B
+\fBunion(This, Region) -> boolean()\fR
+\fB               when\fR
+\fB                   This :: wxRegion(),\fR
+\fB                   Region :: wxRegion:wxRegion() | wxBitmap:wxBitmap();\fR
+\fB           (This, Rect) -> boolean()\fR
+\fB               when\fR
+\fB                   This :: wxRegion(),\fR
+\fB                   Rect ::\fR
+\fB                       {X :: integer(),\fR
+\fB                        Y :: integer(),\fR
+\fB                        W :: integer(),\fR
+\fB                        H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Finds the union of this region and another, rectangular region.
+
+.PP
+This method can be used even if this region is invalid and has the natural behaviour in this case, i.e. makes this region equal to the given rectangle.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: This operation creates a region that combines all of this region and the second region. The result is stored in this region.
+
+
+.RE
+.B
+\fBunion(This, Bmp, TransColour, [Option]) -> boolean()\fR
+\fB               when\fR
+\fB                   This :: wxRegion(),\fR
+\fB                   Bmp :: wxBitmap:wxBitmap(),\fR
+\fB                   TransColour :: wx:wx_colour(),\fR
+\fB                   Option :: {tolerance, integer()}.\fR
+
+.br
+.RS
+.PP
+Finds the union of this region and the non-transparent pixels of a bitmap.
+
+.PP
+Colour to be treated as transparent is specified in the \fItransColour\fR argument, along with an optional colour tolerance value.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: This operation creates a region that combines all of this region and the second region. The result is stored in this region.
+
+
+.RE
+.B
+\fBunion(This, X, Y, Width, Height) -> boolean()\fR
+\fB               when\fR
+\fB                   This :: wxRegion(),\fR
+\fB                   X :: integer(),\fR
+\fB                   Y :: integer(),\fR
+\fB                   Width :: integer(),\fR
+\fB                   Height :: integer().\fR
+
+.br
+.RS
+.PP
+Finds the union of this region and another, rectangular region, specified using position and size.
+
+.PP
+This method can be used even if this region is invalid and has the natural behaviour in this case, i.e. makes this region equal to the given rectangle.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: This operation creates a region that combines all of this region and the second region. The result is stored in this region.
+
+
+.RE

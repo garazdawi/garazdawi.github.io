@@ -1,0 +1,59 @@
+.TH edoc_layout_chunks 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc_layout_chunks \- Convert EDoc module documentation to an \fIEEP-48\fR\fIdocs_v1\fR chunk.
+
+.SH DESCRIPTION
+.PP
+This layout is only expected to work with \fI\fIedoc_doclet_chunks\fR\fR. Section \fIUsing the EDoc API\fR in the EDoc User's Guide shows an example of using this module.
+
+.PP
+This module breaks the convention stated in \fIedoc_doclet\fR to not rely on \fIedoc.hrl\fR in doclets and layouts. It uses \fI#entry{}\fR records directly to recover information that is not otherwise available to layouts.
+
+.PP
+\fBSee also: \fR\fIedoc_doclet_chunks\fR, \fI//stdlib/shell_docs\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBdocs_v1() ::\fR
+\fB          #docs_v1{anno :: erl_anno:anno(),\fR
+\fB                   beam_language :: beam_language(),\fR
+\fB                   format :: mime_type(),\fR
+\fB                   module_doc :: doc(),\fR
+\fB                   metadata :: metadata(),\fR
+\fB                   docs :: [docs_v1_entry()]}.\fR
+
+.br
+.RS
+.PP
+The Docs v1 chunk according to EEP 48.
+
+
+.RE
+.B
+\fBdocs_v1_entry() ::\fR
+\fB          {_KindNameArity :: {atom(), atom(), arity()},\fR
+\fB           _Anno :: erl_anno:anno(),\fR
+\fB           _Signature :: signature(),\fR
+\fB           _Doc :: doc(),\fR
+\fB           _Metadata :: metadata()}.\fR
+
+.br
+.RS
+.PP
+A tuple equivalent to the \fI#docs_v1_entry{}\fR record, but with the record name field skipped.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBmodule(edoc:edoc_module(), proplists:proplist()) -> binary().\fR
+
+.br
+.RS
+.PP
+Convert EDoc module documentation to an EEP-48 style doc chunk.
+
+
+.RE

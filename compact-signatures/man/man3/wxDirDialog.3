@@ -1,0 +1,268 @@
+.TH wxDirDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxDirDialog \- This class represents the directory chooser dialog.
+
+.SH DESCRIPTION
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDD_DEFAULT_STYLE: Equivalent to a combination of wxDEFAULT_DIALOG_STYLE and wxRESIZE_BORDER.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDD_DIR_MUST_EXIST: The dialog will allow the user to choose only an existing folder. When this style is not given, a "Create new directory" button is added to the dialog (on Windows) or some other way is provided to the user to type the name of a new folder.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDD_CHANGE_DIR: Change the current working directory to the directory chosen by the user.
+
+.RE
+
+.PP
+Note: This flag cannot be used with the \fIwxDD_MULTIPLE\fR style.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDD_MULTIPLE: Allow the user to select multiple directories. This flag is only available since wxWidgets 3.1.4
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDD_SHOW_HIDDEN: Show hidden and system folders. This flag is only available since wxWidgets 3.1.4 Notice that \fIwxRESIZE_BORDER\fR has special side effect under Windows where two different directory selection dialogs are available and this style also implicitly selects the new version as the old one always has fixed size. As the new version is almost always preferable, it is recommended that \fIwxRESIZE_BORDER\fR style be always used. This is the case if the dialog is created with the default style value but if you need to use any additional styles you should still specify \fIwxDD_DEFAULT_STYLE\fR unless you explicitly need to use the old dialog version under Windows. E.g. do instead of just using \fIwxDD_DIR_MUST_EXIST\fR style alone.
+
+.RE
+
+.PP
+Remark: MacOS 10.11+ does not display a title bar on the dialog. Use \fIsetMessage/2\fR to change the string displayed to the user at the top of the dialog after creation. The \fIwxTopLevelWindow:setTitle/2\fR method is provided for compatibility with pre-10.11 MacOS versions that do still support displaying the title bar.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFileDialog\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxDirDialog
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxDirDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxDirDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetMessage(This) -> unicode:charlist() when This :: wxDirDialog().\fR
+
+.br
+.RS
+.PP
+Returns the message that will be displayed on the dialog.
+
+
+.RE
+.B
+\fBgetPath(This) -> unicode:charlist() when This :: wxDirDialog().\fR
+
+.br
+.RS
+.PP
+Returns the default or user-selected path.
+
+.PP
+Note: This function can't be used with dialogs which have the \fIwxDD_MULTIPLE\fR style, use \fIGetPaths()\fR (not implemented in wx) instead.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxDirDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {title, unicode:chardata()} |\fR
+\fB                     {defaultPath, unicode:chardata()} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {sz, {W :: integer(), H :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Use \fIwxDialog:showModal/1\fR to show the dialog.
+
+
+.RE
+.B
+\fBsetMessage(This, Message) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxDirDialog(),\fR
+\fB                        Message :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the message that will be displayed on the dialog.
+
+
+.RE
+.B
+\fBsetPath(This, Path) -> ok\fR
+\fB                 when This :: wxDirDialog(), Path :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the default path.
+
+
+.RE

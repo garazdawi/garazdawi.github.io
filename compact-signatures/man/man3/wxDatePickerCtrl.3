@@ -1,0 +1,325 @@
+.TH wxDatePickerCtrl 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxDatePickerCtrl \- This control allows the user to select a date.
+
+.SH DESCRIPTION
+.PP
+Unlike \fIwxCalendarCtrl\fR, which is a relatively big control, \fIwxDatePickerCtrl\fR is implemented as a small window showing the currently selected date. The control can be edited using the keyboard, and can also display a popup window for more user-friendly date selection, depending on the styles used and the platform.
+
+.PP
+It is only available if \fIwxUSE_DATEPICKCTRL\fR is set to 1.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDP_SPIN: Creates a control without a month calendar drop down but with spin-control-like arrows to change individual date components. This style is not supported by the generic version.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDP_DROPDOWN: Creates a control with a month calendar drop-down part from which the user can select a date. This style is not supported in OSX/Cocoa native version.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDP_DEFAULT: Creates a control with the style that is best supported for the current platform (currently wxDP_SPIN under Windows and OSX/Cocoa and wxDP_DROPDOWN elsewhere).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDP_ALLOWNONE: With this style, the control allows the user to not enter any valid date at all. Without it - the default - the control always has some valid date. This style is not supported in OSX/Cocoa native version.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDP_SHOWCENTURY: Forces display of the century in the default date format. Without this style the century could be displayed, or not, depending on the default date representation in the system. This style is not supported in OSX/Cocoa native version currently. As can be seen from the remarks above, most of the control style are only supported in the native MSW implementation. In portable code it's recommended to use \fIwxDP_DEFAULT\fR style only, possibly combined with \fIwxDP_SHOWCENTURY\fR (this is also the style used by default if none is specified).
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCalendarCtrl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDateEvent\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPickerBase\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxDatePickerCtrl
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdate_changed\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxDatePickerCtrl() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxDatePickerCtrl()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetRange(This, Dt1, Dt2) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxDatePickerCtrl(),\fR
+\fB                      Dt1 :: wx:wx_datetime(),\fR
+\fB                      Dt2 :: wx:wx_datetime().\fR
+
+.br
+.RS
+.PP
+If the control had been previously limited to a range of dates using \fIsetRange/3\fR, returns the lower and upper bounds of this range.
+
+.PP
+If no range is set (or only one of the bounds is set), \fIdt1\fR and/or \fIdt2\fR are set to be invalid.
+
+.PP
+Notice that when using a native MSW implementation of this control the lower range is always set, even if \fIsetRange/3\fR hadn't been called explicitly, as the native control only supports dates later than year 1601.
+
+.PP
+Return: false if no range limits are currently set, true if at least one bound is set.
+
+
+.RE
+.B
+\fBgetValue(This) -> wx:wx_datetime() when This :: wxDatePickerCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the currently entered date.
+
+.PP
+For a control with \fIwxDP_ALLOWNONE\fR style the returned value may be invalid if no date is entered, otherwise it is always valid.
+
+
+.RE
+.B
+\fBnew() -> wxDatePickerCtrl().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxDatePickerCtrl()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {date, wx:wx_datetime()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Initializes the object and calls \fICreate()\fR (not implemented in wx) with all the parameters.
+
+
+.RE
+.B
+\fBsetRange(This, Dt1, Dt2) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxDatePickerCtrl(),\fR
+\fB                      Dt1 :: wx:wx_datetime(),\fR
+\fB                      Dt2 :: wx:wx_datetime().\fR
+
+.br
+.RS
+.PP
+Sets the valid range for the date selection.
+
+.PP
+If \fIdt1\fR is valid, it becomes the earliest date (inclusive) accepted by the control. If \fIdt2\fR is valid, it becomes the latest possible date.
+
+.PP
+Notice that if the current value is not inside the new range, it will be adjusted to lie inside it, i.e. calling this method can change the control value, however no events are generated by it.
+
+.PP
+Remark: If the current value of the control is outside of the newly set range bounds, the behaviour is undefined.
+
+
+.RE
+.B
+\fBsetValue(This, Dt) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxDatePickerCtrl(), Dt :: wx:wx_datetime().\fR
+
+.br
+.RS
+.PP
+Changes the current value of the control.
+
+.PP
+The date should be valid unless the control was created with \fIwxDP_ALLOWNONE\fR style and included in the currently selected range, if any.
+
+.PP
+Calling this method does not result in a date change event.
+
+
+.RE

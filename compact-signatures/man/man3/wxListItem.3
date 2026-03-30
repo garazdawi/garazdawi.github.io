@@ -1,0 +1,789 @@
+.TH wxListItem 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxListItem \- This class stores information about a \fIwxListCtrl\fR item or column.
+
+.SH DESCRIPTION
+.PP
+\fIwxListItem\fR is a class which contains information about:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Zero based item position; see \fIsetId/2\fR and \fIgetId/1\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Zero based column index; see \fIsetColumn/2\fR and \fIgetColumn/1\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The label (or header for columns); see \fIsetText/2\fR and \fIgetText/1\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The zero based index into an image list; see \fIgetImage/1\fR and \fIsetImage/2\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Application defined data; see \fISetData()\fR (not implemented in wx) and \fIGetData()\fR (not implemented in wx).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For columns only: the width of the column; see \fIsetWidth/2\fR and \fIgetWidth/1\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For columns only: the format of the column; one of \fIwxLIST_FORMAT_LEFT\fR, \fIwxLIST_FORMAT_RIGHT\fR, \fIwxLIST_FORMAT_CENTRE\fR. See \fIsetAlign/2\fR and \fIgetAlign/1\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The state of the item; see \fIsetState/2\fR and \fIgetState/1\fR. This is a bitlist of the following flags:
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_STATE_FOCUSED:\fR The item has the focus.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_STATE_SELECTED:\fR The item is selected.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_STATE_DONTCARE:\fR No special flags (the value of this constant is 0).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_STATE_DROPHILITED:\fR The item is highlighted to receive a drop event. Win32 only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_STATE_CUT:\fR The item is in the cut state. Win32 only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+mask indicating which state flags are valid; this is a bitlist of the flags reported above for the item state. See \fIsetStateMask/2\fR and GetStateMask().
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+mask indicating which fields of this class are valid; see \fIsetMask/2\fR and \fIgetMask/1\fR. This is a bitlist of the following flags:
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_MASK_STATE:\fR The state field is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_MASK_TEXT:\fR The label field is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_MASK_IMAGE:\fR The image field is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_MASK_DATA:\fR The application-defined data field is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_MASK_WIDTH:\fR The column width field is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxLIST_MASK_FORMAT:\fR The column format field is valid.
+
+.RE
+
+.PP
+The \fIwxListItem\fR object can also contain item-specific colour and font information: for this you need to call one of \fIsetTextColour/2\fR, \fIsetBackgroundColour/2\fR or \fIsetFont/2\fR functions on it passing it the colour/font to use. If the colour/font is not specified, the default list control colour/font is used.
+
+.PP
+See: \fIwxListCtrl\fR
+
+.PP
+wxWidgets docs: wxListItem
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxListItem() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBclear(This) -> ok when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Resets the item state to the default.
+
+
+.RE
+.B
+\fBdestroy(This :: wxListItem()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetAlign(This) -> wx:wx_enum() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns the alignment for this item.
+
+.PP
+Can be one of \fIwxLIST_FORMAT_LEFT\fR, \fIwxLIST_FORMAT_RIGHT\fR or \fIwxLIST_FORMAT_CENTRE\fR.
+
+
+.RE
+.B
+\fBgetBackgroundColour(This) -> wx:wx_colour4()\fR
+\fB                             when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns the background colour for this item.
+
+
+.RE
+.B
+\fBgetColumn(This) -> integer() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns the zero-based column; meaningful only in report mode.
+
+
+.RE
+.B
+\fBgetFont(This) -> wxFont:wxFont() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns the font used to display the item.
+
+
+.RE
+.B
+\fBgetId(This) -> integer() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns the zero-based item position.
+
+
+.RE
+.B
+\fBgetImage(This) -> integer() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns the zero-based index of the image associated with the item into the image list.
+
+
+.RE
+.B
+\fBgetMask(This) -> integer() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns a bit mask indicating which fields of the structure are valid.
+
+.PP
+Can be any combination of the following values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_MASK_STATE: \fIGetState\fR is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_MASK_TEXT: \fIGetText\fR is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_MASK_IMAGE: \fIGetImage\fR is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_MASK_DATA: \fIGetData\fR is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_MASK_WIDTH: \fIGetWidth\fR is valid.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_MASK_FORMAT: \fIGetFormat\fR is valid.
+
+.RE
+
+
+.RE
+.B
+\fBgetState(This) -> integer() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns a bit field representing the state of the item.
+
+.PP
+Can be any combination of:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_DONTCARE: No special flags (the values of this constant is 0).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_DROPHILITED: The item is highlighted to receive a drop event. Win32 only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_FOCUSED: The item has the focus.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_SELECTED: The item is selected.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLIST_STATE_CUT: The item is in the cut state. Win32 only.
+
+.RE
+
+
+.RE
+.B
+\fBgetText(This) -> unicode:charlist() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns the label/header text.
+
+
+.RE
+.B
+\fBgetTextColour(This) -> wx:wx_colour4() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Returns the text colour.
+
+
+.RE
+.B
+\fBgetWidth(This) -> integer() when This :: wxListItem().\fR
+
+.br
+.RS
+.PP
+Meaningful only for column headers in report mode.
+
+.PP
+Returns the column width.
+
+
+.RE
+.B
+\fBnew() -> wxListItem().\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBnew(Item) -> wxListItem() when Item :: wxListItem().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetAlign(This, Align) -> ok\fR
+\fB                  when This :: wxListItem(), Align :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the alignment for the item.
+
+.PP
+See also \fIgetAlign/1\fR
+
+
+.RE
+.B
+\fBsetBackgroundColour(This, ColBack) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxListItem(),\fR
+\fB                                 ColBack :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the background colour for the item.
+
+
+.RE
+.B
+\fBsetColumn(This, Col) -> ok\fR
+\fB                   when This :: wxListItem(), Col :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the zero-based column.
+
+.PP
+Meaningful only in report mode.
+
+
+.RE
+.B
+\fBsetFont(This, Font) -> ok\fR
+\fB                 when This :: wxListItem(), Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font for the item.
+
+
+.RE
+.B
+\fBsetId(This, Id) -> ok when This :: wxListItem(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the zero-based item position.
+
+
+.RE
+.B
+\fBsetImage(This, Image) -> ok\fR
+\fB                  when This :: wxListItem(), Image :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the zero-based index of the image associated with the item into the image list.
+
+
+.RE
+.B
+\fBsetMask(This, Mask) -> ok\fR
+\fB                 when This :: wxListItem(), Mask :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the mask of valid fields.
+
+.PP
+See \fIgetMask/1\fR.
+
+
+.RE
+.B
+\fBsetState(This, State) -> ok\fR
+\fB                  when This :: wxListItem(), State :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the item state flags (note that the valid state flags are influenced by the value of the state mask, see \fIsetStateMask/2\fR).
+
+.PP
+See \fIgetState/1\fR for valid flag values.
+
+
+.RE
+.B
+\fBsetStateMask(This, StateMask) -> ok\fR
+\fB                      when This :: wxListItem(), StateMask :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the bitmask that is used to determine which of the state flags are to be set.
+
+.PP
+See also \fIsetState/2\fR.
+
+
+.RE
+.B
+\fBsetText(This, Text) -> ok\fR
+\fB                 when This :: wxListItem(), Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the text label for the item.
+
+
+.RE
+.B
+\fBsetTextColour(This, ColText) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxListItem(),\fR
+\fB                           ColText :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the text colour for the item.
+
+
+.RE
+.B
+\fBsetWidth(This, Width) -> ok\fR
+\fB                  when This :: wxListItem(), Width :: integer().\fR
+
+.br
+.RS
+.PP
+Meaningful only for column headers in report mode.
+
+.PP
+Sets the column width.
+
+
+.RE

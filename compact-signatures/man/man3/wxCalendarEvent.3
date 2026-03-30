@@ -1,0 +1,107 @@
+.TH wxCalendarEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxCalendarEvent \- The \fIwxCalendarEvent\fR class is used together with \fIwxCalendarCtrl\fR.
+
+.SH DESCRIPTION
+.PP
+See: \fIwxCalendarCtrl\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDateEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxCalendarEvent
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxCalendar() :: #wxCalendar{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxCalendarEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxCalendarEventType() ::\fR
+\fB          calendar_sel_changed | calendar_day_changed |\fR
+\fB          calendar_month_changed | calendar_year_changed |\fR
+\fB          calendar_doubleclicked | calendar_weekday_clicked.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetDate(This) -> wx:wx_datetime() when This :: wxCalendarEvent().\fR
+
+.br
+.RS
+.PP
+Returns the date.
+
+
+.RE
+.B
+\fBgetWeekDay(This) -> wx:wx_enum() when This :: wxCalendarEvent().\fR
+
+.br
+.RS
+.PP
+Returns the week day on which the user clicked in \fIEVT\\_CALENDAR\\_WEEKDAY\\_CLICKED\fR handler.
+
+.PP
+It doesn't make sense to call this function in other handlers.
+
+
+.RE

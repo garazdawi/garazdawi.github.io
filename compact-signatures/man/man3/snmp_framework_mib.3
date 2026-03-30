@@ -1,0 +1,189 @@
+.TH snmp_framework_mib 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmp_framework_mib \- Instrumentation Functions for SNMP-FRAMEWORK-MIB
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmp_framework_mib\fR implements instrumentation functions for the SNMP-FRAMEWORK-MIB, and functions for initializing and configuring the database.
+
+.PP
+The configuration files are described in the SNMP User's Manual.
+
+.SH DATA TYPES
+.LP
+.B
+\fBadmin_string() :: string().\fR
+
+.br
+.RS
+.PP
+\fIOCTET STRING (SIZE(0..255))\fR
+
+
+.RE
+.B
+\fBengine_id() :: string().\fR
+
+.br
+.RS
+.PP
+\fIOCTET STRING (SIZE(5..32))\fR
+
+
+.RE
+.B
+\fBmax_message_size() :: 484..2147483647.\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"The maximum length in octets of an SNMP message which this SNMP engine can send or receive and process, determined as the minimum of the maximum message size values supported among all of the transports available to and supported by the engine."
+
+
+.PP
+\fIINTEGER (484..2147483647)\fR
+
+
+.RE
+.B
+\fBmessage_processing_model() :: v1 | v2c | v3.\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"As of this writing, there are several values of messageProcessingModel defined for use with SNMP. They are as follows: "
+
+.IP
+.nf
+                        0  reserved for SNMPv1
+                        1  reserved for SNMPv2c
+                        2  reserved for SNMPv2u and SNMPv2*
+                        3  reserved for SNMPv3
+
+.fi
+
+
+.PP
+\fIINTEGER(0 .. 2147483647)\fR
+
+
+.RE
+.B
+\fBsecurity_level() :: noAuthNoPriv | authNoPriv | authPriv.\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"A Level of Security at which SNMP messages can be sent or with which operations are being processed; in particular, one of: "
+
+.IP
+.nf
+                      noAuthNoPriv - without authentication and
+                                     without privacy,
+                      authNoPriv   - with authentication but
+                                     without privacy,
+                      authPriv     - with authentication and
+                                     with privacy.
+
+.fi
+
+.PP
+"These three values are ordered such that noAuthNoPriv is less than authNoPriv and authNoPriv is less than authPriv."
+
+
+.PP
+\fIINTEGER { noAuthNoPriv(1), authNoPriv(2), authPriv(3) }\fR
+
+
+.RE
+.B
+\fBsecurity_model() :: any | v1 | v2c | usm.\fR
+
+.br
+.RS
+.PP
+\fBNOTE: \fR"As of this writing, there are several values of securityModel defined for use with SNMP or reserved for use with supporting MIB objects. They are as follows: "
+
+.IP
+.nf
+                        0  reserved for 'any'
+                        1  reserved for SNMPv1
+                        2  reserved for SNMPv2c
+                        3  User-Based Security Model (USM)
+
+.fi
+
+
+.PP
+\fIINTEGER(0 .. 2147483647)\fR
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_context(Ctx) -> {ok, Key} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Ctx :: string(),\fR
+\fB                         Key :: term(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Adds a context to the agent config. Equivalent to one line in the \fIcontext.conf\fR file.
+
+
+.RE
+.B
+\fBconfigure(ConfDir) -> snmp:void() when ConfDir :: string().\fR
+
+.br
+.RS
+.PP
+This function is called from the supervisor at system start-up.
+
+.PP
+Inserts all data in the configuration files into the database and destroys all old data.
+
+.PP
+Thus, the data in the SNMP-FRAMEWORK-MIB, after this function has been called, is from the configuration files.
+
+.PP
+All \fIsnmp\fR counters are set to zero.
+
+.PP
+If an error is found in the configuration file, it is reported using the function \fIconfig_err/2\fR of the error report module, and the function fails with reason \fIconfiguration_error\fR.
+
+.PP
+\fIConfDir\fR is a string which points to the directory where the configuration files are found.
+
+.PP
+The configuration file read is: \fIcontext.conf\fR.
+
+
+.RE
+.B
+\fBdelete_context(Key) -> ok | {error, Reason}\fR
+\fB                        when Key :: term(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Delete a context from the agent config.
+
+
+.RE
+.B
+\fBinit() -> snmp:void().\fR
+
+.br
+.RS
+.PP
+This function is called from the supervisor at system start-up.
+
+.PP
+Creates the necessary objects in the database if they do not exist. It does not destroy any old values.
+
+
+.RE

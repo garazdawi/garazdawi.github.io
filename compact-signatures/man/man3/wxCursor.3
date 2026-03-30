@@ -1,0 +1,253 @@
+.TH wxCursor 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxCursor \- A cursor is a small bitmap usually used for denoting where the mouse pointer is, with a picture that might indicate the interpretation of a mouse click.
+
+.SH DESCRIPTION
+.PP
+As with icons, cursors in X and MS Windows are created in a different manner. Therefore, separate cursors will be created for the different environments. Platform-specific methods for creating a \fIwxCursor\fR object are catered for, and this is an occasion where conditional compilation will probably be required (see \fIwxIcon\fR for an example).
+
+.PP
+A single cursor object may be used in many windows (any subwindow type). The wxWidgets convention is to set the cursor for a window, as in X, rather than to set it globally as in MS Windows, although a global \fIwx_misc:setCursor/1\fR function is also available for MS Windows use.
+
+.PP
+Creating a Custom Cursor
+
+.PP
+The following is an example of creating a cursor from 32x32 bitmap data (down_bits) and a mask (down_mask) where 1 is black and 0 is white for the bits, and 1 is opaque and 0 is transparent for the mask. It works on Windows and GTK+.
+
+.PP
+Predefined objects (include wx.hrl):
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxNullCursor
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTANDARD_CURSOR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxHOURGLASS_CURSOR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxCROSS_CURSOR
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBitmap\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxIcon\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow:setCursor/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwx_misc:setCursor/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxStockCursor
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBitmap\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxCursor
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxCursor() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxCursor()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxCursor().\fR
+
+.br
+.RS
+.PP
+Returns true if cursor data is present.
+
+
+.RE
+.B
+\fBnew() -> wxCursor().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(CursorName) -> wxCursor()\fR
+\fB             when CursorName :: unicode:chardata();\fR
+\fB         (Image) -> wxCursor()\fR
+\fB             when Image :: wxImage:wxImage() | wxCursor:wxCursor();\fR
+\fB         (CursorId) -> wxCursor() when CursorId :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Constructs a cursor using a cursor identifier.
+
+
+.RE
+.B
+\fBnew(CursorName, [Option]) -> wxCursor()\fR
+\fB             when\fR
+\fB                 CursorName :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {type, wx:wx_enum()} |\fR
+\fB                     {hotSpotX, integer()} |\fR
+\fB                     {hotSpotY, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructs a cursor by passing a string resource name or filename.
+
+.PP
+The arguments \fIhotSpotX\fR and \fIhotSpotY\fR are only used when there's no hotspot info in the resource/image-file to load (e.g. when using \fIwxBITMAP_TYPE_ICO\fR under wxMSW or \fIwxBITMAP_TYPE_XPM\fR under wxGTK).
+
+
+.RE
+.B
+\fBok(This) -> boolean() when This :: wxCursor().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIisOk/1\fR
+
+
+.RE

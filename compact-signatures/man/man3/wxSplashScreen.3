@@ -1,0 +1,211 @@
+.TH wxSplashScreen 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSplashScreen \- \fIwxSplashScreen\fR shows a window with a thin border, displaying a bitmap describing your application.
+
+.SH DESCRIPTION
+.PP
+Show it in application initialisation, and then either explicitly destroy it or let it time-out.
+
+.PP
+Example usage:
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSplashScreen
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSplashScreen() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxSplashScreen()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetSplashStyle(This) -> integer() when This :: wxSplashScreen().\fR
+
+.br
+.RS
+.PP
+Returns the splash style (see \fInew/6\fR for details).
+
+
+.RE
+.B
+\fBgetTimeout(This) -> integer() when This :: wxSplashScreen().\fR
+
+.br
+.RS
+.PP
+Returns the timeout in milliseconds.
+
+
+.RE
+.B
+\fBnew(Bitmap, SplashStyle, Milliseconds, Parent, Id, [Option]) ->\fR
+\fB             wxSplashScreen()\fR
+\fB             when\fR
+\fB                 Bitmap :: wxBitmap:wxBitmap(),\fR
+\fB                 SplashStyle :: integer(),\fR
+\fB                 Milliseconds :: integer(),\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Construct the splash screen passing a bitmap, a style, a timeout, a window id, optional position and size, and a window style.
+
+.PP
+\fIsplashStyle\fR is a bitlist of some of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSPLASH_CENTRE_ON_PARENT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSPLASH_CENTRE_ON_SCREEN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSPLASH_NO_CENTRE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSPLASH_TIMEOUT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSPLASH_NO_TIMEOUT
+
+.RE
+
+.PP
+\fImilliseconds\fR is the timeout in milliseconds.
+
+
+.RE

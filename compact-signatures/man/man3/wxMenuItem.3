@@ -1,0 +1,1633 @@
+.TH wxMenuItem 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMenuItem \- A menu item represents an item in a menu.
+
+.SH DESCRIPTION
+.PP
+Note that you usually don't have to deal with it directly as \fIwxMenu\fR methods usually construct an object of this class for you.
+
+.PP
+Also please note that the methods related to fonts and bitmaps are currently only implemented for Windows, Mac and GTK+.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMenuBar\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMenu\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMenuItem
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImenu_open\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImenu_close\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImenu_highlight\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMenuItem() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcheck(This, [Option]) -> ok\fR
+\fB               when This :: wxMenuItem(), Option :: {check, boolean()}.\fR
+
+.br
+.RS
+.PP
+Checks or unchecks the menu item.
+
+.PP
+Note that this only works when the item is already appended to a menu.
+
+
+.RE
+.B
+\fBdestroy(This :: wxMenuItem()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBenable(This, [Option]) -> ok\fR
+\fB                when This :: wxMenuItem(), Option :: {enable, boolean()}.\fR
+
+.br
+.RS
+.PP
+Enables or disables the menu item.
+
+
+.RE
+.B
+\fBgetBitmap(This) -> wxBitmap:wxBitmap() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns the checked or unchecked bitmap.
+
+.PP
+Only for:wxmsw
+
+
+.RE
+.B
+\fBgetHelp(This) -> unicode:charlist() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns the help string associated with the menu item.
+
+
+.RE
+.B
+\fBgetId(This) -> integer() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns the menu item identifier.
+
+
+.RE
+.B
+\fBgetItemLabel(This) -> unicode:charlist() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns the text associated with the menu item including any accelerator characters that were passed to the constructor or \fIsetItemLabel/2\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetItemLabelText/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetLabelText/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetItemLabelText(This) -> unicode:charlist()\fR
+\fB                          when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns the text associated with the menu item, without any accelerator characters.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetItemLabel/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetLabelText/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetKind(This) -> wx:wx_enum() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns the item kind, one of \fIwxITEM_SEPARATOR\fR, \fIwxITEM_NORMAL\fR, \fIwxITEM_CHECK\fR or \fIwxITEM_RADIO\fR.
+
+
+.RE
+.B
+\fBgetLabel(This) -> unicode:charlist() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIgetItemLabelText/1\fR
+
+
+.RE
+.B
+\fBgetLabelFromText(Text) -> unicode:charlist()\fR
+\fB                          when Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIgetLabelText/1\fR
+
+
+.RE
+.B
+\fBgetLabelText(Text) -> unicode:charlist()\fR
+\fB                      when Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Strips all accelerator characters and mnemonics from the given \fItext\fR.
+
+.PP
+For example:
+
+.PP
+will return just \fI"Hello"\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetItemLabelText/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetItemLabel/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetMenu(This) -> wxMenu:wxMenu() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns the menu this menu item is in, or NULL if this menu item is not attached.
+
+
+.RE
+.B
+\fBgetSubMenu(This) -> wxMenu:wxMenu() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns the submenu associated with the menu item, or NULL if there isn't one.
+
+
+.RE
+.B
+\fBgetText(This) -> unicode:charlist() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIgetItemLabel/1\fR
+
+
+.RE
+.B
+\fBisCheckable(This) -> boolean() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is checkable.
+
+.PP
+Notice that the radio buttons are considered to be checkable as well, so this method returns true for them too. Use \fIIsCheck()\fR (not implemented in wx) if you want to test for the check items only.
+
+
+.RE
+.B
+\fBisChecked(This) -> boolean() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is checked.
+
+
+.RE
+.B
+\fBisEnabled(This) -> boolean() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is enabled.
+
+
+.RE
+.B
+\fBisSeparator(This) -> boolean() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is a separator.
+
+
+.RE
+.B
+\fBisSubMenu(This) -> boolean() when This :: wxMenuItem().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is a submenu.
+
+
+.RE
+.B
+\fBnew([Option]) -> wxMenuItem()\fR
+\fB             when\fR
+\fB                 Option ::\fR
+\fB                     {parentMenu, wxMenu:wxMenu()} |\fR
+\fB                     {id, integer()} |\fR
+\fB                     {text, unicode:chardata()} |\fR
+\fB                     {help, unicode:chardata()} |\fR
+\fB                     {kind, wx:wx_enum()} |\fR
+\fB                     {subMenu, wxMenu:wxMenu()}.\fR
+
+.br
+.RS
+.PP
+Constructs a \fIwxMenuItem\fR object.
+
+.PP
+Menu items can be standard, or "stock menu items", or custom. For the standard menu items (such as commands to open a file, exit the program and so on, see page_stockitems for the full list) it is enough to specify just the stock ID and leave \fItext\fR and \fIhelp\fR string empty. Some platforms (currently wxGTK only, and see the remark in \fIsetBitmap/2\fR documentation) will also show standard bitmaps for stock menu items.
+
+.PP
+Leaving at least \fItext\fR empty for the stock menu items is actually strongly recommended as they will have appearance and keyboard interface (including standard accelerators) familiar to the user.
+
+.PP
+For the custom (non-stock) menu items, \fItext\fR must be specified and while \fIhelp\fR string may be left empty, it's recommended to pass the item description (which is automatically shown by the library in the status bar when the menu item is selected) in this parameter.
+
+.PP
+Finally note that you can e.g. use a stock menu label without using its stock help string:
+
+.PP
+that is, stock properties are set independently one from the other.
+
+
+.RE
+.B
+\fBsetBitmap(This, Bmp) -> ok\fR
+\fB                   when This :: wxMenuItem(), Bmp :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Sets the bitmap for the menu item.
+
+.PP
+It is equivalent to wxMenuItem::SetBitmaps(bmp, wxNullBitmap) if \fIchecked\fR is true (default value) or SetBitmaps(wxNullBitmap, bmp) otherwise.
+
+.PP
+\fIsetBitmap/2\fR must be called before the item is appended to the menu, i.e. appending the item without a bitmap and setting one later is not guaranteed to work. But the bitmap can be changed or reset later if it had been set up initially.
+
+.PP
+Notice that GTK+ uses a global setting called \fIgtk-menu-images\fR to determine if the images should be shown in the menus at all. If it is off (which is the case in e.g. Gnome 2.28 by default), no images will be shown, consistently with the native behaviour.
+
+.PP
+Only for:wxmsw,wxosx,wxgtk
+
+
+.RE
+.B
+\fBsetHelp(This, HelpString) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxMenuItem(),\fR
+\fB                     HelpString :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the help string.
+
+
+.RE
+.B
+\fBsetItemLabel(This, Label) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxMenuItem(),\fR
+\fB                          Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the label associated with the menu item.
+
+.PP
+Note that if the ID of this menu item corresponds to a stock ID, then it is not necessary to specify a label: wxWidgets will automatically use the stock item label associated with that ID. See the \fInew/1\fR for more info.
+
+.PP
+The label string for the normal menu items (not separators) may include the accelerator which can be used to activate the menu item from keyboard. An accelerator key can be specified using the ampersand \fI&\fR character. In order to embed an ampersand character in the menu item text, the ampersand must be doubled.
+
+.PP
+Optionally you can specify also an accelerator string appending a tab character \fI\\t\fR followed by a valid key combination (e.g. \fICTRL+V\fR). Its general syntax is any combination of \fI"CTRL"\fR, \fI"RAWCTRL"\fR, \fI"ALT"\fR and \fI"SHIFT"\fR strings (case doesn't matter) separated by either \fI'-'\fR or \fI'+'\fR characters and followed by the accelerator itself. Notice that \fICTRL\fR corresponds to the "Ctrl" key on most platforms but not under macOS where it is mapped to "Cmd" key on Mac keyboard. Usually this is exactly what you want in portable code but if you really need to use the (rarely used for this purpose) "Ctrl" key even under Mac, you may use \fIRAWCTRL\fR to prevent this mapping. Under the other platforms \fIRAWCTRL\fR is the same as plain \fICTRL\fR.
+
+.PP
+The accelerator may be any alphanumeric character, any function key (from \fIF1\fR to \fIF12\fR), any numpad digit key using \fIKP_\fR prefix (i.e. from \fIKP_0\fR to \fIKP_9\fR) or one of the special strings listed below (again, case doesn't matter) corresponding to the specified key code:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDel\fR or \fIDelete:\fR WXK_DELETE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIBack:\fR WXK_BACK
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIIns\fR or \fIInsert:\fR WXK_INSERT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIEnter\fR or \fIReturn:\fR WXK_RETURN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIPgUp\fR or \fIPageUp:\fR WXK_PAGEUP
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIPgDn\fR or \fIPageDown:\fR WXK_PAGEDOWN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fILeft:\fR WXK_LEFT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIRight:\fR WXK_RIGHT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUp:\fR WXK_UP
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDown:\fR WXK_DOWN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIHome:\fR WXK_HOME
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIEnd:\fR WXK_END
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISpace:\fR WXK_SPACE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fITab:\fR WXK_TAB
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIEsc\fR or \fIEscape:\fR WXK_ESCAPE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fICancel:\fR WXK_CANCEL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIClear:\fR WXK_CLEAR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIMenu:\fR WXK_MENU
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIPause:\fR WXK_PAUSE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fICapital:\fR WXK_CAPITAL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISelect:\fR WXK_SELECT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIPrint:\fR WXK_PRINT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIExecute:\fR WXK_EXECUTE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISnapshot:\fR WXK_SNAPSHOT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIHelp:\fR WXK_HELP
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIAdd:\fR WXK_ADD
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISeparator:\fR WXK_SEPARATOR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISubtract:\fR WXK_SUBTRACT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDecimal:\fR WXK_DECIMAL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDivide:\fR WXK_DIVIDE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINum_lock:\fR WXK_NUMLOCK
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIScroll_lock:\fR WXK_SCROLL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Space:\fR WXK_NUMPAD_SPACE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Tab:\fR WXK_NUMPAD_TAB
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Enter:\fR WXK_NUMPAD_ENTER
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Home:\fR WXK_NUMPAD_HOME
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Left:\fR WXK_NUMPAD_LEFT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Up:\fR WXK_NUMPAD_UP
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Right:\fR WXK_NUMPAD_RIGHT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Down:\fR WXK_NUMPAD_DOWN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_PageUp:\fR WXK_NUMPAD_PAGEUP
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_PageDown:\fR WXK_NUMPAD_PAGEDOWN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Prior:\fR WXK_NUMPAD_PAGEUP
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Next:\fR WXK_NUMPAD_PAGEDOWN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_End:\fR WXK_NUMPAD_END
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Begin:\fR WXK_NUMPAD_BEGIN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Insert:\fR WXK_NUMPAD_INSERT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Delete:\fR WXK_NUMPAD_DELETE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Equal:\fR WXK_NUMPAD_EQUAL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Multiply:\fR WXK_NUMPAD_MULTIPLY
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Add:\fR WXK_NUMPAD_ADD
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Separator:\fR WXK_NUMPAD_SEPARATOR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Subtract:\fR WXK_NUMPAD_SUBTRACT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Decimal:\fR WXK_NUMPAD_DECIMAL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIKP_Divide:\fR WXK_NUMPAD_DIVIDE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIWindows_Left:\fR WXK_WINDOWS_LEFT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIWindows_Right:\fR WXK_WINDOWS_RIGHT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIWindows_Menu:\fR WXK_WINDOWS_MENU
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fICommand:\fR WXK_COMMAND
+
+.RE
+
+.PP
+Examples:
+
+.PP
+Note: In wxGTK using \fI"SHIFT"\fR with non-alphabetic characters currently doesn't work, even in combination with other modifiers, due to GTK+ limitation. E.g. \fIShift+Ctrl+A\fR works but \fIShift+Ctrl+1\fR or \fIShift+/\fR do not, so avoid using accelerators of this form in portable code.
+
+.PP
+Note: In wxGTk, the left/right/up/down arrow keys do not work as accelerator keys for a menu item unless a modifier key is used. Additionally, the following keycodes are not supported as menu accelerator keys:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_COMMAND/WXK_CONTROL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_SHIFT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_ALT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_SCROLL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_CAPITAL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_NUMLOCK
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_NUMPAD_TAB
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_TAB
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_WINDOWS_LEFT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_WINDOWS_RIGHT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_ADD
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_SEPARATOR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_SUBTRACT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_DECIMAL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_DIVIDE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+WXK_SNAPSHOT
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetItemLabel/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetItemLabelText/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetMenu(This, Menu) -> ok\fR
+\fB                 when This :: wxMenuItem(), Menu :: wxMenu:wxMenu().\fR
+
+.br
+.RS
+.PP
+Sets the parent menu which will contain this menu item.
+
+
+.RE
+.B
+\fBsetSubMenu(This, Menu) -> ok\fR
+\fB                    when This :: wxMenuItem(), Menu :: wxMenu:wxMenu().\fR
+
+.br
+.RS
+.PP
+Sets the submenu of this menu item.
+
+
+.RE
+.B
+\fBsetText(This, Label) -> ok\fR
+\fB                 when This :: wxMenuItem(), Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIsetItemLabel/2\fR
+
+
+.RE

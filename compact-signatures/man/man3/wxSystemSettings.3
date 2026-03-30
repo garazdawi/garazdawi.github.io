@@ -1,0 +1,128 @@
+.TH wxSystemSettings 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSystemSettings \- \fIwxSystemSettings\fR allows the application to ask for details about the system.
+
+.SH DESCRIPTION
+.PP
+This can include settings such as standard colours, fonts, and user interface element sizes.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFont\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwx_color()\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSystemOptions\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSystemSettings
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSystemSettings() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetColour(Index) -> wx:wx_colour4() when Index :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Returns a system colour.
+
+.PP
+Return: The returned colour is always valid.
+
+
+.RE
+.B
+\fBgetFont(Index) -> wxFont:wxFont() when Index :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Returns a system font.
+
+.PP
+Return: The returned font is always valid.
+
+
+.RE
+.B
+\fBgetMetric(Index, [Option]) -> integer()\fR
+\fB                   when\fR
+\fB                       Index :: wx:wx_enum(),\fR
+\fB                       Option :: {win, wxWindow:wxWindow()}.\fR
+
+.br
+.RS
+.PP
+Returns the value of a system metric, or -1 if the metric is not supported on the current system.
+
+.PP
+The value of \fIwin\fR determines if the metric returned is a global value or a \fIwxWindow\fR based value, in which case it might determine the widget, the display the window is on, or something similar. The window given should be as close to the metric as possible (e.g. a \fIwxTopLevelWindow\fR in case of the wxSYS_CAPTION_Y metric).
+
+.PP
+\fIindex\fR can be one of the ?wxSystemMetric enum values.
+
+.PP
+\fIwin\fR is a pointer to the window for which the metric is requested. Specifying the \fIwin\fR parameter is encouraged, because some metrics on some ports are not supported without one,or they might be capable of reporting better values if given one. If a window does not make sense for a metric, one should still be given, as for example it might determine which displays cursor width is requested with wxSYS_CURSOR_X.
+
+
+.RE
+.B
+\fBgetScreenType() -> wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Returns the screen type.
+
+.PP
+The return value is one of the ?wxSystemScreenType enum values.
+
+
+.RE

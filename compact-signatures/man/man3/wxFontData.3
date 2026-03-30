@@ -1,0 +1,284 @@
+.TH wxFontData 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxFontData \- This class holds a variety of information related to font dialogs.
+
+.SH DESCRIPTION
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFont\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFontDialog\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxFontData
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxFontData() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxFontData()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBenableEffects(This, Enable) -> ok\fR
+\fB                       when This :: wxFontData(), Enable :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables or disables "effects" under Windows or generic only.
+
+.PP
+This refers to the controls for manipulating colour, strikeout and underline properties.
+
+.PP
+The default value is true.
+
+
+.RE
+.B
+\fBgetAllowSymbols(This) -> boolean() when This :: wxFontData().\fR
+
+.br
+.RS
+.PP
+Under Windows, returns a flag determining whether symbol fonts can be selected.
+
+.PP
+Has no effect on other platforms.
+
+.PP
+The default value is true.
+
+
+.RE
+.B
+\fBgetChosenFont(This) -> wxFont:wxFont() when This :: wxFontData().\fR
+
+.br
+.RS
+.PP
+Gets the font chosen by the user if the user pressed OK (\fIwxFontDialog::ShowModal()\fR (not implemented in wx) returned wxID_OK).
+
+
+.RE
+.B
+\fBgetColour(This) -> wx:wx_colour4() when This :: wxFontData().\fR
+
+.br
+.RS
+.PP
+Gets the colour associated with the font dialog.
+
+.PP
+The default value is black.
+
+
+.RE
+.B
+\fBgetEnableEffects(This) -> boolean() when This :: wxFontData().\fR
+
+.br
+.RS
+.PP
+Determines whether "effects" are enabled under Windows.
+
+.PP
+This refers to the controls for manipulating colour, strikeout and underline properties.
+
+.PP
+The default value is true.
+
+
+.RE
+.B
+\fBgetInitialFont(This) -> wxFont:wxFont() when This :: wxFontData().\fR
+
+.br
+.RS
+.PP
+Gets the font that will be initially used by the font dialog.
+
+.PP
+This should have previously been set by the application.
+
+
+.RE
+.B
+\fBgetShowHelp(This) -> boolean() when This :: wxFontData().\fR
+
+.br
+.RS
+.PP
+Returns true if the Help button will be shown (Windows only).
+
+.PP
+The default value is false.
+
+
+.RE
+.B
+\fBnew() -> wxFontData().\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Initializes \fIfontColour\fR to black, \fIshowHelp\fR to false, \fIallowSymbols\fR to true, \fIenableEffects\fR to true, \fIminSize\fR to 0 and \fImaxSize\fR to 0.
+
+
+.RE
+.B
+\fBnew(Data) -> wxFontData() when Data :: wxFontData().\fR
+
+.br
+.RS
+.PP
+Copy Constructor.
+
+
+.RE
+.B
+\fBsetAllowSymbols(This, AllowSymbols) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxFontData(),\fR
+\fB                             AllowSymbols :: boolean().\fR
+
+.br
+.RS
+.PP
+Under Windows, determines whether symbol fonts can be selected.
+
+.PP
+Has no effect on other platforms.
+
+.PP
+The default value is true.
+
+
+.RE
+.B
+\fBsetChosenFont(This, Font) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxFontData(), Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font that will be returned to the user (for internal use only).
+
+
+.RE
+.B
+\fBsetColour(This, Colour) -> ok\fR
+\fB                   when This :: wxFontData(), Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the colour that will be used for the font foreground colour.
+
+.PP
+The default colour is black.
+
+
+.RE
+.B
+\fBsetInitialFont(This, Font) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxFontData(),\fR
+\fB                            Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font that will be initially used by the font dialog.
+
+
+.RE
+.B
+\fBsetRange(This, Min, Max) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxFontData(),\fR
+\fB                      Min :: integer(),\fR
+\fB                      Max :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the valid range for the font point size (Windows only).
+
+.PP
+The default is 0, 0 (unrestricted range).
+
+
+.RE
+.B
+\fBsetShowHelp(This, ShowHelp) -> ok\fR
+\fB                     when This :: wxFontData(), ShowHelp :: boolean().\fR
+
+.br
+.RS
+.PP
+Determines whether the Help button will be displayed in the font dialog (Windows only).
+
+.PP
+The default value is false.
+
+
+.RE

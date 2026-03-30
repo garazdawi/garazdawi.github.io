@@ -1,0 +1,318 @@
+.TH ct_ftp 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_ftp \- FTP client module (based on the \fIftp\fR application).
+
+.SH DESCRIPTION
+.SH DATA TYPES
+.LP
+.B
+\fBconnection() :: handle() | ct:target_name().\fR
+
+.br
+.RS
+.PP
+Reference to opened FTP connection associated to either a \fIhandle\fR or \fItarget_name\fR.
+
+
+.RE
+.B
+\fBhandle() :: ct:handle().\fR
+
+.br
+.RS
+.PP
+Handle for a specific FTP connection, see module \fIct\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcd(Connection, Dir) -> ok | {error, Reason}\fR
+\fB            when\fR
+\fB                Connection :: connection(),\fR
+\fB                Dir :: file:filename(),\fR
+\fB                Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:cd/2 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Changes directory on remote host.
+
+
+.RE
+.B
+\fBclose(Connection) -> ok | {error, Reason}\fR
+\fB               when Connection :: connection(), Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:close/1 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Closes the FTP connection.
+
+
+.RE
+.B
+\fBdelete(Connection, File) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    Connection :: connection(),\fR
+\fB                    File :: file:filename(),\fR
+\fB                    Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:delete/2 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Deletes a file on remote host.
+
+
+.RE
+.B
+\fBget(KeyOrName, RemoteFile, LocalFile) -> ok | {error, Reason}\fR
+\fB             when\fR
+\fB                 KeyOrName :: ct:key_or_name(),\fR
+\fB                 RemoteFile :: file:filename(),\fR
+\fB                 LocalFile :: file:filename(),\fR
+\fB                 Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:get/3 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Opens an FTP connection and fetches a file from the remote host.
+
+.PP
+\fIRemoteFile\fR and \fILocalFile\fR must be absolute paths.
+
+.PP
+The configuration file must be as for \fIct_ftp:put/3\fR.
+
+.PP
+See also \fIct:require/2\fR.
+
+
+.RE
+.B
+\fBls(Connection, Dir) -> {ok, Listing} | {error, Reason}\fR
+\fB            when\fR
+\fB                Connection :: connection(),\fR
+\fB                Dir :: file:filename(),\fR
+\fB                Listing :: string(),\fR
+\fB                Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:ls/2 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Lists directory \fIDir\fR.
+
+
+.RE
+.B
+\fBopen(KeyOrName) -> {ok, Handle} | {error, Reason}\fR
+\fB              when\fR
+\fB                  KeyOrName :: ct:key_or_name(),\fR
+\fB                  Handle :: handle(),\fR
+\fB                  Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:open/1 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Opens an FTP connection to the specified node.
+
+.PP
+You can open a connection for a particular \fIName\fR and use the same name as reference for all following subsequent operations. If you want the connection to be associated with \fIHandle\fR instead (if you, for example, need to open multiple connections to a host), use \fIKey\fR, the configuration variable name, to specify the target. A connection without an associated target name can only be closed with the handle value.
+
+.PP
+For information on how to create a new \fIName\fR, see \fIct:require/2\fR.
+
+
+.RE
+.B
+\fBput(KeyOrName, LocalFile, RemoteFile) -> ok | {error, Reason}\fR
+\fB             when\fR
+\fB                 KeyOrName :: ct:key_or_name(),\fR
+\fB                 LocalFile :: file:filename(),\fR
+\fB                 RemoteFile :: file:filename(),\fR
+\fB                 Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:put/3 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Opens an FTP connection and sends a file to the remote host.
+
+.PP
+\fILocalFile\fR and \fIRemoteFile\fR must be absolute paths.
+
+.PP
+If the target host is a "special" node, the FTP address must be specified in the configuration file as follows:
+
+.IP
+.nf
+{node,[{ftp,IpAddr}]}.
+
+.fi
+
+.PP
+If the target host is something else, for example, a UNIX host, the configuration file must also include the username and password (both strings):
+
+.IP
+.nf
+{unix,[{ftp,IpAddr},
+       {username,Username},
+       {password,Password}]}.
+
+.fi
+
+.PP
+See also \fIct:require/2\fR.
+
+
+.RE
+.B
+\fBrecv(Connection, RemoteFile) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Connection :: connection(),\fR
+\fB                  RemoteFile :: file:filename(),\fR
+\fB                  Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:recv/2 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Fetches a file over FTP.
+
+.PP
+The file gets the same name on the local host.
+
+.PP
+See also \fIct_ftp:recv/3\fR.
+
+
+.RE
+.B
+\fBrecv(Connection, RemoteFile, LocalFile) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Connection :: connection(),\fR
+\fB                  RemoteFile :: file:filename(),\fR
+\fB                  LocalFile :: file:filename(),\fR
+\fB                  Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:recv/3 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Fetches a file over FTP.
+
+.PP
+The file is named \fILocalFile\fR on the local host.
+
+
+.RE
+.B
+\fBsend(Connection, LocalFile) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Connection :: connection(),\fR
+\fB                  LocalFile :: file:filename(),\fR
+\fB                  Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:send/2 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Sends a file over FTP.
+
+.PP
+The file gets the same name on the remote host.
+
+.PP
+See also \fIct_ftp:send/3\fR.
+
+
+.RE
+.B
+\fBsend(Connection, LocalFile, RemoteFile) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Connection :: connection(),\fR
+\fB                  LocalFile :: file:filename(),\fR
+\fB                  RemoteFile :: file:filename(),\fR
+\fB                  Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:send/3 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Sends a file over FTP.
+
+.PP
+The file is named \fIRemoteFile\fR on the remote host.
+
+
+.RE
+.B
+\fBtype(Connection, Type) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Connection :: connection(),\fR
+\fB                  Type :: ascii | binary,\fR
+\fB                  Reason :: term().\fR
+
+.RS
+.LP
+Deprecated: ct_ftp:type/2 is deprecated; Legacy protocol support will be dropped in OTP-30
+.RE
+
+.br
+.RS
+.PP
+Changes the file transfer type.
+
+
+.RE

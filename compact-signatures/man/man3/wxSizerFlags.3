@@ -1,0 +1,211 @@
+.TH wxSizerFlags 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSizerFlags \- Container for sizer items flags providing readable names for them.
+
+.SH DESCRIPTION
+.PP
+Normally, when you add an item to a sizer via \fIwxSizer:add/4\fR, you have to specify a lot of flags and parameters which can be unwieldy. This is where \fIwxSizerFlags\fR comes in: it allows you to specify all parameters using the named methods instead. For example, instead of
+
+.PP
+you can now write
+
+.PP
+This is more readable and also allows you to create \fIwxSizerFlags\fR objects which can be reused for several sizer items.
+
+.PP
+Note that by specification, all methods of \fIwxSizerFlags\fR return the \fIwxSizerFlags\fR object itself to allowing chaining multiple methods calls like in the examples above.
+
+.PP
+See: \fIwxSizer\fR
+
+.PP
+wxWidgets docs: wxSizerFlags
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSizerFlags() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBalign(This, Alignment) -> wxSizerFlags()\fR
+\fB               when This :: wxSizerFlags(), Alignment :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the alignment of this \fIwxSizerFlags\fR to \fIalign\fR.
+
+.PP
+This method replaces the previously set alignment with the specified one.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIleft/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIright/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcentre/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBborder(This, [Option]) -> wxSizerFlags()\fR
+\fB                when\fR
+\fB                    This :: wxSizerFlags(),\fR
+\fB                    Option :: {direction, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the \fIwxSizerFlags\fR to have a border with size as returned by \fIGetDefaultBorder()\fR (not implemented in wx).
+
+
+.RE
+.B
+\fBborder(This, Direction, Borderinpixels) -> wxSizerFlags()\fR
+\fB                when\fR
+\fB                    This :: wxSizerFlags(),\fR
+\fB                    Direction :: integer(),\fR
+\fB                    Borderinpixels :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the \fIwxSizerFlags\fR to have a border of a number of pixels specified by \fIborderinpixels\fR with the directions specified by \fIdirection\fR.
+
+.PP
+Prefer to use the overload below or \fIDoubleBorder()\fR (not implemented in wx) or \fITripleBorder()\fR (not implemented in wx) versions instead of hard-coding the border value in pixels to avoid too small borders on devices with high DPI displays.
+
+
+.RE
+.B
+\fBcenter(This) -> wxSizerFlags() when This :: wxSizerFlags().\fR
+
+.br
+.RS
+.PP
+Sets the object of the \fIwxSizerFlags\fR to center itself in the area it is given.
+
+
+.RE
+.B
+\fBcentre(This) -> wxSizerFlags() when This :: wxSizerFlags().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIcenter/1\fR
+
+
+.RE
+.B
+\fBdestroy(This :: wxSizerFlags()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBexpand(This) -> wxSizerFlags() when This :: wxSizerFlags().\fR
+
+.br
+.RS
+.PP
+Sets the object of the \fIwxSizerFlags\fR to expand to fill as much area as it can.
+
+
+.RE
+.B
+\fBleft(This) -> wxSizerFlags() when This :: wxSizerFlags().\fR
+
+.br
+.RS
+.PP
+Aligns the object to the left, similar for \fIAlign(wxALIGN\\_LEFT)\fR.
+
+.PP
+Unlike \fIalign/2\fR, this method doesn't change the vertical alignment of the item.
+
+
+.RE
+.B
+\fBnew([Option]) -> wxSizerFlags()\fR
+\fB             when Option :: {proportion, integer()}.\fR
+
+.br
+.RS
+.PP
+Creates the \fIwxSizer\fR with the proportion specified by \fIproportion\fR.
+
+
+.RE
+.B
+\fBproportion(This, Proportion) -> wxSizerFlags()\fR
+\fB                    when This :: wxSizerFlags(), Proportion :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the proportion of this \fIwxSizerFlags\fR to \fIproportion\fR.
+
+
+.RE
+.B
+\fBright(This) -> wxSizerFlags() when This :: wxSizerFlags().\fR
+
+.br
+.RS
+.PP
+Aligns the object to the right, similar for \fIAlign(wxALIGN\\_RIGHT)\fR.
+
+.PP
+Unlike \fIalign/2\fR, this method doesn't change the vertical alignment of the item.
+
+
+.RE

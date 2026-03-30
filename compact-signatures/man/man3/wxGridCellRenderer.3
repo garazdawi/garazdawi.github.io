@@ -1,0 +1,128 @@
+.TH wxGridCellRenderer 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGridCellRenderer \- This class is responsible for actually drawing the cell in the grid.
+
+.SH DESCRIPTION
+.PP
+You may pass it to the \fIwxGridCellAttr\fR (below) to change the format of one given cell or to \fIwxGrid:setDefaultRenderer/2\fR to change the view of all cells. This is an abstract class, and you will normally use one of the predefined derived classes or derive your own class from it.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellBoolRenderer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellFloatRenderer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellNumberRenderer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellStringRenderer\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGridCellRenderer
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGridCellRenderer() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdraw(This, Grid, Attr, Dc, Rect, Row, Col, IsSelected) -> ok\fR
+\fB              when\fR
+\fB                  This :: wxGridCellRenderer(),\fR
+\fB                  Grid :: wxGrid:wxGrid(),\fR
+\fB                  Attr :: wxGridCellAttr:wxGridCellAttr(),\fR
+\fB                  Dc :: wxDC:wxDC(),\fR
+\fB                  Rect ::\fR
+\fB                      {X :: integer(),\fR
+\fB                       Y :: integer(),\fR
+\fB                       W :: integer(),\fR
+\fB                       H :: integer()},\fR
+\fB                  Row :: integer(),\fR
+\fB                  Col :: integer(),\fR
+\fB                  IsSelected :: boolean().\fR
+
+.br
+.RS
+.PP
+Draw the given cell on the provided DC inside the given rectangle using the style specified by the attribute and the default or selected state corresponding to the isSelected value.
+
+.PP
+This pure virtual function has a default implementation which will prepare the DC using the given attribute: it will draw the rectangle with the background colour from attr and set the text colour and font.
+
+
+.RE
+.B
+\fBgetBestSize(This, Grid, Attr, Dc, Row, Col) ->\fR
+\fB                     {W :: integer(), H :: integer()}\fR
+\fB                     when\fR
+\fB                         This :: wxGridCellRenderer(),\fR
+\fB                         Grid :: wxGrid:wxGrid(),\fR
+\fB                         Attr :: wxGridCellAttr:wxGridCellAttr(),\fR
+\fB                         Dc :: wxDC:wxDC(),\fR
+\fB                         Row :: integer(),\fR
+\fB                         Col :: integer().\fR
+
+.br
+.RS
+.PP
+Get the preferred size of the cell for its contents.
+
+.PP
+This method must be overridden in the derived classes to return the minimal fitting size for displaying the content of the given grid cell.
+
+
+.RE

@@ -1,0 +1,29 @@
+.TH edoc_doclet_chunks 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc_doclet_chunks \- Doclet generating standalone \fIEEP-48\fR doc chunk files.
+
+.SH DESCRIPTION
+.PP
+Section \fIUsing the EDoc API\fR in the EDoc User's Guide shows an example of using this module.
+
+.PP
+\fBSee also: \fR\fIedoc_layout_chunks\fR, \fI//stdlib/shell_docs\fR.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBrun(edoc_doclet:command(), edoc_doclet:context()) -> ok.\fR
+
+.br
+.RS
+.PP
+Main doclet entry point.
+
+.PP
+This doclet is tightly coupled with \fI\fIedoc_layout_chunks\fR\fR and should be used together with it.
+
+.PP
+The only option this doclet accepts is \fIdir\fR, which controls where the \fIchunks\fR subdirectory and the EEP-48 chunk files will be placed.
+
+
+.RE

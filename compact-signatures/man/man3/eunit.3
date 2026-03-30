@@ -1,0 +1,87 @@
+.TH eunit 3 "eunit 2.10.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+eunit \- This module is the main EUnit user interface.
+
+.SH DESCRIPTION
+.SH FUNCTIONS
+.LP
+.B
+\fBstart() -> term().\fR
+
+.br
+.RS
+.PP
+Starts the EUnit server. Normally, you don't need to call this function; it is started automatically.
+
+
+.RE
+.B
+\fBstop() -> term().\fR
+
+.br
+.RS
+.PP
+Stops the EUnit server. Normally, you don't need to call this function.
+
+
+.RE
+.B
+\fBtest(Tests :: term(), Options :: [term()]) ->\fR
+\fB              ok | error | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Runs a set of tests. The format of \fITests\fR is described in the section EUnit test representation of the overview.
+
+.PP
+Example:
+
+.IP
+.nf
+  eunit:test(fred)
+
+.fi
+
+.PP
+runs all tests in the module \fIfred\fR and also any tests in the module \fIfred_tests\fR, if that module exists.
+
+.PP
+Options:
+
+verbose
+.RS 2
+Displays more details about the running tests.
+
+
+.RE
+
+print_depth
+.RS 2
+Maximum depth to which terms are printed in case of error.
+
+
+.RE
+
+exact_execution
+.RS 2
+If this boolean flag is set to 
+\fItrue\fR framework will not automatically execute tests found in related module suffixed with "_tests". This behaviour might be unwanted if execution of modules found in a folder is ordered while it contains both source and test modules.
+
+.RE
+
+scale_timeouts
+.RS 2
+If this numeric value is set, timeouts will get scaled accordingly. It may be useful when running a set of tests on a slower host. Examples: 
+\fI{scale_timeouts,10}\fR make the timeouts 10 times longer, while \fI{scale_timeouts,0.1}\fR would shorten them by a factor of 10.
+
+.RE
+
+.PP
+Options in the environment variable EUNIT are also included last in the option list, i.e., have lower precedence than those in \fIOptions\fR.
+
+.PP
+\fISee also: \fR\fItest/1\fR.
+
+
+.RE

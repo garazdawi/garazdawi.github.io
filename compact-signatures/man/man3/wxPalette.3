@@ -1,0 +1,199 @@
+.TH wxPalette 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPalette \- A palette is a table that maps pixel values to RGB colours.
+
+.SH DESCRIPTION
+.PP
+It allows the colours of a low-depth bitmap, for example, to be mapped to the available colours in a display. The notion of palettes is becoming more and more obsolete nowadays and only the MSW port is still using a native palette. All other ports use generic code which is basically just an array of colours.
+
+.PP
+It is likely that in the future the only use for palettes within wxWidgets will be for representing colour indices from images (such as GIF or PNG). The image handlers for these formats have been modified to create a palette if there is such information in the original image file (usually 256 or less colour images). See \fIwxImage\fR for more information.
+
+.PP
+Predefined objects (include wx.hrl): ?wxNullPalette
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC:setPalette/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBitmap\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPalette
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPalette() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Red, Green, Blue) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxPalette(),\fR
+\fB                    Red :: binary(),\fR
+\fB                    Green :: binary(),\fR
+\fB                    Blue :: binary().\fR
+
+.br
+.RS
+.PP
+Creates a palette from arrays of size \fIn\fR, one for each red, blue or green component.
+
+.PP
+Return: true if the creation was successful, false otherwise.
+
+.PP
+See: \fInew/3\fR
+
+
+.RE
+.B
+\fBdestroy(This :: wxPalette()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetColoursCount(This) -> integer() when This :: wxPalette().\fR
+
+.br
+.RS
+.PP
+Returns number of entries in palette.
+
+
+.RE
+.B
+\fBgetPixel(This, Red, Green, Blue) -> integer()\fR
+\fB                  when\fR
+\fB                      This :: wxPalette(),\fR
+\fB                      Red :: integer(),\fR
+\fB                      Green :: integer(),\fR
+\fB                      Blue :: integer().\fR
+
+.br
+.RS
+.PP
+Returns a pixel value (index into the palette) for the given RGB values.
+
+.PP
+Return: The nearest palette index or \fIwxNOT_FOUND\fR for unexpected errors.
+
+.PP
+See: \fIgetRGB/2\fR
+
+
+.RE
+.B
+\fBgetRGB(This, Pixel) -> Result\fR
+\fB                when\fR
+\fB                    Result ::\fR
+\fB                        {Res :: boolean(),\fR
+\fB                         Red :: integer(),\fR
+\fB                         Green :: integer(),\fR
+\fB                         Blue :: integer()},\fR
+\fB                    This :: wxPalette(),\fR
+\fB                    Pixel :: integer().\fR
+
+.br
+.RS
+.PP
+Returns RGB values for a given palette index.
+
+.PP
+Return: true if the operation was successful.
+
+.PP
+See: \fIgetPixel/4\fR
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxPalette().\fR
+
+.br
+.RS
+.PP
+Returns true if palette data is present.
+
+
+.RE
+.B
+\fBnew() -> wxPalette().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Palette) -> wxPalette() when Palette :: wxPalette().\fR
+
+.br
+.RS
+.PP
+Copy constructor, uses overview_refcount.
+
+
+.RE
+.B
+\fBnew(Red, Green, Blue) -> wxPalette()\fR
+\fB             when Red :: binary(), Green :: binary(), Blue :: binary().\fR
+
+.br
+.RS
+.PP
+Creates a palette from arrays of size \fIn\fR, one for each red, blue or green component.
+
+.PP
+See: \fIcreate/4\fR
+
+
+.RE
+.B
+\fBok(This) -> boolean() when This :: wxPalette().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIisOk/1\fR
+
+
+.RE

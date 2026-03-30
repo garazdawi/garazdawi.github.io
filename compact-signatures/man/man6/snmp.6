@@ -1,0 +1,1378 @@
+.TH SNMP Application 6 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+SNMP Application
+.SH DESCRIPTION
+.SS "Description"
+
+.PP
+This chapter describes the \fIsnmp\fR application in OTP. The SNMP application provides the following services:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+multilingual extensible SNMP agent
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+SNMP manager
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+MIB compiler
+
+.RE
+
+.SS "Configuration"
+
+.PP
+The following configuration parameters are defined for the SNMP application. Refer to application(3) for more information about configuration parameters.
+
+.PP
+The snmp part of the config file specifying the configuration parameters is basically the following tuple:
+
+.IP
+.nf
+      {snmp, snmp_components_config()}
+
+.fi
+
+.PP
+A minimal config file for starting a node with both a manager and an agent:
+
+.IP
+.nf
+      [{snmp,
+        [{agent, [{db_dir, "/tmp/snmp/agent/db"},
+                  {config, [{dir, "/tmp/snmp/agent/conf"}]}]},
+         {manager, [{config, [{dir, "/tmp/snmp/manager/conf"},
+                              {db_dir, "/tmp/snmp/manager/db"}]}]}]}
+        ]
+       }
+      ].
+
+.fi
+
+.PP
+Each snmp component has its own set of configuration parameters, even though some of the types are common to both components.
+
+.IP
+.nf
+      snmp_components_config() -> [snmp_component_config()]
+      snmp_component_config() -> {agent, agent_options()} | {manager, manager_options()}
+      agent_options() = [agent_option()]
+      agent_option() = {restart_type,     restart_type()}     |
+                       {agent_type,       agent_type()}       |
+                       {agent_verbosity,  verbosity()}        |
+                       {discovery,        agent_discovery()}  |
+                       {versions,         versions()}         |
+                       {gb_max_vbs,       gb_max_vbs()}       |
+                       {priority,         priority()}         |
+                       {multi_threaded,   multi_threaded()}   |
+                       {db_dir,           db_dir()}           |
+                       {db_init_error,    db_init_error()}    |
+                       {local_db,         local_db()}         |
+                       {net_if,           agent_net_if()}     |
+                       {mibs,             mibs()}             |
+                       {mib_storage,      mib_storage()}      |
+                       {mib_server,       mib_server()}       |
+                       {audit_trail_log,  audit_trail_log()}  |
+                       {error_report_mod, error_report_mod()} |
+                       {note_store,       note_store()}       |
+                       {symbolic_store,   symbolic_store()}   |
+                       {target_cache,     target_cache()}     |
+                       {config,           agent_config()}
+      manager_options() = [manager_option()]
+      manager_option() = {restart_type,             restart_type()}    |
+                         {net_if,                   manager_net_if()}  |
+                         {server,                   server()}          |
+                         {note_store,               note_store()}      |
+                         {config,                   manager_config()}  |
+                         {inform_request_behaviour, manager_irb()}     |
+                         {mibs,                     manager_mibs()}    |
+                         {priority,                 priority()}        |
+                         {audit_trail_log,          audit_trail_log()} |
+                         {versions,                 versions()}        |
+                         {def_user_mod,             def_user_module()  |
+                         {def_user_data,            def_user_data()}
+
+.fi
+
+.PP
+Agent specific config options and types:
+
+agent_type() = master | sub <optional>
+.RS 2
+If 
+\fImaster\fR, one master agent is started. Otherwise, no agents are started.
+.PP
+Default is \fImaster\fR.
+
+
+.RE
+
+agent_discovery() = [agent_discovery_opt()] <optional>
+.RS 2
+
+\fIagent_discovery_opt() = {terminating, agent_terminating_discovery_opts()} | {originating, agent_originating_discovery_opts()}\fR
+.PP
+The \fIterminating\fR options effects discovery initiated by a manager.
+
+.PP
+The \fIoriginating\fR options effects discovery initiated by this agent.
+
+.PP
+For defaults see the options in \fIagent_discovery_opt()\fR.
+
+
+.RE
+
+agent_terminating_discovery_opts() = [agent_terminating_discovery_opt()] <optional>
+.RS 2
+
+\fIagent_terminating_discovery_opt() = {enable, boolean()} | {stage2, discovery | plain} | {trigger_username, string()}\fR
+.PP
+These are options effecting discovery \fIterminating\fR in this agent (i.e. initiated by a manager).
+
+.PP
+The default values for the \fIterminating\fR discovery options are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+enable: \fItrue\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+stage2: \fIdiscovery\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+trigger_username: \fI""\fR
+
+.RE
+
+
+.RE
+
+agent_originating_discovery_opts() = [agent_originating_discovery_opt()] <optional>
+.RS 2
+
+\fIagent_originating_discovery_opt() = {enable, boolean()}\fR
+.PP
+These are options effecting discovery \fIoriginating\fR in this agent.
+
+.PP
+The default values for the \fIoriginating\fR discovery options are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+enable: \fItrue\fR
+
+.RE
+
+
+.RE
+
+multi_threaded() = bool() | extended <optional>
+.RS 2
+If 
+\fItrue\fR (or \fIextended\fR), the agent is multi-threaded, with one thread for each get request.
+.PP
+The value \fIextended\fR means that a special 'process' is also created intended to handle \fIall\fR notifications.
+
+true
+.RS 2
+One worker dedicated to 'set-requests' and one (main) worker for all other requests ('get-request' and notifications).
+
+.PP
+If the 'main' worker is busy, a temporary process is spawned to handle that job ('get-request' or notification).
+
+
+.RE
+
+extended
+.RS 2
+One worker dedicated to 'set-requests', one worker dedicated to notifications and one (main) worker for all 'get-requests'.
+
+.PP
+If the 'main' worker is busy, a temporary process is spawned to handle that 'get-request'.
+
+
+.RE
+
+.PP
+\fBNOTE: \fREven with multi-threaded set to \fIextended\fR there is still a risk for 'reorder' when sending inform-requsts, which require a response (and may therefore require resending). Also, there is of course no way to guarantee order once the package is on the network.
+
+
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+db_dir() = string() <mandatory>
+.RS 2
+Defines where the SNMP agent internal db files are stored.
+
+
+.RE
+
+gb_max_vbs() = pos_integer() | infinity <optional>
+.RS 2
+Defines the maximum number of varbinds allowed in a Get-BULK response.
+
+.PP
+Default is \fI1000\fR.
+
+
+.RE
+
+local_db() = [local_db_opt()] <optional>
+.RS 2
+
+\fIlocal_db_opt() = {repair, agent_repair()} | {auto_save, agent_auto_save()} | {verbosity, verbosity()}\fR
+.PP
+Defines options specific for the SNMP agent local database.
+
+.PP
+For defaults see the options in \fIlocal_db_opt()\fR.
+
+
+.RE
+
+agent_repair() = false | true | force <optional>
+.RS 2
+When starting snmpa_local_db it always tries to open an existing database. If 
+\fIfalse\fR, and some errors occur, a new database is created instead. If \fItrue\fR, an existing file will be repaired. If \fIforce\fR, the table will be repaired even if it was properly closed.
+.PP
+Default is \fItrue\fR.
+
+
+.RE
+
+agent_auto_save() = integer() | infinity <optional>
+.RS 2
+The auto save interval. The table is flushed to disk whenever not accessed for this amount of time.
+
+.PP
+Default is \fI5000\fR.
+
+
+.RE
+
+agent_net_if() = [agent_net_if_opt()] <optional>
+.RS 2
+
+\fIagent_net_if_opt() = {module, agent_net_if_module()} | {verbosity, verbosity()} | {options, agent_net_if_options()}\fR
+.PP
+Defines options specific for the SNMP agent network interface entity.
+
+.PP
+For defaults see the options in \fIagent_net_if_opt()\fR.
+
+
+.RE
+
+agent_net_if_module() = atom() <optional>
+.RS 2
+Module which handles the network interface part for the SNMP agent. Must implement the 
+\fIsnmpa_network_interface\fR behaviour.
+.PP
+Default is \fIsnmpa_net_if\fR.
+
+
+.RE
+
+agent_net_if_options() = [agent_net_if_option()] <optional>
+.RS 2
+
+\fIagent_net_if_option() = {bind_to, bind_to()} | {sndbuf, sndbuf()} | {recbuf, recbuf()} | {no_reuse, no_reuse()} | {req_limit, req_limit()} | {filter, agent_net_if_filter_options()} | {open_err_filters, agent_net_if_open_err_filters()} | {extra_sock_opts, extra_socket_options()} | {inet_backend, inet_backend()}\fR
+.PP
+These options are actually specific to the used module. The ones shown here are applicable to the default \fIagent_net_if_module()\fR.
+
+.PP
+\fBNOTE: \fRIf the user has configured transports \fIwith\fR options then those will take precedence over these options. See agent information for more info.
+
+
+.PP
+For defaults see the options in \fIagent_net_if_option()\fR.
+
+
+.RE
+
+req_limit() = integer() | infinity <optional>
+.RS 2
+Max number of simultaneous requests handled by the agent.
+
+.PP
+Default is \fIinfinity\fR.
+
+
+.RE
+
+agent_net_if_filter_options() = [agent_net_if_filter_option()] <optional>
+.RS 2
+
+\fIagent_net_if_filter_option() = {module, agent_net_if_filter_module()}\fR
+.PP
+These options are actually specific to the used module. The ones shown here are applicable to the default \fIagent_net_if_filter_module()\fR.
+
+.PP
+For defaults see the options in \fIagent_net_if_filter_option()\fR.
+
+
+.RE
+
+agent_net_if_filter_module() = atom() <optional>
+.RS 2
+Module which handles the network interface filter part for the SNMP agent. Must implement the 
+\fIsnmpa_network_interface_filter\fR behaviour.
+.PP
+Default is \fIsnmpa_net_if_filter\fR.
+
+
+.RE
+
+agent_net_if_open_err_filters() = [agent_net_if_open_err_filter()] <optional>
+.RS 2
+
+\fIagent_net_if_open_err_filter() = atom()\fR
+.PP
+During agent initiation, the transports UDP sockets are opened. If this operation fails, the net-if (and the agent) fails to start (crash). This (filter) list contains error (reasons) that will make net-if fail "nicely". This (filter) list, is supposed to contain errors that can be returned by gen_udp:open/1,2. The effect is that any error returned by gen_udp:open which \fIare\fR in this list, will be considered "non-fatal" and will only result in an info message, rather than an error message. Net If, and the agent, will still crash, but will produce a less obnoxious message.
+
+
+.RE
+
+agent_mibs() = [string()] <optional>
+.RS 2
+Specifies a list of MIBs (including path) that defines which MIBs are initially loaded into the SNMP master agent.
+
+.PP
+Note that the following mibs will always be loaded:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+version v1: \fISTANDARD-MIB\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+version v2: \fISNMPv2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+version v3: \fISNMPv2\fR, \fISNMP-FRAMEWORK-MIB\fR and \fISNMP-MPD-MIB\fR
+
+.RE
+
+.PP
+Default is \fI[]\fR.
+
+
+.RE
+
+mib_storage() = [mib_storage_opt()] <optional>
+.RS 2
+
+\fImib_storage_opt() = {module, mib_storage_module()} | {options, mib_storage_options()}\fR
+.PP
+This option specifies how basic mib data is stored. This option is used by two parts of the snmp agent: The mib-server and the symbolic-store.
+
+.PP
+Default is \fI[{module, snmpa_mib_storage_ets}]\fR.
+
+
+.RE
+
+mib_storage_module() = snmpa_mib_data_ets | snmpa_mib_data_dets | snmpa_mib_data_mnesia | module()
+.RS 2
+Defines the mib storage module of the SNMP agent as defined by the 
+\fIsnmpa_mib_storage\fR behaviour.
+.PP
+Several entities (\fImib-server\fR via the its data module and the \fIsymbolic-store\fR) of the snmp agent uses this for storage of miscellaneous mib related data retrieved while loading a mib.
+
+.PP
+There are several implementations provided with the agent: \fIsnmpa_mib_storage_ets\fR, \fIsnmpa_mib_storage_dets\fR and \fIsnmpa_mib_storage_mnesia\fR.
+
+.PP
+Default module is \fIsnmpa_mib_storage_ets\fR.
+
+
+.RE
+
+mib_storage_options() = list() <optional>
+.RS 2
+This is implementation depended. That is, it depends on the module. For each module a specific set of options are valid. For the module provided with the app, these options are supported:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsnmpa_mib_storage_ets\fR: \fI{dir, filename()} | {action, keep | clear}, {checksum, boolean()}\fR
+
+dir
+.RS 2
+If present, points to a directory where a file to which all data in the ets table is "synced".
+
+.PP
+Also, when a table is opened this file is read, if it exists.
+
+.PP
+By default, this will \fInot\fR be used.
+
+
+.RE
+
+action
+.RS 2
+Specifies the behaviour when a non-empty file is found: Keep its content or clear it out.
+
+.PP
+Default is \fIkeep\fR.
+
+
+.RE
+
+checksum
+.RS 2
+Defines if the file is checksummed or not.
+
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsnmpa_mib_storage_dets\fR: \fI{dir, filename()} | {action, keep | clear}, {auto_save, default | pos_integer()} | {repair, force | boolean()}\fR
+
+dir
+.RS 2
+This 
+\fImandatory\fR option points to a directory where to place the file of a dets table.
+
+.RE
+action
+.RS 2
+Specifies the behaviour when a non-empty file is found: Keep its content or clear it out.
+
+.PP
+Default is \fIkeep\fR.
+
+
+.RE
+
+auto_save
+.RS 2
+Defines the dets auto-save frequency.
+
+.PP
+Default is \fIdefault\fR.
+
+
+.RE
+
+repair
+.RS 2
+Defines the dets repair behaviour.
+
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsnmpa_mib_storage_mnesia\fR: \fI{action, keep | clear}, {nodes, [node()]}\fR
+
+action
+.RS 2
+Specifies the behaviour when a non-empty, already existing, table: Keep its content or clear it out.
+
+.PP
+Default is \fIkeep\fR.
+
+
+.RE
+
+nodes
+.RS 2
+A list of node names (or an atom describing a list of nodes) defining where to open the table. Its up to the user to ensure that mnesia is actually running on the specified nodes.
+
+.PP
+The following distinct values are recognised:
+
+[]
+.RS 2
+Translated into a list of the own node: 
+\fI[node()]\fR
+
+.RE
+all
+.RS 2
+
+\fIerlang:nodes()\fR
+
+.RE
+visible
+.RS 2
+
+\fIerlang:nodes(visible)\fR
+
+.RE
+connected
+.RS 2
+
+\fIerlang:nodes(connected)\fR
+
+.RE
+db_nodes
+.RS 2
+
+\fImnesia:system_info(db_nodes)\fR
+
+.RE
+
+.PP
+Default is the result of the call: \fIerlang:nodes()\fR.
+
+
+.RE
+
+.RE
+
+
+.RE
+
+mib_server() = [mib_server_opt()] <optional>
+.RS 2
+
+\fImib_server_opt() = {mibentry_override, mibentry_override()} | {trapentry_override, trapentry_override()} | {verbosity, verbosity()} | {cache, mibs_cache()} | {data_module, mib_server_data_module()}\fR
+.PP
+Defines options specific for the SNMP agent mib server.
+
+.PP
+For defaults see the options in \fImib_server_opt()\fR.
+
+
+.RE
+
+mibentry_override() = bool() <optional>
+.RS 2
+If this value is false, then when loading a mib each mib- entry is checked prior to installation of the mib. The purpose of the check is to prevent that the same symbolic mibentry name is used for different oid's.
+
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+trapentry_override() = bool() <optional>
+.RS 2
+If this value is false, then when loading a mib each trap is checked prior to installation of the mib. The purpose of the check is to prevent that the same symbolic trap name is used for different trap's.
+
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+mib_server_data_module() = snmpa_mib_data_tttn | module() <optional>
+.RS 2
+Defines the backend data module of the SNMP agent mib-server as defined by the 
+\fIsnmpa_mib_data\fR behaviour.
+.PP
+At present only the default module is provided with the agent, \fIsnmpa_mib_data_tttn\fR.
+
+.PP
+Default module is \fIsnmpa_mib_data_tttn\fR.
+
+
+.RE
+
+mibs_cache() = bool() | mibs_cache_opts() <optional>
+.RS 2
+Shall the agent utilize the mib server lookup cache or not.
+
+.PP
+Default is \fItrue\fR (in which case the \fImibs_cache_opts()\fR default values apply).
+
+
+.RE
+
+mibs_cache_opts() = [mibs_cache_opt()] <optional>
+.RS 2
+
+\fImibs_cache_opt() = {autogc, mibs_cache_autogc()} | {gclimit, mibs_cache_gclimit()} | {age, mibs_cache_age()}\fR
+.PP
+Defines options specific for the SNMP agent mib server cache.
+
+.PP
+For defaults see the options in \fImibs_cache_opt()\fR.
+
+
+.RE
+
+mibs_cache_autogc() = bool() <optional>
+.RS 2
+Defines if the mib server shall perform cache gc automatically or leave it to the user (see gc_mibs_cache/0,1,2,3).
+
+.PP
+Default is \fItrue\fR.
+
+
+.RE
+
+mibs_cache_age() = integer() > 0 <optional>
+.RS 2
+Defines how old the entries in the cache will be allowed to become before they are GC'ed (assuming GC is performed). Each entry in the cache is "touched" whenever it is accessed.
+
+.PP
+The age is defined in milliseconds.
+
+.PP
+Default is \fI10 timutes\fR.
+
+
+.RE
+
+mibs_cache_gclimit() = infinity | integer() > 0 <optional>
+.RS 2
+When performing a GC, this is the max number of cache entries that will be deleted from the cache.
+
+.PP
+The reason why its possible to set a limit, is that if the cache is large, the GC can potentially take a long time, during which the agent is "busy". \fIBut\fR on a heavily loaded system, we also risk not removing enough elements in the cache, instead causing it to grow over time. This is the reason the default value is \fIinfinity\fR, which will ensure that \fIall\fR candidates are removed as soon as possible.
+
+.PP
+Default is \fIinfinity\fR.
+
+
+.RE
+
+error_report_mod() = atom() <optional>
+.RS 2
+Defines an error report module, implementing the 
+\fIsnmpa_error_report\fR behaviour. Two modules are provided with the toolkit: \fIsnmpa_error_logger\fR and \fIsnmpa_error_io\fR.
+.PP
+Default is \fIsnmpa_error_logger\fR.
+
+
+.RE
+
+symbolic_store() = [symbolic_store_opt()]
+.RS 2
+
+\fIsymbolic_store_opt() = {verbosity, verbosity()}\fR
+.PP
+Defines options specific for the SNMP agent symbolic store.
+
+.PP
+For defaults see the options in \fIsymbolic_store_opt()\fR.
+
+
+.RE
+
+target_cache() = [target_cache_opt()]
+.RS 2
+
+\fItarget_cache_opt() = {verbosity, verbosity()}\fR
+.PP
+Defines options specific for the SNMP agent target cache.
+
+.PP
+For defaults see the options in \fItarget_cache_opt()\fR.
+
+
+.RE
+
+agent_config() = [agent_config_opt()] <mandatory>
+.RS 2
+
+\fIagent_config_opt() = {dir, agent_config_dir()} | {force_load, force_load()} | {verbosity, verbosity()}\fR
+.PP
+Defines specific config related options for the SNMP agent.
+
+.PP
+For defaults see the options in \fIagent_config_opt()\fR.
+
+
+.RE
+
+agent_config_dir = dir() <mandatory>
+.RS 2
+Defines where the SNMP agent configuration files are stored.
+
+
+.RE
+
+force_load() = bool() <optional>
+.RS 2
+If 
+\fItrue\fR the configuration files are re-read during start-up, and the contents of the configuration database ignored. Thus, if \fItrue\fR, changes to the configuration database are lost upon reboot of the agent.
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+.PP
+Manager specific config options and types:
+
+server() = [server_opt()] <optional>
+.RS 2
+
+\fIserver_opt() = {timeout, server_timeout()} | {verbosity, verbosity()} | {cbproxy, server_cbproxy()} | {netif_sup, server_nis()}\fR
+.PP
+Specifies the options for the manager server process.
+
+.PP
+Default is \fIsilence\fR.
+
+
+.RE
+
+server_timeout() = integer() <optional>
+.RS 2
+Asynchronous request cleanup time. For every requests, some info is stored internally, in order to be able to deliver the reply (when it arrives) to the proper destination. If the reply arrives, this info will be deleted. But if there is no reply (in time), the info has to be deleted after the 
+\fIbest before\fR time has been passed. This cleanup will be performed at regular intervals, defined by the \fIserver_timeout()\fR time. The information will have an \fIbest before\fR time, defined by the \fIExpire\fR time given when calling the request function (see async_get, async_get_next and async_set).
+.PP
+Time in milli-seconds.
+
+.PP
+Default is \fI30000\fR.
+
+
+.RE
+
+server_cbproxy() = temporary (default) | permanent <optional>
+.RS 2
+This option specifies how the server will handle callback calls.
+
+temporary (default)
+.RS 2
+A temporary process will be created for each callback call.
+
+
+.RE
+
+permanent
+.RS 2
+With this the server will create a permanent (named) process that in effect serializes all callback calls.
+
+
+.RE
+
+.PP
+Default is \fItemporary\fR.
+
+
+.RE
+
+server_nis() = none (default) | {PingTO, PongTO} <optional>
+.RS 2
+This option specifies if the server should actively supervise the net-if process. Note that this will only work if the used net-if process actually supports the protocol. See 
+\fIsnmpm_network_interface\fR behaviour for more info.
+none (default)
+.RS 2
+No active supervision of the net-if process.
+
+
+.RE
+
+{PingTO :: pos_integer(), PongTO :: pos_integer()}
+.RS 2
+The 
+\fIPingTO\fR time specifies the between a successful ping (or start) and the time when a ping message is to be sent to the net-if process (basically the time between ping).
+.PP
+The \fIPongTO\fR time specifies how long time the net-if process has to respond to a ping message, with a \fIpong\fR message. Its starts counting when the ping message has been sent.
+
+.PP
+Both times are in milli seconds.
+
+
+.RE
+
+.PP
+Default is \fInone\fR.
+
+
+.RE
+
+manager_config() = [manager_config_opt()] <mandatory>
+.RS 2
+
+\fImanager_config_opt() = {dir, manager_config_dir()} | {db_dir, manager_db_dir()} | {db_init_error, db_init_error()} | {repair, manager_repair()} | {auto_save, manager_auto_save()} | {verbosity, verbosity()}\fR
+.PP
+Defines specific config related options for the SNMP manager.
+
+.PP
+For defaults see the options in \fImanager_config_opt()\fR.
+
+
+.RE
+
+manager_config_dir = dir() <mandatory>
+.RS 2
+Defines where the SNMP manager configuration files are stored.
+
+
+.RE
+
+manager_db_dir = dir() <mandatory>
+.RS 2
+Defines where the SNMP manager store persistent data.
+
+
+.RE
+
+manager_repair() = false | true | force <optional>
+.RS 2
+Defines the repair option for the persistent database (if and how the table is repaired when opened).
+
+.PP
+Default is \fItrue\fR.
+
+
+.RE
+
+manager_auto_save() = integer() | infinity <optional>
+.RS 2
+The auto save interval. The table is flushed to disk whenever not accessed for this amount of time.
+
+.PP
+Default is \fI5000\fR.
+
+
+.RE
+
+manager_irb() = auto | user | {user, integer()} <optional>
+.RS 2
+This option defines how the manager will handle the sending of response (acknowledgment) to received inform-requests.
+
+auto
+.RS 2
+The manager will autonomously send response (acknowledgment> to inform-request messages.
+
+
+.RE
+{user, integer()}
+.RS 2
+The manager will send response (acknowledgment) to inform-request messages when the handle_inform function completes. The integer is the time, in milli-seconds, that the manager will consider the stored inform-request info valid.
+
+
+.RE
+user
+.RS 2
+Same as 
+\fI{user, integer()}\fR, except that the default time, 15 seconds (15000), is used.
+
+.RE
+
+.PP
+See \fIsnmpm_network_interface\fR, handle_inform and definition of the manager net if for more info.
+
+.PP
+Default is \fIauto\fR.
+
+
+.RE
+
+manager_mibs() = [string()] <optional>
+.RS 2
+Specifies a list of MIBs (including path) and defines which MIBs are initially loaded into the SNMP manager.
+
+.PP
+Default is \fI[]\fR.
+
+
+.RE
+
+manager_net_if() = [manager_net_if_opt()] <optional>
+.RS 2
+
+\fImanager_net_if_opt() = {module, manager_net_if_module()} | {verbosity, verbosity()} | {options, manager_net_if_options()}\fR
+.PP
+Defines options specific for the SNMP manager network interface entity.
+
+.PP
+For defaults see the options in \fImanager_net_if_opt()\fR.
+
+
+.RE
+
+manager_net_if_options() = [manager_net_if_option()] <optional>
+.RS 2
+
+\fImanager_net_if_option() = {bind_to, bind_to()} | {sndbuf, sndbuf()} | {recbuf, recbuf()} | {no_reuse, no_reuse()} | {filter, manager_net_if_filter_options()} | {extra_sock_opts, extra_socket_options()}} | {inet_backend, inet_backend()}\fR
+.PP
+These options are actually specific to the used module. The ones shown here are applicable to the default \fImanager_net_if_module()\fR.
+
+.PP
+For defaults see the options in \fImanager_net_if_option()\fR.
+
+
+.RE
+
+manager_net_if_module() = atom() <optional>
+.RS 2
+The module which handles the network interface part for the SNMP manager. It must implement the 
+\fIsnmpm_network_interface\fR behaviour.
+.PP
+Default is \fIsnmpm_net_if\fR.
+
+
+.RE
+
+manager_net_if_filter_options() = [manager_net_if_filter_option()] <optional>
+.RS 2
+
+\fImanager_net_if_filter_option() = {module, manager_net_if_filter_module()}\fR
+.PP
+These options are actually specific to the used module. The ones shown here are applicable to the default \fImanager_net_if_filter_module()\fR.
+
+.PP
+For defaults see the options in \fImanager_net_if_filter_option()\fR.
+
+
+.RE
+
+manager_net_if_filter_module() = atom() <optional>
+.RS 2
+Module which handles the network interface filter part for the SNMP manager. Must implement the 
+\fIsnmpm_network_interface_filter\fR behaviour.
+.PP
+Default is \fIsnmpm_net_if_filter\fR.
+
+
+.RE
+
+def_user_module() = atom() <optional>
+.RS 2
+The module implementing the default user. See the 
+\fIsnmpm_user\fR behaviour.
+.PP
+Default is \fIsnmpm_user_default\fR.
+
+
+.RE
+
+def_user_data() = term() <optional>
+.RS 2
+Data for the default user. Passed to the user module when calling the callback functions.
+
+.PP
+Default is \fIundefined\fR.
+
+
+.RE
+
+.PP
+Common config types:
+
+restart_type() = permanent | transient | temporary
+.RS 2
+See supervisor documentation for more info.
+
+.PP
+Default is \fIpermanent\fR for the agent and \fItransient\fR for the manager.
+
+
+.RE
+
+db_init_error() = terminate | create | create_db_and_dir
+.RS 2
+Defines what to do if the agent or manager is unable to open an existing database file. 
+\fIterminate\fR means that the agent/manager will terminate and \fIcreate\fR means that the agent/manager will remove the faulty file(s) and create new ones, and \fIcreate_db_and_dir\fR means that the agent/manager will create the database file along with any missing parent directories for the database file.
+.PP
+Default is \fIterminate\fR.
+
+
+.RE
+
+priority() = atom() <optional>
+.RS 2
+Defines the Erlang priority for all SNMP processes.
+
+.PP
+Default is \fInormal\fR.
+
+
+.RE
+
+versions() = [version()] <optional>
+.RS 2
+
+\fIversion() = v1 | v2 | v3\fR
+.PP
+Which SNMP versions shall be accepted/used.
+
+.PP
+Default is \fI[v1,v2,v3]\fR.
+
+
+.RE
+
+verbosity() = silence | info | log | debug | trace <optional>
+.RS 2
+Verbosity for a SNMP process. This specifies now much debug info is printed.
+
+.PP
+Default is \fIsilence\fR.
+
+
+.RE
+
+bind_to() = bool() <optional>
+.RS 2
+If 
+\fItrue\fR, net_if binds to the IP address. If \fIfalse\fR, net_if listens on any IP address on the host where it is running.
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+no_reuse() = bool() <optional>
+.RS 2
+If 
+\fItrue\fR, net_if does not specify that the IP and port address should be reusable. If \fIfalse\fR, the address is set to reusable.
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+recbuf() = integer() <optional>
+.RS 2
+Receive buffer size.
+
+.PP
+Default value is defined by \fIgen_udp\fR.
+
+
+.RE
+
+sndbuf() = integer() <optional>
+.RS 2
+Send buffer size.
+
+.PP
+Default value is defined by \fIgen_udp\fR.
+
+
+.RE
+
+extra_socket_options() = list() <optional>
+.RS 2
+A list of arbitrary socket options.
+
+.PP
+This list is not inspected by snmp (other then checking that its a list). Its the users responsibility to ensure that these are valid options and does not conflict with the "normal" options.
+
+.PP
+Default is \fI[]\fR.
+
+
+.RE
+
+inet_backend() = inet | socket <optional>
+.RS 2
+Choose the inet-backend.
+
+.PP
+This option make it possible to use net_if (gen_udp) with a different inet-backend ('inet' or 'socket').
+
+.PP
+Default is \fIinet\fR.
+
+
+.RE
+
+note_store() = [note_store_opt()] <optional>
+.RS 2
+
+\fInote_store_opt() = {timeout, note_store_timeout()} | {verbosity, verbosity()}\fR
+.PP
+Specifies the start-up verbosity for the SNMP note store.
+
+.PP
+For defaults see the options in \fInote_store_opt()\fR.
+
+
+.RE
+
+note_store_timeout() = integer() <optional>
+.RS 2
+Note cleanup time. When storing a note in the note store, each note is given lifetime. Every 
+\fItimeout\fR the note_store process performs a GC to remove the expired note's. Time in milli-seconds.
+.PP
+Default is \fI30000\fR.
+
+
+.RE
+
+audit_trail_log() = [audit_trail_log_opt()] <optional>
+.RS 2
+
+\fIaudit_trail_log_opt() = {type, atl_type()} | {dir, atl_dir()} | {size, atl_size()} | {repair, atl_repair()} | {seqno, atl_seqno()}\fR
+.PP
+If present, this option specifies the options for the audit trail logging. The \fIdisk_log\fR module is used to maintain a wrap log. If present, the \fIdir\fR and \fIsize\fR options are mandatory.
+
+.PP
+If not present, audit trail logging is not used.
+
+
+.RE
+
+atl_type() = read | write | read_write <optional>
+.RS 2
+Specifies what type of an audit trail log should be used. The effect of the type is actually different for the the agent and the manager.
+
+.PP
+For the agent:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIwrite\fR is specified, only set requests are logged.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIread\fR is specified, only get requests are logged.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIread_write\fR, all requests are logged.
+
+.RE
+
+.PP
+For the manager:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIwrite\fR is specified, only sent messages are logged.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIread\fR is specified, only received messages are logged.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIread_write\fR, both outgoing and incoming messages are logged.
+
+.RE
+
+.PP
+Default is \fIread_write\fR.
+
+
+.RE
+
+atl_dir = dir() <mandatory>
+.RS 2
+Specifies where the audit trail log should be stored.
+
+.PP
+If \fIaudit_trail_log\fR specifies that logging should take place, this parameter \fImust\fR be defined.
+
+
+.RE
+
+atl_size() = {integer(), integer()} <mandatory>
+.RS 2
+Specifies the size of the audit trail log. This parameter is sent to 
+\fIdisk_log\fR.
+.PP
+If \fIaudit_trail_log\fR specifies that logging should take place, this parameter \fImust\fR be defined.
+
+
+.RE
+
+atl_repair() = true | false | truncate | snmp_repair <optional>
+.RS 2
+Specifies if and how the audit trail log shall be repaired when opened. Unless this parameter has the value 
+\fIsnmp_repair\fR it is sent to \fIdisk_log\fR. If, on the other hand, the value is \fIsnmp_repair\fR, snmp attempts to handle certain faults on its own. And even if it cannot repair the file, it does not truncate it directly, but instead \fImoves it aside\fR for later off-line analysis.
+.PP
+Default is \fItrue\fR.
+
+
+.RE
+
+atl_seqno() = true | false <optional>
+.RS 2
+Specifies if the audit trail log entries will be (sequence) numbered or not. The range of the sequence numbers are according to RFC 5424, i.e. 1 through 2147483647.
+
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+.SS "See Also"
+
+.PP
+application(3), disk_log(3)
+

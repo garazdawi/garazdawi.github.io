@@ -1,0 +1,154 @@
+.TH erlang_port_info 3 "erts 16.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erlang_port_info \- Returns information about \fIPort\fR.
+
+.SH DESCRIPTION
+.PP
+If the port identified by \fIPort\fR is not open, \fIundefined\fR is returned. If the port is closed and the calling process was previously linked to the port, the exit signal from the port is guaranteed to be delivered before \fIport_info/2\fR returns \fIundefined\fR.
+
+.PP
+\fIItem\fR is one of the following and can be used to get various information about the \fIPort\fR.
+
+connected
+.RS 2
+returns 
+\fI{connected, Pid}\fR where \fIPid\fR is the process identifier of the process connected to the port.
+
+.RE
+id
+.RS 2
+returns 
+\fI{id, Index}\fR where \fIIndex\fR is the internal index of the port. This index can be used to separate ports.
+
+.RE
+input
+.RS 2
+returns 
+\fI{input, Bytes}\fR where \fIBytes\fR is the total number of bytes read from the port.
+
+.RE
+links
+.RS 2
+returns 
+\fI{links, Pids}\fR where \fIPids\fR is a list of the process identifiers of the processes that the port is linked to.
+
+.RE
+locking
+.RS 2
+returns 
+\fI{locking, Locking}\fR where \fILocking\fR is one of the following:
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIport_level\fR (port-specific locking)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdriver_level\fR (driver-specific locking) Notice that these results are highly implementation-specific and can change in a future release.
+
+.RE
+
+.PP
+Since: OTP R16B
+
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImemory\fR  - returns \fI{memory, Bytes}\fR where \fIBytes\fR is the total number of bytes allocated for this port by the runtime system. The port itself can have allocated memory that is not included in \fIBytes\fR.
+
+.PP
+Since: OTP R16B
+
+.RE
+monitors
+.RS 2
+returns 
+\fI{monitors, Monitors}\fR where \fIMonitors\fR represent processes monitored by this port.
+.PP
+Since: OTP R16B
+
+
+.RE
+monitored_by
+.RS 2
+returns 
+\fI{monitored_by, MonitoredBy}\fR where \fIMonitoredBy\fR is a list of pids that are monitoring given port at the moment.
+.PP
+Since: OTP 19.0
+
+
+.RE
+name
+.RS 2
+returns 
+\fI{name, Name}\fR where \fIName\fR is the command name set by \fIopen_port/2\fR.
+
+.RE
+os_pid
+.RS 2
+returns 
+\fI{os_pid, OsPid}\fR where \fIOsPid\fR is the process identifier (or equivalent) of an OS process created with \fIopen_port({spawn | spawn_executable, Command}, Options)\fR. If the port is not the result of spawning an OS process, the value is \fIundefined\fR.
+.PP
+Since: OTP R16B
+
+
+.RE
+output
+.RS 2
+returns 
+\fI{output, Bytes}\fR where \fIBytes\fR is the total number of bytes written to the port from Erlang processes using \fIport_command/2\fR, \fIport_command/3\fR, or \fIPort ! {Owner, {command, Data}\fR.
+
+.RE
+parallelism
+.RS 2
+returns 
+\fI{parallelism, Boolean}\fR where \fIBoolean\fR corresponds to the port parallelism hint used by this port. For more information, see option \fIparallelism\fR of \fIopen_port/2\fR.
+.PP
+Since: OTP R16B
+
+
+.RE
+queue_size
+.RS 2
+returns 
+\fI{queue_size, Bytes}\fR where \fIBytes\fR is the total number of bytes queued by the port using the ERTS driver queue implementation.
+.PP
+Since: OTP R16B
+
+
+.RE
+registered_name
+.RS 2
+returns 
+\fI{registered_name, RegisteredName}\fR where \fIRegisteredName\fR is the registered name of the port. If the port has no registered name, \fI[]\fR is returned.
+
+.RE
+
+.PP
+Failure: \fIbadarg\fR if \fIPort\fR is not a local port identifier, or an atom.
+

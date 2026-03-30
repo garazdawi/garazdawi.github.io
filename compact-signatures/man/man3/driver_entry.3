@@ -1,0 +1,445 @@
+.TH driver_entry 3 "erts 16.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+driver_entry \- The driver-entry structure used by Erlang drivers
+.SH DESCRIPTION
+.PP
+\fBWARNING: \fR\fIUse this functionality with extreme care.\fR A driver callback is executed as a direct extension of the native code of the VM. Execution is not made in a safe environment. The VM \fIcannot\fR provide the same services as provided when executing Erlang code, such as pre-emptive scheduling or memory protection. If the driver callback function does not behave well, the whole VM will misbehave.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+driver callback that crash will crash the whole VM.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An erroneously implemented driver callback can cause a VM internal state inconsistency, which can cause a crash of the VM, or miscellaneous misbehaviors of the VM at any point after the call to the driver callback.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+driver callback doing lengthy work before returning degrades responsiveness of the VM, and can cause miscellaneous strange behaviors. Such strange behaviors include, but are not limited to, extreme memory usage, and bad load balancing between schedulers. Strange behaviors that can occur because of lengthy work can also vary between Erlang/OTP releases.
+
+.RE
+
+
+.PP
+As from ERTS 5.9 (Erlang/OTP R15B) the driver interface has been changed with larger types for the callbacks \fIoutput\fR, \fIcontrol\fR, and \fIcall\fR. See driver version management in \fIerl_driver\fR.
+
+.PP
+\fBNOTE: \fROld drivers (compiled with an \fIerl_driver.h\fR from an ERTS version earlier than 5.9) must be updated and have to use the extended interface (with version management ).
+
+
+.PP
+The \fIdriver_entry\fR structure is a C struct that all Erlang drivers define. It contains entry points for the Erlang driver, which are called by the Erlang emulator when Erlang code accesses the driver.
+
+.PP
+The \fIerl_driver\fR driver API functions need a port handle that identifies the driver instance (and the port in the emulator). This is only passed to the \fIstart\fR function, but not to the other functions. The \fIstart\fR function returns a driver-defined handle that is passed to the other functions. A common practice is to have the \fIstart\fR function allocate some application-defined structure and stash the \fIport\fR handle in it, to use it later with the driver API functions.
+
+.PP
+The driver callback functions are called synchronously from the Erlang emulator. If they take too long before completing, they can cause time-outs in the emulator. Use the queue or asynchronous calls if necessary, as the emulator must be responsive.
+
+.PP
+The driver structure contains the driver name and some 15 function pointers, which are called at different times by the emulator.
+
+.PP
+The only exported function from the driver is \fIdriver_init\fR. This function returns the \fIdriver_entry\fR structure that points to the other functions in the driver. The \fIdriver_init\fR function is declared with a macro, \fIDRIVER_INIT(drivername)\fR. (This is because different operating systems have different names for it.) 
+
+.PP
+When writing a driver in C++, the driver entry is to be of \fI"C"\fR linkage. One way to do this is to put the following line somewhere before the driver entry:
+
+.IP
+.nf
+extern "C" DRIVER_INIT(drivername);
+
+.fi
+
+.PP
+When the driver has passed the \fIdriver_entry\fR over to the emulator, the driver is \fInot\fR allowed to modify the \fIdriver_entry\fR.
+
+.PP
+If compiling a driver for static inclusion through \fI--enable-static-drivers\fR, you must define \fISTATIC_ERLANG_DRIVER\fR before the \fIDRIVER_INIT\fR declaration.
+
+.PP
+\fBNOTE: \fRDo \fInot\fR declare the \fIdriver_entry\fR \fIconst\fR. This because the emulator must modify the \fIhandle\fR and the \fIhandle2\fR fields. A statically allocated, and \fIconst\fR-declared \fIdriver_entry\fR can be located in read-only memory, which causes the emulator to crash.
+
+
+.SS "Data Types"
+
+.PP
+\fIErlDrvEntry\fR
+
+.IP
+.nf
+typedef struct erl_drv_entry {
+    int (*init)(void);          /* Called at system startup for statically
+                                   linked drivers, and after loading for
+                                   dynamically loaded drivers */
+#ifndef ERL_SYS_DRV
+    ErlDrvData (*start)(ErlDrvPort port, char *command);
+                                /* Called when open_port/2 is invoked,
+                                   return value -1 means failure */
+#else
+    ErlDrvData (*start)(ErlDrvPort port, char *command, SysDriverOpts* opts);
+                                /* Special options, only for system driver */
+#endif
+    void (*stop)(ErlDrvData drv_data);
+                                /* Called when port is closed, and when the
+                                   emulator is halted */
+    void (*output)(ErlDrvData drv_data, char *buf, ErlDrvSizeT len);
+                                /* Called when we have output from Erlang to
+                                   the port */
+    void (*ready_input)(ErlDrvData drv_data, ErlDrvEvent event);
+                                /* Called when we have input from one of
+                                   the driver's handles */
+    void (*ready_output)(ErlDrvData drv_data, ErlDrvEvent event);
+                                /* Called when output is possible to one of
+                                   the driver's handles */
+    char *driver_name;          /* Name supplied as command in
+                                   erlang:open_port/2 */
+    void (*finish)(void);       /* Called before unloading the driver -
+                                   dynamic drivers only */
+    void *handle;               /* Reserved, used by emulator internally */
+    ErlDrvSSizeT (*control)(ErlDrvData drv_data, unsigned int command,
+                            char *buf, ErlDrvSizeT len,
+			    char **rbuf, ErlDrvSizeT rlen);
+                                /* "ioctl" for drivers - invoked by
+                                   port_control/3 */
+    void (*timeout)(ErlDrvData drv_data);
+                                /* Handling of time-out in driver */
+    void (*outputv)(ErlDrvData drv_data, ErlIOVec *ev);
+                                /* Called when we have output from Erlang
+                                   to the port */
+    void (*ready_async)(ErlDrvData drv_data, ErlDrvThreadData thread_data);
+    void (*flush)(ErlDrvData drv_data);
+                                /* Called when the port is about to be
+                                   closed, and there is data in the
+                                   driver queue that must be flushed
+                                   before 'stop' can be called */
+    ErlDrvSSizeT (*call)(ErlDrvData drv_data, unsigned int command,
+                         char *buf, ErlDrvSizeT len,
+			 char **rbuf, ErlDrvSizeT rlen, unsigned int *flags);
+                                /* Works mostly like 'control', a synchronous
+                                   call into the driver */
+    void* unused_event_callback;
+    int extended_marker;        /* ERL_DRV_EXTENDED_MARKER */
+    int major_version;          /* ERL_DRV_EXTENDED_MAJOR_VERSION */
+    int minor_version;          /* ERL_DRV_EXTENDED_MINOR_VERSION */
+    int driver_flags;           /* ERL_DRV_FLAGs */
+    void *handle2;              /* Reserved, used by emulator internally */
+    void (*process_exit)(ErlDrvData drv_data, ErlDrvMonitor *monitor);
+                                /* Called when a process monitor fires */
+    void (*stop_select)(ErlDrvEvent event, void* reserved);
+                                /* Called to close an event object */
+ } ErlDrvEntry;
+
+.fi
+
+int (*init)(void)
+.RS 2
+Called directly after the driver has been loaded by 
+\fIerl_ddll:load_driver/2\fR (actually when the driver is added to the driver list). The driver is to return \fI0\fR, or, if the driver cannot initialize, \fI-1\fR.
+
+.RE
+
+ErlDrvData (*start)(ErlDrvPort port, char* command)
+.RS 2
+Called when the driver is instantiated, when 
+\fIerlang:open_port/2\fR is called. The driver is to return a number >= 0 or a pointer, or, if the driver cannot be started, one of three error codes:
+ERL_DRV_ERROR_GENERAL
+.RS 2
+General error, no error code
+
+
+.RE
+
+ERL_DRV_ERROR_ERRNO
+.RS 2
+Error with error code in 
+\fIerrno\fR
+
+.RE
+
+ERL_DRV_ERROR_BADARG
+.RS 2
+Error, 
+\fIbadarg\fR
+
+.RE
+
+.PP
+If an error code is returned, the port is not started.
+
+
+.RE
+
+void (*stop)(ErlDrvData drv_data)
+.RS 2
+Called when the port is closed, with 
+\fIerlang:port_close/1\fR or \fIPort ! {self(), close}\fR. Notice that terminating the port owner process also closes the port. If \fIdrv_data\fR is a pointer to memory allocated in \fIstart\fR, then \fIstop\fR is the place to deallocate that memory.
+
+.RE
+
+void (*output)(ErlDrvData drv_data, char *buf, ErlDrvSizeT len)
+.RS 2
+Called when an Erlang process has sent data to the port. The data is pointed to by 
+\fIbuf\fR, and is \fIlen\fR bytes. Data is sent to the port with \fIPort ! {self(), {command, Data}}\fR or with \fIerlang:port_command/2\fR. Depending on how the port was opened, it is to be either a list of integers \fI0...255\fR or a binary. See \fIerlang:open_port/2\fR and \fIerlang:port_command/2\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIvoid (*ready_input)(ErlDrvData drv_data, ErlDrvEvent event)\fR\fR
+
+.RE
+
+void (*ready_output)(ErlDrvData drv_data, ErlDrvEvent event)
+.RS 2
+Called when a driver event (specified in parameter 
+\fIevent\fR) is signaled. This is used to help asynchronous drivers "wake up" when something occurs.
+.PP
+On Unix the \fIevent\fR is a pipe or socket handle (or something that the \fIselect\fR system call understands).
+
+.PP
+On Windows the \fIevent\fR is an \fIEvent\fR or \fISemaphore\fR (or something that the \fIWaitForMultipleObjects\fR API function understands). (Some trickery in the emulator allows more than the built-in limit of 64 \fIEvents\fR to be used.)
+
+.PP
+To use this with threads and asynchronous routines, create a pipe on Unix and an \fIEvent\fR on Windows. When the routine completes, write to the pipe (use \fISetEvent\fR on Windows), this makes the emulator call \fIready_input\fR or \fIready_output\fR.
+
+.PP
+False events can occur. That is, calls to \fIready_input\fR or \fIready_output\fR although no real events are signaled. In reality, it is rare (and OS-dependant), but a robust driver must nevertheless be able to handle such cases.
+
+
+.RE
+
+char *driver_name
+.RS 2
+The driver name. It must correspond to the atom used in 
+\fIerlang:open_port/2\fR, and the name of the driver library file (without the extension).
+
+.RE
+
+void (*finish)(void)
+.RS 2
+Called by the 
+\fIerl_ddll\fR driver when the driver is unloaded. (It is only called in dynamic drivers.)
+.PP
+The driver is only unloaded as a result of calling \fIerl_ddll:unload_driver/1\fR, or when the emulator halts.
+
+
+.RE
+
+void *handle
+.RS 2
+This field is reserved for the emulator's internal use. The emulator will modify this field, so it is important that the 
+\fIdriver_entry\fR is not declared \fIconst\fR.
+
+.RE
+
+ErlDrvSSizeT (*control)(ErlDrvData drv_data, unsigned int command, char *buf, ErlDrvSizeT len, char **rbuf, ErlDrvSizeT rlen)
+.RS 2
+A special routine invoked with 
+\fIerlang:port_control/3\fR. It works a little like an "ioctl" for Erlang drivers. The data specified to \fIport_control/3\fR arrives in \fIbuf\fR and \fIlen\fR. The driver can send data back, using \fI*rbuf\fR and \fIrlen\fR.
+.PP
+This is the fastest way of calling a driver and get a response. It makes no context switch in the Erlang emulator and requires no message passing. It is suitable for calling C function to get faster execution, when Erlang is too slow.
+
+.PP
+If the driver wants to return data, it is to return it in \fIrbuf\fR. When \fIcontrol\fR is called, \fI*rbuf\fR points to a default buffer of \fIrlen\fR bytes, which can be used to return data. Data is returned differently depending on the port control flags (those that are set with \fIerl_driver:set_port_control_flags\fR).
+
+.PP
+If the flag is set to \fIPORT_CONTROL_FLAG_BINARY\fR, a binary is returned. Small binaries can be returned by writing the raw data into the default buffer. A binary can also be returned by setting \fI*rbuf\fR to point to a binary allocated with \fIerl_driver:driver_alloc_binary\fR. This binary is freed automatically after \fIcontrol\fR has returned. The driver can retain the binary for \fIread only\fR access with \fIerl_driver:driver_binary_inc_refc\fR to be freed later with \fIerl_driver:driver_free_binary\fR. It is never allowed to change the binary after \fIcontrol\fR has returned. If \fI*rbuf\fR is set to \fINULL\fR, an empty list is returned.
+
+.PP
+If the flag is set to \fI0\fR, data is returned as a list of integers. Either use the default buffer or set \fI*rbuf\fR to point to a larger buffer allocated with \fIerl_driver:driver_alloc\fR. The buffer is freed automatically after \fIcontrol\fR has returned.
+
+.PP
+Using binaries is faster if more than a few bytes are returned.
+
+.PP
+The return value is the number of bytes returned in \fI*rbuf\fR.
+
+
+.RE
+
+void (*timeout)(ErlDrvData drv_data)
+.RS 2
+Called any time after the driver's timer reaches 
+\fI0\fR. The timer is activated with \fIerl_driver:driver_set_timer\fR. No priorities or ordering exist among drivers, so if several drivers time out at the same time, anyone of them is called first.
+
+.RE
+
+void (*outputv)(ErlDrvData drv_data, ErlIOVec *ev)
+.RS 2
+Called whenever the port is written to. If it is 
+\fINULL\fR, the \fIoutput\fR function is called instead. This function is faster than \fIoutput\fR, as it takes an \fIErlIOVec\fR directly, which requires no copying of the data. The port is to be in binary mode, see \fIerlang:open_port/2\fR.
+.PP
+\fIErlIOVec\fR contains both a \fISysIOVec\fR, suitable for \fIwritev\fR, and one or more binaries. If these binaries are to be retained when the driver returns from \fIoutputv\fR, they can be queued (using, for example, \fIerl_driver:driver_enq_bin\fR) or, if they are kept in a static or global variable, the reference counter can be incremented.
+
+
+.RE
+
+void (*ready_async)(ErlDrvData drv_data, ErlDrvThreadData thread_data)
+.RS 2
+Called after an asynchronous call has completed. The asynchronous call is started with 
+\fIerl_driver:driver_async\fR. This function is called from the Erlang emulator thread, as opposed to the asynchronous function, which is called in some thread (if multi-threading is enabled).
+
+.RE
+
+void (*flush)(ErlDrvData drv_data)
+.RS 2
+Called when the port is about to be closed, and there is data in the driver queue that must be flushed before 'stop' can be called.
+
+
+.RE
+
+ErlDrvSSizeT (*call)(ErlDrvData drv_data, unsigned int command, char *buf, ErlDrvSizeT len, char **rbuf, ErlDrvSizeT rlen, unsigned int *flags)
+.RS 2
+Called from 
+\fIerlang:port_call/3\fR. It works a lot like the \fIcontrol\fR callback, but uses the external term format for input and output.
+.PP
+\fIcommand\fR is an integer, obtained from the call from Erlang (the second argument to \fIerlang:port_call/3\fR).
+
+.PP
+\fIbuf\fR and \fIlen\fR provide the arguments to the call (the third argument to \fIerlang:port_call/3\fR). They can be decoded using \fIei\fR functions.
+
+.PP
+\fIrbuf\fR points to a return buffer, \fIrlen\fR bytes long. The return data is to be a valid Erlang term in the external (binary) format. This is converted to an Erlang term and returned by \fIerlang:port_call/3\fR to the caller. If more space than \fIrlen\fR bytes is needed to return data, \fI*rbuf\fR can be set to memory allocated with \fIerl_driver:driver_alloc\fR. This memory is freed automatically after \fIcall\fR has returned.
+
+.PP
+The return value is the number of bytes returned in \fI*rbuf\fR. If \fIERL_DRV_ERROR_GENERAL\fR is returned (or in fact, anything < 0), \fIerlang:port_call/3\fR throws a \fIBAD_ARG\fR.
+
+
+.RE
+
+void (*event)(ErlDrvData drv_data, ErlDrvEvent event, ErlDrvEventData event_data)
+.RS 2
+Intentionally left undocumented.
+
+
+.RE
+
+int extended_marker
+.RS 2
+This field is either to be equal to 
+\fIERL_DRV_EXTENDED_MARKER\fR or \fI0\fR. An old driver (not aware of the extended driver interface) is to set this field to \fI0\fR. If this field is \fI0\fR, all the following fields \fImust\fR also be \fI0\fR, or \fINULL\fR if it is a pointer field.
+
+.RE
+
+int major_version
+.RS 2
+This field is to equal 
+\fIERL_DRV_EXTENDED_MAJOR_VERSION\fR if field \fIextended_marker\fR equals \fIERL_DRV_EXTENDED_MARKER\fR.
+
+.RE
+
+int minor_version
+.RS 2
+This field is to equal 
+\fIERL_DRV_EXTENDED_MINOR_VERSION\fR if field \fIextended_marker\fR equals \fIERL_DRV_EXTENDED_MARKER\fR.
+
+.RE
+
+int driver_flags
+.RS 2
+This field is used to pass driver capability and other information to the runtime system. If field 
+\fIextended_marker\fR equals \fIERL_DRV_EXTENDED_MARKER\fR, it is to contain \fI0\fR or driver flags (\fIERL_DRV_FLAG_*\fR) OR'ed bitwise. The following driver flags exist:
+ERL_DRV_FLAG_USE_PORT_LOCKING
+.RS 2
+The runtime system uses port-level locking on all ports executing this driver instead of driver-level locking. For more information, see 
+\fIerl_driver\fR.
+
+.RE
+
+ERL_DRV_FLAG_SOFT_BUSY
+.RS 2
+Marks that driver instances can handle being called in the 
+\fIoutput\fR and/or \fIoutputv\fR callbacks although a driver instance has marked itself as busy (see \fIerl_driver:set_busy_port\fR). As from ERTS 5.7.4 this flag is required for drivers used by the Erlang distribution (the behavior has always been required by drivers used by the distribution).
+
+.RE
+
+ERL_DRV_FLAG_NO_BUSY_MSGQ
+.RS 2
+Disables busy port message queue functionality. For more information, see 
+\fIerl_driver:erl_drv_busy_msgq_limits\fR.
+
+.RE
+
+ERL_DRV_FLAG_USE_INIT_ACK
+.RS 2
+When this flag is specified, the linked-in driver must manually acknowledge that the port has been successfully started using 
+\fIerl_driver:erl_drv_init_ack()\fR. This allows the implementor to make the \fIerlang:open_port\fR exit with \fIbadarg\fR after some initial asynchronous initialization has been done.
+
+.RE
+
+
+.RE
+
+void *handle2
+.RS 2
+This field is reserved for the emulator's internal use. The emulator modifies this field, so it is important that the 
+\fIdriver_entry\fR is not declared \fIconst\fR.
+
+.RE
+
+void (*process_exit)(ErlDrvData drv_data, ErlDrvMonitor *monitor)
+.RS 2
+Called when a monitored process exits. The 
+\fIdrv_data\fR is the data associated with the port for which the process is monitored (using \fIerl_driver:driver_monitor_process\fR) and the \fImonitor\fR corresponds to the \fIErlDrvMonitor\fR structure filled in when creating the monitor. The driver interface function \fIerl_driver:driver_get_monitored_process\fR can be used to retrieve the process ID of the exiting process as an \fIErlDrvTermData\fR.
+
+.RE
+
+void (*stop_select)(ErlDrvEvent event, void* reserved)
+.RS 2
+Called on behalf of 
+\fIerl_driver:driver_select\fR when it is safe to close an event object.
+.PP
+A typical implementation on Unix is to do \fIclose((int)event)\fR.
+
+.PP
+Argument \fIreserved\fR is intended for future use and is to be ignored.
+
+.PP
+In contrast to most of the other callback functions, \fIstop_select\fR is called independent of any port. No \fIErlDrvData\fR argument is passed to the function. No driver lock or port lock is guaranteed to be held. The port that called \fIdriver_select\fR can even be closed at the time \fIstop_select\fR is called. But it can also be the case that \fIstop_select\fR is called directly by \fIerl_driver:driver_select\fR.
+
+.PP
+It is not allowed to call any functions in the driver API from \fIstop_select\fR. This strict limitation is because the volatile context that \fIstop_select\fR can be called.
+
+
+.RE
+
+.SS "See Also"
+
+.PP
+\fIerl_driver(3)\fR, \fIerlang\fR, \fIerl_ddll\fR
+

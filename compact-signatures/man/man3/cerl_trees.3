@@ -1,0 +1,219 @@
+.TH cerl_trees 3 "compiler 9.0.5" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+cerl_trees \- Basic functions on Core Erlang abstract syntax trees.
+
+.SH DESCRIPTION
+.PP
+\fBNOTE: \fRThe public interface of the Erlang compiler can be found in module \fIcompile\fR. This module is an internal part of the compiler. Its API is not guaranteed to remain compatible between releases.
+
+
+.PP
+Syntax trees are defined in the module \fIcerl\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcerl() :: cerl:cerl().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdepth(Tree :: cerl()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the length of the longest path in the tree.
+
+.PP
+A leaf node has depth zero, the tree representing "\fI{foo, bar}\fR" has depth one, and so on.
+
+
+.RE
+.B
+\fBfold(Function :: fun((cerl(), term()) -> term()),\fR
+\fB           Unit :: term(),\fR
+\fB           Term :: cerl()) ->\fR
+\fB              term().\fR
+
+.br
+.RS
+.PP
+Does a fold operation over the nodes of the tree.
+
+.PP
+The result is the value of \fIFunction(X1, Function(X2, ... Function(Xn, Unit) ... ))\fR, where \fIX1, ..., Xn\fR are the nodes of \fITree\fR in a post-order traversal.
+
+.PP
+\fISee also: \fR\fImapfold/3\fR.
+
+
+.RE
+.B
+\fBfree_variables(Tree :: cerl()) -> [cerl:var_name()].\fR
+
+.br
+.RS
+.PP
+Like \fIvariables/1\fR, but only includes variables that are free in the tree.
+
+.PP
+\fISee also: \fR\fInext_free_variable_name/1\fR, \fIvariables/1\fR.
+
+
+.RE
+.B
+\fBget_label(Tree :: cerl()) -> top | integer().\fR
+
+.br
+.RS
+.PP
+Retrieves the label for \fITree\fR.
+
+.PP
+An exception is thrown if \fITree\fR does not have a label, or if \fITree\fR does not represent a well-formed Core Erlang syntax tree.
+
+
+.RE
+.B
+\fBlabel(cerl()) -> {cerl(), integer()}.\fR
+
+.br
+.RS
+.PP
+Equivalent to label(Tree, 0).
+
+
+.RE
+.B
+\fBlabel(Tree :: cerl(), N :: integer()) -> {cerl(), integer()}.\fR
+
+.br
+.RS
+.PP
+Labels each expression in the tree.
+
+.PP
+A term \fI{label, L}\fR is prefixed to the annotation list of each expression node, where L is a unique number for every node, except for variables (and function name variables) which get the same label if they represent the same variable. Constant literal nodes are not labeled.
+
+.PP
+The returned value is a tuple \fI{NewTree, Max}\fR, where \fINewTree\fR is the labeled tree and \fIMax\fR is 1 plus the largest label value used. All previous annotation terms of the form \fI{label, X}\fR are deleted.
+
+.PP
+The values of L used in the tree is a dense range from \fIN\fR to \fIMax - 1\fR, where \fIN =< Max =< N + size(Tree)\fR. Note that it is possible that no labels are used at all, i.e., \fIN = Max\fR.
+
+.PP
+Note: All instances of free variables will be given distinct labels.
+
+.PP
+\fISee also: \fR\fIlabel/1\fR, \fIsize/1\fR.
+
+
+.RE
+.B
+\fBmap(Function :: fun((cerl()) -> cerl()), Tree :: cerl()) -> cerl().\fR
+
+.br
+.RS
+.PP
+Maps a function onto the nodes of a tree.
+
+.PP
+This replaces each node in the tree by the result of applying the given function on the original node, bottom-up.
+
+.PP
+\fISee also: \fR\fImapfold/3\fR.
+
+
+.RE
+.B
+\fBmapfold(Function :: fun((cerl(), term()) -> {cerl(), term()}),\fR
+\fB              Initial :: term(),\fR
+\fB              Tree :: cerl()) ->\fR
+\fB                 {cerl(), term()}.\fR
+
+.br
+.RS
+.PP
+Does a combined map/fold operation on the nodes of the tree.
+
+.PP
+This is similar to \fImap/2\fR, but also propagates a value from each application of \fIFunction\fR to the next, starting with the given value \fIInitial\fR, while doing a post-order traversal of the tree, much like \fIfold/3\fR.
+
+.PP
+This is equivalent to \fImapfold/4\fR with an identity function as the pre-operation.
+
+.PP
+\fISee also:\fR \fIfold/3\fR, \fImap/2\fR, \fImapfold/4\fR.
+
+
+.RE
+.B
+\fBmapfold(Pre :: fun((cerl(), term()) -> {cerl(), term()} | skip),\fR
+\fB              Post :: fun((cerl(), term()) -> {cerl(), term()}),\fR
+\fB              Initial :: term(),\fR
+\fB              Tree :: cerl()) ->\fR
+\fB                 {cerl(), term()}.\fR
+
+.br
+.RS
+.PP
+Does a combined map/fold operation on the nodes of the tree.
+
+.PP
+It begins by calling \fIPre\fR on the tree, using the \fIInitial\fR value. \fIPre\fR must either return a tree with an updated accumulator or the atom \fIskip\fR.
+
+.PP
+If a tree is returned, this function deconstructs the top node of the returned tree and recurses on the children, using the returned value as the new initial and carrying the returned values from one call to the next. Finally it reassembles the top node from the children, calls \fIPost\fR on it and returns the result.
+
+.PP
+If \fIskip\fR is returned, it returns the tree and accumulator as is.
+
+
+.RE
+.B
+\fBnext_free_variable_name(Tree :: cerl()) -> integer().\fR
+
+.br
+.RS
+.PP
+Returns a integer variable name higher than any other integer variable name in the syntax tree.
+
+.PP
+An exception is thrown if \fITree\fR does not represent a well-formed Core Erlang syntax tree.
+
+.PP
+\fISee also: \fR\fIfree_variables/1\fR, \fIvariables/1\fR.
+
+
+.RE
+.B
+\fBsize(Tree :: cerl()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of nodes in \fITree\fR.
+
+
+.RE
+.B
+\fBvariables(Tree :: cerl()) -> [cerl:var_name()].\fR
+
+.br
+.RS
+.PP
+Returns an ordered-set list of the names of all variables in the syntax tree (including function-name variables.)
+
+.PP
+An exception is thrown if \fITree\fR does not represent a well-formed Core Erlang syntax tree.
+
+.PP
+\fISee also: \fR\fIfree_variables/1\fR, \fInext_free_variable_name/1\fR.
+
+
+.RE

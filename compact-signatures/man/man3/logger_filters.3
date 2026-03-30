@@ -1,0 +1,239 @@
+.TH logger_filters 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+logger_filters \- Filters to use with Logger.
+
+.SH DESCRIPTION
+.PP
+All functions exported from this module can be used as primary or handler filters. See \fIlogger:add_primary_filter/2\fR and \fIlogger:add_handler_filter/3\fR for more information about how filters are added.
+
+.PP
+Filters are removed with \fIlogger:remove_primary_filter/1\fR and \fIlogger:remove_handler_filter/2\fR.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIlogger\fR
+
+.SH FUNCTIONS
+.LP
+.B
+\fBdomain(LogEvent, Extra) -> logger:filter_return()\fR
+\fB                when\fR
+\fB                    LogEvent :: logger:log_event(),\fR
+\fB                    Extra :: {Action, Compare, MatchDomain},\fR
+\fB                    Action :: log | stop,\fR
+\fB                    Compare ::\fR
+\fB                        super | sub | equal | not_equal | undefined,\fR
+\fB                    MatchDomain :: [atom()].\fR
+
+.br
+.RS
+.PP
+This filter provides a way of filtering log events based on a \fIdomain\fR field in \fIMetadata\fR. This field is optional, and the purpose of using it is to group log events from, for example, a specific functional area. This allows filtering or other specialized treatment in a Logger handler.
+
+.PP
+A domain field must be a list of atoms, creating smaller and more specialized domains as the list grows longer. The greatest domain is \fI[]\fR, which comprises all possible domains.
+
+.PP
+For example, consider the following domains:
+
+.IP
+.nf
+D1 = [otp]
+D2 = [otp, sasl]
+
+.fi
+
+.PP
+\fID1\fR is the greatest of the two, and is said to be a super-domain of \fID2\fR. \fID2\fR is a sub-domain \fID1\fR. Both \fID1\fR and \fID2\fR are sub-domains of \fI[]\fR.
+
+.PP
+The above domains are used for logs originating from Erlang/OTP. D1 specifies that the log event comes from Erlang/OTP in general, and D2 indicates that the log event is a so called SASL report.
+
+.PP
+The \fIExtra\fR parameter to the \fIdomain/2\fR function is specified when adding the filter via \fIlogger:add_primary_filter/2\fR or \fIlogger:add_handler_filter/3\fR.
+
+.PP
+The filter compares the value of the \fIdomain\fR field in the log event's metadata (\fIDomain\fR) against \fIMatchDomain\fR. The filter matches if the value of \fICompare\fR is:
+
+sub
+.RS 2
+and 
+\fIDomain\fR is equal to or a sub-domain of \fIMatchDomain\fR, that is, if \fIMatchDomain\fR is a prefix of \fIDomain\fR.
+
+.RE
+
+super
+.RS 2
+and 
+\fIDomain\fR is equal to or a super-domain of \fIMatchDomain\fR, that is, if \fIDomain\fR is a prefix of \fIMatchDomain\fR.
+
+.RE
+
+equal
+.RS 2
+and 
+\fIDomain\fR is equal to \fIMatchDomain\fR.
+
+.RE
+
+not_equal
+.RS 2
+and 
+\fIDomain\fR differs from \fIMatchDomain\fR, or if there is no domain field in metadata.
+
+.RE
+
+undefined
+.RS 2
+and there is no domain field in metadata. In this case 
+\fIMatchDomain\fR must be set to \fI[]\fR.
+
+.RE
+
+.PP
+If the filter matches and \fIAction\fR is \fIlog\fR, the log event is allowed. If the filter matches and \fIAction\fR is \fIstop\fR, the log event is stopped.
+
+.PP
+If the filter does not match, it returns \fIignore\fR, meaning that other filters, or the value of the configuration parameter \fIfilter_default\fR, decide if the event is allowed or not.
+
+.PP
+Log events that do not contain any domain field, match only when \fICompare\fR is equal to \fIundefined\fR or \fInot_equal\fR.
+
+.PP
+Example: stop all events with domain \fI[otp, sasl | _]\fR
+
+.IP
+.nf
+1> logger:set_handler_config(h1, filter_default, log). % this is the default
+ok
+2> Filter = {fun logger_filters:domain/2, {stop, sub, [otp, sasl]}}.
+...
+3> logger:add_handler_filter(h1, no_sasl, Filter).
+ok
+
+.fi
+
+
+.RE
+.B
+\fBlevel(LogEvent, Extra) -> logger:filter_return()\fR
+\fB               when\fR
+\fB                   LogEvent :: logger:log_event(),\fR
+\fB                   Extra :: {Action, Operator, MatchLevel},\fR
+\fB                   Action :: log | stop,\fR
+\fB                   Operator :: neq | eq | lt | gt | lteq | gteq,\fR
+\fB                   MatchLevel :: logger:level().\fR
+
+.br
+.RS
+.PP
+This filter provides a way of filtering log events based on the log level. It matches log events by comparing the log level with a specified \fIMatchLevel\fR
+
+.PP
+The \fIExtra\fR parameter is specified when adding the filter via \fIlogger:add_primary_filter/2\fR or \fIlogger:add_handler_filter/3\fR.
+
+.PP
+The filter compares the value of the event's log level (\fILevel\fR) to \fIMatchLevel\fR by calling \fIlogger:compare_levels(Level, MatchLevel)\fR. The filter matches if the value of \fIOperator\fR is:
+
+neq
+.RS 2
+and the compare function returns 
+\fIlt\fR or \fIgt\fR.
+
+.RE
+
+eq
+.RS 2
+and the compare function returns 
+\fIeq\fR.
+
+.RE
+
+lt
+.RS 2
+and the compare function returns 
+\fIlt\fR.
+
+.RE
+
+gt
+.RS 2
+and the compare function returns 
+\fIgt\fR.
+
+.RE
+
+lteq
+.RS 2
+and the compare function returns 
+\fIlt\fR or \fIeq\fR.
+
+.RE
+
+gteq
+.RS 2
+and the compare function returns 
+\fIgt\fR or \fIeq\fR.
+
+.RE
+
+.PP
+If the filter matches and \fIAction\fR is \fIlog\fR, the log event is allowed. If the filter matches and \fIAction\fR is \fIstop\fR, the log event is stopped.
+
+.PP
+If the filter does not match, it returns \fIignore\fR, meaning that other filters, or the value of the configuration parameter \fIfilter_default\fR, will decide if the event is allowed or not.
+
+.PP
+Example: only allow debug level log events
+
+.IP
+.nf
+logger:set_handler_config(h1, filter_default, stop).
+Filter = {fun logger_filters:level/2, {log, eq, debug}}.
+logger:add_handler_filter(h1, debug_only, Filter).
+ok
+
+.fi
+
+
+.RE
+.B
+\fBprogress(LogEvent, Extra) -> logger:filter_return()\fR
+\fB                  when\fR
+\fB                      LogEvent :: logger:log_event(),\fR
+\fB                      Extra :: log | stop.\fR
+
+.br
+.RS
+.PP
+This filter matches all progress reports from \fIsupervisor\fR and \fIapplication_controller\fR.
+
+.PP
+If \fIExtra\fR is \fIlog\fR, the progress reports are allowed. If \fIExtra\fR is \fIstop\fR, the progress reports are stopped.
+
+.PP
+The filter returns \fIignore\fR for all other log events.
+
+
+.RE
+.B
+\fBremote_gl(LogEvent, Extra) -> logger:filter_return()\fR
+\fB                   when\fR
+\fB                       LogEvent :: logger:log_event(),\fR
+\fB                       Extra :: log | stop.\fR
+
+.br
+.RS
+.PP
+This filter matches all events originating from a process that has its group leader on a remote node.
+
+.PP
+If \fIExtra\fR is \fIlog\fR, the matching events are allowed. If \fIExtra\fR is \fIstop\fR, the matching events are stopped.
+
+.PP
+The filter returns \fIignore\fR for all other log events.
+
+
+.RE

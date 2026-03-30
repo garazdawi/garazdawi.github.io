@@ -1,0 +1,68 @@
+.TH wxPaletteChangedEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPaletteChangedEvent \- Functions for wxPaletteChangedEvent class
+
+.SH DESCRIPTION
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPaletteChangedEvent
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPaletteChanged() :: #wxPaletteChanged{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxPaletteChangedEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxPaletteChangedEventType() :: palette_changed.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetChangedWindow(This) -> wxWindow:wxWindow()\fR
+\fB                          when This :: wxPaletteChangedEvent().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetChangedWindow(This, Win) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxPaletteChangedEvent(),\fR
+\fB                              Win :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+
+.RE

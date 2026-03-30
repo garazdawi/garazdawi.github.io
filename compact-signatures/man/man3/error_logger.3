@@ -1,0 +1,527 @@
+.TH error_logger 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+error_logger \- Erlang error logger.
+
+.SH DESCRIPTION
+.PP
+\fBNOTE: \fRIn Erlang/OTP 21.0, a new API for logging was added. The old \fIerror_logger\fR module can still be used by legacy code, but log events are redirected to the new Logger API. New code should use the Logger API directly. \fIerror_logger\fR is no longer started by default, but is automatically started when an event handler is added with \fIerror_logger:add_report_handler/1,2\fR. The \fIerror_logger\fR module is then also added as a handler to the new logger. See \fIlogger\fR and the Logging chapter in the User's Guide for more information.
+
+
+.PP
+The Erlang \fIerror logger\fR is an event manager (see OTP Design Principles and \fIgen_event\fR), registered as \fIerror_logger\fR.
+
+.PP
+Error logger is no longer started by default, but is automatically started when an event handler is added with \fIadd_report_handler/1,2\fR. The \fIerror_logger\fR module is then also added as a handler to the new logger, causing log events to be forwarded from logger to error logger, and consequently to all installed error logger event handlers.
+
+.PP
+User-defined event handlers can be added to handle application-specific events.
+
+.PP
+Existing event handlers provided by STDLIB and SASL are still available, but are no longer used by OTP.
+
+.PP
+Warning events were introduced in Erlang/OTP R9C and are enabled by default as from Erlang/OTP 18.0. To retain backwards compatibility with existing user-defined event handlers, the warning events can be tagged as \fIerrors\fR or \fIinfo\fR using command-line flag \fI+W <e | i | w>\fR, thus showing up as \fIERROR REPORT\fR or \fIINFO REPORT\fR in the logs.
+
+.SS "Events"
+
+.PP
+All event handlers added to the error logger must handle the following events. \fIGleader\fR is the group leader pid of the process that sent the event, and \fIPid\fR is the process that sent the event.
+
+{error, Gleader, {Pid, Format, Data}}
+.RS 2
+Generated when 
+\fIerror_msg/1,2\fR or \fIformat/2\fR is called.
+
+.RE
+
+{error_report, Gleader, {Pid, std_error, Report}}
+.RS 2
+Generated when 
+\fIerror_report/1\fR is called.
+
+.RE
+
+{error_report, Gleader, {Pid, Type, Report}}
+.RS 2
+Generated when 
+\fIerror_report/2\fR is called.
+
+.RE
+
+{warning_msg, Gleader, {Pid, Format, Data}}
+.RS 2
+Generated when 
+\fIwarning_msg/1,2\fR is called if warnings are set to be tagged as warnings.
+
+.RE
+
+{warning_report, Gleader, {Pid, std_warning, Report}}
+.RS 2
+Generated when 
+\fIwarning_report/1\fR is called if warnings are set to be tagged as warnings.
+
+.RE
+
+{warning_report, Gleader, {Pid, Type, Report}}
+.RS 2
+Generated when 
+\fIwarning_report/2\fR is called if warnings are set to be tagged as warnings.
+
+.RE
+
+{info_msg, Gleader, {Pid, Format, Data}}
+.RS 2
+Generated when 
+\fIinfo_msg/1,2\fR is called.
+
+.RE
+
+{info_report, Gleader, {Pid, std_info, Report}}
+.RS 2
+Generated when 
+\fIinfo_report/1\fR is called.
+
+.RE
+
+{info_report, Gleader, {Pid, Type, Report}}
+.RS 2
+Generated when 
+\fIinfo_report/2\fR is called.
+
+.RE
+
+.PP
+Notice that some system-internal events can also be received. Therefore a catch-all clause last in the definition of the event handler callback function \fIgen_event:handle_event/2\fR is necessary. This also applies for \fIgen_event:handle_info/2\fR, as the event handler must also take care of some system-internal messages.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIgen_event\fR, \fIlogger\fR, \fIlog_mf_h\fR, \fIkernel\fR, \fIsasl\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBopen_error() :: file:posix() | badarg | system_limit.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBreport() ::\fR
+\fB          [{Tag :: term(), Data :: term()} | term()] | string() | term().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_report_handler(Handler, Args) -> Result\fR
+\fB                            when\fR
+\fB                                Handler :: module(),\fR
+\fB                                Args :: gen_event:handler_args(),\fR
+\fB                                Result :: gen_event:add_handler_ret().\fR
+
+.br
+.RS
+.PP
+Adds a new event handler to the error logger. The event handler must be implemented as a \fIgen_event\fR callback module.
+
+.PP
+\fIHandler\fR is typically the name of the callback module and \fIArgs\fR is an optional term (defaults to []) passed to the initialization callback function \fIgen_event:init/1\fR. The function returns \fIok\fR if successful.
+
+.PP
+The event handler must be able to handle the events in this module, see section Events.
+
+.PP
+The first time this function is called, \fIerror_logger\fR is added as a Logger handler, and the \fIerror_logger\fR process is started.
+
+
+.RE
+.B
+\fBdelete_report_handler(Handler) -> Result\fR
+\fB                               when\fR
+\fB                                   Handler :: module(),\fR
+\fB                                   Result :: gen_event:del_handler_ret().\fR
+
+.br
+.RS
+.PP
+Deletes an event handler from the error logger by calling \fIgen_event:delete_handler(error_logger, Handler, [])\fR.
+
+.PP
+If no more event handlers exist after the deletion, \fIerror_logger\fR is removed as a Logger handler, and the \fIerror_logger\fR process is stopped.
+
+
+.RE
+.B
+\fBerror_msg(Format, Data) -> ok\fR
+\fB                   when Format :: string(), Data :: list().\fR
+
+.br
+.RS
+.PP
+Log a standard error event. The \fIFormat\fR and \fIData\fR arguments are the same as the arguments of \fIio:format/2\fR in STDLIB.
+
+.PP
+Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+The event is handled by the default Logger handler.
+
+.PP
+This function is kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_ERROR\fR macro or \fIlogger:error/1,2,3\fR instead.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> error_logger:error_msg("An error occurred in ~p", [a_module]).
+=ERROR REPORT==== 22-May-2018::11:18:43.376917 ===
+An error occurred in a_module
+ok
+
+.fi
+
+.PP
+\fBWARNING: \fRIf the Unicode translation modifier (\fIt\fR) is used in the format string, all event handlers must ensure that the formatted output is correctly encoded for the I/O device.
+
+
+
+.RE
+.B
+\fBerror_report(Report) -> ok when Report :: report().\fR
+
+.br
+.RS
+.PP
+Log a standard error event. Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+The event is handled by the default Logger handler.
+
+.PP
+This functions is kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_ERROR\fR macro or \fIlogger:error/1,2,3\fR instead.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+2> error_logger:error_report([{tag1,data1},a_term,{tag2,data}]).
+=ERROR REPORT==== 22-May-2018::11:24:23.699306 ===
+    tag1: data1
+    a_term
+    tag2: data
+ok
+3> error_logger:error_report("Serious error in my module").
+=ERROR REPORT==== 22-May-2018::11:24:45.972445 ===
+Serious error in my module
+ok
+
+.fi
+
+
+.RE
+.B
+\fBerror_report(Type, Report) -> ok\fR
+\fB                      when Type :: term(), Report :: report().\fR
+
+.br
+.RS
+.PP
+Log a user-defined error event. Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+Error logger also adds a \fIdomain\fR field with value \fI[Type]\fR to this event's metadata, causing the filters of the default Logger handler to discard the event. A different Logger handler, or an error logger event handler, must be added to handle this event.
+
+.PP
+It is recommended that \fIReport\fR follows the same structure as for \fIerror_report/1\fR.
+
+.PP
+This functions is kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_ERROR\fR macro or \fIlogger:error/1,2,3\fR instead.
+
+
+.RE
+.B
+\fBget_format_depth() -> unlimited | pos_integer().\fR
+
+.br
+.RS
+.PP
+Returns \fImax(10, Depth)\fR, where \fIDepth\fR is the value of \fIerror_logger_format_depth\fR in the Kernel application, if Depth is an integer. Otherwise, \fIunlimited\fR is returned.
+
+.PP
+\fBNOTE: \fRThe \fIerror_logger_format_depth\fR variable is deprecated since the Logger API was introduced in Erlang/OTP 21.0. The variable, and this function, are kept for backwards compatibility since they still might be used by legacy report handlers.
+
+
+
+.RE
+.B
+\fBinfo_msg(Format, Data) -> ok\fR
+\fB                  when Format :: string(), Data :: list().\fR
+
+.br
+.RS
+.PP
+Log a standard information event. The \fIFormat\fR and \fIData\fR arguments are the same as the arguments of \fIio:format/2\fR in STDLIB.
+
+.PP
+Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+The event is handled by the default Logger handler.
+
+.PP
+These functions are kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_INFO\fR macro or \fIlogger:info/1,2,3\fR instead.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> error_logger:info_msg("Something happened in ~p", [a_module]).
+=INFO REPORT==== 22-May-2018::12:03:32.612462 ===
+Something happened in a_module
+ok
+
+.fi
+
+.PP
+\fBWARNING: \fRIf the Unicode translation modifier (\fIt\fR) is used in the format string, all event handlers must ensure that the formatted output is correctly encoded for the I/O device.
+
+
+
+.RE
+.B
+\fBinfo_report(Report) -> ok when Report :: report().\fR
+
+.br
+.RS
+.PP
+Log a standard information event. Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+The event is handled by the default Logger handler.
+
+.PP
+This functions is kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_INFO\fR macro or \fIlogger:info/1,2,3\fR instead.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+2> error_logger:info_report([{tag1,data1},a_term,{tag2,data}]).
+=INFO REPORT==== 22-May-2018::12:06:35.994440 ===
+    tag1: data1
+    a_term
+    tag2: data
+ok
+3> error_logger:info_report("Something strange happened").
+=INFO REPORT==== 22-May-2018::12:06:49.066872 ===
+Something strange happened
+ok
+
+.fi
+
+
+.RE
+.B
+\fBinfo_report(Type, Report) -> ok\fR
+\fB                     when Type :: any(), Report :: report().\fR
+
+.br
+.RS
+.PP
+Log a user-defined information event. Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+Error logger also adds a \fIdomain\fR field with value \fI[Type]\fR to this event's metadata, causing the filters of the default Logger handler to discard the event. A different Logger handler, or an error logger event handler, must be added to handle this event.
+
+.PP
+It is recommended that \fIReport\fR follows the same structure as for \fIinfo_report/1\fR.
+
+.PP
+This functions is kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_INFO\fR macro or \fIlogger:info/1,2,3\fR instead.
+
+
+.RE
+.B
+\fBlogfile(Request :: {open, Filename}) -> ok | {error, OpenReason}\fR
+\fB                 when\fR
+\fB                     Filename :: file:name(),\fR
+\fB                     OpenReason :: allready_have_logfile | open_error();\fR
+\fB             (Request :: close) -> ok | {error, CloseReason}\fR
+\fB                 when CloseReason :: module_not_found;\fR
+\fB             (Request :: filename) -> Filename | {error, FilenameReason}\fR
+\fB                 when\fR
+\fB                     Filename :: file:name(),\fR
+\fB                     FilenameReason :: no_log_file.\fR
+
+.br
+.RS
+.PP
+Enables or disables printout of standard events to a file.
+
+.PP
+This is done by adding or deleting the \fIerror_logger_file_h\fR event handler, and thus indirectly adding \fIerror_logger\fR as a Logger handler.
+
+.PP
+Notice that this function does not manipulate the Logger configuration directly, meaning that if the default Logger handler is already logging to a file, this function can potentially cause logging to a second file.
+
+.PP
+This function is useful as a shortcut during development and testing, but must not be used in a production system. See section Logging in the Kernel User's Guide, and the \fIlogger\fR manual page for information about how to configure Logger for live systems.
+
+.PP
+\fIRequest\fR is one of the following:
+
+{open, Filename}
+.RS 2
+Opens log file 
+\fIFilename\fR. Returns \fIok\fR if successful, or \fI{error, allready_have_logfile}\fR if logging to file is already enabled, or an error tuple if another error occurred (for example, if \fIFilename\fR cannot be opened). The file is opened with encoding UTF-8.
+
+.RE
+
+close
+.RS 2
+Closes the current log file. Returns 
+\fIok\fR, or \fI{error, module_not_found}\fR.
+
+.RE
+
+filename
+.RS 2
+Returns the name of the log file 
+\fIFilename\fR, or \fI{error, no_log_file}\fR if logging to file is not enabled.
+
+.RE
+
+
+.RE
+.B
+\fBtty(Flag) -> ok when Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables (\fIFlag == true\fR) or disables (\fIFlag == false\fR) printout of standard events to the terminal.
+
+.PP
+This is done by manipulating the Logger configuration. The function is useful as a shortcut during development and testing, but must not be used in a production system. See section Logging in the Kernel User's Guide, and the \fIlogger\fR manual page for information about how to configure Logger for live systems.
+
+
+.RE
+.B
+\fBwarning_map() -> Tag when Tag :: error | warning | info.\fR
+
+.br
+.RS
+.PP
+Returns the current mapping for warning events.
+
+.PP
+Events sent using \fIwarning_msg/1,2\fR or \fIwarning_report/1,2\fR are tagged as errors, warnings (default), or info, depending on the value of command-line flag \fI+W\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+os$ erl
+Erlang (BEAM) emulator version 5.4.8 [hipe] [threads:0] [kernel-poll]
+
+Eshell V5.4.8  (abort with ^G)
+1> error_logger:warning_map().
+warning
+2> error_logger:warning_msg("Warnings tagged as: ~p~n", [warning]).
+
+=WARNING REPORT==== 11-Aug-2005::15:31:55 ===
+Warnings tagged as: warning
+ok
+3>
+User switch command
+ --> q
+os$ erl +W e
+Erlang (BEAM) emulator version 5.4.8 [hipe] [threads:0] [kernel-poll]
+
+Eshell V5.4.8  (abort with ^G)
+1> error_logger:warning_map().
+error
+2> error_logger:warning_msg("Warnings tagged as: ~p~n", [error]).
+
+=ERROR REPORT==== 11-Aug-2005::15:31:23 ===
+Warnings tagged as: error
+ok
+
+.fi
+
+
+.RE
+.B
+\fBwarning_msg(Format, Data) -> ok\fR
+\fB                     when Format :: string(), Data :: list().\fR
+
+.br
+.RS
+.PP
+Log a standard warning event. The \fIFormat\fR and \fIData\fR arguments are the same as the arguments of \fIio:format/2\fR in STDLIB.
+
+.PP
+Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+The event is handled by the default Logger handler. The log level can be changed to error or info, see \fIwarning_map/0\fR.
+
+.PP
+These functions are kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_WARNING\fR macro or \fIlogger:warning/1,2,3\fR instead.
+
+.PP
+\fBWARNING: \fRIf the Unicode translation modifier (\fIt\fR) is used in the format string, all event handlers must ensure that the formatted output is correctly encoded for the I/O device.
+
+
+
+.RE
+.B
+\fBwarning_report(Report) -> ok when Report :: report().\fR
+
+.br
+.RS
+.PP
+Log a standard warning event. Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+The event is handled by the default Logger handler. The log level can be changed to error or info, see \fIwarning_map/0\fR.
+
+.PP
+This functions is kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_WARNING\fR macro or \fIlogger:warning/1,2,3\fR instead.
+
+
+.RE
+.B
+\fBwarning_report(Type, Report) -> ok\fR
+\fB                        when Type :: any(), Report :: report().\fR
+
+.br
+.RS
+.PP
+Log a user-defined warning event. Error logger forwards the event to Logger, including metadata that allows backwards compatibility with legacy error logger event handlers.
+
+.PP
+Error logger also adds a \fIdomain\fR field with value \fI[Type]\fR to this event's metadata, causing the filters of the default Logger handler to discard the event. A different Logger handler, or an error logger event handler, must be added to handle this event.
+
+.PP
+The log level can be changed to error or info, see \fIwarning_map/0\fR.
+
+.PP
+It is recommended that \fIReport\fR follows the same structure as for \fIwarning_report/1\fR.
+
+.PP
+This functions is kept for backwards compatibility and must not be used by new code. Use the \fI?LOG_WARNING\fR macro or \fIlogger:warning/1,2,3\fR instead.
+
+
+.RE

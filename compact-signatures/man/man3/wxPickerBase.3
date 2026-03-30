@@ -1,0 +1,258 @@
+.TH wxPickerBase 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPickerBase \- Base abstract class for all pickers which support an auxiliary text control.
+
+.SH DESCRIPTION
+.PP
+This class handles all positioning and sizing of the text control like a an horizontal \fIwxBoxSizer\fR would do, with the text control on the left of the picker button.
+
+.PP
+The proportion (see \fIwxSizer\fR documentation for more info about proportion values) of the picker control defaults to 1 when there isn't a text control associated (see \fIwxPB_USE_TEXTCTRL\fR style) and to 0 otherwise.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPB_USE_TEXTCTRL: Creates a text control to the left of the picker which is completely managed by this \fIwxPickerBase\fR class.
+
+.RE
+
+.PP
+See: \fIwxColourPickerCtrl\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPickerBase
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPickerBase() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetInternalMargin(This) -> integer() when This :: wxPickerBase().\fR
+
+.br
+.RS
+.PP
+Returns the margin (in pixel) between the picker and the text control.
+
+.PP
+This function can be used only when \fIhasTextCtrl/1\fR returns true.
+
+
+.RE
+.B
+\fBgetPickerCtrlProportion(This) -> integer()\fR
+\fB                                 when This :: wxPickerBase().\fR
+
+.br
+.RS
+.PP
+Returns the proportion value of the picker.
+
+
+.RE
+.B
+\fBgetTextCtrl(This) -> wxTextCtrl:wxTextCtrl()\fR
+\fB                     when This :: wxPickerBase().\fR
+
+.br
+.RS
+.PP
+Returns a pointer to the text control handled by this window or NULL if the \fIwxPB\\_USE\\_TEXTCTRL\fR style was not specified when this control was created.
+
+.PP
+Remark: The contents of the text control could be an invalid representation of the entity which can be chosen through the picker (e.g. when the user enters an invalid colour syntax because of a typo). Thus you should never parse the content of the textctrl to get the user's input; rather use the derived-class getter (e.g. \fIwxColourPickerCtrl:getColour/1\fR, \fIwxFilePickerCtrl:getPath/1\fR, etc).
+
+
+.RE
+.B
+\fBgetTextCtrlProportion(This) -> integer()\fR
+\fB                               when This :: wxPickerBase().\fR
+
+.br
+.RS
+.PP
+Returns the proportion value of the text control.
+
+.PP
+This function can be used only when \fIhasTextCtrl/1\fR returns true.
+
+
+.RE
+.B
+\fBhasTextCtrl(This) -> boolean() when This :: wxPickerBase().\fR
+
+.br
+.RS
+.PP
+Returns true if this window has a valid text control (i.e. if the \fIwxPB\\_USE\\_TEXTCTRL\fR style was given when creating this control).
+
+
+.RE
+.B
+\fBisPickerCtrlGrowable(This) -> boolean()\fR
+\fB                              when This :: wxPickerBase().\fR
+
+.br
+.RS
+.PP
+Returns true if the picker control is growable.
+
+
+.RE
+.B
+\fBisTextCtrlGrowable(This) -> boolean() when This :: wxPickerBase().\fR
+
+.br
+.RS
+.PP
+Returns true if the text control is growable.
+
+.PP
+This function can be used only when \fIhasTextCtrl/1\fR returns true.
+
+
+.RE
+.B
+\fBsetInternalMargin(This, Margin) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxPickerBase(),\fR
+\fB                               Margin :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the margin (in pixel) between the picker and the text control.
+
+.PP
+This function can be used only when \fIhasTextCtrl/1\fR returns true.
+
+
+.RE
+.B
+\fBsetPickerCtrlGrowable(This, [Option]) -> ok\fR
+\fB                               when\fR
+\fB                                   This :: wxPickerBase(),\fR
+\fB                                   Option :: {grow, boolean()}.\fR
+
+.br
+.RS
+.PP
+Sets the picker control as growable when \fIgrow\fR is true.
+
+
+.RE
+.B
+\fBsetPickerCtrlProportion(This, Prop) -> ok\fR
+\fB                                 when\fR
+\fB                                     This :: wxPickerBase(),\fR
+\fB                                     Prop :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the proportion value of the picker.
+
+.PP
+Look at the detailed description of \fIwxPickerBase\fR for more info.
+
+
+.RE
+.B
+\fBsetTextCtrlGrowable(This, [Option]) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxPickerBase(),\fR
+\fB                                 Option :: {grow, boolean()}.\fR
+
+.br
+.RS
+.PP
+Sets the text control as growable when \fIgrow\fR is true.
+
+.PP
+This function can be used only when \fIhasTextCtrl/1\fR returns true.
+
+
+.RE
+.B
+\fBsetTextCtrlProportion(This, Prop) -> ok\fR
+\fB                               when\fR
+\fB                                   This :: wxPickerBase(),\fR
+\fB                                   Prop :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the proportion value of the text control.
+
+.PP
+Look at the detailed description of \fIwxPickerBase\fR for more info.
+
+.PP
+This function can be used only when \fIhasTextCtrl/1\fR returns true.
+
+
+.RE

@@ -1,0 +1,215 @@
+.TH wxToggleButton 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxToggleButton \- \fIwxToggleButton\fR is a button that stays pressed when clicked by the user.
+
+.SH DESCRIPTION
+.PP
+In other words, it is similar to \fIwxCheckBox\fR in functionality but looks like a \fIwxButton\fR.
+
+.PP
+Since wxWidgets version 2.9.0 this control emits an update UI event.
+
+.PP
+You can see \fIwxToggleButton\fR in action in page_samples_widgets.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCheckBox\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxButton\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxToggleButton
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_togglebutton_clicked\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxToggleButton() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Label, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxToggleButton(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Label :: unicode:chardata(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Creates the toggle button for two-step construction.
+
+.PP
+See \fInew/4\fR for details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxToggleButton()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetValue(This) -> boolean() when This :: wxToggleButton().\fR
+
+.br
+.RS
+.PP
+Gets the state of the toggle button.
+
+.PP
+Return: Returns true if it is pressed, false otherwise.
+
+
+.RE
+.B
+\fBnew() -> wxToggleButton().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Label, [Option]) -> wxToggleButton()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Label :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a toggle button.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBsetValue(This, State) -> ok\fR
+\fB                  when This :: wxToggleButton(), State :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets the toggle button to the given state.
+
+.PP
+This does not cause a \fIEVT_TOGGLEBUTTON\fR event to be emitted.
+
+
+.RE

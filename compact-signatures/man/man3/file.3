@@ -1,0 +1,3122 @@
+.TH file 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+file \- File interface module.
+
+.SH DESCRIPTION
+.PP
+This module provides an interface to the file system.
+
+.PP
+\fBWARNING: \fRFile operations are only guaranteed to appear atomic when going through the same file server. A NIF or other OS process may observe intermediate steps on certain operations on some operating systems, eg. renaming an existing file on Windows, or \fIwrite_file_info/2\fR on any OS at the time of writing.
+
+
+.PP
+Regarding filename encoding, the Erlang VM can operate in two modes. The current mode can be queried using function \fInative_name_encoding/0\fR. It returns \fIlatin1\fR or \fIutf8\fR.
+
+.PP
+In \fIlatin1\fR mode, the Erlang VM does not change the encoding of filenames. In \fIutf8\fR mode, filenames can contain Unicode characters greater than 255 and the VM converts filenames back and forth to the native filename encoding (usually UTF-8, but UTF-16 on Windows).
+
+.PP
+The default mode depends on the operating system. Windows, MacOS X and Android enforce consistent filename encoding and therefore the VM uses \fIutf8\fR mode.
+
+.PP
+On operating systems with transparent naming (for example, all Unix systems except MacOS X), default is \fIutf8\fR if the terminal supports UTF-8, otherwise \fIlatin1\fR. The default can be overridden using \fI+fnl\fR (to force \fIlatin1\fR mode) or \fI+fnu\fR (to force \fIutf8\fR mode) when starting \fIerl\fR.
+
+.PP
+On operating systems with transparent naming, files can be inconsistently named, for example, some files are encoded in UTF-8 while others are encoded in ISO Latin-1. The concept of \fIraw filenames\fR is introduced to handle file systems with inconsistent naming when running in \fIutf8\fR mode.
+
+.PP
+A \fIraw filename\fR is a filename specified as a binary. The Erlang VM does not translate a filename specified as a binary on systems with transparent naming.
+
+.PP
+When running in \fIutf8\fR mode, functions \fIlist_dir/1\fR and \fIread_link/1\fR never return raw filenames. To return all filenames including raw filenames, use functions \fIlist_dir_all/1\fR and \fIread_link_all/1\fR.
+
+.PP
+See also section Notes About Raw Filenames in the STDLIB User's Guide.
+
+.PP
+\fBNOTE: \fRFile operations used to accept filenames containing null characters (integer value zero). This caused the name to be truncated and in some cases arguments to primitive operations to be mixed up. Filenames containing null characters inside the filename are now \fIrejected\fR and will cause primitive file operations fail.
+
+
+.SS "POSIX Error Codes"
+
+eacces
+.RS 2
+Permission denied
+
+
+.RE
+eagain
+.RS 2
+Resource temporarily unavailable
+
+
+.RE
+ebadf
+.RS 2
+Bad file number
+
+
+.RE
+ebusy
+.RS 2
+File busy
+
+
+.RE
+edquot
+.RS 2
+Disk quota exceeded
+
+
+.RE
+eexist
+.RS 2
+File already exists
+
+
+.RE
+efault
+.RS 2
+Bad address in system call argument
+
+
+.RE
+efbig
+.RS 2
+File too large
+
+
+.RE
+eintr
+.RS 2
+Interrupted system call
+
+
+.RE
+einval
+.RS 2
+Invalid argument
+
+
+.RE
+eio
+.RS 2
+I/O error
+
+
+.RE
+eisdir
+.RS 2
+Illegal operation on a directory
+
+
+.RE
+eloop
+.RS 2
+Too many levels of symbolic links
+
+
+.RE
+emfile
+.RS 2
+Too many open files
+
+
+.RE
+emlink
+.RS 2
+Too many links
+
+
+.RE
+enametoolong
+.RS 2
+Filename too long
+
+
+.RE
+enfile
+.RS 2
+File table overflow
+
+
+.RE
+enodev
+.RS 2
+No such device
+
+
+.RE
+enoent
+.RS 2
+No such file or directory
+
+
+.RE
+enomem
+.RS 2
+Not enough memory
+
+
+.RE
+enospc
+.RS 2
+No space left on device
+
+
+.RE
+enotblk
+.RS 2
+Block device required
+
+
+.RE
+enotdir
+.RS 2
+Not a directory
+
+
+.RE
+enotsup
+.RS 2
+Operation not supported
+
+
+.RE
+enxio
+.RS 2
+No such device or address
+
+
+.RE
+eperm
+.RS 2
+Not owner
+
+
+.RE
+epipe
+.RS 2
+Broken pipe
+
+
+.RE
+erofs
+.RS 2
+Read-only file system
+
+
+.RE
+espipe
+.RS 2
+Invalid seek
+
+
+.RE
+esrch
+.RS 2
+No such process
+
+
+.RE
+estale
+.RS 2
+Stale remote file handle
+
+
+.RE
+exdev
+.RS 2
+Cross-device link
+
+
+.RE
+
+.SS "Performance"
+
+.PP
+For increased performance, raw files are recommended.
+
+.PP
+A normal file is really a process so it can be used as an I/O device (see \fIio\fR). Therefore, when data is written to a normal file, the sending of the data to the file process, copies all data that are not binaries. Opening the file in binary mode and writing binaries is therefore recommended. If the file is opened on another node, or if the file server runs as slave to the file server of another node, also binaries are copied.
+
+.PP
+\fBNOTE: \fRRaw files use the file system of the host machine of the node. For normal files (non-raw), the file server is used to find the files, and if the node is running its file server as slave to the file server of another node, and the other node runs on some other host machine, they can have different file systems. However, this is seldom a problem.
+
+
+.PP
+\fIopen/2\fR can be given the options \fIdelayed_write\fR and \fIread_ahead\fR to turn on caching, which will reduce the number of operating system calls and greatly improve performance for small reads and writes. However, the overhead won't disappear completely and it's best to keep the number of file operations to a minimum. As a contrived example, the following function writes 4MB in 2.5 seconds when tested:
+
+.IP
+.nf
+create_file_slow(Name) ->
+    {ok, Fd} = file:open(Name, [raw, write, delayed_write, binary]),
+    create_file_slow_1(Fd, 4 bsl 20),
+    file:close(Fd).
+
+create_file_slow_1(_Fd, 0) ->
+    ok;
+create_file_slow_1(Fd, M) ->
+    ok = file:write(Fd, <<0>>),
+    create_file_slow_1(Fd, M - 1).
+
+.fi
+
+.PP
+The following functionally equivalent code writes 128 bytes per call to \fIwrite/2\fR and so does the same work in 0.08 seconds, which is roughly 30 times faster:
+
+.IP
+.nf
+create_file(Name) ->
+    {ok, Fd} = file:open(Name, [raw, write, delayed_write, binary]),
+    create_file_1(Fd, 4 bsl 20),
+    file:close(Fd),
+    ok.
+
+create_file_1(_Fd, 0) ->
+    ok;
+create_file_1(Fd, M) when M >= 128 ->
+    ok = file:write(Fd, <<0:(128)/unit:8>>),
+    create_file_1(Fd, M - 128);
+create_file_1(Fd, M) ->
+    ok = file:write(Fd, <<0:(M)/unit:8>>),
+    create_file_1(Fd, M - 1).
+
+.fi
+
+.PP
+When writing data it's generally more efficient to write a list of binaries rather than a list of integers. It is not needed to flatten a deep list before writing. On Unix hosts, scatter output, which writes a set of buffers in one operation, is used when possible. In this way \fIwrite(FD, [Bin1, Bin2 | Bin3])\fR writes the contents of the binaries without copying the data at all, except for perhaps deep down in the operating system kernel.
+
+.PP
+\fBWARNING: \fRIf an error occurs when accessing an open file with module \fIio\fR, the process handling the file exits. The dead file process can hang if a process tries to access it later. This will be fixed in a future release.
+
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIfilename\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBdate_time() :: calendar:datetime().\fR
+
+.br
+.RS
+.PP
+Must denote a valid date and time.
+
+
+.RE
+.B
+\fBdeep_list() :: [char() | atom() | deep_list()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdelete_option() :: raw.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfd() :: file_descriptor().\fR
+
+.br
+.RS
+.PP
+A file descriptor representing a file opened in \fIraw\fR mode.
+
+
+.RE
+.B
+\fBfile_info() :: #file_info{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfile_info_option() ::\fR
+\fB          {time, local} | {time, universal} | {time, posix} | raw.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfilename() :: string().\fR
+
+.br
+.RS
+.PP
+A file name as returned from \fIfile\fR API functions.
+
+.PP
+See the documentation of the \fIname_all/0\fR type.
+
+
+.RE
+.B
+\fBfilename_all() :: string() | (RawFilename :: binary()).\fR
+
+.br
+.RS
+.PP
+A file name as returned from \fIfile\fR API functions.
+
+.PP
+See the documentation of the \fIname_all/0\fR type.
+
+
+.RE
+.B
+\fBio_device() :: io_server() | fd().\fR
+
+.br
+.RS
+.PP
+An IO device as returned by \fIopen/2\fR.
+
+.PP
+\fIio_server/0\fR is returned by default and \fIfd/0\fR is returned if the \fIraw\fR option is given.
+
+
+.RE
+.B
+\fBio_server() :: pid().\fR
+
+.br
+.RS
+.PP
+A process handling the I/O protocol.
+
+
+.RE
+.B
+\fBlocation() ::\fR
+\fB          integer() |\fR
+\fB          {bof, Offset :: integer()} |\fR
+\fB          {cur, Offset :: integer()} |\fR
+\fB          {eof, Offset :: integer()} |\fR
+\fB          bof | cur | eof.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmode() ::\fR
+\fB          read | write | append | exclusive | raw | binary |\fR
+\fB          {delayed_write,\fR
+\fB           Size :: non_neg_integer(),\fR
+\fB           Delay :: non_neg_integer()} |\fR
+\fB          delayed_write |\fR
+\fB          {read_ahead, Size :: pos_integer()} |\fR
+\fB          read_ahead | compressed | compressed_one |\fR
+\fB          {zstd,\fR
+\fB           zstd:compress_parameters() | zstd:decompress_parameters()} |\fR
+\fB          {encoding, unicode:encoding()} |\fR
+\fB          sync.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBname() :: string() | atom() | deep_list().\fR
+
+.br
+.RS
+.PP
+A restricted file name used as input into \fIfile\fR API functions.
+
+.PP
+If VM is in Unicode filename mode, \fIstring/0\fR and \fIchar/0\fR are allowed to be > 255. See also the documentation of the \fIname_all/0\fR type.
+
+
+.RE
+.B
+\fBname_all() ::\fR
+\fB          string() | atom() | deep_list() | (RawFilename :: binary()).\fR
+
+.br
+.RS
+.PP
+A file name used as input into \fIfile\fR API functions.
+
+.PP
+If VM is in Unicode filename mode, characters are allowed to be > 255. \fIRawFilename\fR is a filename not subject to Unicode translation, meaning that it can contain characters not conforming to the Unicode encoding expected from the file system (that is, non-UTF-8 characters although the VM is started in Unicode filename mode). Null characters (integer value zero) are \fInot\fR allowed in filenames (not even at the end).
+
+
+.RE
+.B
+\fBposix() ::\fR
+\fB          eacces | eagain | ebadf | ebadmsg | ebusy | edeadlk |\fR
+\fB          edeadlock | edquot | eexist | efault | efbig | eftype |\fR
+\fB          eintr | einval | eio | eisdir | eloop | emfile | emlink |\fR
+\fB          emultihop | enametoolong | enfile | enobufs | enodev |\fR
+\fB          enolck | enolink | enoent | enomem | enospc | enosr | enostr |\fR
+\fB          enosys | enotblk | enotdir | enotsup | enxio | eopnotsupp |\fR
+\fB          eoverflow | eperm | epipe | erange | erofs | espipe | esrch |\fR
+\fB          estale | etxtbsy | exdev.\fR
+
+.br
+.RS
+.PP
+An atom that is named from the POSIX error codes used in Unix, and in the runtime libraries of most C compilers.
+
+
+.RE
+.B
+\fBposix_file_advise() ::\fR
+\fB          normal | sequential | random | no_reuse | will_need |\fR
+\fB          dont_need.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBread_file_option() :: raw.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsendfile_option() ::\fR
+\fB          {chunk_size, non_neg_integer()} | {use_threads, boolean()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadvise(IoDevice, Offset, Length, Advise) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    IoDevice :: io_device(),\fR
+\fB                    Offset :: integer(),\fR
+\fB                    Length :: integer(),\fR
+\fB                    Advise :: posix_file_advise(),\fR
+\fB                    Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+\fIadvise/4\fR can be used to announce an intention to access file data in a specific pattern in the future, thus allowing the operating system to perform appropriate optimizations.
+
+.PP
+On some platforms, this function might have no effect.
+
+
+.RE
+.B
+\fBallocate(File, Offset, Length) -> ok | {error, posix()}\fR
+\fB                  when\fR
+\fB                      File :: io_device(),\fR
+\fB                      Offset :: non_neg_integer(),\fR
+\fB                      Length :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+\fIallocate/3\fR can be used to preallocate space for a file.
+
+.PP
+This function only succeeds in platforms that provide this feature.
+
+
+.RE
+.B
+\fBchange_group(Filename, Gid) -> ok | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Filename :: name_all(),\fR
+\fB                          Gid :: integer(),\fR
+\fB                          Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Changes group of a file. See \fIwrite_file_info/2\fR.
+
+
+.RE
+.B
+\fBchange_mode(Filename, Mode) -> ok | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Filename :: name_all(),\fR
+\fB                         Mode :: integer(),\fR
+\fB                         Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Changes permissions of a file. See \fIwrite_file_info/2\fR.
+
+
+.RE
+.B
+\fBchange_owner(Filename, Uid) -> ok | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Filename :: name_all(),\fR
+\fB                          Uid :: integer(),\fR
+\fB                          Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Changes owner of a file. See \fIwrite_file_info/2\fR.
+
+
+.RE
+.B
+\fBchange_owner(Filename, Uid, Gid) -> ok | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Filename :: name_all(),\fR
+\fB                          Uid :: integer(),\fR
+\fB                          Gid :: integer(),\fR
+\fB                          Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Changes owner and group of a file. See \fIwrite_file_info/2\fR.
+
+
+.RE
+.B
+\fBchange_time(Filename, Mtime) -> ok | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Filename :: name_all(),\fR
+\fB                         Mtime :: date_time(),\fR
+\fB                         Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Changes the modification and access times of a file. See \fIwrite_file_info/2\fR.
+
+
+.RE
+.B
+\fBchange_time(Filename, Atime, Mtime) -> ok | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Filename :: name_all(),\fR
+\fB                         Atime :: date_time(),\fR
+\fB                         Mtime :: date_time(),\fR
+\fB                         Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Changes the modification and last access times of a file. See \fIwrite_file_info/2\fR.
+
+
+.RE
+.B
+\fBclose(IoDevice) -> ok | {error, Reason}\fR
+\fB               when\fR
+\fB                   IoDevice :: io_device(),\fR
+\fB                   Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Closes the file referenced by \fIIoDevice\fR. It mostly returns \fIok\fR, except for some severe errors such as out of memory.
+
+.PP
+Notice that if option \fIdelayed_write\fR was used when opening the file, \fIclose/1\fR can return an old write error and not even try to close the file. See \fIopen/2\fR.
+
+
+.RE
+.B
+\fBconsult(Filename) -> {ok, Terms} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Filename :: name_all(),\fR
+\fB                     Terms :: [term()],\fR
+\fB                     Reason ::\fR
+\fB                         posix() |\fR
+\fB                         badarg | terminated | system_limit |\fR
+\fB                         {Line :: integer(),\fR
+\fB                          Mod :: module(),\fR
+\fB                          Term :: term()}.\fR
+
+.br
+.RS
+.PP
+Reads Erlang terms, separated by \fI.\fR, from \fIFilename\fR. Returns one of the following:
+
+{ok, Terms}
+.RS 2
+The file was successfully read.
+
+
+.RE
+
+{error, atom()}
+.RS 2
+An error occurred when opening the file or reading it. For a list of typical error codes, see 
+\fIopen/2\fR.
+
+.RE
+
+{error, {Line, Mod, Term}}
+.RS 2
+An error occurred when interpreting the Erlang terms in the file. To convert the three-element tuple to an English description of the error, use 
+\fIformat_error/1\fR.
+
+.RE
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+f.txt:  {person, "kalle", 25}.
+        {person, "pelle", 30}.
+
+.fi
+
+.IP
+.nf
+1> file:consult("f.txt").
+{ok,[{person,"kalle",25},{person,"pelle",30}]}
+
+.fi
+
+.PP
+The encoding of \fIFilename\fR can be set by a comment, as described in \fIepp\fR.
+
+
+.RE
+.B
+\fBcopy(Source, Destination, ByteCount) ->\fR
+\fB              {ok, BytesCopied} | {error, Reason}\fR
+\fB              when\fR
+\fB                  Source :: io_device() | Filename | {Filename, Modes},\fR
+\fB                  Destination ::\fR
+\fB                      io_device() | Filename | {Filename, Modes},\fR
+\fB                  Filename :: name_all(),\fR
+\fB                  Modes :: [mode()],\fR
+\fB                  ByteCount :: non_neg_integer() | infinity,\fR
+\fB                  BytesCopied :: non_neg_integer(),\fR
+\fB                  Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Copies \fIByteCount\fR bytes from \fISource\fR to \fIDestination\fR. \fISource\fR and \fIDestination\fR refer to either filenames or IO devices from, for example, \fIopen/2\fR.
+
+.PP
+Argument \fIModes\fR is a list of possible modes, see \fIopen/2\fR, and defaults to \fI[]\fR.
+
+.PP
+If both \fISource\fR and \fIDestination\fR refer to filenames, the files are opened with \fI[read, binary]\fR and \fI[write, binary]\fR prepended to their mode lists, respectively, to optimize the copy.
+
+.PP
+If \fISource\fR refers to a filename, it is opened with \fIread\fR mode prepended to the mode list before the copy, and closed when done.
+
+.PP
+If \fIDestination\fR refers to a filename, it is opened with \fIwrite\fR mode prepended to the mode list before the copy, and closed when done.
+
+.PP
+Returns \fI{ok, BytesCopied}\fR, where \fIBytesCopied\fR is the number of bytes that was copied, which can be less than \fIByteCount\fR if end of file was encountered on the source. If the operation fails, \fI{error, Reason}\fR is returned.
+
+.PP
+Typical error reasons: as for \fIopen/2\fR if a file had to be opened, and as for \fIread/2\fR and \fIwrite/2\fR.
+
+
+.RE
+.B
+\fBdatasync(IoDevice) -> ok | {error, Reason}\fR
+\fB                  when\fR
+\fB                      IoDevice :: io_device(),\fR
+\fB                      Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Ensures that any buffers kept by the operating system (not by the Erlang runtime system) are written to disk. In many ways it resembles \fIfsync\fR but it does not update some of the metadata of the file, such as the access time. On some platforms this function has no effect.
+
+.PP
+Applications that access databases or log files often write a tiny data fragment (for example, one line in a log file) and then call \fIfsync()\fR immediately to ensure that the written data is physically stored on the hard disk. Unfortunately, \fIfsync()\fR always initiates two write operations: one for the newly written data and another one to update the modification time stored in the \fIinode\fR. If the modification time is not a part of the transaction concept, \fIfdatasync()\fR can be used to avoid unnecessary \fIinode\fR disk write operations.
+
+.PP
+Available only in some POSIX systems, this call results in a call to \fIfsync()\fR, or has no effect in systems not providing the \fIfdatasync()\fR syscall.
+
+
+.RE
+.B
+\fBdel_dir(Dir) -> ok | {error, Reason}\fR
+\fB                 when Dir :: name_all(), Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Tries to delete directory \fIDir\fR. The directory must be empty before it can be deleted. Returns \fIok\fR if successful.
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing search or write permissions for the parent directories of 
+\fIDir\fR.
+
+.RE
+
+eexist
+.RS 2
+The directory is not empty.
+
+
+.RE
+
+enoent
+.RS 2
+The directory does not exist.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of 
+\fIDir\fR is not a directory. On some platforms, \fIenoent\fR is returned instead.
+
+.RE
+
+einval
+.RS 2
+Attempt to delete the current directory. On some platforms, 
+\fIeacces\fR is returned instead.
+
+.RE
+
+
+.RE
+.B
+\fBdel_dir_r(File) -> ok | {error, Reason}\fR
+\fB                   when File :: name_all(), Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Deletes file or directory \fIFile\fR. If \fIFile\fR is a directory, its contents is first recursively deleted. Returns:
+
+ok
+.RS 2
+The operation completed without errors.
+
+
+.RE
+
+{error, posix()}
+.RS 2
+An error occurred when accessing or deleting 
+\fIFile\fR. If some file or directory under \fIFile\fR could not be deleted, \fIFile\fR cannot be deleted as it is non-empty, and \fI{error, eexist}\fR is returned.
+
+.RE
+
+
+.RE
+.B
+\fBdelete(Filename, Opts) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    Filename :: name_all(),\fR
+\fB                    Opts :: [delete_option()],\fR
+\fB                    Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Tries to delete file \fIFilename\fR. Returns \fIok\fR if successful.
+
+.PP
+If the option \fIraw\fR is set, the file server is not called. This can be useful in particular during the early boot stage when the file server is not yet registered, to still be able to delete local files.
+
+.PP
+Typical error reasons:
+
+enoent
+.RS 2
+The file does not exist.
+
+
+.RE
+
+eacces
+.RS 2
+Missing permission for the file or one of its parents.
+
+
+.RE
+
+eperm
+.RS 2
+The file is a directory and the user is not superuser.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of the filename is not a directory. On some platforms, 
+\fIenoent\fR is returned instead.
+
+.RE
+
+einval
+.RS 2
+
+\fIFilename\fR has an improper type, such as tuple.
+
+.RE
+
+.PP
+\fBWARNING: \fRIn a future release, a bad type for argument \fIFilename\fR will probably generate an exception.
+
+
+
+.RE
+.B
+\fBeval(Filename) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Filename :: name_all(),\fR
+\fB                  Reason ::\fR
+\fB                      posix() |\fR
+\fB                      badarg | terminated | system_limit |\fR
+\fB                      {Line :: integer(),\fR
+\fB                       Mod :: module(),\fR
+\fB                       Term :: term()}.\fR
+
+.br
+.RS
+.PP
+Reads and evaluates Erlang expressions, separated by \fI.\fR (or \fI,\fR, a sequence of expressions is also an expression) from \fIFilename\fR. The result of the evaluation is not returned; any expression sequence in the file must be there for its side effect.
+
+.PP
+Returns one of the following:
+
+ok
+.RS 2
+The file was read and evaluated.
+
+
+.RE
+
+{error, atom()}
+.RS 2
+An error occurred when opening the file or reading it. For a list of typical error codes, see 
+\fIopen/2\fR.
+
+.RE
+
+{error, {Line, Mod, Term}}
+.RS 2
+An error occurred when interpreting the Erlang expressions in the file. To convert the three-element tuple to an English description of the error, use 
+\fIformat_error/1\fR.
+
+.RE
+
+.PP
+The encoding of \fIFilename\fR can be set by a comment, as described in \fIepp\fR.
+
+
+.RE
+.B
+\fBeval(Filename, Bindings) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Filename :: name_all(),\fR
+\fB                  Bindings :: erl_eval:binding_struct(),\fR
+\fB                  Reason ::\fR
+\fB                      posix() |\fR
+\fB                      badarg | terminated | system_limit |\fR
+\fB                      {Line :: integer(),\fR
+\fB                       Mod :: module(),\fR
+\fB                       Term :: term()}.\fR
+
+.br
+.RS
+.PP
+The same as \fIeval/1\fR, but the variable bindings \fIBindings\fR are used in the evaluation. For information about the variable bindings, see \fIerl_eval\fR.
+
+
+.RE
+.B
+\fBformat_error(Reason) -> Chars\fR
+\fB                      when\fR
+\fB                          Reason ::\fR
+\fB                              posix() |\fR
+\fB                              badarg | terminated | system_limit |\fR
+\fB                              {Line :: integer(),\fR
+\fB                               Mod :: module(),\fR
+\fB                               Term :: term()},\fR
+\fB                          Chars :: string().\fR
+
+.br
+.RS
+.PP
+Given the error reason returned by any function in this module, returns a descriptive string of the error in English.
+
+
+.RE
+.B
+\fBget_cwd() -> {ok, Dir} | {error, Reason}\fR
+\fB                 when Dir :: filename(), Reason :: posix().\fR
+
+.br
+.RS
+.PP
+Returns \fI{ok, Dir}\fR, where \fIDir\fR is the current working directory of the file server.
+
+.PP
+\fBNOTE: \fRIn rare circumstances, this function can fail on Unix. It can occur if read permission does not exist for the parent directories of the current directory.
+
+
+.PP
+A typical error reason:
+
+eacces
+.RS 2
+Missing read permission for one of the parents of the current directory.
+
+
+.RE
+
+
+.RE
+.B
+\fBget_cwd(Drive) -> {ok, Dir} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Drive :: string(),\fR
+\fB                     Dir :: filename(),\fR
+\fB                     Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Returns \fI{ok, Dir}\fR or \fI{error, Reason}\fR, where \fIDir\fR is the current working directory of the specified drive.
+
+.PP
+\fIDrive\fR is to be of the form \fILetter:\fR, for example, \fI\fR.
+
+.PP
+Returns \fI{error, enotsup}\fR on platforms that have no concept of current drive (Unix, for example).
+
+.PP
+Typical error reasons:
+
+enotsup
+.RS 2
+The operating system has no concept of drives.
+
+
+.RE
+
+eacces
+.RS 2
+The drive does not exist.
+
+
+.RE
+
+einval
+.RS 2
+The format of 
+\fIDrive\fR is invalid.
+
+.RE
+
+
+.RE
+.B
+\fBlist_dir(Dir) -> {ok, Filenames} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Dir :: name_all(),\fR
+\fB                      Filenames :: [filename()],\fR
+\fB                      Reason ::\fR
+\fB                          posix() |\fR
+\fB                          badarg |\fR
+\fB                          {no_translation,\fR
+\fB                           Filename :: unicode:latin1_binary()}.\fR
+
+.br
+.RS
+.PP
+Lists all files in a directory, \fIexcept\fR files with raw filenames. Returns \fI{ok, Filenames}\fR if successful, otherwise \fI{error, Reason}\fR. \fIFilenames\fR is a list of the names of all the files in the directory. The names are not sorted.
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing search or write permissions for 
+\fIDir\fR or one of its parent directories.
+
+.RE
+
+enoent
+.RS 2
+The directory does not exist.
+
+
+.RE
+
+{no_translation, Filename}
+.RS 2
+
+\fIFilename\fR is a \fIbinary/0\fR with characters coded in ISO Latin-1 and the VM was started with parameter \fI+fnue\fR.
+
+.RE
+
+
+.RE
+.B
+\fBlist_dir_all(Dir) -> {ok, Filenames} | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Dir :: name_all(),\fR
+\fB                          Filenames :: [filename_all()],\fR
+\fB                          Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Lists all the files in a directory, including files with raw filenames. Returns \fI{ok, Filenames}\fR if successful, otherwise \fI{error, Reason}\fR. \fIFilenames\fR is a list of the names of all the files in the directory. The names are not sorted.
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing search or write permissions for 
+\fIDir\fR or one of its parent directories.
+
+.RE
+
+enoent
+.RS 2
+The directory does not exist.
+
+
+.RE
+
+
+.RE
+.B
+\fBmake_dir(Dir) -> ok | {error, Reason}\fR
+\fB                  when Dir :: name_all(), Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Tries to create directory \fIDir\fR. Missing parent directories are \fInot\fR created. Returns \fIok\fR if successful.
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing search or write permissions for the parent directories of 
+\fIDir\fR.
+
+.RE
+
+eexist
+.RS 2
+A file or directory named 
+\fIDir\fR exists already.
+
+.RE
+
+enoent
+.RS 2
+A component of 
+\fIDir\fR does not exist.
+
+.RE
+
+enospc
+.RS 2
+No space is left on the device.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of 
+\fIDir\fR is not a directory. On some platforms, \fIenoent\fR is returned instead.
+
+.RE
+
+
+.RE
+.B
+\fBmake_link(Existing, New) -> ok | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Existing :: name_all(),\fR
+\fB                       New :: name_all(),\fR
+\fB                       Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Makes a hard link from \fIExisting\fR to \fINew\fR on platforms supporting links (Unix and Windows). This function returns \fIok\fR if the link was successfully created, otherwise \fI{error, Reason}\fR. On platforms not supporting links, \fI{error,enotsup}\fR is returned.
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing read or write permissions for the parent directories of 
+\fIExisting\fR or \fINew\fR.
+
+.RE
+
+eexist
+.RS 2
+
+\fINew\fR already exists.
+
+.RE
+
+enotsup
+.RS 2
+Hard links are not supported on this platform.
+
+
+.RE
+
+
+.RE
+.B
+\fBmake_symlink(Existing, New) -> ok | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Existing :: name_all(),\fR
+\fB                          New :: name_all(),\fR
+\fB                          Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Creates a symbolic link \fINew\fR to the file or directory \fIExisting\fR on platforms supporting symbolic links (most Unix systems and Windows, beginning with Vista). \fIExisting\fR does not need to exist. Returns \fIok\fR if the link is successfully created, otherwise \fI{error, Reason}\fR. On platforms not supporting symbolic links, \fI{error, enotsup}\fR is returned.
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing read or write permissions for the parent directories of 
+\fIExisting\fR or \fINew\fR.
+
+.RE
+
+eexist
+.RS 2
+
+\fINew\fR already exists.
+
+.RE
+
+enotsup
+.RS 2
+Symbolic links are not supported on this platform.
+
+
+.RE
+
+eperm
+.RS 2
+User does not have privileges to create symbolic links (
+\fISeCreateSymbolicLinkPrivilege\fR on Windows).
+
+.RE
+
+
+.RE
+.B
+\fBnative_name_encoding() -> latin1 | utf8.\fR
+
+.br
+.RS
+.PP
+Returns the filename encoding mode. If it is \fIlatin1\fR, the system translates no filenames. If it is \fIutf8\fR, filenames are converted back and forth to the native filename encoding (usually UTF-8, but UTF-16 on Windows).
+
+
+.RE
+.B
+\fBopen(File, Modes) -> {ok, IoDevice} | {error, Reason}\fR
+\fB              when\fR
+\fB                  File :: Filename | iodata(),\fR
+\fB                  Filename :: name_all(),\fR
+\fB                  Modes :: [mode() | ram | directory],\fR
+\fB                  IoDevice :: io_device(),\fR
+\fB                  Reason :: posix() | badarg | system_limit.\fR
+
+.br
+.RS
+.PP
+Opens file \fIFile\fR in the mode determined by \fIModes\fR, which can contain one or more of the following options:
+
+read
+.RS 2
+The file, which must exist, is opened for reading.
+
+
+.RE
+
+write
+.RS 2
+The file is opened for writing. It is created if it does not exist. If the file exists and 
+\fIwrite\fR is not combined with \fIread\fR, the file is truncated.
+
+.RE
+
+append
+.RS 2
+The file is opened for writing. It is created if it does not exist. Every write operation to a file opened with 
+\fIappend\fR takes place at the end of the file.
+
+.RE
+
+exclusive
+.RS 2
+The file is opened for writing. It is created if it does not exist. If the file exists, 
+\fI{error, eexist}\fR is returned.
+.PP
+\fBWARNING: \fRThis option does not guarantee exclusiveness on file systems not supporting \fIO_EXCL\fR properly, such as NFS. Do not depend on this option unless you know that the file system supports it (in general, local file systems are safe).
+
+
+
+.RE
+
+raw
+.RS 2
+Allows faster access to a file, as no Erlang process is needed to handle the file. However, a file opened in this way has the following limitations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The functions in the \fIio\fR module cannot be used, as they can only talk to an Erlang process. Instead, use functions \fIread/2\fR, \fIread_line/1\fR, and \fIwrite/2\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Especially if \fIread_line/1\fR is to be used on a \fIraw\fR file, it is recommended to combine this option with option \fI{read_ahead, Size}\fR as line-oriented I/O is inefficient without buffering.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Only the Erlang process that opened the file can use it.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+remote Erlang file server cannot be used. The computer on which the Erlang node is running must have access to the file system (directly or through NFS).
+
+.RE
+
+
+.RE
+
+binary
+.RS 2
+Read operations on the file return binaries rather than lists.
+
+
+.RE
+
+{delayed_write, Size, Delay}
+.RS 2
+Data in subsequent 
+\fIwrite/2\fR calls is buffered until at least \fISize\fR bytes are buffered, or until the oldest buffered data is \fIDelay\fR milliseconds old. Then all buffered data is written in one operating system call. The buffered data is also flushed before some other file operation than \fIwrite/2\fR is executed.
+.PP
+The purpose of this option is to increase performance by reducing the number of operating system calls. Thus, the \fIwrite/2\fR calls must be for sizes significantly less than \fISize\fR, and not interspersed by too many other file operations.
+
+.PP
+When this option is used, the result of \fIwrite/2\fR calls can prematurely be reported as successful, and if a write error occurs, the error is reported as the result of the next file operation, which is not executed.
+
+.PP
+For example, when \fIdelayed_write\fR is used, after a number of \fIwrite/2\fR calls, \fIclose/1\fR can return \fI{error, enospc}\fR, as there is not enough space on the disc for previously written data. \fIclose/1\fR must probably be called again, as the file is still open.
+
+
+.RE
+
+delayed_write
+.RS 2
+The same as 
+\fI{delayed_write, Size, Delay}\fR with reasonable default values for \fISize\fR and \fIDelay\fR (roughly some 64 KB, 2 seconds).
+
+.RE
+
+{read_ahead, Size}
+.RS 2
+Activates read data buffering. If 
+\fIread/2\fR calls are for significantly less than \fISize\fR bytes, read operations to the operating system are still performed for blocks of \fISize\fR bytes. The extra data is buffered and returned in subsequent \fIread/2\fR calls, giving a performance gain as the number of operating system calls is reduced.
+.PP
+The \fIread_ahead\fR buffer is also highly used by function \fIread_line/1\fR in \fIraw\fR mode, therefore this option is recommended (for performance reasons) when accessing raw files using that function.
+
+.PP
+If \fIread/2\fR calls are for sizes not significantly less than, or even greater than \fISize\fR bytes, no performance gain can be expected.
+
+
+.RE
+
+read_ahead
+.RS 2
+The same as 
+\fI{read_ahead, Size}\fR with a reasonable default value for \fISize\fR (roughly some 64 KB).
+
+.RE
+
+compressed
+.RS 2
+Makes it possible to read or write gzip compressed files. Option 
+\fIcompressed\fR must be combined with \fIread\fR or \fIwrite\fR, but not both. Notice that the file size obtained with \fIread_file_info/1\fR does probably not match the number of bytes that can be read from a compressed file.
+
+.RE
+
+{zstd, Opts}
+.RS 2
+Makes it possible to read or write zstd compressed files. Option 
+\fIcompressed\fR must be combined with \fIread\fR or \fIwrite\fR, but not both. Notice that the file size obtained with \fIread_file_info/1\fR does probably not match the number of bytes that can be read from a compressed file.
+
+.RE
+
+compressed_one
+.RS 2
+Read one member of a gzip compressed file. Option 
+\fIcompressed_one\fR can only be combined with \fIread\fR.
+
+.RE
+
+{encoding, Encoding}
+.RS 2
+Makes the file perform automatic translation of characters to and from a specific (Unicode) encoding. Notice that the data supplied to 
+\fIwrite/2\fR or returned by \fIread/2\fR still is byte-oriented; this option denotes only how data is stored in the disk file.
+.PP
+Depending on the encoding, different methods of reading and writing data is preferred. The default encoding of \fIlatin1\fR implies using this module (\fIfile\fR) for reading and writing data as the interfaces provided here work with byte-oriented data. Using other (Unicode) encodings makes the \fIio\fR functions \fIget_chars\fR, \fIget_line\fR, and \fIput_chars\fR more suitable, as they can work with the full Unicode range.
+
+.PP
+If data is sent to an \fIio_device/0\fR in a format that cannot be converted to the specified encoding, or if data is read by a function that returns data in a format that cannot cope with the character range of the data, an error occurs and the file is closed.
+
+.PP
+Allowed values for \fIEncoding\fR:
+
+latin1
+.RS 2
+The default encoding. Bytes supplied to the file, that is, 
+\fIwrite/2\fR are written "as is" on the file. Likewise, bytes read from the file, that is, \fIread/2\fR are returned "as is". If module \fIio\fR is used for writing, the file can only cope with Unicode characters up to code point 255 (the ISO Latin-1 range).
+
+.RE
+
+unicode or utf8
+.RS 2
+Characters are translated to and from UTF-8 encoding before they are written to or read from the file. A file opened in this way can be readable using function 
+\fIread/2\fR, as long as no data stored on the file lies beyond the ISO Latin-1 range (0..255), but failure occurs if the data contains Unicode code points beyond that range. The file is best read with the functions in the Unicode aware module \fIio\fR.
+.PP
+Bytes written to the file by any means are translated to UTF-8 encoding before being stored on the disk file.
+
+
+.RE
+
+utf16 or {utf16,big}
+.RS 2
+Works like 
+\fIunicode\fR, but translation is done to and from big endian UTF-16 instead of UTF-8.
+
+.RE
+
+{utf16,little}
+.RS 2
+Works like 
+\fIunicode\fR, but translation is done to and from little endian UTF-16 instead of UTF-8.
+
+.RE
+
+utf32 or {utf32,big}
+.RS 2
+Works like 
+\fIunicode\fR, but translation is done to and from big endian UTF-32 instead of UTF-8.
+
+.RE
+
+{utf32,little}
+.RS 2
+Works like 
+\fIunicode\fR, but translation is done to and from little endian UTF-32 instead of UTF-8.
+
+.RE
+
+.PP
+The Encoding can be changed for a file "on the fly" by using function \fIio:setopts/2\fR. So a file can be analyzed in latin1 encoding for, for example, a BOM, positioned beyond the BOM and then be set for the right encoding before further reading. For functions identifying BOMs, see module \fIunicode\fR.
+
+.PP
+This option is not allowed on \fIraw\fR files.
+
+
+.RE
+
+ram
+.RS 2
+
+\fIFile\fR must be \fIiodata/0\fR. Returns an \fIfd/0\fR, which lets module \fIfile\fR operate on the data in-memory as if it is a file.
+
+.RE
+
+sync
+.RS 2
+On platforms supporting it, enables the POSIX 
+\fIO_SYNC\fR synchronous I/O flag or its platform-dependent equivalent (for example, \fIFILE_FLAG_WRITE_THROUGH\fR on Windows) so that writes to the file block until the data is physically written to disk. However, be aware that the exact semantics of this flag differ from platform to platform. For example, none of Linux or Windows guarantees that all file metadata are also written before the call returns. For precise semantics, check the details of your platform documentation. On platforms with no support for POSIX \fIO_SYNC\fR or equivalent, use of the \fIsync\fR flag causes \fIopen\fR to return \fI{error, enotsup}\fR.
+
+.RE
+
+directory
+.RS 2
+Allows 
+\fIopen\fR to work on directories.
+
+.RE
+
+.PP
+Returns:
+
+{ok, IoDevice}
+.RS 2
+The file is opened in the requested mode. 
+\fIIoDevice\fR is a reference to the file.
+
+.RE
+
+{error, Reason}
+.RS 2
+The file cannot be opened.
+
+
+.RE
+
+.PP
+\fIIoDevice\fR is really the pid of the process that handles the file. This process monitors the process that originally opened the file (the owner process). If the owner process terminates, the file is closed and the process itself terminates too. An \fIIoDevice\fR returned from this call can be used as an argument to the I/O functions (see \fIio\fR).
+
+.PP
+\fBWARNING: \fRWhile this function can be used to open any file, we recommend against using it for NFS-mounted files, FIFOs, devices, or similar since they can cause IO threads to hang forever. If your application needs to interact with these kinds of files we recommend breaking out those parts to a port program instead.
+
+
+.PP
+\fBNOTE: \fRIn previous versions of \fIfile\fR, modes were specified as one of the atoms \fIread\fR, \fIwrite\fR, or \fIread_write\fR instead of a list. This is still allowed for reasons of backwards compatibility, but is not to be used for new code. Also note that \fIread_write\fR is not allowed in a mode list.
+
+
+.PP
+Typical error reasons:
+
+enoent
+.RS 2
+The file does not exist.
+
+
+.RE
+
+eacces
+.RS 2
+Missing permission for reading the file or searching one of the parent directories.
+
+
+.RE
+
+eisdir
+.RS 2
+The named file is a directory.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of the filename is not a directory, or the filename itself is not a directory if 
+\fIdirectory\fR mode was specified. On some platforms, \fIenoent\fR is returned instead.
+
+.RE
+
+enospc
+.RS 2
+There is no space left on the device (if 
+\fIwrite\fR access was specified).
+
+.RE
+
+
+.RE
+.B
+\fBpath_consult(Path, Filename) ->\fR
+\fB                      {ok, Terms, FullName} | {error, Reason}\fR
+\fB                      when\fR
+\fB                          Path :: [Dir],\fR
+\fB                          Dir :: name_all(),\fR
+\fB                          Filename :: name_all(),\fR
+\fB                          Terms :: [term()],\fR
+\fB                          FullName :: filename_all(),\fR
+\fB                          Reason ::\fR
+\fB                              posix() |\fR
+\fB                              badarg | terminated | system_limit |\fR
+\fB                              {Line :: integer(),\fR
+\fB                               Mod :: module(),\fR
+\fB                               Term :: term()}.\fR
+
+.br
+.RS
+.PP
+Searches the path \fIPath\fR (a list of directory names) until the file \fIFilename\fR is found. If \fIFilename\fR is an absolute filename, \fIPath\fR is ignored. Then reads Erlang terms, separated by \fI.\fR, from the file.
+
+.PP
+Returns one of the following:
+
+{ok, Terms, FullName}
+.RS 2
+The file is successfully read. 
+\fIFullName\fR is the full name of the file.
+
+.RE
+
+{error, enoent}
+.RS 2
+The file cannot be found in any of the directories in 
+\fIPath\fR.
+
+.RE
+
+{error, atom()}
+.RS 2
+An error occurred when opening the file or reading it. For a list of typical error codes, see 
+\fIopen/2\fR.
+
+.RE
+
+{error, {Line, Mod, Term}}
+.RS 2
+An error occurred when interpreting the Erlang terms in the file. Use 
+\fIformat_error/1\fR to convert the three-element tuple to an English description of the error.
+
+.RE
+
+.PP
+The encoding of \fIFilename\fR can be set by a comment as described in \fIepp\fR.
+
+
+.RE
+.B
+\fBpath_eval(Path, Filename) -> {ok, FullName} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Path :: [Dir :: name_all()],\fR
+\fB                       Filename :: name_all(),\fR
+\fB                       FullName :: filename_all(),\fR
+\fB                       Reason ::\fR
+\fB                           posix() |\fR
+\fB                           badarg | terminated | system_limit |\fR
+\fB                           {Line :: integer(),\fR
+\fB                            Mod :: module(),\fR
+\fB                            Term :: term()}.\fR
+
+.br
+.RS
+.PP
+Searches the path \fIPath\fR (a list of directory names) until the file \fIFilename\fR is found. If \fIFilename\fR is an absolute filename, \fIPath\fR is ignored. Then reads and evaluates Erlang expressions, separated by \fI.\fR (or \fI,\fR, a sequence of expressions is also an expression), from the file. The result of evaluation is not returned; any expression sequence in the file must be there for its side effect.
+
+.PP
+Returns one of the following:
+
+{ok, FullName}
+.RS 2
+The file is read and evaluated. 
+\fIFullName\fR is the full name of the file.
+
+.RE
+
+{error, enoent}
+.RS 2
+The file cannot be found in any of the directories in 
+\fIPath\fR.
+
+.RE
+
+{error, atom()}
+.RS 2
+An error occurred when opening the file or reading it. For a list of typical error codes, see 
+\fIopen/2\fR.
+
+.RE
+
+{error, {Line, Mod, Term}}
+.RS 2
+An error occurred when interpreting the Erlang expressions in the file. Use 
+\fIformat_error/1\fR to convert the three-element tuple to an English description of the error.
+
+.RE
+
+.PP
+The encoding of \fIFilename\fR can be set by a comment as described in \fIepp\fR.
+
+
+.RE
+.B
+\fBpath_open(Path, Filename, Modes) ->\fR
+\fB                   {ok, IoDevice, FullName} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Path :: [Dir :: name_all()],\fR
+\fB                       Filename :: name_all(),\fR
+\fB                       Modes :: [mode() | directory],\fR
+\fB                       IoDevice :: io_device(),\fR
+\fB                       FullName :: filename_all(),\fR
+\fB                       Reason :: posix() | badarg | system_limit.\fR
+
+.br
+.RS
+.PP
+Searches the path \fIPath\fR (a list of directory names) until the file \fIFilename\fR is found. If \fIFilename\fR is an absolute filename, \fIPath\fR is ignored. Then opens the file in the mode determined by \fIModes\fR.
+
+.PP
+Returns one of the following:
+
+{ok, IoDevice, FullName}
+.RS 2
+The file is opened in the requested mode. 
+\fIIoDevice\fR is a reference to the file and \fIFullName\fR is the full name of the file.
+
+.RE
+
+{error, enoent}
+.RS 2
+The file cannot be found in any of the directories in 
+\fIPath\fR.
+
+.RE
+
+{error, atom()}
+.RS 2
+The file cannot be opened.
+
+
+.RE
+
+
+.RE
+.B
+\fBpath_script(Path, Filename) ->\fR
+\fB                     {ok, Value, FullName} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Path :: [Dir :: name_all()],\fR
+\fB                         Filename :: name_all(),\fR
+\fB                         Value :: term(),\fR
+\fB                         FullName :: filename_all(),\fR
+\fB                         Reason ::\fR
+\fB                             posix() |\fR
+\fB                             badarg | terminated | system_limit |\fR
+\fB                             {Line :: integer(),\fR
+\fB                              Mod :: module(),\fR
+\fB                              Term :: term()}.\fR
+
+.br
+.RS
+.PP
+Searches the path \fIPath\fR (a list of directory names) until the file \fIFilename\fR is found. If \fIFilename\fR is an absolute filename, \fIPath\fR is ignored. Then reads and evaluates Erlang expressions, separated by \fI.\fR (or \fI,\fR, a sequence of expressions is also an expression), from the file.
+
+.PP
+Returns one of the following:
+
+{ok, Value, FullName}
+.RS 2
+The file is read and evaluated. 
+\fIFullName\fR is the full name of the file and \fIValue\fR the value of the last expression.
+
+.RE
+
+{error, enoent}
+.RS 2
+The file cannot be found in any of the directories in 
+\fIPath\fR.
+
+.RE
+
+{error, atom()}
+.RS 2
+An error occurred when opening the file or reading it. For a list of typical error codes, see 
+\fIopen/2\fR.
+
+.RE
+
+{error, {Line, Mod, Term}}
+.RS 2
+An error occurred when interpreting the Erlang expressions in the file. Use 
+\fIformat_error/1\fR to convert the three-element tuple to an English description of the error.
+
+.RE
+
+.PP
+The encoding of \fIFilename\fR can be set by a comment as described in \fIepp\fR.
+
+
+.RE
+.B
+\fBpath_script(Path, Filename, Bindings) ->\fR
+\fB                     {ok, Value, FullName} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Path :: [Dir :: name_all()],\fR
+\fB                         Filename :: name_all(),\fR
+\fB                         Bindings :: erl_eval:binding_struct(),\fR
+\fB                         Value :: term(),\fR
+\fB                         FullName :: filename_all(),\fR
+\fB                         Reason ::\fR
+\fB                             posix() |\fR
+\fB                             badarg | terminated | system_limit |\fR
+\fB                             {Line :: integer(),\fR
+\fB                              Mod :: module(),\fR
+\fB                              Term :: term()}.\fR
+
+.br
+.RS
+.PP
+The same as \fIpath_script/2\fR but the variable bindings \fIBindings\fR are used in the evaluation. See \fIerl_eval\fR about variable bindings.
+
+
+.RE
+.B
+\fBposition(IoDevice, Location) ->\fR
+\fB                  {ok, NewPosition} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      IoDevice :: io_device(),\fR
+\fB                      Location :: location(),\fR
+\fB                      NewPosition :: integer(),\fR
+\fB                      Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Sets the position of the file referenced by \fIIoDevice\fR to \fILocation\fR. Returns \fI{ok, NewPosition}\fR (as absolute offset) if successful, otherwise \fI{error, Reason}\fR. \fILocation\fR is one of the following:
+
+Offset
+.RS 2
+The same as 
+\fI{bof, Offset}\fR.
+
+.RE
+
+{bof, Offset}
+.RS 2
+Absolute offset.
+
+
+.RE
+
+{cur, Offset}
+.RS 2
+Offset from the current position.
+
+
+.RE
+
+{eof, Offset}
+.RS 2
+Offset from the end of file.
+
+
+.RE
+
+bof | cur | eof
+.RS 2
+The same as above with 
+\fIOffset\fR 0.
+
+.RE
+
+.PP
+Notice that offsets are counted in bytes, not in characters. If the file is opened using some other \fIencoding\fR than \fIlatin1\fR, one byte does not correspond to one character. Positioning in such a file can only be done to known character boundaries. That is, to a position earlier retrieved by getting a current position, to the beginning/end of the file or to some other position \fIknown\fR to be on a correct character boundary by some other means (typically beyond a byte order mark in the file, which has a known byte-size).
+
+.PP
+A typical error reason is:
+
+einval
+.RS 2
+Either 
+\fILocation\fR is illegal, or it is evaluated to a negative offset in the file. Notice that if the resulting position is a negative value, the result is an error, and after the call the file position is undefined.
+
+.RE
+
+
+.RE
+.B
+\fBpread(IoDevice, LocNums) -> {ok, DataL} | eof | {error, Reason}\fR
+\fB               when\fR
+\fB                   IoDevice :: io_device(),\fR
+\fB                   LocNums ::\fR
+\fB                       [{Location :: location(),\fR
+\fB                         Number :: non_neg_integer()}],\fR
+\fB                   DataL :: [Data],\fR
+\fB                   Data :: string() | binary() | eof,\fR
+\fB                   Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Performs a sequence of \fIpread/3\fR in one operation, which is more efficient than calling them one at a time. Returns \fI{ok, [Data, ...]}\fR or \fI{error, Reason}\fR, where each \fIData\fR, the result of the corresponding \fIpread\fR, is either a list or a binary depending on the mode of the file, or \fIeof\fR if the requested position is beyond end of file.
+
+.PP
+As the position is specified as a byte-offset, take special caution when working with files where \fIencoding\fR is set to something else than \fIlatin1\fR, as not every byte position is a valid character boundary on such a file.
+
+
+.RE
+.B
+\fBpread(IoDevice, Location, Number) ->\fR
+\fB               {ok, Data} | eof | {error, Reason}\fR
+\fB               when\fR
+\fB                   IoDevice :: io_device(),\fR
+\fB                   Location :: location(),\fR
+\fB                   Number :: non_neg_integer(),\fR
+\fB                   Data :: string() | binary(),\fR
+\fB                   Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Combines \fIposition/2\fR and \fIread/2\fR in one operation, which is more efficient than calling them one at a time.
+
+.PP
+\fILocation\fR is only allowed to be an integer for \fIraw\fR and \fIram\fR modes.
+
+.PP
+The current position of the file after the operation is undefined for \fIraw\fR mode and unchanged for \fIram\fR mode.
+
+.PP
+As the position is specified as a byte-offset, take special caution when working with files where \fIencoding\fR is set to something else than \fIlatin1\fR, as not every byte position is a valid character boundary on such a file.
+
+
+.RE
+.B
+\fBpwrite(IoDevice, LocBytes) -> ok | {error, {N, Reason}}\fR
+\fB                when\fR
+\fB                    IoDevice :: io_device(),\fR
+\fB                    LocBytes ::\fR
+\fB                        [{Location :: location(), Bytes :: iodata()}],\fR
+\fB                    N :: non_neg_integer(),\fR
+\fB                    Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Performs a sequence of \fIpwrite/3\fR in one operation, which is more efficient than calling them one at a time. Returns \fIok\fR or \fI{error, {N, Reason}}\fR, where \fIN\fR is the number of successful writes done before the failure.
+
+.PP
+When positioning in a file with other \fIencoding\fR than \fIlatin1\fR, caution must be taken to set the position on a correct character boundary. For details, see \fIposition/2\fR.
+
+
+.RE
+.B
+\fBpwrite(IoDevice, Location, Bytes) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    IoDevice :: io_device(),\fR
+\fB                    Location :: location(),\fR
+\fB                    Bytes :: iodata(),\fR
+\fB                    Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Combines \fIposition/2\fR and \fIwrite/2\fR in one operation, which is more efficient than calling them one at a time.
+
+.PP
+\fILocation\fR is only allowed to be an integer for \fIraw\fR and \fIram\fR modes.
+
+.PP
+The current position of the file after the operation is undefined for \fIraw\fR mode and unchanged for \fIram\fR mode.
+
+.PP
+When positioning in a file with other \fIencoding\fR than \fIlatin1\fR, caution must be taken to set the position on a correct character boundary. For details, see \fIposition/2\fR.
+
+
+.RE
+.B
+\fBread(IoDevice, Number) -> {ok, Data} | eof | {error, Reason}\fR
+\fB              when\fR
+\fB                  IoDevice :: io_device() | io:device(),\fR
+\fB                  Number :: non_neg_integer(),\fR
+\fB                  Data :: string() | binary(),\fR
+\fB                  Reason ::\fR
+\fB                      posix() |\fR
+\fB                      badarg | terminated |\fR
+\fB                      {no_translation, unicode, latin1}.\fR
+
+.br
+.RS
+.PP
+Reads \fINumber\fR bytes/characters from the file referenced by \fIIoDevice\fR.
+
+.PP
+The functions \fIread/2\fR, \fIpread/3\fR, and \fIread_line/1\fR are the only ways to read from a file opened in \fIraw\fR mode (although they work for normally opened files, too).
+
+.PP
+For files where \fIencoding\fR is set to something else than \fIlatin1\fR, one character can be represented by more than one byte on the file. The parameter \fINumber\fR always denotes the number of \fIcharacters\fR read from the file, while the position in the file can be moved much more than this number when reading a Unicode file.
+
+.PP
+Also, if \fIencoding\fR is set to something else than \fIlatin1\fR, the \fIread/2\fR call fails if the data contains characters larger than 255, which is why \fIio:get_chars/3\fR is to be preferred when reading such a file.
+
+.PP
+The function returns:
+
+{ok, Data}
+.RS 2
+If the file was opened in binary mode, the read bytes are returned in a binary, otherwise in a list. The list or binary is shorter than the number of bytes requested if end of file was reached.
+
+
+.RE
+
+eof
+.RS 2
+Returned if 
+\fINumber>0\fR and end of file was reached before anything at all could be read.
+
+.RE
+
+{error, Reason}
+.RS 2
+An error occurred.
+
+
+.RE
+
+.PP
+Typical error reasons:
+
+ebadf
+.RS 2
+The file is not opened for reading.
+
+
+.RE
+
+{no_translation, unicode, latin1}
+.RS 2
+The file is opened with another 
+\fIencoding\fR than \fIlatin1\fR and the data in the file cannot be translated to the byte-oriented data that this function returns.
+
+.RE
+
+
+.RE
+.B
+\fBread_file(Filename, Opts) -> {ok, Binary} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Filename :: name_all(),\fR
+\fB                       Opts :: [read_file_option()],\fR
+\fB                       Binary :: binary(),\fR
+\fB                       Reason ::\fR
+\fB                           posix() | badarg | terminated | system_limit.\fR
+
+.br
+.RS
+.PP
+Returns \fI{ok, Binary}\fR, where \fIBinary\fR is a binary data object that contains the contents of \fIFilename\fR, or \fI{error, Reason}\fR if an error occurs.
+
+.PP
+If the option \fIraw\fR is set, the file server is not called.
+
+.PP
+Typical error reasons:
+
+enoent
+.RS 2
+The file does not exist.
+
+
+.RE
+
+eacces
+.RS 2
+Missing permission for reading the file, or for searching one of the parent directories.
+
+
+.RE
+
+eisdir
+.RS 2
+The named file is a directory.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of the filename is not a directory. On some platforms, 
+\fIenoent\fR is returned instead.
+
+.RE
+
+enomem
+.RS 2
+There is not enough memory for the contents of the file.
+
+
+.RE
+
+
+.RE
+.B
+\fBread_file_info(File, Opts) -> {ok, FileInfo} | {error, Reason}\fR
+\fB                        when\fR
+\fB                            File :: name_all() | io_device(),\fR
+\fB                            Opts :: [file_info_option()],\fR
+\fB                            FileInfo :: file_info(),\fR
+\fB                            Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Retrieves information about a file. Returns \fI{ok, FileInfo}\fR if successful, otherwise \fI{error, Reason}\fR.
+
+.PP
+\fIFileInfo\fR is a record \fIfile_info\fR, defined in the Kernel include file \fIfile.hrl\fR. Include the following directive in the module from which the function is called:
+
+.IP
+.nf
+-include_lib("kernel/include/file.hrl").
+
+.fi
+
+.PP
+The time type returned in \fIatime\fR, \fImtime\fR, and \fIctime\fR is dependent on the time type set in \fIOpts :: {time, Type}\fR as follows:
+
+local
+.RS 2
+Returns local time.
+
+
+.RE
+
+universal
+.RS 2
+Returns universal time.
+
+
+.RE
+
+posix
+.RS 2
+Returns seconds since or before Unix time epoch, which is 1970-01-01 00:00 UTC.
+
+
+.RE
+
+.PP
+Default is \fI{time, local}\fR.
+
+.PP
+If the option \fIraw\fR is set, the file server is not called and only information about local files is returned. Note that this will break this module's atomicity guarantees as it can race with a concurrent call to \fIwrite_file_info/1,2\fR .
+
+.PP
+This option has no effect when the function is given an I/O device instead of a file name. Use \fIopen/2\fR with the \fIraw\fR mode to obtain a file descriptor first.
+
+.PP
+\fBNOTE: \fRAs file times are stored in POSIX time on most OS, it is faster to query file information with option \fIposix\fR.
+
+
+.PP
+The record \fIfile_info\fR contains the following fields:
+
+size =  non_neg_integer/0
+.RS 2
+Size of file in bytes.
+
+
+.RE
+
+type = device | directory | other | regular
+.RS 2
+The type of the file. Can also contain 
+\fIsymlink\fR when returned from read_link_info/1,2.
+
+.RE
+
+access = read | write | read_write | none
+.RS 2
+The current system access to the file.
+
+
+.RE
+
+atime =  date_time/0  |  non_neg_integer/0
+.RS 2
+The last time the file was read.
+
+
+.RE
+
+mtime =  date_time/0  |  non_neg_integer/0
+.RS 2
+The last time the file was written.
+
+
+.RE
+
+ctime =  date_time/0  |  non_neg_integer/0
+.RS 2
+The interpretation of this time field depends on the operating system. On Unix, it is the last time the file or the 
+\fIinode\fR was changed. In Windows, it is the create time.
+
+.RE
+
+mode =  non_neg_integer/0
+.RS 2
+The file permissions as the sum of the following bit values:
+
+8#00400
+.RS 2
+read permission: owner
+
+
+.RE
+
+8#00200
+.RS 2
+write permission: owner
+
+
+.RE
+
+8#00100
+.RS 2
+execute permission: owner
+
+
+.RE
+
+8#00040
+.RS 2
+read permission: group
+
+
+.RE
+
+8#00020
+.RS 2
+write permission: group
+
+
+.RE
+
+8#00010
+.RS 2
+execute permission: group
+
+
+.RE
+
+8#00004
+.RS 2
+read permission: other
+
+
+.RE
+
+8#00002
+.RS 2
+write permission: other
+
+
+.RE
+
+8#00001
+.RS 2
+execute permission: other
+
+
+.RE
+
+16#800
+.RS 2
+set user id on execution
+
+
+.RE
+
+16#400
+.RS 2
+set group id on execution
+
+
+.RE
+
+.PP
+On Unix platforms, other bits than those listed above may be set.
+
+
+.RE
+
+links =  non_neg_integer/0
+.RS 2
+Number of links to the file (this is always 1 for file systems that have no concept of links).
+
+
+.RE
+
+major_device =  non_neg_integer/0
+.RS 2
+Identifies the file system where the file is located. In Windows, the number indicates a drive as follows: 0 means A:, 1 means B:, and so on.
+
+
+.RE
+
+minor_device =  non_neg_integer/0
+.RS 2
+Only valid for character devices on Unix. In all other cases, this field is zero.
+
+
+.RE
+
+inode =  non_neg_integer/0
+.RS 2
+Gives the 
+\fIinode\fR number. On non-Unix file systems, this field is zero.
+
+.RE
+
+uid =  non_neg_integer/0
+.RS 2
+Indicates the owner of the file. On non-Unix file systems, this field is zero.
+
+
+.RE
+
+gid =  non_neg_integer/0
+.RS 2
+Gives the group that the owner of the file belongs to. On non-Unix file systems, this field is zero.
+
+
+.RE
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing search permission for one of the parent directories of the file.
+
+
+.RE
+
+enoent
+.RS 2
+The file does not exist.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of the filename is not a directory. On some platforms, 
+\fIenoent\fR is returned instead.
+
+.RE
+
+
+.RE
+.B
+\fBread_line(IoDevice) -> {ok, Data} | eof | {error, Reason}\fR
+\fB                   when\fR
+\fB                       IoDevice :: io_device() | io:device(),\fR
+\fB                       Data :: string() | binary(),\fR
+\fB                       Reason ::\fR
+\fB                           posix() |\fR
+\fB                           badarg | terminated |\fR
+\fB                           {no_translation, unicode, latin1}.\fR
+
+.br
+.RS
+.PP
+Reads a line of bytes/characters from the file referenced by \fIIoDevice\fR.
+
+.PP
+Lines are defined to be delimited by the linefeed (LF, \fI\\n\fR) character, but any carriage return (CR, \fI\\r\fR) followed by a newline is also treated as a single LF character (the carriage return is silently ignored). The line is returned \fIincluding\fR the LF, but excluding any CR immediately followed by an LF. This behaviour is consistent with the behaviour of \fIio:get_line/2\fR. If end of file is reached without any LF ending the last line, a line with no trailing LF is returned.
+
+.PP
+The function can be used on files opened in \fIraw\fR mode. However, it is inefficient to use it on \fIraw\fR files if the file is not opened with option \fI{read_ahead, Size}\fR specified. Thus, combining \fIraw\fR and \fI{read_ahead, Size}\fR is highly recommended when opening a text file for raw line-oriented reading.
+
+.PP
+If \fIencoding\fR is set to something else than \fIlatin1\fR, the \fIread_line/1\fR call fails if the data contains characters larger than 255, why \fIio:get_line/2\fR is to be preferred when reading such a file.
+
+.PP
+The function returns:
+
+{ok, Data}
+.RS 2
+One line from the file is returned, including the trailing LF, but with CRLF sequences replaced by a single LF (see above).
+
+.PP
+If the file is opened in binary mode, the read bytes are returned in a binary, otherwise in a list.
+
+
+.RE
+
+eof
+.RS 2
+Returned if end of file was reached before anything at all could be read.
+
+
+.RE
+
+{error, Reason}
+.RS 2
+An error occurred.
+
+
+.RE
+
+.PP
+Typical error reasons:
+
+ebadf
+.RS 2
+The file is not opened for reading.
+
+
+.RE
+
+{no_translation, unicode, latin1}
+.RS 2
+The file is opened with another 
+\fIencoding\fR than \fIlatin1\fR and the data on the file cannot be translated to the byte-oriented data that this function returns.
+
+.RE
+
+
+.RE
+.B
+\fBread_link(Name) -> {ok, Filename} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Name :: name_all(),\fR
+\fB                       Filename :: filename(),\fR
+\fB                       Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Returns \fI{ok, Filename}\fR if \fIName\fR refers to a symbolic link that is not a raw filename, or \fI{error, Reason}\fR otherwise. On platforms that do not support symbolic links, the return value is \fI{error,enotsup}\fR.
+
+.PP
+Typical error reasons:
+
+einval
+.RS 2
+
+\fIName\fR does not refer to a symbolic link or the name of the file that it refers to does not conform to the expected encoding.
+
+.RE
+
+enoent
+.RS 2
+The file does not exist.
+
+
+.RE
+
+enotsup
+.RS 2
+Symbolic links are not supported on this platform.
+
+
+.RE
+
+
+.RE
+.B
+\fBread_link_all(Name) -> {ok, Filename} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Name :: name_all(),\fR
+\fB                           Filename :: filename_all(),\fR
+\fB                           Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Returns \fI{ok, Filename}\fR if \fIName\fR refers to a symbolic link or \fI{error, Reason}\fR otherwise. On platforms that do not support symbolic links, the return value is \fI{error, enotsup}\fR.
+
+.PP
+Notice that \fIFilename\fR can be either a list or a binary.
+
+.PP
+Typical error reasons:
+
+einval
+.RS 2
+
+\fIName\fR does not refer to a symbolic link.
+
+.RE
+
+enoent
+.RS 2
+The file does not exist.
+
+
+.RE
+
+enotsup
+.RS 2
+Symbolic links are not supported on this platform.
+
+
+.RE
+
+
+.RE
+.B
+\fBread_link_info(Name, Opts) -> {ok, FileInfo} | {error, Reason}\fR
+\fB                        when\fR
+\fB                            Name :: name_all(),\fR
+\fB                            Opts :: [file_info_option()],\fR
+\fB                            FileInfo :: file_info(),\fR
+\fB                            Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Works like \fIread_file_info/1,2\fR except that if \fIName\fR is a symbolic link, information about the link is returned in the \fIfile_info\fR record and the \fItype\fR field of the record is set to \fIsymlink\fR.
+
+.PP
+If the option \fIraw\fR is set, the file server is not called and only information about local files is returned. Note that this will break this module's atomicity guarantees as it can race with a concurrent call to \fIwrite_file_info/1,2\fR
+
+.PP
+If \fIName\fR is not a symbolic link, this function returns the same result as \fIread_file_info/1\fR. On platforms that do not support symbolic links, this function is always equivalent to \fIread_file_info/1\fR.
+
+
+.RE
+.B
+\fBrename(Source, Destination) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    Source :: name_all(),\fR
+\fB                    Destination :: name_all(),\fR
+\fB                    Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Tries to rename the file \fISource\fR to \fIDestination\fR. It can be used to move files (and directories) between directories, but it is not sufficient to specify the destination only. The destination filename must also be specified. For example, if \fIbar\fR is a normal file and \fIfoo\fR and \fIbaz\fR are directories, \fIrename("foo/bar", "baz")\fR returns an error, but \fIrename("foo/bar", "baz/bar")\fR succeeds. Returns \fIok\fR if it is successful.
+
+.PP
+\fBNOTE: \fRRenaming of open files is not allowed on most platforms (see \fIeacces\fR below).
+
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing read or write permissions for the parent directories of 
+\fISource\fR or \fIDestination\fR. On some platforms, this error is given if either \fISource\fR or \fIDestination\fR is open.
+
+.RE
+
+eexist
+.RS 2
+
+\fIDestination\fR is not an empty directory. On some platforms, also given when \fISource\fR and \fIDestination\fR are not of the same type.
+
+.RE
+
+einval
+.RS 2
+
+\fISource\fR is a root directory, or \fIDestination\fR is a subdirectory of \fISource\fR.
+
+.RE
+
+eisdir
+.RS 2
+
+\fIDestination\fR is a directory, but \fISource\fR is not.
+
+.RE
+
+enoent
+.RS 2
+
+\fISource\fR does not exist.
+
+.RE
+
+enotdir
+.RS 2
+
+\fISource\fR is a directory, but \fIDestination\fR is not.
+
+.RE
+
+exdev
+.RS 2
+
+\fISource\fR and \fIDestination\fR are on different file systems.
+
+.RE
+
+
+.RE
+.B
+\fBscript(Filename) -> {ok, Value} | {error, Reason}\fR
+\fB                when\fR
+\fB                    Filename :: name_all(),\fR
+\fB                    Value :: term(),\fR
+\fB                    Reason ::\fR
+\fB                        posix() |\fR
+\fB                        badarg | terminated | system_limit |\fR
+\fB                        {Line :: integer(),\fR
+\fB                         Mod :: module(),\fR
+\fB                         Term :: term()}.\fR
+
+.br
+.RS
+.PP
+Reads and evaluates Erlang expressions, separated by \fI.\fR (or \fI,\fR, a sequence of expressions is also an expression), from the file.
+
+.PP
+Returns one of the following:
+
+{ok, Value}
+.RS 2
+The file is read and evaluated. 
+\fIValue\fR is the value of the last expression.
+
+.RE
+
+{error, atom()}
+.RS 2
+An error occurred when opening the file or reading it. For a list of typical error codes, see 
+\fIopen/2\fR.
+
+.RE
+
+{error, {Line, Mod, Term}}
+.RS 2
+An error occurred when interpreting the Erlang expressions in the file. Use 
+\fIformat_error/1\fR to convert the three-element tuple to an English description of the error.
+
+.RE
+
+.PP
+The encoding of \fIFilename\fR can be set by a comment as described in \fIepp\fR.
+
+
+.RE
+.B
+\fBscript(Filename, Bindings) -> {ok, Value} | {error, Reason}\fR
+\fB                when\fR
+\fB                    Filename :: name_all(),\fR
+\fB                    Bindings :: erl_eval:binding_struct(),\fR
+\fB                    Value :: term(),\fR
+\fB                    Reason ::\fR
+\fB                        posix() |\fR
+\fB                        badarg | terminated | system_limit |\fR
+\fB                        {Line :: integer(),\fR
+\fB                         Mod :: module(),\fR
+\fB                         Term :: term()}.\fR
+
+.br
+.RS
+.PP
+The same as \fIscript/1\fR but the variable bindings \fIBindings\fR are used in the evaluation. See \fIerl_eval\fR about variable bindings.
+
+
+.RE
+.B
+\fBsendfile(Filename, Socket) ->\fR
+\fB                  {ok, non_neg_integer()} |\fR
+\fB                  {error, inet:posix() | closed | badarg | not_owner}\fR
+\fB                  when\fR
+\fB                      Filename :: name_all(),\fR
+\fB                      Socket ::\fR
+\fB                          inet:socket() |\fR
+\fB                          socket:socket() |\fR
+\fB                          fun((iolist()) ->\fR
+\fB                                  ok | {error, inet:posix() | closed}).\fR
+
+.br
+.RS
+.PP
+Sends the file \fIFilename\fR to \fISocket\fR. Returns \fI{ok, BytesSent}\fR if successful, otherwise \fI{error, Reason}\fR.
+
+
+.RE
+.B
+\fBsendfile(RawFile, Socket, Offset, Bytes, Opts) ->\fR
+\fB                  {ok, non_neg_integer()} |\fR
+\fB                  {error, inet:posix() | closed | badarg | not_owner}\fR
+\fB                  when\fR
+\fB                      RawFile :: fd(),\fR
+\fB                      Socket ::\fR
+\fB                          inet:socket() |\fR
+\fB                          socket:socket() |\fR
+\fB                          fun((iolist()) ->\fR
+\fB                                  ok | {error, inet:posix() | closed}),\fR
+\fB                      Offset :: non_neg_integer(),\fR
+\fB                      Bytes :: non_neg_integer(),\fR
+\fB                      Opts :: [sendfile_option()].\fR
+
+.br
+.RS
+.PP
+Sends \fIBytes\fR from the file referenced by \fIRawFile\fR beginning at \fIOffset\fR to \fISocket\fR. Returns \fI{ok, BytesSent}\fR if successful, otherwise \fI{error, Reason}\fR. If \fIBytes\fR is set to \fI0\fR all data after the specified \fIOffset\fR is sent.
+
+.PP
+The file used must be opened using the \fIraw\fR flag, and the process calling \fIsendfile\fR must be the controlling process of the socket. See \fIgen_tcp:controlling_process/2\fR or module \fIsocket\fR's level \fIotp\fR socket option \fIcontrolling_process\fR.
+
+.PP
+If the OS used does not support non-blocking \fIsendfile\fR, an Erlang fallback using \fIread/2\fR and \fIgen_tcp:send/2\fR is used.
+
+.PP
+The option list can contain the following options:
+
+chunk_size
+.RS 2
+The chunk size used by the Erlang fallback to send data. If using the fallback, set this to a value that comfortably fits in the systems memory. Default is 20 MB.
+
+
+.RE
+
+
+.RE
+.B
+\fBset_cwd(Dir) -> ok | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Dir :: name() | EncodedBinary,\fR
+\fB                     EncodedBinary :: binary(),\fR
+\fB                     Reason :: posix() | badarg | no_translation.\fR
+
+.br
+.RS
+.PP
+Sets the current working directory of the file server to \fIDir\fR. Returns \fIok\fR if successful.
+
+.PP
+The functions in the module \fIfile\fR usually treat binaries as raw filenames, that is, they are passed "as is" even when the encoding of the binary does not agree with \fInative_name_encoding()\fR. However, this function expects binaries to be encoded according to the value returned by \fInative_name_encoding/0\fR.
+
+.PP
+Typical error reasons are:
+
+enoent
+.RS 2
+The directory does not exist.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of 
+\fIDir\fR is not a directory. On some platforms, \fIenoent\fR is returned.
+
+.RE
+
+eacces
+.RS 2
+Missing permission for the directory or one of its parents.
+
+
+.RE
+
+badarg
+.RS 2
+
+\fIDir\fR has an improper type, such as tuple.
+
+.RE
+
+no_translation
+.RS 2
+
+\fIDir\fR is a \fIbinary/0\fR with characters coded in ISO-latin-1 and the VM is operating with unicode filename encoding.
+
+.RE
+
+.PP
+\fBWARNING: \fRIn a future release, a bad type for argument \fIDir\fR will probably generate an exception.
+
+
+
+.RE
+.B
+\fBsync(IoDevice) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  IoDevice :: io_device(),\fR
+\fB                  Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Ensures that any buffers kept by the operating system (not by the Erlang runtime system) are written to disk. On some platforms, this function might have no effect.
+
+.PP
+A typical error reason is:
+
+enospc
+.RS 2
+Not enough space left to write the file.
+
+
+.RE
+
+
+.RE
+.B
+\fBtruncate(IoDevice) -> ok | {error, Reason}\fR
+\fB                  when\fR
+\fB                      IoDevice :: io_device(),\fR
+\fB                      Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Truncates the file referenced by \fIIoDevice\fR at the current position. Returns \fIok\fR if successful, otherwise \fI{error, Reason}\fR.
+
+
+.RE
+.B
+\fBwrite(IoDevice, Bytes) -> ok | {error, Reason}\fR
+\fB               when\fR
+\fB                   IoDevice :: io_device() | io:device(),\fR
+\fB                   Bytes :: iodata(),\fR
+\fB                   Reason :: posix() | badarg | terminated.\fR
+
+.br
+.RS
+.PP
+Writes \fIBytes\fR to the file referenced by \fIIoDevice\fR. This function is the only way to write to a file opened in \fIraw\fR mode (although it works for normally opened files too). Returns \fIok\fR if successful, and \fI{error, Reason}\fR otherwise.
+
+.PP
+If the file is opened with \fIencoding\fR set to something else than \fIlatin1\fR, each byte written can result in many bytes being written to the file, as the byte range 0..255 can represent anything between one and four bytes depending on value and UTF encoding type. If you want to write \fIunicode:chardata/0\fR to the \fIIoDevice\fR you should use \fIio:put_chars/2\fR instead.
+
+.PP
+Typical error reasons:
+
+ebadf
+.RS 2
+The file is not opened for writing.
+
+
+.RE
+
+enospc
+.RS 2
+No space is left on the device.
+
+
+.RE
+
+
+.RE
+.B
+\fBwrite_file(Filename, Bytes) -> ok | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Filename :: name_all(),\fR
+\fB                        Bytes :: iodata(),\fR
+\fB                        Reason ::\fR
+\fB                            posix() | badarg | terminated | system_limit.\fR
+
+.br
+.RS
+.PP
+Writes the contents of the \fIiodata\fR term \fIBytes\fR to file \fIFilename\fR. The file is created if it does not exist. If it exists, the previous contents are overwritten. Returns \fIok\fR if successful, otherwise \fI{error, Reason}\fR.
+
+.PP
+Typical error reasons:
+
+enoent
+.RS 2
+A component of the filename does not exist.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of the filename is not a directory. On some platforms, 
+\fIenoent\fR is returned instead.
+
+.RE
+
+enospc
+.RS 2
+No space is left on the device.
+
+
+.RE
+
+eacces
+.RS 2
+Missing permission for writing the file or searching one of the parent directories.
+
+
+.RE
+
+eisdir
+.RS 2
+The named file is a directory.
+
+
+.RE
+
+
+.RE
+.B
+\fBwrite_file(Filename, Bytes, Modes) -> ok | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Filename :: name_all(),\fR
+\fB                        Bytes :: iodata(),\fR
+\fB                        Modes :: [mode()],\fR
+\fB                        Reason ::\fR
+\fB                            posix() | badarg | terminated | system_limit.\fR
+
+.br
+.RS
+.PP
+Same as \fIwrite_file/2\fR, but takes a third argument \fIModes\fR, a list of possible modes, see \fIopen/2\fR. The mode flags \fIbinary\fR and \fIwrite\fR are implicit, so they are not to be used.
+
+
+.RE
+.B
+\fBwrite_file_info(Filename, FileInfo, Opts) -> ok | {error, Reason}\fR
+\fB                         when\fR
+\fB                             Filename :: name_all(),\fR
+\fB                             Opts :: [file_info_option()],\fR
+\fB                             FileInfo :: file_info(),\fR
+\fB                             Reason :: posix() | badarg.\fR
+
+.br
+.RS
+.PP
+Changes file information. Returns \fIok\fR if successful, otherwise \fI{error, Reason}\fR.
+
+.PP
+\fIFileInfo\fR is a record \fIfile_info\fR, defined in the Kernel include file \fIfile.hrl\fR. Include the following directive in the module from which the function is called:
+
+.IP
+.nf
+-include_lib("kernel/include/file.hrl").
+
+.fi
+
+.PP
+The time type set in \fIatime\fR, \fImtime\fR, and \fIctime\fR depends on the time type set in \fIOpts :: {time, Type}\fR as follows:
+
+local
+.RS 2
+Interprets the time set as local.
+
+
+.RE
+
+universal
+.RS 2
+Interprets it as universal time.
+
+
+.RE
+
+posix
+.RS 2
+Must be seconds since or before Unix time epoch, which is 1970-01-01 00:00 UTC.
+
+
+.RE
+
+.PP
+Default is \fI{time, local}\fR.
+
+.PP
+If the option \fIraw\fR is set, the file server is not called and only information about local files is returned.
+
+.PP
+The following fields are used from the record, if they are specified:
+
+atime =  date_time/0  |  non_neg_integer/0
+.RS 2
+The last time the file was read.
+
+
+.RE
+
+mtime =  date_time/0  |  non_neg_integer/0
+.RS 2
+The last time the file was written.
+
+
+.RE
+
+ctime =  date_time/0  |  non_neg_integer/0
+.RS 2
+On Unix, any value specified for this field is ignored (the "ctime" for the file is set to the current time). On Windows, this field is the new creation time to set for the file.
+
+
+.RE
+
+mode =  non_neg_integer/0
+.RS 2
+The file permissions as the sum of the following bit values:
+
+8#00400
+.RS 2
+Read permission: owner
+
+
+.RE
+
+8#00200
+.RS 2
+Write permission: owner
+
+
+.RE
+
+8#00100
+.RS 2
+Execute permission: owner
+
+
+.RE
+
+8#00040
+.RS 2
+Read permission: group
+
+
+.RE
+
+8#00020
+.RS 2
+Write permission: group
+
+
+.RE
+
+8#00010
+.RS 2
+Execute permission: group
+
+
+.RE
+
+8#00004
+.RS 2
+Read permission: other
+
+
+.RE
+
+8#00002
+.RS 2
+Write permission: other
+
+
+.RE
+
+8#00001
+.RS 2
+Execute permission: other
+
+
+.RE
+
+16#800
+.RS 2
+Set user id on execution
+
+
+.RE
+
+16#400
+.RS 2
+Set group id on execution
+
+
+.RE
+
+.PP
+On Unix platforms, other bits than those listed above may be set.
+
+
+.RE
+
+uid =  non_neg_integer/0
+.RS 2
+Indicates the file owner. Ignored for non-Unix file systems.
+
+
+.RE
+
+gid =  non_neg_integer/0
+.RS 2
+Gives the group that the file owner belongs to. Ignored for non-Unix file systems.
+
+
+.RE
+
+.PP
+Typical error reasons:
+
+eacces
+.RS 2
+Missing search permission for one of the parent directories of the file.
+
+
+.RE
+
+enoent
+.RS 2
+The file does not exist.
+
+
+.RE
+
+enotdir
+.RS 2
+A component of the filename is not a directory. On some platforms, 
+\fIenoent\fR is returned instead.
+
+.RE
+
+
+.RE

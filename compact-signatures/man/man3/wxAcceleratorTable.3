@@ -1,0 +1,115 @@
+.TH wxAcceleratorTable 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxAcceleratorTable \- An accelerator table allows the application to specify a table of keyboard shortcuts for menu or button commands.
+
+.SH DESCRIPTION
+.PP
+The object ?wxNullAcceleratorTable is defined to be a table with no data, and is the initial accelerator table for a window.
+
+.PP
+Example:
+
+.PP
+Remark: An accelerator takes precedence over normal processing and can be a convenient way to program some event handling. For example, you can use an accelerator table to enable a dialog with a multi-line text control to accept CTRL-Enter as meaning 'OK'.
+
+.PP
+Predefined objects (include wx.hrl): ?wxNullAcceleratorTable
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxAcceleratorEntry\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow:setAcceleratorTable/2\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxAcceleratorTable
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxAcceleratorTable() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxAcceleratorTable()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxAcceleratorTable().\fR
+
+.br
+.RS
+.PP
+Returns true if the accelerator table is valid.
+
+
+.RE
+.B
+\fBnew() -> wxAcceleratorTable().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+
+.RE
+.B
+\fBnew(N, Entries) -> wxAcceleratorTable()\fR
+\fB             when\fR
+\fB                 N :: integer(),\fR
+\fB                 Entries :: [wxAcceleratorEntry:wxAcceleratorEntry()].\fR
+
+.br
+.RS
+.PP
+Initializes the accelerator table from an array of \fIwxAcceleratorEntry\fR.
+
+
+.RE
+.B
+\fBok(This) -> boolean() when This :: wxAcceleratorTable().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIisOk/1\fR
+
+
+.RE

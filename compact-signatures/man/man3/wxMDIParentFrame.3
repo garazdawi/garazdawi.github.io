@@ -1,0 +1,387 @@
+.TH wxMDIParentFrame 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMDIParentFrame \- An MDI (Multiple Document Interface) parent frame is a window which can contain MDI child frames in its client area which emulates the full desktop.
+
+.SH DESCRIPTION
+.PP
+MDI is a user-interface model in which all the window reside inside the single parent window as opposed to being separate from each other. It remains popular despite dire warnings from Microsoft itself (which popularized this model in the first model) that MDI is obsolete.
+
+.PP
+An MDI parent frame always has a \fIwxMDIClientWindow\fR associated with it, which is the parent for MDI child frames. In the simplest case, the client window takes up the entire parent frame area but it is also possible to resize it to be smaller in order to have other windows in the frame, a typical example is using a sidebar along one of the window edges.
+
+.PP
+The appearance of MDI applications differs between different ports. The classic MDI model, with child windows which can be independently moved, resized etc, is only available under MSW, which provides native support for it. In Mac ports, multiple top level windows are used for the MDI children too and the MDI parent frame itself is invisible, to accommodate the native look and feel requirements. In all the other ports, a tab-based MDI implementation (sometimes called TDI) is used and so at most one MDI child is visible at any moment (child frames are always maximized).
+
+.PP
+Although it is possible to have multiple MDI parent frames, a typical MDI application has a single MDI parent frame window inside which multiple MDI child frames, i.e. objects of class \fIwxMDIChildFrame\fR, can be created.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+.PP
+There are no special styles for this class, all \fIwxFrame\fR styles apply to it in the usual way. The only exception is that wxHSCROLL and wxVSCROLL styles apply not to the frame itself but to the client window, so that using them enables horizontal and vertical scrollbars for this window and not the frame.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMDIChildFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMDIClientWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMDIParentFrame
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMDIParentFrame() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBactivateNext(This) -> ok when This :: wxMDIParentFrame().\fR
+
+.br
+.RS
+.PP
+Activates the MDI child following the currently active one.
+
+.PP
+The MDI children are maintained in an ordered list and this function switches to the next element in this list, wrapping around the end of it if the currently active child is the last one.
+
+.PP
+See: \fIactivatePrevious/1\fR
+
+
+.RE
+.B
+\fBactivatePrevious(This) -> ok when This :: wxMDIParentFrame().\fR
+
+.br
+.RS
+.PP
+Activates the MDI child preceding the currently active one.
+
+.PP
+See: \fIactivateNext/1\fR
+
+
+.RE
+.B
+\fBarrangeIcons(This) -> ok when This :: wxMDIParentFrame().\fR
+
+.br
+.RS
+.PP
+Arranges any iconized (minimized) MDI child windows.
+
+.PP
+This method is only implemented in MSW MDI implementation and does nothing under the other platforms.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcascade/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItile/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBcascade(This) -> ok when This :: wxMDIParentFrame().\fR
+
+.br
+.RS
+.PP
+Arranges the MDI child windows in a cascade.
+
+.PP
+This method is only implemented in MSW MDI implementation and does nothing under the other platforms.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItile/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIarrangeIcons/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBcreate(This, Parent, Id, Title, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxMDIParentFrame(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Title :: unicode:chardata(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Used in two-step frame construction.
+
+.PP
+See \fInew/4\fR for further details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxMDIParentFrame()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetActiveChild(This) -> wxMDIChildFrame:wxMDIChildFrame()\fR
+\fB                        when This :: wxMDIParentFrame().\fR
+
+.br
+.RS
+.PP
+Returns a pointer to the active MDI child, if there is one.
+
+.PP
+If there are any children at all this function returns a non-NULL pointer.
+
+
+.RE
+.B
+\fBgetClientWindow(This) -> wxMDIClientWindow:wxMDIClientWindow()\fR
+\fB                         when This :: wxMDIParentFrame().\fR
+
+.br
+.RS
+.PP
+Returns a pointer to the client window.
+
+
+.RE
+.B
+\fBnew() -> wxMDIParentFrame().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+.PP
+Use \fIcreate/5\fR for the objects created using this constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Title, [Option]) -> wxMDIParentFrame()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Title :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating the window.
+
+.PP
+Notice that if you override virtual \fIOnCreateClient()\fR (not implemented in wx) method you shouldn't be using this constructor but the default constructor and \fIcreate/5\fR as otherwise your overridden method is never going to be called because of the usual C++ virtual call resolution rules.
+
+.PP
+Under wxMSW, the client window will automatically have a sunken border style when the active child is not maximized, and no border style when a child is maximized.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBtile(This, [Option]) -> ok\fR
+\fB              when\fR
+\fB                  This :: wxMDIParentFrame(),\fR
+\fB                  Option :: {orient, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Tiles the MDI child windows either horizontally or vertically depending on whether \fIorient\fR is \fIwxHORIZONTAL\fR or \fIwxVERTICAL\fR.
+
+.PP
+This method is only implemented in MSW MDI implementation and does nothing under the other platforms.
+
+
+.RE

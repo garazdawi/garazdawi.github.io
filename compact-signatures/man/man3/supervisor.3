@@ -1,0 +1,1078 @@
+.TH supervisor 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+supervisor \- Generic supervisor behavior.
+
+.SH DESCRIPTION
+.PP
+This behavior module provides a supervisor, a process that supervises other processes called child processes. A child process can either be another supervisor or a worker process. Worker processes are normally implemented using one of the \fIgen_event\fR, \fIgen_server\fR, or \fIgen_statem\fR behaviors. A supervisor implemented using this module has a standard set of interface functions and includes functionality for tracing and error reporting. Supervisors are used to build a hierarchical process structure called a supervision tree, a nice way to structure a fault-tolerant application. For more information, see Supervisor Behaviour in OTP Design Principles.
+
+.PP
+A supervisor expects the definition of which child processes to supervise to be specified in a callback module exporting a predefined set of functions.
+
+.PP
+Unless otherwise stated, all functions in this module fail if the specified supervisor does not exist or if bad arguments are specified.
+
+.SS "Supervision Principles"
+
+.PP
+The supervisor is responsible for starting, stopping, and monitoring its child processes. The basic idea of a supervisor is that it must keep its child processes alive by restarting them when necessary.
+
+.PP
+The children of a supervisor are defined as a list of \fIchild specifications\fR. When the supervisor is started, the child processes are started in order from left to right according to this list. When the supervisor is going to terminate, it first terminates its child processes in reversed start order, from right to left.
+
+.PP
+\fBSupervisor flags\fR
+
+.PP
+The supervisor properties are defined by the supervisor flags. The type definition for the supervisor flags is as follows:
+
+.IP
+.nf
+sup_flags() = #{strategy => strategy(),           % optional
+                intensity => non_neg_integer(),   % optional
+                period => pos_integer(),          % optional
+                hibernate_after => timeout(),     % optional, available since OTP 28.0
+                auto_shutdown => auto_shutdown()} % optional
+
+.fi
+
+.PP
+\fBRestart Strategies\fR
+
+.PP
+A supervisor can have one of the following \fIrestart strategies\fR specified with the \fIstrategy\fR key in the above map:
+
+one_for_one
+.RS 2
+If one child process terminates and is to be restarted, only that child process is affected. This is the default restart strategy.
+
+
+.RE
+one_for_all
+.RS 2
+If one child process terminates and is to be restarted, all other child processes are terminated and then all child processes are restarted.
+
+
+.RE
+rest_for_one
+.RS 2
+If one child process terminates and is to be restarted, the 'rest' of the child processes (that is, the child processes after the terminated child process in the start order) are terminated. Then the terminated child process and all child processes after it are restarted.
+
+
+.RE
+simple_one_for_one
+.RS 2
+A simplified 
+\fIone_for_one\fR supervisor, where all child processes are dynamically added instances of the same process type, that is, running the same code.
+.PP
+Functions \fIdelete_child/2\fR and \fIrestart_child/2\fR are invalid for \fIsimple_one_for_one\fR supervisors and return \fI{error,simple_one_for_one}\fR if the specified supervisor uses this restart strategy.
+
+.PP
+Function \fIterminate_child/2\fR can be used for children under \fIsimple_one_for_one\fR supervisors by specifying the child's \fIpid/0\fR as the second argument. If instead the child specification identifier is used, \fIterminate_child/2\fR return \fI{error,simple_one_for_one}\fR.
+
+.PP
+As a \fIsimple_one_for_one\fR supervisor can have many children, it shuts them all down asynchronously. This means that the children do their cleanup in parallel, and therefore the order in which they are stopped is not defined.
+
+
+.RE
+
+.PP
+\fBRestart intensity and period\fR
+
+.PP
+To prevent a supervisor from getting into an infinite loop of child process terminations and restarts, a \fImaximum restart intensity\fR is defined using two integer values specified with keys \fIintensity\fR and \fIperiod\fR in the above map. Assuming the values \fIMaxR\fR for \fIintensity\fR and \fIMaxT\fR for \fIperiod\fR, then, if more than \fIMaxR\fR restarts occur within \fIMaxT\fR seconds, the supervisor terminates all child processes and then itself. The termination reason for the supervisor itself in that case will be \fIshutdown\fR. \fIintensity\fR defaults to \fI1\fR and \fIperiod\fR defaults to \fI5\fR.
+
+.PP
+\fBHibernate after\fR
+
+.PP
+In order to save memory, a supervisor, like any other process, can go into hibernation. By default, a \fIsimple_one_for_one\fR supervisor will never hibernate, as it is expected its children will come and go at potentially high rates. In counterpart, other strategies rather expect children to be stable and therefore will default to hibernating after a certain period of time of inactivity, in order to be responsive to bursts of restarts and save memory in periods of stability. You can finetune this flag by setting \fIhibernate_after\fR, when for example the supervisor will be regularly queried for \fIwhich_child/1\fR or similar and hibernation is to be better controlled.
+
+.PP
+\fBAutomatic Shutdown\fR
+
+.PP
+A supervisor can be configured to automatically shut itself down with exit reason \fIshutdown\fR when significant children terminate with the \fIauto_shutdown\fR key in the above map:
+
+never
+.RS 2
+Automic shutdown is disabled. This is the default setting.
+
+.PP
+With \fIauto_shutdown\fR set to \fInever\fR, child specs with the \fIsignificant\fR flag set to \fItrue\fR are considered invalid and will be rejected.
+
+
+.RE
+
+any_significant
+.RS 2
+The supervisor will shut itself down when 
+\fIany\fR significant child terminates, that is, when a \fItransient\fR significant child terminates normally or when a \fItemporary\fR significant child terminates normally or abnormally.
+
+.RE
+all_significant
+.RS 2
+The supervisor will shut itself down when 
+\fIall\fR significant children have terminated, that is, when the \fIlast active\fR significant child terminates. The same rules as for \fIany_significant\fR apply.
+
+.RE
+
+.PP
+For more information, see the section Automatic Shutdown in Supervisor Behavior in OTP Design Principles.
+
+.PP
+\fBWARNING: \fRThe automatic shutdown feature appeared in OTP 24.0, but applications using this feature will also compile and run with older OTP versions. However, such applications, when compiled with an OTP version that predates the appearance of the automatic shutdown feature, will leak processes because the automatic shutdowns they rely on will not happen. It is up to implementors to take proper precautions if they expect that their applications may be compiled with older OTP versions.
+
+
+.PP
+\fBChild specification\fR
+
+.PP
+The type definition of a child specification is as follows:
+
+.IP
+.nf
+child_spec() = #{id => child_id(),             % mandatory
+                 start => mfargs(),            % mandatory
+                 restart => restart(),         % optional
+                 significant => significant(), % optional
+                 shutdown => shutdown(),       % optional
+                 type => worker(),             % optional
+                 modules => modules()}         % optional
+
+.fi
+
+.PP
+The old tuple format is kept for backwards compatibility, see \fIchild_spec/0\fR, but the map is preferred.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIid\fR is used to identify the child specification internally by the supervisor.
+
+.PP
+The \fIid\fR key is mandatory.
+
+.PP
+Notice that this identifier on occasion has been called "name". As far as possible, the terms "identifier" or "id" are now used but to keep backward compatibility, some occurences of "name" can still be found, for example in error messages.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstart\fR defines the function call used to start the child process. It must be a module-function-arguments tuple \fI{M,F,A}\fR used as \fIapply(M,F,A)\fR.
+
+.PP
+The start function \fImust create and link to\fR the child process, and must return \fI{ok,Child}\fR or \fI{ok,Child,Info}\fR, where \fIChild\fR is the pid of the child process and \fIInfo\fR any term that is ignored by the supervisor.
+
+.PP
+The start function can also return \fIignore\fR if the child process for some reason cannot be started, in which case the child specification is kept by the supervisor (unless it is a temporary child) but the non-existing child process is ignored.
+
+.PP
+If something goes wrong, the function can also return an error tuple \fI{error,Error}\fR.
+
+.PP
+Notice that the \fIstart_link\fR functions of the different behavior modules fulfill the above requirements.
+
+.PP
+The \fIstart\fR key is mandatory.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrestart\fR defines when a terminated child process must be restarted. A \fIpermanent\fR child process is always restarted. A \fItemporary\fR child process is never restarted (even when the supervisor's restart strategy is \fIrest_for_one\fR or \fIone_for_all\fR and a sibling's death causes the temporary process to be terminated). A \fItransient\fR child process is restarted only if it terminates abnormally, that is, with another exit reason than \fInormal\fR, \fIshutdown\fR, or \fI{shutdown,Term}\fR.
+
+.PP
+The \fIrestart\fR key is optional. If it is not specified, it defaults to \fIpermanent\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsignificant\fR defines if a child is considered significant for automatic self-shutdown of the supervisor.
+
+.PP
+Setting this option to \fItrue\fR when the restart type is \fIpermanent\fR is invalid. Also, it is considered invalid to start children with this option set to \fItrue\fR in a supervisor when the \fIauto_shutdown\fR supervisor flag is set to \fInever\fR.
+
+.PP
+The \fIsignificant\fR key is optional. If it is not specified, it defaults to \fIfalse\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshutdown\fR defines how a child process must be terminated. \fIbrutal_kill\fR means that the child process is unconditionally terminated using \fIexit(Child,kill)\fR. An integer time-out value means that the supervisor tells the child process to terminate by calling \fIexit(Child,shutdown)\fR and then wait for an exit signal with reason \fIshutdown\fR back from the child process. If no exit signal is received within the specified number of milliseconds, the child process is unconditionally terminated using \fIexit(Child,kill)\fR.
+
+.PP
+If the child process is another supervisor, the shutdown time must be set to \fIinfinity\fR to give the subtree ample time to shut down.
+
+.PP
+\fBWARNING: \fRSetting the shutdown time to anything other than \fIinfinity\fR for a child of type \fIsupervisor\fR can cause a race condition where the child in question unlinks its own children, but fails to terminate them before it is killed.
+
+
+.PP
+It is also allowed to set it to \fIinfinity\fR, if the child process is a worker.
+
+.PP
+\fBWARNING: \fRBe careful when setting the shutdown time to \fIinfinity\fR when the child process is a worker. Because, in this situation, the termination of the supervision tree depends on the child process, it must be implemented in a safe way and its cleanup procedure must always return.
+
+
+.PP
+Notice that all child processes implemented using the standard OTP behavior modules automatically adhere to the shutdown protocol.
+
+.PP
+The \fIshutdown\fR key is optional. If it is not specified, it defaults to \fI5000\fR if the child is of type \fIworker\fR and it defaults to \fIinfinity\fR if the child is of type \fIsupervisor\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItype\fR specifies if the child process is a supervisor or a worker.
+
+.PP
+The \fItype\fR key is optional. If it is not specified, it defaults to \fIworker\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImodules\fR is used by the release handler during code replacement to determine which processes are using a certain module. As a rule of thumb, if the child process is a \fIsupervisor\fR, \fIgen_server\fR or, \fIgen_statem\fR, this is to be a list with one element \fI[Module]\fR, where \fIModule\fR is the callback module. If the child process is an event manager (\fIgen_event\fR) with a dynamic set of callback modules, value \fIdynamic\fR must be used. For more information about release handling, see Release Handling in OTP Design Principles.
+
+.PP
+The \fImodules\fR key is optional. If it is not specified, it defaults to \fI[M]\fR, where \fIM\fR comes from the child's start \fI{M,F,A}\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Internally, the supervisor also keeps track of the pid \fIChild\fR of the child process, or \fIundefined\fR if no pid exists.
+
+.RE
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIgen_event\fR, \fIgen_statem\fR, \fIgen_server\fR, \fIsys\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBauto_shutdown() :: never | any_significant | all_significant.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBchild() :: undefined | pid().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBchild_id() :: term().\fR
+
+.br
+.RS
+.PP
+Not a \fIpid/0\fR.
+
+
+.RE
+.B
+\fBchild_rec() :: #child{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBchild_spec() ::\fR
+\fB          #{id := child_id(),\fR
+\fB            start := mfargs(),\fR
+\fB            restart => restart(),\fR
+\fB            significant => significant(),\fR
+\fB            shutdown => shutdown(),\fR
+\fB            type => worker(),\fR
+\fB            modules => modules()} |\fR
+\fB          {Id :: child_id(),\fR
+\fB           StartFunc :: mfargs(),\fR
+\fB           Restart :: restart(),\fR
+\fB           Shutdown :: shutdown(),\fR
+\fB           Type :: worker(),\fR
+\fB           Modules :: modules()}.\fR
+
+.br
+.RS
+.PP
+The tuple format is kept for backward compatibility only. A map is preferred; see more details above.
+
+
+.RE
+.B
+\fBchildren() ::\fR
+\fB          {Ids :: [child_id()], Db :: #{child_id() => child_rec()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmfargs() ::\fR
+\fB          {M :: module(), F :: atom(), A :: [term()] | undefined}.\fR
+
+.br
+.RS
+.PP
+Value \fIundefined\fR for \fIA\fR (the argument list) is only to be used internally in \fIsupervisor\fR. If the restart type of the child is \fItemporary\fR, the process is never to be restarted and therefore there is no need to store the real argument list. Value \fIundefined\fR is then stored instead.
+
+
+.RE
+.B
+\fBmodules() :: [module()] | dynamic.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrestart() :: permanent | transient | temporary.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBshutdown() :: brutal_kill | timeout().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsignificant() :: boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstartchild_err() ::\fR
+\fB          already_present | {already_started, Child :: child()} | term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstartchild_ret() ::\fR
+\fB          {ok, Child :: child()} |\fR
+\fB          {ok, Child :: child(), Info :: term()} |\fR
+\fB          {error, startchild_err()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstartlink_err() ::\fR
+\fB          {already_started, pid()} | {shutdown, term()} | term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstartlink_ret() :: {ok, pid()} | ignore | {error, startlink_err()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstrategy() ::\fR
+\fB          one_for_all | one_for_one | rest_for_one | simple_one_for_one.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsup_flags() ::\fR
+\fB          #{strategy => strategy(),\fR
+\fB            intensity => non_neg_integer(),\fR
+\fB            period => pos_integer(),\fR
+\fB            auto_shutdown => auto_shutdown(),\fR
+\fB            hibernate_after => timeout()} |\fR
+\fB          {RestartStrategy :: strategy(),\fR
+\fB           Intensity :: non_neg_integer(),\fR
+\fB           Period :: pos_integer()}.\fR
+
+.br
+.RS
+.PP
+The tuple format is kept for backward compatibility only. A map is preferred; see more details above.
+
+
+.RE
+.B
+\fBsup_name() ::\fR
+\fB          {local, Name :: atom()} |\fR
+\fB          {global, Name :: term()} |\fR
+\fB          {via, Module :: module(), Name :: any()}.\fR
+
+.br
+.RS
+.PP
+Name specification to use when starting a \fIsupervisor\fR. See function \fIstart_link/2,3\fR and the type \fIsup_ref/0\fR below.
+
+{local,LocalName}
+.RS 2
+Register the 
+\fIsupervisor\fR locally as \fILocalName\fR using \fIregister/2\fR.
+
+.RE
+
+{global,GlobalName}
+.RS 2
+Register the 
+\fIsupervisor\fR process id globally as \fIGlobalName\fR using \fIglobal:register_name/2\fR.
+
+.RE
+
+{via,RegMod,ViaName}
+.RS 2
+Register the 
+\fIsupervisor\fR process with the registry represented by \fIRegMod\fR. The \fIRegMod\fR callback is to export the functions \fIregister_name/2\fR, \fIunregister_name/1\fR, \fIwhereis_name/1\fR, and \fIsend/2\fR, which are to behave like the corresponding functions in \fIglobal\fR. Thus, \fI{via,global,GlobalName}\fR is a valid reference equivalent to \fI{global,GlobalName}\fR.
+
+.RE
+
+
+.RE
+.B
+\fBsup_ref() ::\fR
+\fB          (Name :: atom()) |\fR
+\fB          {Name :: atom(), Node :: node()} |\fR
+\fB          {global, Name :: term()} |\fR
+\fB          {via, Module :: module(), Name :: any()} |\fR
+\fB          pid().\fR
+
+.br
+.RS
+.PP
+Supervisor specification to use when addressing a \fIsupervisor\fR. See \fIcount_children/1\fR, \fIdelete_child/2\fR, \fIget_childspec/2\fR, \fIrestart_child/2\fR, \fIstart_child/2\fR, \fIterminate_child/2\fR, \fIwhich_children/1\fR and the type \fIsup_name/0\fR above.
+
+.PP
+It can be:
+
+pid/0
+.RS 2
+The 
+\fIsupervisor\fR's process identifier.
+
+.RE
+
+LocalName
+.RS 2
+The 
+\fIsupervisor\fR is locally registered as \fILocalName\fR with \fIregister/2\fR.
+
+.RE
+
+{Name,Node}
+.RS 2
+The 
+\fIsupervisor\fR is locally registered on another node.
+
+.RE
+
+{global,GlobalName}
+.RS 2
+The 
+\fIsupervisor\fR is globally registered in \fIglobal\fR.
+
+.RE
+
+{via,RegMod,ViaName}
+.RS 2
+The 
+\fIsupervisor\fR is registered in an alternative process registry. The registry callback module \fIRegMod\fR is to export functions \fIregister_name/2\fR, \fIunregister_name/1\fR, \fIwhereis_name/1\fR, and \fIsend/2\fR, which are to behave like the corresponding functions in \fIglobal\fR. Thus, \fI{via,global,GlobalName}\fR is the same as \fI{global,GlobalName}\fR.
+
+.RE
+
+
+.RE
+.B
+\fBworker() :: worker | supervisor.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcheck_childspecs(ChildSpecs, AutoShutdown) -> Result\fR
+\fB                          when\fR
+\fB                              ChildSpecs :: [child_spec()],\fR
+\fB                              AutoShutdown ::\fR
+\fB                                  undefined | auto_shutdown(),\fR
+\fB                              Result :: ok | {error, Error :: term()}.\fR
+
+.br
+.RS
+.PP
+Takes a list of child specification as argument and returns \fIok\fR if all of them are syntactically correct, otherwise \fI{error,Error}\fR.
+
+.PP
+If the \fIAutoShutdown\fR argument is not \fIundefined\fR, also checks if the child specifications are allowed for the given auto_shutdown option.
+
+
+.RE
+.B
+\fBcount_children(SupRef) -> PropListOfCounts\fR
+\fB                        when\fR
+\fB                            SupRef :: sup_ref(),\fR
+\fB                            PropListOfCounts :: [Count],\fR
+\fB                            Count ::\fR
+\fB                                {specs,\fR
+\fB                                 ChildSpecCount :: non_neg_integer()} |\fR
+\fB                                {active,\fR
+\fB                                 ActiveProcessCount :: non_neg_integer()} |\fR
+\fB                                {supervisors,\fR
+\fB                                 ChildSupervisorCount ::\fR
+\fB                                     non_neg_integer()} |\fR
+\fB                                {workers,\fR
+\fB                                 ChildWorkerCount :: non_neg_integer()}.\fR
+
+.br
+.RS
+.PP
+Returns a property list containing the counts for each of the following elements of the supervisor's child specifications and managed processes:
+
+specs
+.RS 2
+The total count of children, dead or alive.
+
+
+.RE
+active
+.RS 2
+The count of all actively running child processes managed by this supervisor. For a 
+\fIsimple_one_for_one\fR supervisors, no check is done to ensure that each child process is still alive, although the result provided here is likely to be very accurate unless the supervisor is heavily overloaded.
+
+.RE
+supervisors
+.RS 2
+The count of all children marked as 
+\fIchild_type = supervisor\fR in the specification list, regardless if the child process is still alive.
+
+.RE
+workers
+.RS 2
+The count of all children marked as 
+\fIchild_type = worker\fR in the specification list, regardless if the child process is still alive.
+
+.RE
+
+
+.RE
+.B
+\fBdelete_child(SupRef, Id) -> Result\fR
+\fB                      when\fR
+\fB                          SupRef :: sup_ref(),\fR
+\fB                          Id :: child_id(),\fR
+\fB                          Result :: ok | {error, Error},\fR
+\fB                          Error ::\fR
+\fB                              running | restarting | not_found |\fR
+\fB                              simple_one_for_one.\fR
+
+.br
+.RS
+.PP
+Tells supervisor \fISupRef\fR to delete the child specification identified by \fIId\fR. The corresponding child process must not be running. Use \fIterminate_child/2\fR to terminate it.
+
+.PP
+If successful, the function returns \fIok\fR. If the child specification identified by \fIId\fR exists but the corresponding child process is running or is about to be restarted, the function returns \fI{error,running}\fR or \fI{error,restarting}\fR, respectively. If the child specification identified by \fIId\fR does not exist, the function returns \fI{error,not_found}\fR.
+
+
+.RE
+.B
+\fBget_childspec(SupRef, Id) -> Result\fR
+\fB                       when\fR
+\fB                           SupRef :: sup_ref(),\fR
+\fB                           Id :: pid() | child_id(),\fR
+\fB                           Result :: {ok, child_spec()} | {error, Error},\fR
+\fB                           Error :: not_found.\fR
+
+.br
+.RS
+.PP
+Returns the child specification map for the child identified by \fIId\fR under supervisor \fISupRef\fR. The returned map contains all keys, both mandatory and optional.
+
+
+.RE
+.B
+\fBrestart_child(SupRef, Id) -> Result\fR
+\fB                       when\fR
+\fB                           SupRef :: sup_ref(),\fR
+\fB                           Id :: child_id(),\fR
+\fB                           Result ::\fR
+\fB                               {ok, Child :: child()} |\fR
+\fB                               {ok, Child :: child(), Info :: term()} |\fR
+\fB                               {error, Error},\fR
+\fB                           Error ::\fR
+\fB                               running | restarting | not_found |\fR
+\fB                               simple_one_for_one |\fR
+\fB                               term().\fR
+
+.br
+.RS
+.PP
+Tells supervisor \fISupRef\fR to restart a child process corresponding to the child specification identified by \fIId\fR. The child specification must exist, and the corresponding child process must not be running.
+
+.PP
+Notice that for temporary children, the child specification is automatically deleted when the child terminates; thus, it is not possible to restart such children.
+
+.PP
+If the child specification identified by \fIId\fR does not exist, the function returns \fI{error,not_found}\fR. If the child specification exists but the corresponding process is already running, the function returns \fI{error,running}\fR.
+
+.PP
+If the child process start function returns \fI{ok,Child}\fR or \fI{ok,Child,Info}\fR, the pid is added to the supervisor and the function returns the same value.
+
+.PP
+If the child process start function returns \fIignore\fR, the pid remains set to \fIundefined\fR and the function returns \fI{ok,undefined}\fR.
+
+.PP
+If the child process start function returns an error tuple or an erroneous value, or if it fails, the function returns \fI{error,Error}\fR, where \fIError\fR is a term containing information about the error.
+
+
+.RE
+.B
+\fBstart_child(SupRef, ChildSpec) -> startchild_ret()\fR
+\fB                     when SupRef :: sup_ref(), ChildSpec :: child_spec();\fR
+\fB                 (SupRef, ExtraArgs) -> startchild_ret()\fR
+\fB                     when SupRef :: sup_ref(), ExtraArgs :: [term()].\fR
+
+.br
+.RS
+.PP
+Dynamically adds a child specification to supervisor \fISupRef\fR, which starts the corresponding child process.
+
+.PP
+For \fIone_for_one\fR, \fIone_for_all\fR and \fIrest_for_one\fR supervisors, the second argument must be a valid child specification \fIChildSpec\fR. The child process is started by using the start function as defined in the child specification.
+
+.PP
+For \fIsimple_one_for_one\fR supervisors, the child specification defined in \fIModule:init/1\fR is used, and the second argument must instead be an arbitrary list of terms \fIExtraArgs\fR. The child process is then started by appending \fIExtraArgs\fR to the existing start function arguments, that is, by calling \fIapply(M, F, A++ExtraArgs)\fR, where \fI{M,F,A}\fR is the start function defined in the child specification.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If there already exists a child specification with the specified identifier, \fIChildSpec\fR is discarded, and the function returns \fI{error,already_present}\fR or \fI{error,{already_started,Child}}\fR, depending on if the corresponding child process is running or not.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the child process start function returns \fI{ok,Child}\fR or \fI{ok,Child,Info}\fR, the child specification and pid are added to the supervisor and the function returns the same value.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the child process start function returns \fIignore\fR, the child specification \fIChildSpec\fR is added to the supervisor if it is an \fIone_for_one\fR, \fIone_for_all\fR or \fIrest_for_one\fR supervisor, and the pid is set to \fIundefined\fR. For \fIsimple_one_for_one\fR supervisors, no child is added to the supervisor. The function returns \fI{ok,undefined}\fR.
+
+.RE
+
+.PP
+If the child process start function returns an error tuple or an erroneous value, or if it fails, the child specification is discarded, and the function returns \fI{error,Error}\fR, where \fIError\fR is a term containing information about the error and child specification.
+
+
+.RE
+.B
+\fBstart_link(Module, Args) -> startlink_ret()\fR
+\fB                    when Module :: module(), Args :: term().\fR
+
+.br
+.RS
+.PP
+Creates a nameless supervisor process as part of a supervision tree.
+
+.PP
+Equivalent to \fIstart_link/3\fR except that the supervisor process is not \fIregistered\fR.
+
+
+.RE
+.B
+\fBstart_link(SupName, Module, Args) -> startlink_ret()\fR
+\fB                    when\fR
+\fB                        SupName :: sup_name(),\fR
+\fB                        Module :: module(),\fR
+\fB                        Args :: term().\fR
+
+.br
+.RS
+.PP
+Creates a supervisor process as part of a supervision tree.
+
+.PP
+For example, the function ensures that the supervisor is linked to the calling process (its supervisor).
+
+.PP
+The created supervisor process calls \fIModule:init/1\fR to find out about restart strategy, maximum restart intensity, and child processes. To ensure a synchronized startup procedure, \fIstart_link/2,3\fR does not return until \fIModule:init/1\fR has returned and all child processes have been started.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fISupName={local,Name}\fR, the supervisor is registered locally as \fIName\fR using \fIregister/2\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fISupName={global,Name}\fR, the supervisor is registered globally as \fIName\fR using \fIglobal:register_name/2\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fISupName={via,Module,Name}\fR, the supervisor is registered as \fIName\fR using the registry represented by \fIModule\fR. The \fIModule\fR callback must export the functions \fIregister_name/2\fR, \fIunregister_name/1\fR, and \fIsend/2\fR, which must behave like the corresponding functions in \fIglobal\fR. Thus, \fI{via,global,Name}\fR is a valid reference.
+
+.RE
+
+.PP
+\fIModule\fR is the name of the callback module.
+
+.PP
+\fIArgs\fR is any term that is passed as the argument to \fIModule:init/1\fR.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the supervisor and its child processes are successfully created (that is, if all child process start functions return \fI{ok,Child}\fR, \fI{ok,Child,Info}\fR, or \fIignore\fR), the function returns \fI{ok,Pid}\fR, where \fIPid\fR is the pid of the supervisor.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If there already exists a process with the specified \fISupName\fR, the function returns \fI{error,{already_started,Pid}}\fR, where \fIPid\fR is the pid of that process.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIModule:init/1\fR returns \fIignore\fR, this function returns \fIignore\fR as well, and the supervisor terminates with reason \fInormal\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIModule:init/1\fR fails or returns an incorrect value, this function returns \fI{error,Term}\fR, where \fITerm\fR is a term with information about the error, and the supervisor terminates with reason \fITerm\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If any child process start function fails or returns an error tuple or an erroneous value, the supervisor first terminates all already started child processes with reason \fIshutdown\fR and then terminate itself and returns \fI{error, {shutdown, Reason}}\fR.
+
+.RE
+
+
+.RE
+.B
+\fBstop(SupRef :: sup_ref(), Reason :: term(), Timeout :: timeout()) ->\fR
+\fB              ok.\fR
+
+.br
+.RS
+.PP
+Stop a supervisor.
+
+.PP
+Orders the supervisor specified by \fISupRef\fR to exit with the specified \fIReason\fR and waits for it to terminate. The supervisor will terminate all its children before exiting.
+
+.PP
+The function returns \fIok\fR if the supervisor terminates with the expected reason. Any other reason than \fInormal\fR, \fIshutdown\fR, or \fI{shutdown,Term}\fR causes an error report to be issued using \fIlogger\fR. An exit signal with the same reason is sent to linked processes and ports.
+
+.PP
+\fITimeout\fR is an integer that specifies how many milliseconds to wait for the supervisor to terminate, or the atom \fIinfinity\fR to wait indefinitely. If the supervisor has not terminated within the specified time, the call exits the calling process with reason \fItimeout\fR.
+
+.PP
+If the process does not exist, the call exits the calling process with reason \fInoproc\fR, or with reason \fI{nodedown,Node}\fR if the connection fails to the remote \fINode\fR where the supervisor runs.
+
+.PP
+\fBWARNING: \fRCalling this function from a (sub-)child process of the given supervisor will result in a deadlock which will last until either the shutdown timeout of the child or the timeout given to \fIstop/3\fR has expired.
+
+
+
+.RE
+.B
+\fBterminate_child(SupRef, Id) -> Result\fR
+\fB                         when\fR
+\fB                             SupRef :: sup_ref(),\fR
+\fB                             Id :: pid() | child_id(),\fR
+\fB                             Result :: ok | {error, Error},\fR
+\fB                             Error :: not_found | simple_one_for_one.\fR
+
+.br
+.RS
+.PP
+Tells supervisor \fISupRef\fR to terminate the specified child.
+
+.PP
+If the supervisor is not \fIsimple_one_for_one\fR, \fIId\fR must be the child specification identifier. The process, if any, is terminated and, unless it is a temporary child, the child specification is kept by the supervisor. The child process can later be restarted by the supervisor. The child process can also be restarted explicitly by calling \fIrestart_child/2\fR. Use \fIdelete_child/2\fR to remove the child specification.
+
+.PP
+If the child is temporary, the child specification is deleted as soon as the process terminates. This means that \fIdelete_child/2\fR has no meaning and \fIrestart_child/2\fR cannot be used for these children.
+
+.PP
+If the supervisor is \fIsimple_one_for_one\fR, \fIId\fR must be the \fIpid/0\fR of the child process. If the specified process is alive, but is not a child of the specified supervisor, the function returns \fI{error,not_found}\fR. If the child specification identifier is specified instead of a \fIpid/0\fR, the function returns \fI{error,simple_one_for_one}\fR.
+
+.PP
+If successful, the function returns \fIok\fR. If there is no child specification with the specified \fIId\fR, the function returns \fI{error,not_found}\fR.
+
+
+.RE
+.B
+\fBwhich_child(SupRef, Id) -> Result\fR
+\fB                     when\fR
+\fB                         SupRef :: sup_ref(),\fR
+\fB                         Id :: pid() | child_id(),\fR
+\fB                         Result ::\fR
+\fB                             {ok, {Id, Child, Type, Modules}} |\fR
+\fB                             {error, Error},\fR
+\fB                         Child :: child() | restarting,\fR
+\fB                         Type :: worker(),\fR
+\fB                         Modules :: modules(),\fR
+\fB                         Error :: not_found.\fR
+
+.br
+.RS
+.PP
+Returns information about the child specification and child process identified by the given \fIId\fR.
+
+.PP
+See \fIwhich_children/1\fR for an explanation of the information returned.
+
+.PP
+If no child with the given \fIId\fR exists, returns \fI{error, not_found}\fR.
+
+
+.RE
+.B
+\fBwhich_children(SupRef) -> [{Id, Child, Type, Modules}]\fR
+\fB                        when\fR
+\fB                            SupRef :: sup_ref(),\fR
+\fB                            Id :: child_id() | undefined,\fR
+\fB                            Child :: child() | restarting,\fR
+\fB                            Type :: worker(),\fR
+\fB                            Modules :: modules().\fR
+
+.br
+.RS
+.PP
+Returns a newly created list with information about all child specifications and child processes belonging to supervisor \fISupRef\fR.
+
+.PP
+Notice that calling this function when supervising many children under low memory conditions can cause an out of memory exception.
+
+.PP
+The following information is given for each child specification/process:
+
+Id
+.RS 2
+As defined in the child specification or 
+\fIundefined\fR for a \fIsimple_one_for_one\fR supervisor.
+
+.RE
+Child
+.RS 2
+The pid of the corresponding child process, the atom 
+\fIrestarting\fR if the process is about to be restarted, or \fIundefined\fR if there is no such process.
+
+.RE
+Type
+.RS 2
+As defined in the child specification.
+
+
+.RE
+Modules
+.RS 2
+As defined in the child specification.
+
+
+.RE
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBinit(Args)\fR
+
+.br
+.RS
+.PP
+Whenever a supervisor is started using \fIstart_link/2,3\fR, this function is called by the new process to find out about restart strategy, maximum restart intensity, and child specifications.
+
+.PP
+\fIArgs\fR is the \fIArgs\fR argument provided to the start function.
+
+.PP
+\fISupFlags\fR is the supervisor flags defining the restart strategy and maximum restart intensity for the supervisor. \fI[ChildSpec]\fR is a list of valid child specifications defining which child processes the supervisor must start and monitor. See the discussion in section \fISupervision Principles\fR earlier.
+
+.PP
+Notice that when the restart strategy is \fIsimple_one_for_one\fR, the list of child specifications must be a list with one child specification only. (The child specification identifier is ignored.) No child process is then started during the initialization phase, but all children are assumed to be started dynamically using \fIstart_child/2\fR.
+
+.PP
+The function can also return \fIignore\fR.
+
+.PP
+Notice that this function can also be called as a part of a code upgrade procedure. Therefore, the function is not to have any side effects. For more information about code upgrade of supervisors, see section Changing a Supervisor in OTP Design Principles.
+
+
+.RE

@@ -1,0 +1,538 @@
+.TH math 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+math \- Mathematical functions.
+
+.SH DESCRIPTION
+.PP
+This module provides an interface to a number of mathematical functions.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBacos(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the arc cosine of \fIX\fR in radians.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:acos(1.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBacosh(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the inverse hyperbolic cosine of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:acosh(1.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBasin(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the arc cosine of \fIX\fR in radians.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:asin(0.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBasinh(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the inverse hyperbolic sine of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:asinh(0.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBatan(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the arc tangent of \fIX\fR in radians.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:atan(0.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBatan2(Y, X) -> float() when Y :: number(), X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the arc tangent of \fIY\fR/\fIX\fR in radians, using the signs of both arguments to determine the quadrant of the return value.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:atan2(0.0, -10.0).
+3.141592653589793
+
+.fi
+
+
+.RE
+.B
+\fBatanh(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the inverse hyperbolic tangent of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:atanh(0.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBceil(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the ceiling of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:ceil(7.5).
+8.0
+2> math:ceil(-5.5).
+-5.0
+3> math:ceil(1.0).
+1.0
+
+.fi
+
+
+.RE
+.B
+\fBcos(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the cosine of \fIX\fR in radians.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:cos(0.0).
+1.0
+
+.fi
+
+
+.RE
+.B
+\fBcosh(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the hyperbolic cosine of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:cosh(0.0).
+1.0
+
+.fi
+
+
+.RE
+.B
+\fBerf(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the error function of \fIX\fR.
+
+.PP
+See Error function (Wikipedia).
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:erf(0.0).
+0.0
+2> math:erf(10.0).
+1.0
+
+.fi
+
+
+.RE
+.B
+\fBerfc(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns \fI1.0\fR - \fIerf(X)\fR, computed using methods that avoid cancellation for large \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:erfc(0.0).
+1.0
+
+.fi
+
+
+.RE
+.B
+\fBexp(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns \fIe\fR raised to the power of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:exp(0).
+1.0
+2> trunc(100 * math:exp(1)).
+271
+
+.fi
+
+
+.RE
+.B
+\fBfloor(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the floor of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:floor(9.1).
+9.0
+2> math:floor(-1.5).
+-2.0
+3> math:floor(1.0).
+1.0
+
+.fi
+
+
+.RE
+.B
+\fBfmod(X, Y) -> float() when X :: number(), Y :: number().\fR
+
+.br
+.RS
+.PP
+Returns the floating point remainder \fIX\fR divided by \fIY\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:fmod(10.5, 8.0).
+2.5
+
+.fi
+
+
+.RE
+.B
+\fBlog(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the natural logarithm of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:log(1.0).
+0.0
+2> math:log(2.718281828459045).
+1.0
+
+.fi
+
+
+.RE
+.B
+\fBlog10(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns logarithm of \fIX\fR to base 10.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:log10(1.0).
+0.0
+2> math:log10(10.0).
+1.0
+3> math:log10(100).
+2.0
+
+.fi
+
+
+.RE
+.B
+\fBlog2(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns logarithm of \fIX\fR to base 2.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:log2(1.0).
+0.0
+2> math:log2(2.0).
+1.0
+3> math:log2(64).
+6.0
+
+.fi
+
+
+.RE
+.B
+\fBpi() -> float().\fR
+
+.br
+.RS
+.PP
+Returns the ratio of the circumference of a circle to its diameter.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:pi().
+3.141592653589793
+
+.fi
+
+
+.RE
+.B
+\fBpow(X, N) -> float() when X :: number(), N :: number().\fR
+
+.br
+.RS
+.PP
+Raise \fIX\fR to the power \fIN\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:pow(2, 6).
+64.0
+2> math:pow(10.0, 3.0).
+1000.0
+
+.fi
+
+
+.RE
+.B
+\fBsin(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the sine of \fIX\fR in radians.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:sin(0.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBsinh(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the hyperbolic sine of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:sinh(0.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBsqrt(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the non-negative square root of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:sqrt(2).
+1.4142135623730951
+2> math:sqrt(100.0).
+10.0
+
+.fi
+
+
+.RE
+.B
+\fBtan(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the tangent of \fIX\fR in radians.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:tan(0.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBtanh(X) -> float() when X :: number().\fR
+
+.br
+.RS
+.PP
+Returns the hyperbolic tangent of \fIX\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:tan(0.0).
+0.0
+
+.fi
+
+
+.RE
+.B
+\fBtau() -> float().\fR
+
+.br
+.RS
+.PP
+Returns the ratio of the circumference of a circle to its radius.
+
+.PP
+This constant is equivalent to a full turn when described in radians.
+
+.SS "Examples"
+
+.IP
+.nf
+1> math:tau().
+6.283185307179586
+2> math:tau() == 2 * math:pi().
+true
+
+.fi
+
+
+.RE

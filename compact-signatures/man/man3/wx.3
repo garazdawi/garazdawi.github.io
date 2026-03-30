@@ -1,0 +1,562 @@
+.TH wx 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wx \- A port of wxWidgets.
+
+.SH DESCRIPTION
+.PP
+This is the base api of wxWidgets. This module contains functions for starting and stopping the wx-server, as well as other utility functions.
+
+.PP
+wxWidgets is object oriented, and not functional. Thus, in Wx a module represents a class, and the object created by this class has an own type, wxCLASS(). This module represents the base class, and all other wxMODULE's are sub-classes of this class.
+
+.PP
+Objects of a class are created with wxCLASS:new(...) and destroyed with wxCLASS:destroy(). Member functions are called with wxCLASS:member(Object, ...) instead of as in C++ Object.member(...).
+
+.PP
+Sub class modules inherit (non static) functions from their parents. The inherited functions are not documented in the sub-classes.
+
+.PP
+This erlang port of wxWidgets tries to be a one-to-one mapping with the original wxWidgets library. Some things are different though, as the optional arguments use property lists and can be in any order. The main difference is the event handling which is different from the original library. See \fIwxEvtHandler\fR.
+
+.PP
+The following classes are implemented directly as erlang types:  wxPoint={x,y},wxSize={w,h},wxRect={x,y,w,h},wxColour={r,g,b [,a]}, wxString=unicode:chardata(), wxGBPosition={r,c},wxGBSpan={rs,cs},wxGridCellCoords={r,c}.
+
+.PP
+wxWidgets uses a process specific environment, which is created by wx:new/0. To be able to use the environment from other processes, call \fIget_env/0\fR to retrieve the environment and \fIset_env/1\fR to assign the environment in the other process.
+
+.PP
+Global (classless) functions are located in the wx_misc module.
+
+.SS "DATA TYPES"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_colour() = {R::byte(), G::byte(), B::byte()} | wx_colour4()\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_colour4() = {R::byte(), G::byte(), B::byte(), A::byte()}\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_datetime() = {{Year::integer(), Month::integer(), Day::integer()}, {Hour::integer(), Minute::integer(), Second::integer()}}\fR
+
+.PP
+In Local Timezone
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_enum() = integer()\fR
+
+.PP
+Constant defined in wx.hrl
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_env() = #wx_env{}\fR
+
+.PP
+Opaque process environment
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_memory() = binary() | #wx_mem{}\fR
+
+.PP
+Opaque memory reference
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_object() = #wx_ref{}\fR
+
+.PP
+Opaque object reference
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_wxHtmlLinkInfo() = #wxHtmlLinkInfo{href=unicode:chardata(), target=unicode:chardata()}\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB wx_wxMouseState() = #wxMouseState{x=integer(), y=integer(), leftDown=boolean(), middleDown=boolean(), rightDown=boolean(), controlDown=boolean(), shiftDown=boolean(), altDown=boolean(), metaDown=boolean(), cmdDown=boolean()}\fR
+
+.PP
+See #wxMouseState{} defined in wx.hrl
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwx_colour() ::\fR
+\fB          {R :: byte(), G :: byte(), B :: byte()} | wx_colour4().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx_colour4() ::\fR
+\fB          {R :: byte(), G :: byte(), B :: byte(), A :: byte()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx_datetime() ::\fR
+\fB          {{Year :: integer(), Month :: integer(), Day :: integer()},\fR
+\fB           {Hour :: integer(), Minute :: integer(), Second :: integer()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx_enum() :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx_env() :: #wx_env{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx_memory() :: binary() | #wx_mem{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx_object() :: #wx_ref{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx_wxHtmlLinkInfo() :: #wxHtmlLinkInfo{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwx_wxMouseState() :: #wxMouseState{}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbatch(function()) -> term().\fR
+
+.br
+.RS
+.PP
+Batches all \fIwx\fR commands used in the fun. Improves performance of the command processing by grabbing the wxWidgets thread so that no event processing will be done before the complete batch of commands is invoked.
+
+.PP
+\fISee also:\fR \fIfoldl/3\fR, \fIfoldr/3\fR, \fIforeach/2\fR, \fImap/2\fR.
+
+
+.RE
+.B
+\fBcreate_memory(Size :: integer()) -> wx_memory().\fR
+
+.br
+.RS
+.PP
+Creates a memory area (of Size in bytes) which can be used by an external library (i.e. opengl). It is up to the client to keep a reference to this object so it does not get garbage collected by erlang while still in use by the external library.
+
+.PP
+This is far from erlang's intentional usage and can crash the erlang emulator. Use it carefully.
+
+
+.RE
+.B
+\fBdebug(Level | [Level]) -> ok\fR
+\fB               when Level :: none | verbose | trace | driver | integer().\fR
+
+.br
+.RS
+.PP
+Sets debug level. If debug level is 'verbose' or 'trace' each call is printed on console. If Level is 'driver' each allocated object and deletion is printed on the console.
+
+
+.RE
+.B
+\fBdemo() -> ok | {error, atom()}.\fR
+
+.br
+.RS
+.PP
+Starts a Wx demo if examples directory exists and is compiled
+
+
+.RE
+.B
+\fBdestroy() -> ok.\fR
+
+.br
+.RS
+.PP
+Stops a wx server.
+
+
+.RE
+.B
+\fBequal(Ref1 :: wx_object(), Ref2 :: wx_object()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if both arguments references the same object, false otherwise
+
+
+.RE
+.B
+\fBfoldl(function(), term(), list()) -> term().\fR
+
+.br
+.RS
+.PP
+Behaves like \fIlists:foldl/3\fR but batches wx commands. See \fIbatch/1\fR.
+
+
+.RE
+.B
+\fBfoldr(function(), term(), list()) -> term().\fR
+
+.br
+.RS
+.PP
+Behaves like \fIlists:foldr/3\fR but batches wx commands. See \fIbatch/1\fR.
+
+
+.RE
+.B
+\fBforeach(function(), list()) -> ok.\fR
+
+.br
+.RS
+.PP
+Behaves like \fIlists:foreach/2\fR but batches wx commands. See \fIbatch/1\fR.
+
+
+.RE
+.B
+\fBgetObjectType(Wx_ref :: wx_object()) -> atom().\fR
+
+.br
+.RS
+.PP
+Returns the object type
+
+
+.RE
+.B
+\fBget_env() -> wx_env().\fR
+
+.br
+.RS
+.PP
+Gets this process's current wx environment. Can be sent to other processes to allow them use this process wx environment.
+
+.PP
+\fISee also:\fR \fIset_env/1\fR.
+
+
+.RE
+.B
+\fBget_memory_bin(Wx_mem :: wx_memory()) -> binary().\fR
+
+.br
+.RS
+.PP
+Returns the memory area as a binary.
+
+
+.RE
+.B
+\fBis_null(Wx_ref :: wx_object()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if object is null, false otherwise
+
+
+.RE
+.B
+\fBmap(function(), list()) -> list().\fR
+
+.br
+.RS
+.PP
+Behaves like \fIlists:map/2\fR but batches wx commands. See \fIbatch/1\fR.
+
+
+.RE
+.B
+\fBnew() -> wx_object().\fR
+
+.br
+.RS
+.PP
+Starts a wx server.
+
+
+.RE
+.B
+\fBnew([Option]) -> wx_object()\fR
+\fB             when\fR
+\fB                 Option ::\fR
+\fB                     {debug, list() | atom()} |\fR
+\fB                     {silent_start, boolean()}.\fR
+
+.br
+.RS
+.PP
+Starts a wx server.
+
+.PP
+Option may be \fI{debug, Level}\fR, see \fIdebug/1\fR. Or \fI{silent_start, Bool}\fR, which causes error messages at startup to be suppressed. The latter can be used as a silent test of whether wx is properly installed or not.
+
+
+.RE
+.B
+\fBnull() -> wx_object().\fR
+
+.br
+.RS
+.PP
+Returns the null object
+
+
+.RE
+.B
+\fBparent_class(Wx_ref :: wx_object()) -> boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrelease_memory(Wx_mem :: wx_memory()) -> ok.\fR
+
+.br
+.RS
+.PP
+Releases the memory retained by \fIretain_memory/1\fR
+
+
+.RE
+.B
+\fBretain_memory(Wx_mem :: wx_memory()) -> ok.\fR
+
+.br
+.RS
+.PP
+Saves the memory from deletion until \fIrelease_memory/1\fR is called. If \fIrelease_memory/1\fR is not called the memory will not be garbage collected.
+
+
+.RE
+.B
+\fBset_env(Wx_env :: wx_env()) -> ok.\fR
+
+.br
+.RS
+.PP
+Sets the process wx environment, allows this process to use another process wx environment.
+
+
+.RE
+.B
+\fBsubscribe_events() -> ok.\fR
+
+.br
+.RS
+.PP
+Adds the calling process to the list of of processes that are listening to wx application events.
+
+.PP
+At the moment these are all MacOSX specific events corresponding to \fIMacNewFile()\fR and friends from wxWidgets wxApp:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{new_file, ""}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{open_file, Filename}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{print_file, Filename}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{open_url, Url}\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{reopen_app, ""}\fR
+
+.RE
+
+.PP
+The call always returns ok but will have sent any already received events to the calling process.
+
+
+.RE
+.B
+\fBtypeCast(wx_object(), atom()) -> wx_object().\fR
+
+.br
+.RS
+.PP
+Casts the object to class NewType. It is needed when using functions like wxWindow:findWindow/2, which returns a generic wxObject type.
+
+
+.RE

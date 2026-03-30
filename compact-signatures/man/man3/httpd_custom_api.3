@@ -1,0 +1,40 @@
+.TH httpd_custom_api 3 "inets 9.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+httpd_custom_api \- Behaviour with optional callbacks to customize the inets HTTP server.
+
+.SH DESCRIPTION
+.PP
+The module implementing this behaviour shall be supplied to to the servers configuration with the option customize
+
+.SH CALLBACKS
+.LP
+.B
+\fBrequest_header/1\fR
+
+.br
+.RS
+.PP
+Filter and possible alter HTTP request headers before they are processed by the server.
+
+
+.RE
+.B
+\fBresponse_default_headers()\fR
+
+.br
+.RS
+.PP
+Provide default headers for the HTTP servers responses. Note that this option may override built-in defaults.
+
+
+.RE
+.B
+\fBresponse_header/1\fR
+
+.br
+.RS
+.PP
+Filter and possible alter HTTP response headers before they are sent to the client.
+
+
+.RE

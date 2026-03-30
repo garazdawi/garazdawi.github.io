@@ -1,0 +1,919 @@
+.TH ssh_file 3 "ssh 5.5.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ssh_file \- Default callback module for the client's and server's database operations in the ssh application
+
+.SH DESCRIPTION
+.PP
+This module is the default callback handler for the client's and the server's user and host "database" operations. All data, for instance key pairs, are stored in files in the normal file system. This page documents the files, where they are stored and configuration options for this callback module.
+
+.PP
+The intention is to be compatible with the OpenSSH storage in files. Therefore it mimics directories and filenames of OpenSSH.
+
+.PP
+Ssh_file implements the \fIssh_server_key_api\fR and the \fIssh_client_key_api\fR. This enables the user to make an own interface using for example a database handler.
+
+.PP
+Such another callback module could be used by setting the option \fIkey_cb\fR when starting a client or a server (with for example ssh:connect, ssh:daemon of ssh:shell ).
+
+.PP
+\fBNOTE: \fRThe functions are \fICallbacks\fR for the SSH app. They are not intended to be called from the user's code!
+
+
+.SS "Files, directories and who uses them"
+
+.PP
+\fBDaemons\fR
+
+.PP
+Daemons uses all files stored in the SYSDIR directory.
+
+.PP
+Optionally, in case of \fIpublickey\fR authorization, one or more of the remote user's public keys in the USERDIR directory are used. See the files \fIUSERDIR/authorized_keys\fR and \fIUSERDIR/authorized_keys2\fR.
+
+.PP
+\fBClients\fR
+
+.PP
+Clients uses all files stored in the USERDIR directory.
+
+.PP
+\fBDirectory contents\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB LOCALUSER\fR  The user name of the OS process running the Erlang virtual machine (emulator).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB SYSDIR\fR  This is the directory holding the server's files:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIssh_host_dsa_key\fR - private dss host key (optional)
+
+.RE
+ssh_host_rsa_key
+.RS 2
+private rsa host key (optional)
+
+
+.RE
+ssh_host_ecdsa_key
+.RS 2
+private ecdsa host key (optional)
+
+
+.RE
+ssh_host_ed25519_key
+.RS 2
+private eddsa host key for curve 25519 (optional)
+
+
+.RE
+ssh_host_ed448_key
+.RS 2
+private eddsa host key for curve 448 (optional)
+
+
+.RE
+
+.PP
+The key files could be generated with OpenSSH's ssh-keygen command.
+
+.PP
+At least one host key must be defined. The default value of SYSDIR is \fI/etc/ssh\fR.
+
+.PP
+For security reasons, this directory is normally accessible only to the root user.
+
+.PP
+To change the SYSDIR, see the system_dir option.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB USERDIR\fR  This is the directory holding the files:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIauthorized_keys\fR and, as second alternative \fIauthorized_keys2\fR - the user's public keys are stored concatenated in one of those files.
+
+.PP
+It is composed of lines as for OpenSSH:
+
+.IP
+.nf
+(options)? keytype base64-encoded-key comment
+
+.fi
+
+.PP
+where
+
+.IP
+.nf
+options :: option(,option)*
+option :: % All options are skipped
+keytype :: 'ssh-dsa'
+         | 'ssh-rsa'
+         | 'ssh-ecdsa-nistp256'
+	 | 'ssh-ecdsa-nistp384'
+         | 'ssh-ecdsa-nistp521'
+         | 'ssh-ed25519'
+	 | 'ssh-ed448'
+base64-encoded-key :: % The user's public key
+comment :: % Comments are skipped
+
+.fi
+
+.RE
+
+known_hosts
+.RS 2
+host keys from hosts visited concatenated. The file is created and used by the client.
+
+.PP
+It is composed of lines as for OpenSSH:
+
+.IP
+.nf
+(option)? pattern(,pattern)* keytype key (comment)?
+
+.fi
+
+.PP
+where
+
+.IP
+.nf
+option :: '@revoked'
+pattern :: host | '[' host ']:' port
+host :: ip-address | hostname | '*'
+port :: portnumber | '*'
+keytype :: 'ssh-dsa'
+         | 'ssh-rsa'
+         | 'ssh-ecdsa-nistp256'
+	 | 'ssh-ecdsa-nistp384'
+         | 'ssh-ecdsa-nistp521'
+         | 'ssh-ed25519'
+	 | 'ssh-ed448'
+key :: % encoded key from eg ssh_host_*.pub
+
+.fi
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIid_dsa\fR - private dss user key (optional)
+
+.RE
+id_rsa
+.RS 2
+private rsa user key (optional)
+
+
+.RE
+id_ecdsa
+.RS 2
+private ecdsa user key (optional)
+
+
+.RE
+id_ed25519
+.RS 2
+private eddsa user key for curve 25519 (optional)
+
+
+.RE
+id_ed448
+.RS 2
+private eddsa user key for curve 448 (optional)
+
+
+.RE
+
+.PP
+The key files could be generated with OpenSSH's ssh-keygen command.
+
+.PP
+The default value of USERDIR is \fI/home/\fR\fILOCALUSER\fR\fI/.ssh\fR.
+
+.PP
+To change the USERDIR, see the user_dir option
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBexperimental_openssh_key_v1_decode() ::\fR
+\fB          [{key(), openssh_key_v1_attributes()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexperimental_openssh_key_v1_encode() ::\fR
+\fB          [{[{public_key:public_key(),\fR
+\fB              public_key:private_key(),\fR
+\fB              Comment :: binary()} |\fR
+\fB             {public_key:private_key(), Comment :: binary()}],\fR
+\fB            openssh_key_v1_attributes()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBkey() :: public_key:public_key() | public_key:private_key().\fR
+
+.br
+.RS
+.PP
+The key representation
+
+
+.RE
+.B
+\fBopenssh_key_v1_attributes() :: [{atom(), term()}].\fR
+
+.br
+.RS
+.PP
+Types for the experimental implementation of the \fIopenssh_key_v1\fR format.
+
+
+.RE
+.B
+\fBoptimize_key_lookup() :: {optimize, time | space}.\fR
+
+.br
+.RS
+.PP
+Make the handling of large files fast by setting \fItime\fR, but this will use more memory. The \fIspace\fR variant shrinks the memory requirements, but with a higher time consumption.
+
+.PP
+To set it, set the option \fI{key_cb, {ssh_file, [{optimize,TimeOrSpace}]}\fR in the call of ssh:connect/3, \fIssh:daemon/2\fR or similar function call that initiates an ssh connection.
+
+
+.RE
+.B
+\fBpubkey_passphrase_client_options() ::\fR
+\fB          {dsa_pass_phrase, string()} |\fR
+\fB          {rsa_pass_phrase, string()} |\fR
+\fB          {ecdsa_pass_phrase, string()}.\fR
+
+.br
+.RS
+.PP
+If the user's DSA, RSA or ECDSA key is protected by a passphrase, it can be supplied with those options.
+
+.PP
+Note that EdDSA passhrases (Curves 25519 and 448) are not implemented.
+
+
+.RE
+.B
+\fBsystem_dir_daemon_option() :: {system_dir, string()}.\fR
+
+.br
+.RS
+.PP
+Sets the system directory.
+
+
+.RE
+.B
+\fBuser2dir() ::\fR
+\fB          fun((RemoteUserName :: string()) -> UserDir :: string()).\fR
+
+.br
+.RS
+.PP
+Sets the user directory dynamically by evaluating the \fIuser2dir\fR function.
+
+
+.RE
+.B
+\fBuser_dir_common_option() :: {user_dir, string()}.\fR
+
+.br
+.RS
+.PP
+Sets the user directory.
+
+
+.RE
+.B
+\fBuser_dir_fun_common_option() :: {user_dir_fun, user2dir()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_host_key(Host, Port, Key, Options) -> Result\fR
+\fB                      when\fR
+\fB                          Host ::\fR
+\fB                              inet:ip_address() |\fR
+\fB                              inet:hostname() |\fR
+\fB                              [inet:ip_address() | inet:hostname()],\fR
+\fB                          Port :: inet:port_number(),\fR
+\fB                          Key :: public_key:public_key(),\fR
+\fB                          Options ::\fR
+\fB                              ssh_client_key_api:client_key_cb_options(none()),\fR
+\fB                          Result :: ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+\fBTypes and description\fR
+
+.PP
+See the api description in ssh_client_key_api, Module:add_host_key/4.
+
+.PP
+Note that the alternative, the old Module:add_host_key/3 is no longer supported by \fIssh_file\fR.
+
+.PP
+\fBOption\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+user_dir
+
+.RE
+
+.PP
+\fBFile\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/known_hosts\fR
+
+.RE
+
+
+.RE
+.B
+\fBdecode(SshBin, Type) -> Decoded | {error, term()}\fR
+\fB                when\fR
+\fB                    SshBin :: binary(),\fR
+\fB                    Type ::\fR
+\fB                        ssh2_pubkey | public_key | openssh_key |\fR
+\fB                        rfc4716_key | openssh_key_v1 | known_hosts |\fR
+\fB                        auth_keys,\fR
+\fB                    Decoded ::\fR
+\fB                        Decoded_ssh2_pubkey | Decoded_public |\fR
+\fB                        Decoded_openssh | Decoded_rfc4716 |\fR
+\fB                        Decoded_openssh_key_v1 | Decoded_known_hosts |\fR
+\fB                        Decoded_auth_keys,\fR
+\fB                    Decoded_ssh2_pubkey :: public_key:public_key(),\fR
+\fB                    Decoded_public ::\fR
+\fB                        Decoded_rfc4716 | Decoded_openssh_key_v1 |\fR
+\fB                        Decoded_openssh,\fR
+\fB                    Decoded_openssh ::\fR
+\fB                        [{public_key:public_key(),\fR
+\fB                          [{comment, string()}]}],\fR
+\fB                    Decoded_rfc4716 :: [{key(), [{headers, Attrs}]}],\fR
+\fB                    Decoded_openssh_key_v1 ::\fR
+\fB                        experimental_openssh_key_v1_decode(),\fR
+\fB                    Decoded_known_hosts ::\fR
+\fB                        [{public_key:public_key(),\fR
+\fB                          [{comment, string()} | {hostnames, [string()]}]}],\fR
+\fB                    Decoded_auth_keys ::\fR
+\fB                        [{public_key:public_key(),\fR
+\fB                          [{comment, string()} | {options, [string()]}]}],\fR
+\fB                    Attrs :: {Key :: string(), Value :: string()}.\fR
+
+.br
+.RS
+.PP
+Decodes an SSH file-binary.
+
+.PP
+If \fIType\fR is \fIpublic_key\fR the binary can be either an RFC4716 public key or an OpenSSH public key.
+
+.PP
+\fBNOTE: \fRThe implementation of the \fIopenssh_key_v1\fR format is still experimental.
+
+
+
+.RE
+.B
+\fBencode(InData, Type) -> binary() | {error, term()}\fR
+\fB                when\fR
+\fB                    Type ::\fR
+\fB                        ssh2_pubkey | openssh_key | rfc4716_key |\fR
+\fB                        openssh_key_v1 | known_hosts | auth_keys,\fR
+\fB                    InData ::\fR
+\fB                        InData_ssh2_pubkey | InData_openssh |\fR
+\fB                        InData_rfc4716 | InData_openssh_key_v1 |\fR
+\fB                        InData_known_hosts | InData_auth_keys,\fR
+\fB                    InData_ssh2_pubkey :: public_key:public_key(),\fR
+\fB                    InData_openssh ::\fR
+\fB                        [{public_key:public_key(),\fR
+\fB                          [{comment, string()}]}],\fR
+\fB                    InData_rfc4716 :: [{key(), [{headers, Attrs}]}],\fR
+\fB                    InData_openssh_key_v1 ::\fR
+\fB                        experimental_openssh_key_v1_encode(),\fR
+\fB                    InData_known_hosts ::\fR
+\fB                        [{public_key:public_key(),\fR
+\fB                          [{comment, string()} | {hostnames, [string()]}]}],\fR
+\fB                    InData_auth_keys ::\fR
+\fB                        [{public_key:public_key(),\fR
+\fB                          [{comment, string()} | {options, [string()]}]}],\fR
+\fB                    Attrs :: {Key :: string(), Value :: string()}.\fR
+
+.br
+.RS
+.PP
+Encodes a list of SSH file entries (public keys and attributes) to a binary.
+
+.PP
+\fBNOTE: \fRThe implementation of the \fIopenssh_key_v1\fR format is still experimental.
+
+
+
+.RE
+.B
+\fBextract_public_key(PrivKey) -> PubKey\fR
+\fB                            when\fR
+\fB                                PrivKey :: public_key:private_key(),\fR
+\fB                                PubKey :: public_key:public_key().\fR
+
+.br
+.RS
+.PP
+Fetches the public key from a private key.
+
+
+.RE
+.B
+\fBhost_key(Algorithm, Options) -> Result\fR
+\fB                  when\fR
+\fB                      Algorithm :: ssh:pubkey_alg(),\fR
+\fB                      Result ::\fR
+\fB                          {ok, public_key:private_key()} |\fR
+\fB                          {error, term()},\fR
+\fB                      Options ::\fR
+\fB                          ssh_server_key_api:daemon_key_cb_options(none()).\fR
+
+.br
+.RS
+.PP
+\fBTypes and description\fR
+
+.PP
+See the api description in ssh_server_key_api, Module:host_key/2.
+
+.PP
+\fBOptions\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+system_dir
+
+.RE
+
+.PP
+\fBFiles\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISYSDIR/ssh_host_rsa_key\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISYSDIR/ssh_host_dsa_key\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISYSDIR/ssh_host_ecdsa_key\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISYSDIR/ssh_host_ed25519_key\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISYSDIR/ssh_host_ed448_key\fR
+
+.RE
+
+
+.RE
+.B
+\fBis_auth_key(Key, User, Options) -> boolean()\fR
+\fB                     when\fR
+\fB                         Key :: public_key:public_key(),\fR
+\fB                         User :: string(),\fR
+\fB                         Options ::\fR
+\fB                             ssh_server_key_api:daemon_key_cb_options(optimize_key_lookup()).\fR
+
+.br
+.RS
+.PP
+\fBTypes and description\fR
+
+.PP
+See the api description in ssh_server_key_api: Module:is_auth_key/3.
+
+.PP
+\fBOptions\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+user_dir_fun
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+user_dir
+
+.RE
+
+.PP
+\fBFiles\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/authorized_keys\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/authorized_keys2\fR
+
+.RE
+
+.PP
+This functions discards all options in the beginning of the lines of thoose files when reading them.
+
+
+.RE
+.B
+\fBis_host_key(Key, Host, Port, Algorithm, Options) -> Result\fR
+\fB                     when\fR
+\fB                         Key :: public_key:public_key(),\fR
+\fB                         Host ::\fR
+\fB                             inet:ip_address() |\fR
+\fB                             inet:hostname() |\fR
+\fB                             [inet:ip_address() | inet:hostname()],\fR
+\fB                         Port :: inet:port_number(),\fR
+\fB                         Algorithm :: ssh:pubkey_alg(),\fR
+\fB                         Options ::\fR
+\fB                             ssh_client_key_api:client_key_cb_options(optimize_key_lookup()),\fR
+\fB                         Result :: boolean() | {error, term()}.\fR
+
+.br
+.RS
+.PP
+\fBTypes and description\fR
+
+.PP
+See the api description in ssh_client_key_api, Module:is_host_key/5.
+
+.PP
+Note that the alternative, the old Module:is_host_key/4 is no longer supported by \fIssh_file\fR.
+
+.PP
+\fBOption\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+user_dir
+
+.RE
+
+.PP
+\fBFile\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/known_hosts\fR
+
+.RE
+
+
+.RE
+.B
+\fBuser_key(Algorithm, Options) -> Result\fR
+\fB                  when\fR
+\fB                      Algorithm :: ssh:pubkey_alg(),\fR
+\fB                      Result ::\fR
+\fB                          {ok, public_key:private_key()} |\fR
+\fB                          {error, string()},\fR
+\fB                      Options ::\fR
+\fB                          ssh_client_key_api:client_key_cb_options(none()).\fR
+
+.br
+.RS
+.PP
+\fBTypes and description\fR
+
+.PP
+See the api description in ssh_client_key_api, Module:user_key/2.
+
+.PP
+\fBOptions\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+user_dir
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+dsa_pass_phrase
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+rsa_pass_phrase
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ecdsa_pass_phrase
+
+.RE
+
+.PP
+Note that EdDSA passhrases (Curves 25519 and 448) are not implemented.
+
+.PP
+\fBFiles\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/id_dsa\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/id_rsa\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/id_ecdsa\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/id_ed25519\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIUSERDIR/id_ed448\fR
+
+.RE
+
+
+.RE

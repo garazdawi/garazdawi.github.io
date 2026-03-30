@@ -1,0 +1,379 @@
+.TH wxBookCtrlBase 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxBookCtrlBase \- A book control is a convenient way of displaying multiple pages of information, displayed one page at a time.
+
+.SH DESCRIPTION
+.PP
+wxWidgets has five variants of this control:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxChoicebook\fR: controlled by a \fIwxChoice\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListbook\fR: controlled by a \fIwxListCtrl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxNotebook\fR: uses a row of tabs
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTreebook\fR: controlled by a \fIwxTreeCtrl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxToolbook\fR: controlled by a \fIwxToolBar\fR
+
+.RE
+
+.PP
+This abstract class is the parent of all these book controls, and provides their basic interface. This is a pure virtual class so you cannot allocate it directly.
+
+.PP
+See: Overview bookctrl
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxBookCtrlBase
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxBookCtrlBase() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddPage(This, Page, Text, [Option]) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxBookCtrlBase(),\fR
+\fB                     Page :: wxWindow:wxWindow(),\fR
+\fB                     Text :: unicode:chardata(),\fR
+\fB                     Option ::\fR
+\fB                         {bSelect, boolean()} | {imageId, integer()}.\fR
+
+.br
+.RS
+.PP
+Adds a new page.
+
+.PP
+The page must have the book control itself as the parent and must not have been added to this control previously.
+
+.PP
+The call to this function will generate the page changing and page changed events if \fIselect\fR is true, but not when inserting the very first page (as there is no previous page selection to switch from in this case and so it wouldn't make sense to e.g. veto such event).
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: Do not delete the page, it will be deleted by the book control.
+
+.PP
+See: \fIinsertPage/5\fR
+
+
+.RE
+.B
+\fBadvanceSelection(This, [Option]) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxBookCtrlBase(),\fR
+\fB                              Option :: {forward, boolean()}.\fR
+
+.br
+.RS
+.PP
+Cycles through the tabs.
+
+.PP
+The call to this function generates the page changing events.
+
+
+.RE
+.B
+\fBchangeSelection(This, Page) -> integer()\fR
+\fB                         when\fR
+\fB                             This :: wxBookCtrlBase(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Changes the selection to the given page, returning the previous selection.
+
+.PP
+This function behaves as \fIsetSelection/2\fR but does \fInot\fR generate the page changing events.
+
+.PP
+See overview_events_prog for more information.
+
+
+.RE
+.B
+\fBdeleteAllPages(This) -> boolean() when This :: wxBookCtrlBase().\fR
+
+.br
+.RS
+.PP
+Deletes all pages.
+
+
+.RE
+.B
+\fBdeletePage(This, Page) -> boolean()\fR
+\fB                    when This :: wxBookCtrlBase(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Deletes the specified page, and the associated window.
+
+.PP
+The call to this function generates the page changing events when deleting the currently selected page or a page preceding it in the index order, but it does \fInot\fR send any events when deleting the last page: while in this case the selection also changes, it becomes invalid and for compatibility reasons the control never generates events with the invalid selection index.
+
+
+.RE
+.B
+\fBgetCurrentPage(This) -> wxWindow:wxWindow()\fR
+\fB                        when This :: wxBookCtrlBase().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected page or NULL.
+
+
+.RE
+.B
+\fBgetPage(This, Page) -> wxWindow:wxWindow()\fR
+\fB                 when This :: wxBookCtrlBase(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the window at the given page position.
+
+
+.RE
+.B
+\fBgetPageCount(This) -> integer() when This :: wxBookCtrlBase().\fR
+
+.br
+.RS
+.PP
+Returns the number of pages in the control.
+
+
+.RE
+.B
+\fBgetPageText(This, NPage) -> unicode:charlist()\fR
+\fB                     when This :: wxBookCtrlBase(), NPage :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the string for the given page.
+
+
+.RE
+.B
+\fBgetSelection(This) -> integer() when This :: wxBookCtrlBase().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected page, or \fIwxNOT\\_FOUND\fR if none was selected.
+
+.PP
+Note that this method may return either the previously or newly selected page when called from the \fIEVT_BOOKCTRL_PAGE_CHANGED\fR handler depending on the platform and so \fIwxBookCtrlEvent:getSelection/1\fR should be used instead in this case.
+
+
+.RE
+.B
+\fBhitTest(This, Pt) -> Result\fR
+\fB                 when\fR
+\fB                     Result :: {Res :: integer(), Flags :: integer()},\fR
+\fB                     This :: wxBookCtrlBase(),\fR
+\fB                     Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Returns the index of the tab at the specified position or \fIwxNOT\\_FOUND\fR if none.
+
+.PP
+If \fIflags\fR parameter is non-NULL, the position of the point inside the tab is returned as well.
+
+.PP
+Return: Returns the zero-based tab index or \fIwxNOT_FOUND\fR if there is no tab at the specified position.
+
+
+.RE
+.B
+\fBinsertPage(This, Index, Page, Text, [Option]) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxBookCtrlBase(),\fR
+\fB                        Index :: integer(),\fR
+\fB                        Page :: wxWindow:wxWindow(),\fR
+\fB                        Text :: unicode:chardata(),\fR
+\fB                        Option ::\fR
+\fB                            {bSelect, boolean()} | {imageId, integer()}.\fR
+
+.br
+.RS
+.PP
+Inserts a new page at the specified position.
+
+.PP
+Return: true if successful, false otherwise.
+
+.PP
+Remark: Do not delete the page, it will be deleted by the book control.
+
+.PP
+See: \fIaddPage/4\fR
+
+
+.RE
+.B
+\fBremovePage(This, Page) -> boolean()\fR
+\fB                    when This :: wxBookCtrlBase(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Deletes the specified page, without deleting the associated window.
+
+.PP
+See \fIdeletePage/2\fR for a note about the events generated by this function.
+
+
+.RE
+.B
+\fBsetPageText(This, Page, Text) -> boolean()\fR
+\fB                     when\fR
+\fB                         This :: wxBookCtrlBase(),\fR
+\fB                         Page :: integer(),\fR
+\fB                         Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the text for the given page.
+
+
+.RE
+.B
+\fBsetSelection(This, Page) -> integer()\fR
+\fB                      when This :: wxBookCtrlBase(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the selection to the given page, returning the previous selection.
+
+.PP
+Notice that the call to this function generates the page changing events, use the \fIchangeSelection/2\fR function if you don't want these events to be generated.
+
+.PP
+See: \fIgetSelection/1\fR
+
+
+.RE

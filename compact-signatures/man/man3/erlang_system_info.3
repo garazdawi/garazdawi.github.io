@@ -1,0 +1,1170 @@
+.TH erlang_system_info 3 "erts 16.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erlang_system_info \- Returns information about the current system.
+
+.SH DESCRIPTION
+.PP
+The documentation of this function is broken into the following sections in order to make it easier to navigate.
+
+Memory Allocation
+.RS 2
+
+\fIallocated_areas\fR, \fIallocator\fR, \fIalloc_util_allocators\fR, \fIallocator_sizes\fR
+
+.RE
+
+CPU Topology
+.RS 2
+
+\fIcpu_topology\fR, \fIlogical_processors\fR, \fIupdate_cpu_info\fR
+
+.RE
+
+Process Information
+.RS 2
+
+\fIfullsweep_after\fR, \fIgarbage_collection\fR, \fIheap_sizes\fR, \fIheap_type\fR, \fImax_heap_size\fR, \fImessage_queue_data\fR, \fImin_heap_size\fR, \fImin_bin_vheap_size\fR, \fIprocs\fR
+
+.RE
+
+System Limits
+.RS 2
+
+\fIatom_count\fR, \fIatom_limit\fR, \fIets_count\fR, \fIets_limit\fR, \fIport_count\fR, \fIport_limit\fR, \fIprocess_count\fR, \fIprocess_limit\fR
+
+.RE
+
+System Time
+.RS 2
+
+\fIend_time\fR, \fIos_monotonic_time_source\fR, \fIos_system_time_source\fR, \fIstart_time\fR, \fItime_correction\fR, \fItime_offset\fR, \fItime_warp_mode\fR, \fItolerant_timeofday\fR
+
+.RE
+
+Scheduler Information
+.RS 2
+
+\fIdirty_cpu_schedulers\fR, \fIdirty_cpu_schedulers_online\fR, \fIdirty_io_schedulers\fR, \fImulti_scheduling\fR, \fImulti_scheduling_blockers\fR, \fInormal_multi_scheduling_blockers\fR, \fIscheduler_bind_type\fR, \fIscheduler_bindings\fR, \fIscheduler_id\fR, \fIschedulers\fR, \fIsmp_support\fR, \fIthreads\fR, \fIthread_pool_size\fR
+
+.RE
+
+Distribution Information
+.RS 2
+
+\fIcreation\fR, \fIdelayed_node_table_gc\fR, \fIdist\fR, \fIdist_buf_busy_limit\fR, \fIdist_ctrl\fR
+
+.RE
+
+System Information
+.RS 2
+
+\fIc_compiler_used\fR, \fIcheck_io\fR, \fIdebug_compiled\fR, \fIdriver_version\fR, \fIdynamic_trace\fR, \fIdynamic_trace_probes\fR, \fIemu_flavor\fR, \fIemu_type\fR, \fIinfo\fR, \fIkernel_poll\fR, \fIloaded\fR, \fImachine\fR, \fImodified_timing_level\fR, \fInif_version\fR, \fIotp_release\fR, \fIoutstanding_system_requests_limit\fR, \fIport_parallelism\fR, \fIsystem_architecture\fR, \fIsystem_logger\fR, \fIsystem_version\fR, \fItrace_control_word\fR, \fIversion\fR, \fIwordsize\fR
+
+.RE
+
+.SS "Memory Allocation"
+
+.PP
+Returns various information about the memory allocators of the current system (emulator) as specified by \fIItem\fR:
+
+allocated_areas
+.RS 2
+Returns 
+\fI[tuple()]\fR with information about miscellaneous allocated memory areas.
+.PP
+Each tuple contains an atom describing the type of memory as first element and the amount of allocated memory in bytes as second element. When information about allocated and used memory is present, also a third element is present, containing the amount of used memory in bytes.
+
+.PP
+\fIerlang:system_info(allocated_areas)\fR is intended for debugging, and the content is highly implementation-dependent. The content of the results therefore changes when needed without prior notice.
+
+.PP
+Notice that the sum of these values is \fInot\fR the total amount of memory allocated by the emulator. Some values are part of other values, and some memory areas are not part of the result. For information about the total amount of memory allocated by the emulator, see \fIerlang:memory/0,1\fR.
+
+
+.RE
+
+allocator
+.RS 2
+Returns
+
+.IP
+.nf
+{Allocator :: undefined | glibc,
+ Version :: [non_neg_integer()],
+ Features :: [atom()],
+ Settings :: [{Subsystem :: atom(),
+               [{Parameter :: atom(),
+                 Value :: term()}]
+               }]
+}
+
+.fi
+
+.PP
+where
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIAllocator\fR corresponds to the \fImalloc()\fR implementation used. If \fIAllocator\fR equals \fIundefined\fR, the \fImalloc()\fR implementation used cannot be identified. \fIglibc\fR can be identified.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIVersion\fR is a list of integers (but not a string) representing the version of the \fImalloc()\fR implementation used.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFeatures\fR is a list of atoms representing the allocation features used.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fISettings\fR is a list of subsystems, their configurable parameters, and used values. Settings can differ between different combinations of platforms, allocators, and allocation features. Memory sizes are given in bytes.
+
+.RE
+
+.PP
+See also "System Flags Effecting erts_alloc" in \fIerts_alloc(3)\fR.
+
+
+.RE
+
+{allocator, Alloc}
+.RS 2
+Returns information about the specified allocator. As from ERTS 5.6.1, the return value is a list of 
+\fI{instance, InstanceNo, InstanceInfo}\fR tuples, where \fIInstanceInfo\fR contains information about a specific instance of the allocator. If \fIAlloc\fR is not a recognized allocator, \fIundefined\fR is returned. If \fIAlloc\fR is disabled, \fIfalse\fR is returned.
+.PP
+Notice that the information returned is highly implementation-dependent and can be changed or removed at any time without prior notice. It was initially intended as a tool when developing new allocators, but as it can be of interest for others it has been briefly documented.
+
+.PP
+The recognized allocators are listed in \fIerts_alloc(3)\fR. Information about super carriers can be obtained from ERTS 8.0 with \fI{allocator, erts_mmap}\fR or from ERTS 5.10.4; the returned list when calling with \fI{allocator, mseg_alloc}\fR also includes an \fI{erts_mmap, _}\fR tuple as one element in the list.
+
+.PP
+After reading the \fIerts_alloc(3)\fR documentation, the returned information more or less speaks for itself, but it can be worth explaining some things. Call counts are presented by two values, the first value is giga calls, and the second value is calls. \fImbcs\fR and \fIsbcs\fR denote multi-block carriers, and single-block carriers, respectively. Sizes are presented in bytes. When a size is not presented, it is the amount of something. Sizes and amounts are often presented by three values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The first is the current value.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The second is the maximum value since the last call to \fIerlang:system_info({allocator, Alloc})\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The third is the maximum value since the emulator was started.
+
+.RE
+
+.PP
+If only one value is present, it is the current value. \fIfix_alloc\fR memory block types are presented by two values. The first value is the memory pool size and the second value is the used memory size.
+
+
+.RE
+
+alloc_util_allocators
+.RS 2
+Returns a list of the names of all allocators using the ERTS internal 
+\fIalloc_util\fR framework as atoms. For more information, see section The alloc_util framework in \fIerts_alloc(3)\fR.
+
+.RE
+
+{allocator_sizes, Alloc}
+.RS 2
+Returns various size information for the specified allocator. The information returned is a subset of the information returned by 
+\fIerlang:system_info({allocator, Alloc})\fR.
+
+.RE
+
+.SS "CPU Topology"
+
+.PP
+Returns various information about the CPU topology of the current system (emulator) as specified by \fIItem\fR:
+
+cpu_topology
+.RS 2
+Returns the 
+\fIcpu_topology()\fR currently used by the emulator. The CPU topology is used when binding schedulers to logical processors. The CPU topology used is the user-defined CPU topology, if such exists, otherwise the automatically detected CPU topology, if such exists. If no CPU topology exists, \fIundefined\fR is returned.
+
+.RE
+
+{cpu_topology, defined}
+.RS 2
+Returns the user-defined 
+\fIcpu_topology()\fR. For more information, see command-line flag \fI+sct\fR in \fIerl(1)\fR and argument \fIcpu_topology\fR.
+
+.RE
+
+{cpu_topology, detected}
+.RS 2
+Returns the automatically detected 
+\fIcpu_topology()\fR. The emulator detects the CPU topology on some newer Linux, Solaris, FreeBSD, and Windows systems. On Windows system with more than 32 logical processors, the CPU topology is not detected.
+.PP
+For more information, see argument \fIcpu_topology\fR.
+
+
+.RE
+
+{cpu_topology, used}
+.RS 2
+Returns 
+\fICpuTopology\fR used by the emulator. For more information, see argument \fIcpu_topology\fR.
+
+.RE
+
+logical_processors
+.RS 2
+Returns the detected number of logical processors configured in the system. The return value is either an integer, or the atom 
+\fIunknown\fR if the emulator cannot detect the configured logical processors.
+
+.RE
+
+logical_processors_available
+.RS 2
+Returns the detected number of logical processors available to the Erlang runtime system. The return value is either an integer, or the atom 
+\fIunknown\fR if the emulator cannot detect the available logical processors. The number of available logical processors is less than or equal to the number of logical processors online.
+
+.RE
+
+logical_processors_online
+.RS 2
+Returns the detected number of logical processors online on the system. The return value is either an integer, or the atom 
+\fIunknown\fR if the emulator cannot detect logical processors online. The number of logical processors online is less than or equal to the number of logical processors configured.
+
+.RE
+
+cpu_quota
+.RS 2
+Returns the detected CPU quota the emulator is limited by. The return value is an integer saying how many processors' worth of runtime we get (between 1 and the number of logical processors), or the atom 
+\fIunknown\fR if the emulator cannot detect a quota.
+
+.RE
+
+update_cpu_info
+.RS 2
+The runtime system rereads the CPU information available and updates its internally stored information about the detected CPU topology and the number of logical processors configured, online, available, and cpu quota.
+
+.PP
+If the CPU information has changed since the last time it was read, the atom \fIchanged\fR is returned, otherwise the atom \fIunchanged\fR. If the CPU information has changed, you probably want to adjust the number of schedulers online. You typically want to have as many schedulers online as logical processors available.
+
+.PP
+Since: OTP R14B
+
+
+.RE
+
+.SS "Process Information"
+
+.PP
+Returns information about the default process heap settings:
+
+fullsweep_after
+.RS 2
+Returns 
+\fI{fullsweep_after, integer() >= 0}\fR, which is the \fIfullsweep_after\fR garbage collection setting used by default. For more information, see \fIgarbage_collection\fR described below.
+
+.RE
+
+garbage_collection
+.RS 2
+Returns 
+\fIgarbage_collection_defaults/0\fR describing the default garbage collection settings. A process spawned on the local node by a \fIspawn\fR or \fIspawn_link\fR uses these garbage collection settings. The default settings can be changed by using \fIerlang:system_flag/2\fR. \fIspawn_opt/2,3,4\fR can spawn a process that does not use the default settings.
+
+.RE
+
+heap_sizes
+.RS 2
+Returns a list of integers representing valid heap sizes in words. All Erlang heaps are sized from sizes in this list.
+
+
+.RE
+
+heap_type
+.RS 2
+Returns the heap type used by the current emulator. One heap type exists:
+
+private
+.RS 2
+Each process has a heap reserved for its use and no references between heaps of different processes are allowed. Messages passed between processes are copied between heaps.
+
+
+.RE
+
+
+.RE
+
+max_heap_size
+.RS 2
+Returns 
+\fI{max_heap_size, MaxHeapSize}\fR, where \fIMaxHeapSize\fR is the current system-wide maximum heap size settings for spawned processes. This setting can be set using the command-line flags \fI+hmax\fR, \fI+hmaxk\fR, \fI+hmaxel\fR and \fI+hmaxibl\fR in \fIerl(1)\fR. It can also be changed at runtime using \fIerlang:system_flag(max_heap_size, MaxHeapSize)\fR. For more details about the \fImax_heap_size\fR process flag, see \fIprocess_flag(max_heap_size, MaxHeapSize)\fR.
+.PP
+Since: OTP 19.0
+
+
+.RE
+
+message_queue_data
+.RS 2
+Returns the default value of the 
+\fImessage_queue_data\fR process flag, which can be either \fIoff_heap\fR or \fIon_heap\fR. The default value is set by the command-line argument \fI+hmqd\fR in \fIerl(1)\fR. For more information, see the documentation of \fIprocess_flag(message_queue_data, MQD)\fR.
+.PP
+Since: OTP 19.0
+
+
+.RE
+
+min_heap_size
+.RS 2
+Returns 
+\fI{min_heap_size, MinHeapSize}\fR, where \fIMinHeapSize\fR is the current system-wide minimum heap size for spawned processes.
+.PP
+Since: OTP R13B04
+
+
+.RE
+
+min_bin_vheap_size
+.RS 2
+Returns 
+\fI{min_bin_vheap_size, MinBinVHeapSize}\fR, where \fIMinBinVHeapSize\fR is the current system-wide minimum binary virtual heap size for spawned processes.
+.PP
+Since: OTP R13B04
+
+
+.RE
+
+procs
+.RS 2
+Returns a binary containing a string of process and port information formatted as in Erlang crash dumps. For more information, see section How to interpret the Erlang crash dumps in the User's Guide.
+
+
+.RE
+
+.SS "System Limits"
+
+.PP
+Returns information about the current system (emulator) limits as specified by \fIItem\fR:
+
+atom_count
+.RS 2
+Returns the number of atoms currently existing at the local node. The value is given as an integer.
+
+.PP
+Since: OTP 20.0
+
+
+.RE
+
+atom_limit
+.RS 2
+Returns the maximum number of atoms allowed. This limit can be increased at startup by passing command-line flag 
+\fI+t\fR to \fIerl(1)\fR.
+.PP
+Since: OTP 20.0
+
+
+.RE
+
+ets_count
+.RS 2
+Returns the number of ETS tables currently existing at the local node.
+
+.PP
+Since: OTP 21.1
+
+
+.RE
+
+ets_limit
+.RS 2
+Returns the limit for number of ETS tables. This limit is partially obsolete and number of tables are only limited by available memory.
+
+.PP
+Since: OTP R16B03
+
+
+.RE
+
+port_count
+.RS 2
+Returns the number of ports currently existing at the local node. The value is given as an integer. This is the same value as returned by 
+\fIlength(erlang:ports())\fR, but more efficient.
+.PP
+Since: OTP R16B
+
+
+.RE
+
+port_limit
+.RS 2
+Returns the maximum number of simultaneously existing ports at the local node as an integer. This limit can be configured at startup by using command-line flag 
+\fI+Q\fR in \fIerl(1)\fR.
+.PP
+Since OTP R16B
+
+
+.RE
+
+process_count
+.RS 2
+Returns the number of processes currently existing at the local node. The value is given as an integer. This is the same value as returned by 
+\fIlength(processes())\fR, but more efficient.
+
+.RE
+
+process_limit
+.RS 2
+Returns the maximum number of simultaneously existing processes at the local node. The value is given as an integer. This limit can be configured at startup by using command-line flag 
+\fI+P\fR in \fIerl(1)\fR.
+
+.RE
+
+.SS "System Time"
+
+.PP
+Returns information about the current system (emulator) time as specified by \fIItem\fR:
+
+end_time
+.RS 2
+The last Erlang monotonic time in 
+\fInative\fR time unit that can be represented internally in the current Erlang runtime system instance. The time between the start time and the end time is at least a quarter of a millennium.
+.PP
+Since: OTP 18.0
+
+
+.RE
+
+os_monotonic_time_source
+.RS 2
+Returns a list containing information about the source of OS monotonic time that is used by the runtime system.
+
+.PP
+If \fI[]\fR is returned, no OS monotonic time is available. The list contains two-tuples with \fIKey\fRs as first element, and \fIValue\fRs as second element. The order of these tuples is undefined. The following tuples can be part of the list, but more tuples can be introduced in the future:
+
+{function, Function}
+.RS 2
+
+\fIFunction\fR is the name of the function used. This tuple always exists if OS monotonic time is available to the runtime system.
+
+.RE
+
+{clock_id, ClockId}
+.RS 2
+This tuple only exists if 
+\fIFunction\fR can be used with different clocks. \fIClockId\fR corresponds to the clock identifier used when calling \fIFunction\fR.
+
+.RE
+
+{resolution, OsMonotonicTimeResolution}
+.RS 2
+Highest possible resolution of current OS monotonic time source as parts per second. If no resolution information can be retrieved from the OS, 
+\fIOsMonotonicTimeResolution\fR is set to the resolution of the time unit of \fIFunction\fRs return value. That is, the actual resolution can be lower than \fIOsMonotonicTimeResolution\fR. Notice that the resolution does not say anything about the accuracy or whether the precision aligns with the resolution. You do, however, know that the precision is not better than \fIOsMonotonicTimeResolution\fR.
+
+.RE
+
+{used_resolution, UsedOsMonotonicTimeResolution}
+.RS 2
+The OS monotonic time resolution used by the runtime system. This is very often the same as 
+\fIOsMonotonicTimeResolution\fR. However, on some systems the resolution has to be reduced in order to reliably produce monotonic timestamps. An example of this is when \fIQueryPerformanceCounter()\fR is used as OS monotonic time source on Windows. If such a reduction of the resolution has been done, \fIUsedOsMonotonicTimeResolution\fR will be smaller than \fIOsMonotonicTimeResolution\fR.
+
+.RE
+
+{extended, Extended}
+.RS 2
+
+\fIExtended\fR equals \fIyes\fR if the range of time values has been extended; otherwise \fIExtended\fR equals \fIno\fR. The range must be extended if \fIFunction\fR returns values that wrap fast. This typically is the case when the return value is a 32-bit value.
+
+.RE
+
+{parallel, Parallel}
+.RS 2
+
+\fIParallel\fR equals \fIyes\fR if \fIFunction\fR is called in parallel from multiple threads. If it is not called in parallel, because calls must be serialized, \fIParallel\fR equals \fIno\fR.
+
+.RE
+
+{time, OsMonotonicTime}
+.RS 2
+
+\fIOsMonotonicTime\fR equals current OS monotonic time in \fInative\fR time unit.
+
+.RE
+
+.PP
+Since: OTP 18.0
+
+
+.RE
+
+os_system_time_source
+.RS 2
+Returns a list containing information about the source of OS system time that is used by the runtime system.
+
+.PP
+The list contains two-tuples with \fIKey\fRs as first element, and \fIValue\fRs as second element. The order of these tuples is undefined. The following tuples can be part of the list, but more tuples can be introduced in the future:
+
+{function, Function}
+.RS 2
+
+\fIFunction\fR is the name of the function used.
+
+.RE
+
+{clock_id, ClockId}
+.RS 2
+Exists only if 
+\fIFunction\fR can be used with different clocks. \fIClockId\fR corresponds to the clock identifier used when calling \fIFunction\fR.
+
+.RE
+
+{resolution, OsSystemTimeResolution}
+.RS 2
+Highest possible resolution of current OS system time source as parts per second. If no resolution information can be retrieved from the OS, 
+\fIOsSystemTimeResolution\fR is set to the resolution of the time unit of \fIFunction\fRs return value. That is, the actual resolution can be lower than \fIOsSystemTimeResolution\fR. Notice that the resolution does not say anything about the accuracy or whether the precision do align with the resolution. You do, however, know that the precision is not better than \fIOsSystemTimeResolution\fR.
+
+.RE
+
+{parallel, Parallel}
+.RS 2
+
+\fIParallel\fR equals \fIyes\fR if \fIFunction\fR is called in parallel from multiple threads. If it is not called in parallel, because calls needs to be serialized, \fIParallel\fR equals \fIno\fR.
+
+.RE
+
+{time, OsSystemTime}
+.RS 2
+
+\fIOsSystemTime\fR equals current OS system time in \fInative\fR time unit.
+
+.RE
+
+.PP
+Since: OTP 18.0
+
+
+.RE
+
+start_time
+.RS 2
+The Erlang monotonic time in 
+\fInative\fR time unit at the time when current Erlang runtime system instance started.
+.PP
+See also \fIerlang:system_info(end_time)\fR.
+
+.PP
+Since: OTP 18.0
+
+
+.RE
+
+time_correction
+.RS 2
+Returns a 
+\fIboolean()\fR value indicating whether time correction is enabled or not.
+.PP
+Since: OTP 18.0
+
+
+.RE
+
+time_offset
+.RS 2
+Returns the state of the time offset:
+
+preliminary
+.RS 2
+The time offset is preliminary, and will be changed and finalized later. The preliminary time offset is used during the preliminary phase of the single time warp mode.
+
+
+.RE
+
+final
+.RS 2
+The time offset is final. This either because no time warp mode is used, or because the time offset have been finalized when single time warp mode is used.
+
+
+.RE
+
+volatile
+.RS 2
+The time offset is volatile. That is, it can change at any time. This is because multi-time warp mode is used.
+
+
+.RE
+
+.PP
+Since: OTP 18.0
+
+
+.RE
+
+time_warp_mode
+.RS 2
+Returns a value identifying the time warp mode that is used:
+
+no_time_warp
+.RS 2
+The no time warp mode is used.
+
+
+.RE
+
+single_time_warp
+.RS 2
+The single time warp mode is used.
+
+
+.RE
+
+multi_time_warp
+.RS 2
+The multi-time warp mode is used.
+
+
+.RE
+
+.PP
+Since: OTP 18.0
+
+
+.RE
+
+tolerant_timeofday
+.RS 2
+Returns whether a pre ERTS 7.0 backwards compatible compensation for sudden changes of system time is 
+\fIenabled\fR or \fIdisabled\fR. Such compensation is \fIenabled\fR when the time offset is \fIfinal\fR, and time correction is enabled.
+.PP
+Since: OTP 17.1
+
+
+.RE
+
+.SS "Scheduler Information"
+
+.PP
+Returns information about schedulers, scheduling and threads in the current system as specified by \fIItem\fR:
+
+dirty_cpu_schedulers
+.RS 2
+Returns the number of dirty CPU scheduler threads used by the emulator. Dirty CPU schedulers execute CPU-bound native functions, such as NIFs, linked-in driver code, and BIFs that cannot be managed cleanly by the normal emulator schedulers.
+
+.PP
+The number of dirty CPU scheduler threads is determined at emulator boot time and cannot be changed after that. However, the number of dirty CPU scheduler threads online can be changed at any time. The number of dirty CPU schedulers can be set at startup by passing command-line flag \fI+SDcpu\fR or \fI+SDPcpu\fR in \fIerl(1)\fR.
+
+.PP
+See also \fIerlang:system_flag(dirty_cpu_schedulers_online, DirtyCPUSchedulersOnline)\fR, \fIerlang:system_info(dirty_cpu_schedulers_online)\fR, \fIerlang:system_info(dirty_io_schedulers)\fR, \fIerlang:system_info(schedulers)\fR, \fIerlang:system_info(schedulers_online)\fR, and \fIerlang:system_flag(schedulers_online, SchedulersOnline)\fR.
+
+.PP
+Since: OTP 17.0
+
+
+.RE
+
+dirty_cpu_schedulers_online
+.RS 2
+Returns the number of dirty CPU schedulers online. The return value satisfies 
+\fI1 <= DirtyCPUSchedulersOnline <= N\fR, where \fIN\fR is the smallest of the return values of \fIerlang:system_info(dirty_cpu_schedulers)\fR and \fIerlang:system_info(schedulers_online)\fR.
+.PP
+The number of dirty CPU schedulers online can be set at startup by passing command-line flag \fI+SDcpu\fR in \fIerl(1)\fR.
+
+.PP
+For more information, see \fIerlang:system_info(dirty_cpu_schedulers)\fR, \fIerlang:system_info(dirty_io_schedulers)\fR, \fIerlang:system_info(schedulers_online)\fR, and \fIerlang:system_flag(dirty_cpu_schedulers_online, DirtyCPUSchedulersOnline)\fR.
+
+.PP
+Since: OTP 17.0
+
+
+.RE
+
+dirty_io_schedulers
+.RS 2
+Returns the number of dirty I/O schedulers as an integer. Dirty I/O schedulers execute I/O-bound native functions, such as NIFs and linked-in driver code, which cannot be managed cleanly by the normal emulator schedulers.
+
+.PP
+This value can be set at startup by passing command-line argument \fI+SDio\fR in \fIerl(1)\fR.
+
+.PP
+For more information, see \fIerlang:system_info(dirty_cpu_schedulers)\fR, \fIerlang:system_info(dirty_cpu_schedulers_online)\fR, and \fIerlang:system_flag(dirty_cpu_schedulers_online, DirtyCPUSchedulersOnline)\fR.
+
+.PP
+Since: OTP 17.0
+
+
+.RE
+
+multi_scheduling
+.RS 2
+Returns one of the following:
+
+disabled
+.RS 2
+The emulator has been started with only one scheduler thread.
+
+
+.RE
+
+blocked
+.RS 2
+The emulator has more than one scheduler thread, but all scheduler threads except one are blocked. That is, only one scheduler thread schedules Erlang processes and executes Erlang code.
+
+
+.RE
+
+blocked_normal
+.RS 2
+The emulator has more than one scheduler thread, but all normal scheduler threads except one are blocked. Notice that dirty schedulers are not blocked, and can schedule Erlang processes and execute native code.
+
+
+.RE
+
+enabled
+.RS 2
+The emulator has more than one scheduler thread, and no scheduler threads are blocked. That is, all available scheduler threads schedule Erlang processes and execute Erlang code.
+
+
+.RE
+
+.PP
+See also \fIerlang:system_flag(multi_scheduling, BlockState)\fR, \fIerlang:system_info(multi_scheduling_blockers)\fR, \fIerlang:system_info(normal_multi_scheduling_blockers)\fR, and \fIerlang:system_info(schedulers)\fR.
+
+
+.RE
+
+multi_scheduling_blockers
+.RS 2
+Returns a list of 
+\fIPid\fRs when multi-scheduling is blocked, otherwise the empty list is returned. The \fIPid\fRs in the list represent all the processes currently blocking multi-scheduling. A \fIPid\fR occurs only once in the list, even if the corresponding process has blocked multiple times.
+.PP
+See also \fIerlang:system_flag(multi_scheduling, BlockState)\fR, \fIerlang:system_info(multi_scheduling)\fR, \fIerlang:system_info(normal_multi_scheduling_blockers)\fR, and \fIerlang:system_info(schedulers)\fR.
+
+
+.RE
+
+normal_multi_scheduling_blockers
+.RS 2
+Returns a list of 
+\fIPid\fRs when normal multi-scheduling is blocked (that is, all normal schedulers but one is blocked), otherwise the empty list is returned. The \fIPid\fRs in the list represent all the processes currently blocking normal multi-scheduling. A \fIPid\fR occurs only once in the list, even if the corresponding process has blocked multiple times.
+.PP
+See also \fIerlang:system_flag(multi_scheduling, BlockState)\fR, \fIerlang:system_info(multi_scheduling)\fR, \fIerlang:system_info(multi_scheduling_blockers)\fR, and \fIerlang:system_info(schedulers)\fR.
+
+.PP
+Since: OTP 19.0
+
+
+.RE
+
+scheduler_bind_type
+.RS 2
+Returns 
+\fIscheduler_bind_type()\fR, information about how the user has requested schedulers to be bound or not bound.
+.PP
+Notice that although a user has requested schedulers to be bound, they can silently have failed to bind. To inspect the scheduler bindings, call \fIerlang:system_info(scheduler_bindings)\fR.
+
+.PP
+For more information, see command-line argument \fI+sbt\fR in \fIerl(1)\fR and \fIerlang:system_info(scheduler_bindings)\fR.
+
+
+.RE
+
+scheduler_bindings
+.RS 2
+Returns information about the currently used scheduler bindings.
+
+.PP
+A tuple of a size equal to \fIerlang:system_info(schedulers)\fR is returned. The tuple elements are integers or the atom \fIunbound\fR. Logical processor identifiers are represented as integers. The \fIN\fRth element of the tuple equals the current binding for the scheduler with the scheduler identifier equal to \fIN\fR. For example, if the schedulers are bound, \fIelement(erlang:system_info(scheduler_id), erlang:system_info(scheduler_bindings))\fR returns the identifier of the logical processor that the calling process is executing on.
+
+.PP
+Notice that only schedulers online can be bound to logical processors.
+
+.PP
+For more information, see command-line argument \fI+sbt\fR in \fIerl(1)\fR and \fIerlang:system_info(schedulers_online)\fR.
+
+
+.RE
+
+scheduler_id
+.RS 2
+Returns the scheduler ID (
+\fISchedulerId\fR) of the scheduler thread that the calling process is executing on. \fISchedulerId\fR is a positive integer, where \fI1 <= SchedulerId <= erlang:system_info(schedulers)\fR.
+.PP
+See also \fIerlang:system_info(schedulers)\fR.
+
+
+.RE
+
+schedulers
+.RS 2
+Returns the number of scheduler threads used by the emulator. Scheduler threads online schedules Erlang processes and Erlang ports, and execute Erlang code and Erlang linked-in driver code.
+
+.PP
+The number of scheduler threads is determined at emulator boot time and cannot be changed later. However, the number of schedulers online can be changed at any time.
+
+.PP
+See also \fIerlang:system_flag(schedulers_online, SchedulersOnline)\fR, \fIerlang:system_info(schedulers_online)\fR, \fIerlang:system_info(scheduler_id)\fR, \fIerlang:system_flag(multi_scheduling, BlockState)\fR, \fIerlang:system_info(multi_scheduling)\fR, \fIerlang:system_info(normal_multi_scheduling_blockers)\fR and \fIerlang:system_info(multi_scheduling_blockers)\fR.
+
+
+.RE
+
+schedulers_online
+.RS 2
+Returns the number of schedulers online. The scheduler identifiers of schedulers online satisfy the relationship 
+\fI1 <= SchedulerId <= erlang:system_info(schedulers_online)\fR.
+.PP
+For more information, see \fIerlang:system_info(schedulers)\fR and \fIerlang:system_flag(schedulers_online, SchedulersOnline)\fR.
+
+
+.RE
+
+smp_support
+.RS 2
+Returns 
+\fItrue\fR.
+
+.RE
+
+threads
+.RS 2
+Returns 
+\fItrue\fR.
+
+.RE
+
+thread_pool_size
+.RS 2
+Returns the number of async threads in the async thread pool used for asynchronous driver calls ( 
+\fIerl_driver:driver_async()\fR). The value is given as an integer.
+
+.RE
+
+.SS "Distribution Information"
+
+.PP
+Returns information about Erlang Distribution in the current system as specified by \fIItem\fR:
+
+async_dist
+.RS 2
+Returns the value of the command line argument +pad <boolean> which the runtime system use. This value determines the default 
+\fIasync_dist\fR value for newly spawned processes.
+.PP
+Since: OTP 25.3
+
+
+.RE
+
+creation
+.RS 2
+Returns the "creation" value of the local node as an integer. The creation is changed when a node is restarted. The creation of a node is stored in process identifiers, port identifiers, and references. This makes it possible to distinguish between identifiers from different incarnations of a node. Creation values are currently 32-bit positive integers, but this may change in future releases. If the node is not alive, 
+\fI0\fR is returned.
+
+.RE
+
+delayed_node_table_gc
+.RS 2
+Returns the amount of time in seconds garbage collection of an entry in a node table is delayed. This limit can be set on startup by passing command-line flag 
+\fI+zdntgc\fR to \fIerl(1)\fR. For more information, see the documentation of the command-line flag.
+.PP
+Since: OTP 18.0
+
+
+.RE
+
+dist
+.RS 2
+Returns a binary containing a string of distribution information formatted as in Erlang crash dumps. For more information, see section How to interpret the Erlang crash dumps in the User's Guide.
+
+
+.RE
+
+dist_buf_busy_limit
+.RS 2
+Returns the value of the distribution buffer busy limit in bytes. This limit can be set at startup by passing command-line flag 
+\fI+zdbbl\fR to \fIerl(1)\fR.
+.PP
+Since: OTP R14B01
+
+
+.RE
+
+dist_ctrl
+.RS 2
+Returns a list of tuples 
+\fI{Node :: node(), ControllingEntity :: port() | pid()}\fR, one entry for each connected remote node. \fINode\fR is the node name and \fIControllingEntity\fR is the port or process identifier responsible for the communication to that node. More specifically, \fIControllingEntity\fR for nodes connected through TCP/IP (the normal case) is the socket used in communication with the specific node.
+
+.RE
+
+.SS "System Information"
+
+.PP
+Returns various information about the current system (emulator) as specified by \fIItem\fR:
+
+c_compiler_used
+.RS 2
+Returns a two-tuple describing the C compiler used when compiling the runtime system. The first element is an atom describing the name of the compiler, or 
+\fIundefined\fR if unknown. The second element is a term describing the version of the compiler, or \fIundefined\fR if unknown.
+
+.RE
+
+check_io
+.RS 2
+Returns a list containing miscellaneous information about the emulators internal I/O checking. Notice that the content of the returned list can vary between platforms and over time. It is only guaranteed that a list is returned.
+
+
+.RE
+
+debug_compiled
+.RS 2
+Returns 
+\fItrue\fR if the emulator has been debug-compiled, otherwise \fIfalse\fR.
+
+.RE
+
+driver_version
+.RS 2
+Returns a string containing the Erlang driver version used by the runtime system. It has the form "<major ver>.<minor ver>".
+
+
+.RE
+
+dynamic_trace
+.RS 2
+Returns an atom describing the dynamic trace framework compiled into the virtual machine. It can be 
+\fIdtrace\fR, \fIsystemtap\fR, or \fInone\fR. For a commercial or standard build, it is always \fInone\fR. The other return values indicate a custom configuration (for example, \fI./configure --with-dynamic-trace=dtrace\fR). For more information about dynamic tracing, see \fIdyntrace(3)\fR manual page and the \fIREADME.dtrace\fR/\fIREADME.systemtap\fR files in the Erlang source code top directory.
+.PP
+Since: OTP R15B01
+
+
+.RE
+
+dynamic_trace_probes
+.RS 2
+Returns a 
+\fIboolean()\fR indicating if dynamic trace probes (\fIdtrace\fR or \fIsystemtap\fR) are built into the emulator. This can only be \fItrue\fR if the virtual machine was built for dynamic tracing (that is, \fIsystem_info(dynamic_trace)\fR returns \fIdtrace\fR or \fIsystemtap\fR).
+.PP
+Since: OTP R15B01
+
+
+.RE
+
+emu_flavor
+.RS 2
+Returns an atom describing the flavor of the runtime system. This will be either 
+\fIemu\fR or \fIjit\fR. Possible return values can be added or removed at any time without prior notice.
+.PP
+Since: OTP 24.0
+
+
+.RE
+
+emu_type
+.RS 2
+Returns an atom describing the build type of the runtime system. This is normally the atom 
+\fIopt\fR for optimized. Other possible return values are \fIdebug\fR, \fIgcov\fR, \fIvalgrind\fR, \fIgprof\fR, and \fIlcnt\fR. Possible return values can be added or removed at any time without prior notice.
+.PP
+Since: OTP 24.0
+
+
+.RE
+
+halt_flush_timeout
+.RS 2
+Returns the default 
+\fIhalt flush timeout\fR set by the \fIerl\fR \fI+zhft <Timeout>\fR command line flag.
+.PP
+Since: OTP 27.0
+
+
+.RE
+
+info
+.RS 2
+Returns a binary containing a string of miscellaneous system information formatted as in Erlang crash dumps. For more information, see section How to interpret the Erlang crash dumps in the User's Guide.
+
+
+.RE
+
+kernel_poll
+.RS 2
+Returns 
+\fItrue\fR if the emulator uses some kind of kernel-poll implementation, otherwise \fIfalse\fR.
+
+.RE
+
+loaded
+.RS 2
+Returns a binary containing a string of loaded module information formatted as in Erlang crash dumps. For more information, see section How to interpret the Erlang crash dumps in the User's Guide.
+
+
+.RE
+
+machine
+.RS 2
+Returns a string containing the Erlang machine name.
+
+
+.RE
+
+modified_timing_level
+.RS 2
+Returns the modified timing-level (an 
+\fIinteger()\fR) if modified timing is enabled, otherwise \fIundefined\fR. For more information about modified timing, see command-line flag \fI+T\fR in \fIerl(1)\fR
+
+.RE
+
+nif_version
+.RS 2
+Returns a string containing the version of the Erlang NIF interface used by the runtime system. It is on the form "<major ver>.<minor ver>".
+
+.PP
+Since: OTP 17.4
+
+
+.RE
+
+otp_release
+.RS 2
+Returns a string containing the OTP release number of the OTP release that the currently executing ERTS application is part of.
+
+.PP
+As from Erlang/OTP 17, the OTP release number corresponds to the major OTP version number. No \fIerlang:system_info()\fR argument gives the exact OTP version. This is because the exact OTP version in the general case is difficult to determine. For more information, see the description of versions in System principles in System Documentation.
+
+
+.RE
+
+outstanding_system_requests_limit
+.RS 2
+Returns the limit on the amount of outstanding requests made by a system process orchestrating system wide changes. See 
+\fIerlang:system_flag(outstanding_system_requests_limit, Limit)\fR for more information.
+.PP
+Since: OTP 24.2
+
+
+.RE
+
+port_parallelism
+.RS 2
+Returns the default port parallelism scheduling hint used. For more information, see command-line argument 
+\fI+spp\fR in \fIerl(1)\fR.
+.PP
+Since: OTP R16B
+
+
+.RE
+
+system_architecture
+.RS 2
+Returns a string containing the processor and OS architecture the emulator is built for.
+
+
+.RE
+
+system_logger
+.RS 2
+Returns the current 
+\fIsystem_logger\fR as set by \fIerlang:system_flag(system_logger, *)\fR.
+.PP
+Since: OTP 21.3
+
+
+.RE
+
+system_version
+.RS 2
+Returns a string containing version number and some important properties, such as the number of schedulers.
+
+
+.RE
+
+trace_control_word
+.RS 2
+Returns the value of the node trace control word. For more information, see function 
+\fIget_tcw\fR in section Match Specifications in Erlang in the User's Guide.
+
+.RE
+
+version
+.RS 2
+Returns a string containing the version number of the emulator.
+
+
+.RE
+
+wordsize
+.RS 2
+Same as 
+\fI{wordsize, internal}\fR.
+
+.RE
+
+{wordsize, internal}
+.RS 2
+Returns the size of Erlang term words in bytes as an integer, that is, 4 is returned on a 32-bit architecture, and 8 is returned on a 64-bit architecture.
+
+
+.RE
+
+{wordsize, external}
+.RS 2
+Returns the true word size of the emulator, that is, the size of a pointer. The value is given in bytes as an integer. On a pure 32-bit architecture, 4 is returned. On a 64-bit architecture, 8 is returned.
+
+
+.RE
+

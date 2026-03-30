@@ -1,0 +1,302 @@
+.TH slave 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+slave \- This module provides functions for starting Erlang slave nodes.
+
+.SH DESCRIPTION
+.PP
+All slave nodes that are started by a master terminate automatically when the master terminates. All terminal output produced at the slave is sent back to the master node. File I/O is done through the master.
+
+.PP
+Slave nodes on other hosts than the current one are started with the \fIssh\fR program. The user must be allowed to \fIssh\fR to the remote hosts without being prompted for a password. This can be arranged in a number of ways (for details, see the \fIssh\fR documentation). A slave node started on the same host as the master inherits certain environment values from the master, such as the current directory and the environment variables. For what can be assumed about the environment when a slave is started on another host, see the documentation for the \fIssh\fR program.
+
+.PP
+An alternative to the \fIssh\fR program can be specified on the command line to \fIerl(1)\fR as follows:
+
+.IP
+.nf
+-rsh Program
+
+.fi
+
+.PP
+Note that the command specified with the \fI-rsh\fR flag is treated as a file name which may contain spaces. It is thus not possible to include any command line options. The remote node will be launched as \fI"$RSH" "$REMOTE_HOSTNAME" erl -detached -noinput ...\fR, so the \fIerl\fR command must be found in the path on the remote host.
+
+.PP
+The slave node is to use the same file system at the master. At least, Erlang/OTP is to be installed in the same place on both computers and the same version of Erlang is to be used.
+
+.PP
+A node running on Windows can only start slave nodes on the host on which it is running.
+
+.PP
+The master node must be alive.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBpseudo([Master :: node() | (ServerList :: [atom()])]) -> ok.\fR
+
+.RS
+.LP
+Deprecated: slave:pseudo/1 is deprecated; use the 'peer' module instead
+.RE
+
+.br
+.RS
+.PP
+Calls \fIpseudo(Master, ServerList)\fR. If you want to start a node from the command line and set up a number of pseudo servers, an Erlang runtime system can be started as follows:
+
+.IP
+.nf
+% erl -name abc -s slave pseudo klacke@super x --
+
+.fi
+
+
+.RE
+.B
+\fBpseudo(Master, ServerList) -> ok\fR
+\fB                when Master :: node(), ServerList :: [atom()].\fR
+
+.RS
+.LP
+Deprecated: slave:pseudo/2 is deprecated; use the 'peer' module instead
+.RE
+
+.br
+.RS
+.PP
+Starts a number of pseudo servers. A pseudo server is a server with a registered name that does nothing but pass on all message to the real server that executes at a master node. A pseudo server is an intermediary that only has the same registered name as the real server.
+
+.PP
+For example, if you have started a slave node \fIN\fR and want to execute \fIpxw\fR graphics code on this node, you can start server \fIpxw_server\fR as a pseudo server at the slave node. This is illustrated as follows:
+
+.IP
+.nf
+rpc:call(N, slave, pseudo, [node(), [pxw_server]]).
+
+.fi
+
+
+.RE
+.B
+\fBrelay(Pid) -> no_return() when Pid :: pid().\fR
+
+.RS
+.LP
+Deprecated: slave:relay/1 is deprecated; use the 'peer' module instead
+.RE
+
+.br
+.RS
+.PP
+Runs a pseudo server. This function never returns any value and the process that executes the function receives messages. All messages received are simply passed on to \fIPid\fR.
+
+
+.RE
+.B
+\fBstart(Host) -> {ok, Node} | {error, Reason}\fR
+\fB               when\fR
+\fB                   Host :: inet:hostname(),\fR
+\fB                   Node :: node(),\fR
+\fB                   Reason :: timeout | no_rsh | {already_running, Node}.\fR
+
+.RS
+.LP
+Deprecated: slave:start/1 is deprecated; use the 'peer' module instead
+.RE
+
+.br
+.RS
+.PP
+Equivalent to \fIstart(Host, Name)\fR where \fIName\fR is the same as the node that executes this call.
+
+
+.RE
+.B
+\fBstart(Host, Name, Args) -> {ok, Node} | {error, Reason}\fR
+\fB               when\fR
+\fB                   Host :: inet:hostname(),\fR
+\fB                   Name :: atom() | string(),\fR
+\fB                   Args :: string(),\fR
+\fB                   Node :: node(),\fR
+\fB                   Reason :: timeout | no_rsh | {already_running, Node}.\fR
+
+.RS
+.LP
+Deprecated: slave:start/3 is deprecated; use the 'peer' module instead
+.RE
+
+.br
+.RS
+.PP
+Starts a slave node on host \fIHost\fR. Host names need not necessarily be specified as fully qualified names; short names can also be used. This is the same condition that applies to names of distributed Erlang nodes.
+
+.PP
+The name of the started node becomes \fIName@Host\fR.
+
+.PP
+The slave node resets its \fIio:user/0\fR process so that all terminal I/O that is produced at the slave is automatically relayed to the master. Also, the file server is relayed to the master.
+
+.PP
+Argument \fIArgs\fR is used to set \fIerl\fR command-line arguments. It is passed to the new node and can be used for a variety of purposes; see \fIerl(1)\fR.
+
+.PP
+As an example, suppose that you want to start a slave node at host \fIH\fR with node name \fIName@H\fR and want the slave node to have the following properties:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Directory \fIDir\fR is to be added to the code path.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The Mnesia directory is to be set to \fIM\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The Unix \fIDISPLAY\fR environment variable is to be set to the display of the master node.
+
+.RE
+
+.PP
+The following code is executed to achieve this:
+
+.IP
+.nf
+E = " -env DISPLAY " ++ net_adm:localhost() ++ ":0 ",
+Arg = "-mnesia_dir " ++ M ++ " -pa " ++ Dir ++ E,
+slave:start(H, Name, Arg).
+
+.fi
+
+.PP
+The function returns \fI{ok, Node}\fR, where \fINode\fR is the name of the new node, otherwise \fI{error, Reason}\fR, where \fIReason\fR can be one of:
+
+timeout
+.RS 2
+The master node failed to get in contact with the slave node. This can occur in a number of circumstances:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Erlang/OTP is not installed on the remote host.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The file system on the other host has a different structure to the the master.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The Erlang nodes have different cookies.
+
+.RE
+
+
+.RE
+
+no_rsh
+.RS 2
+No remote shell program was found on the computer. Note that 
+\fIssh\fR is used by default, but this can be overridden with the \fI-rsh\fR flag.
+
+.RE
+
+{already_running, Node}
+.RS 2
+A node with name 
+\fIName@Host\fR already exists.
+
+.RE
+
+
+.RE
+.B
+\fBstart_link(Host, Name, Args) -> {ok, Node} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Host :: inet:hostname(),\fR
+\fB                        Name :: atom() | string(),\fR
+\fB                        Args :: string(),\fR
+\fB                        Node :: node(),\fR
+\fB                        Reason ::\fR
+\fB                            timeout | no_rsh | {already_running, Node}.\fR
+
+.RS
+.LP
+Deprecated: slave:start_link/3 is deprecated; use the 'peer' module instead
+.RE
+
+.br
+.RS
+.PP
+Starts a slave node in the same way as \fIstart/1,2,3\fR, except that the slave node is linked to the currently executing process. If that process terminates, the slave node also terminates.
+
+.PP
+For a description of arguments and return values, see \fIstart/1,2,3\fR.
+
+
+.RE
+.B
+\fBstop(Node) -> ok when Node :: node().\fR
+
+.RS
+.LP
+Deprecated: slave:stop/1 is deprecated; use the 'peer' module instead
+.RE
+
+.br
+.RS
+.PP
+Stops (kills) a node.
+
+
+.RE

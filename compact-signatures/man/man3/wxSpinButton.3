@@ -1,0 +1,340 @@
+.TH wxSpinButton 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSpinButton \- A \fIwxSpinButton\fR has two small up and down (or left and right) arrow buttons.
+
+.SH DESCRIPTION
+.PP
+It is often used next to a text control for increment and decrementing a value. Portable programs should try to use \fIwxSpinCtrl\fR instead as \fIwxSpinButton\fR is not implemented for all platforms but \fIwxSpinCtrl\fR is as it degenerates to a simple \fIwxTextCtrl\fR on such platforms.
+
+.PP
+Note: the range supported by this control (and \fIwxSpinCtrl\fR) depends on the platform but is at least \fI-0x8000\fR to \fI0x7fff\fR. Under GTK and Win32 with sufficiently new version of \fIcomctrl32.dll\fR (at least 4.71 is required, 5.80 is recommended) the full 32 bit range is supported.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_HORIZONTAL: Specifies a horizontal spin button (note that this style is not supported in wxGTK).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_VERTICAL: Specifies a vertical spin button.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_ARROW_KEYS: The user can use arrow keys to change the value.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_WRAP: The value wraps at the minimum and maximum.
+
+.RE
+
+.PP
+See: \fIwxSpinCtrl\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSpinButton
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIspin\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIspin_up\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIspin_down\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSpinButton() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxSpinButton(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option ::\fR
+\fB                        {id, integer()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Scrollbar creation function called by the spin button constructor.
+
+.PP
+See \fInew/2\fR for details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxSpinButton()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetMax(This) -> integer() when This :: wxSpinButton().\fR
+
+.br
+.RS
+.PP
+Returns the maximum permissible value.
+
+.PP
+See: \fIsetRange/3\fR
+
+
+.RE
+.B
+\fBgetMin(This) -> integer() when This :: wxSpinButton().\fR
+
+.br
+.RS
+.PP
+Returns the minimum permissible value.
+
+.PP
+See: \fIsetRange/3\fR
+
+
+.RE
+.B
+\fBgetValue(This) -> integer() when This :: wxSpinButton().\fR
+
+.br
+.RS
+.PP
+Returns the current spin button value.
+
+.PP
+See: \fIsetValue/2\fR
+
+
+.RE
+.B
+\fBnew() -> wxSpinButton().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxSpinButton()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {id, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a spin button.
+
+.PP
+See: \fIcreate/3\fR
+
+
+.RE
+.B
+\fBsetRange(This, Min, Max) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxSpinButton(),\fR
+\fB                      Min :: integer(),\fR
+\fB                      Max :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the range of the spin button.
+
+.PP
+In portable code, \fImin\fR should be less than or equal to \fImax\fR. In wxMSW it is possible to specify minimum greater than maximum and the native control supports the same range as if they were reversed, but swaps the meaning of up and down arrows, however this dubious feature is not supported on other platforms.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMin/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMax/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetValue(This, Value) -> ok\fR
+\fB                  when This :: wxSpinButton(), Value :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the value of the spin button.
+
+
+.RE

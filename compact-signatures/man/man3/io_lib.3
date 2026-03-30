@@ -1,0 +1,781 @@
+.TH io_lib 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+io_lib \- I/O library functions.
+
+.SH DESCRIPTION
+.PP
+This module contains functions for converting to and from strings (lists of characters). They are used for implementing the functions in the \fIio\fR module. There is no guarantee that the character lists returned from some of the functions are flat, they can be deep lists. Function \fIlists:flatten/1\fR can be used for flattening deep lists.
+
+.SH DATA TYPES
+.LP
+.B
+\fBchars() :: [char() | chars()].\fR
+
+.br
+.RS
+.PP
+An possibly deep list containing only \fIchar/0\fRs.
+
+
+.RE
+.B
+\fBchars_limit() :: integer().\fR
+
+.br
+.RS
+.PP
+A soft limit on the number of characters returned.
+
+.PP
+When the number of characters is reached, remaining structures are replaced by "\fI...\fR". \fICharsLimit\fR defaults to -1, which means no limit on the number of characters returned.
+
+
+.RE
+.B
+\fB-opaque continuation() \fR
+
+.br
+.RS
+.PP
+A continuation as returned by \fIfread/3\fR.
+
+
+.RE
+.B
+\fBdepth() :: -1 | non_neg_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBformat_options() :: [{chars_limit, chars_limit()}].\fR
+
+.br
+.RS
+.PP
+Options that can be passed to \fIformat/3\fR and \fIfwrite/3\fR.
+
+
+.RE
+.B
+\fBformat_spec() ::\fR
+\fB          #{control_char := char(),\fR
+\fB            args := [any()],\fR
+\fB            width := none | integer(),\fR
+\fB            adjust := left | right,\fR
+\fB            precision := none | integer(),\fR
+\fB            pad_char := char(),\fR
+\fB            encoding := unicode | latin1,\fR
+\fB            strings := boolean(),\fR
+\fB            maps_order => maps:iterator_order()}.\fR
+
+.br
+.RS
+.PP
+A map describing the contents of a format string.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcontrol_char\fR is the type of control sequence: \fI$P\fR, \fI$w\fR, and so on.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIargs\fR is a list of the arguments used by the control sequence, or an empty list if the control sequence does not take any arguments.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwidth\fR is the field width.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIadjust\fR is the adjustment.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIprecision\fR is the precision of the printed argument.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpad_char\fR is the padding character.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIencoding\fR is set to \fItrue\fR if translation modifier \fIt\fR is present.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstrings\fR is set to \fIfalse\fR if modifier \fIl\fR is present.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaps_order\fR is set to \fIundefined\fR by default, \fIordered\fR if modifier \fIk\fR is present, or \fIreversed\fR or \fICmpFun\fR if modifier \fIK\fR is present.
+
+.RE
+
+
+.RE
+.B
+\fBfread_error() ::\fR
+\fB          atom | based | character | float | format | input | integer |\fR
+\fB          string | unsigned.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfread_item() :: string() | atom() | integer() | float().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlatin1_string() :: [unicode:latin1_char()].\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbfwrite(Format, Data, Options) -> unicode:unicode_binary()\fR
+\fB                 when\fR
+\fB                     Format :: io:format(),\fR
+\fB                     Data :: [term()],\fR
+\fB                     Options :: format_options().\fR
+
+.br
+.RS
+.PP
+Binary variant of \fIfwrite/3\fR
+
+.PP
+Returns a UTF-8 encoded binary string.
+
+
+.RE
+.B
+\fBbuild_text(FormatList) -> chars()\fR
+\fB                    when FormatList :: [char() | format_spec()].\fR
+
+.br
+.RS
+.PP
+For details, see \fIscan_format/2\fR.
+
+
+.RE
+.B
+\fBbwrite(Term, Options) -> unicode:unicode_binary()\fR
+\fB                when\fR
+\fB                    Term :: term(),\fR
+\fB                    Options :: [Option],\fR
+\fB                    Option ::\fR
+\fB                        {chars_limit, CharsLimit} |\fR
+\fB                        {depth, Depth} |\fR
+\fB                        {encoding, latin1 | utf8 | unicode} |\fR
+\fB                        {maps_order, maps:iterator_order()},\fR
+\fB                    CharsLimit :: chars_limit(),\fR
+\fB                    Depth :: depth().\fR
+
+.br
+.RS
+.PP
+Behaves as \fIwrite/2\fR but returns a UTF-8 encoded binary string.
+
+
+.RE
+.B
+\fBbwrite_string(String, Qoute, InEnc) -> unicode:unicode_binary()\fR
+\fB                       when\fR
+\fB                           String :: string() | binary(),\fR
+\fB                           Qoute :: integer() | [],\fR
+\fB                           InEnc :: unicode | latin1.\fR
+
+.br
+.RS
+.PP
+Returns the UTF-8 encoded binary \fIString\fR surrounded by \fIQoute\fR.
+
+
+.RE
+.B
+\fBchar_list(Term) -> boolean() when Term :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fITerm\fR is a flat list of characters in the Unicode range, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBdeep_char_list(Term) -> boolean() when Term :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fITerm\fR is a, possibly deep, list of characters in the Unicode range, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBdeep_latin1_char_list(Term) -> boolean() when Term :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fITerm\fR is a, possibly deep, list of characters in the ISO Latin-1 range, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBfread(Format, String) -> Result\fR
+\fB               when\fR
+\fB                   Format :: string(),\fR
+\fB                   String :: string(),\fR
+\fB                   Result ::\fR
+\fB                       {ok,\fR
+\fB                        InputList :: [fread_item()],\fR
+\fB                        LeftOverChars :: string()} |\fR
+\fB                       {more,\fR
+\fB                        RestFormat :: string(),\fR
+\fB                        Nchars :: non_neg_integer(),\fR
+\fB                        InputStack :: chars()} |\fR
+\fB                       {error, {fread, What :: fread_error()}}.\fR
+
+.br
+.RS
+.PP
+Tries to read \fIString\fR in accordance with the control sequences in \fIFormat\fR.
+
+.PP
+For a detailed description of the available formatting options, see \fIio:fread/3\fR. It is assumed that \fIString\fR contains whole lines.
+
+.PP
+The function returns:
+
+{ok, InputList, LeftOverChars}
+.RS 2
+The string was read. 
+\fIInputList\fR is the list of successfully matched and read items, and \fILeftOverChars\fR are the input characters not used.
+
+.RE
+
+{more, RestFormat, Nchars, InputStack}
+.RS 2
+The string was read, but more input is needed to complete the original format string. 
+\fIRestFormat\fR is the remaining format string, \fINchars\fR is the number of characters scanned, and \fIInputStack\fR is the reversed list of inputs matched up to that point.
+
+.RE
+
+{error, What}
+.RS 2
+The read operation failed and parameter 
+\fIWhat\fR gives a hint about the error.
+
+.RE
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+3> io_lib:fread("~f~f~f", "15.6 17.3e-6 24.5").
+{ok,[15.6,1.73e-5,24.5],[]}
+
+.fi
+
+
+.RE
+.B
+\fBfread(Continuation, CharSpec, Format) -> Return\fR
+\fB               when\fR
+\fB                   Continuation :: continuation() | [],\fR
+\fB                   CharSpec :: string() | eof,\fR
+\fB                   Format :: string(),\fR
+\fB                   Return ::\fR
+\fB                       {more, Continuation1 :: continuation()} |\fR
+\fB                       {done, Result, LeftOverChars :: string()},\fR
+\fB                   Result ::\fR
+\fB                       {ok, InputList :: [fread_item()]} |\fR
+\fB                       eof |\fR
+\fB                       {error, {fread, What :: fread_error()}}.\fR
+
+.br
+.RS
+.PP
+This is the re-entrant formatted reader. The continuation of the first call to the functions must be \fI[]\fR.
+
+.PP
+For a complete description of how the re-entrant input scheme works, see Armstrong, Virding, Williams: 'Concurrent Programming in Erlang', Chapter 13.
+
+.PP
+The function returns:
+
+{done, Result, LeftOverChars}
+.RS 2
+The input is complete. The result is one of the following:
+
+{ok, InputList}
+.RS 2
+The string was read. 
+\fIInputList\fR is the list of successfully matched and read items, and \fILeftOverChars\fR are the remaining characters.
+
+.RE
+
+eof
+.RS 2
+End of file was encountered. 
+\fILeftOverChars\fR are the input characters not used.
+
+.RE
+
+{error, What}
+.RS 2
+An error occurred and parameter 
+\fIWhat\fR gives a hint about the error.
+
+.RE
+
+
+.RE
+
+{more, Continuation}
+.RS 2
+More data is required to build a term. 
+\fIContinuation\fR must be passed to \fIfread/3\fR when more data becomes available.
+
+.RE
+
+
+.RE
+.B
+\fBfwrite(Format, Data) -> chars()\fR
+\fB                when Format :: io:format(), Data :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns a character list that represents \fIData\fR formatted in accordance with \fIFormat\fR.
+
+.PP
+For a detailed description of the available formatting options, see \fIio:fwrite/1,2,3\fR. If the format string or argument list contains an error, a fault is generated.
+
+.PP
+If and only if the Unicode translation modifier is used in the format string (that is, \fI~ts\fR or \fI~tc\fR), the resulting list can contain characters beyond the ISO Latin-1 character range (that is, numbers > 255). If so, the result is still an ordinary Erlang \fIstring/0\fR, and can well be used in any context where Unicode data is allowed.
+
+
+.RE
+.B
+\fBfwrite(Format, Data, Options) -> chars()\fR
+\fB                when\fR
+\fB                    Format :: io:format(),\fR
+\fB                    Data :: [term()],\fR
+\fB                    Options :: format_options().\fR
+
+.br
+.RS
+.PP
+Returns a character list that represents \fIData\fR formatted in accordance with \fIFormat\fR in the same way as \fIfwrite/2\fR and \fIformat/2\fR, but takes an extra argument, a list of options.
+
+.PP
+Valid option:
+
+{chars_limit, CharsLimit}
+.RS 2
+A soft limit on the number of characters returned. When the number of characters is reached, remaining structures are replaced by "
+\fI...\fR". \fICharsLimit\fR defaults to -1, which means no limit on the number of characters returned.
+
+.RE
+
+
+.RE
+.B
+\fBindentation(String, StartIndent) -> integer()\fR
+\fB                     when String :: string(), StartIndent :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the indentation if \fIString\fR has been printed, starting at \fIStartIndent\fR.
+
+
+.RE
+.B
+\fBlatin1_char_list(Term) -> boolean() when Term :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fITerm\fR is a flat list of characters in the ISO Latin-1 range, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBnl() -> string().\fR
+
+.br
+.RS
+.PP
+Returns a character list that represents a new line character.
+
+
+.RE
+.B
+\fBprint(Term, Column, LineLength, Depth) -> chars()\fR
+\fB               when\fR
+\fB                   Term :: term(),\fR
+\fB                   Column :: non_neg_integer(),\fR
+\fB                   LineLength :: non_neg_integer(),\fR
+\fB                   Depth :: depth().\fR
+
+.br
+.RS
+.PP
+Returns a list of characters that represents \fITerm\fR, but breaks representations longer than one line into many lines and indents each line sensibly.
+
+.PP
+Also tries to detect and output lists of printable characters as strings.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIColumn\fR is the starting column; defaults to 1.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fILineLength\fR is the maximum line length; defaults to 80. The value 0 can be used to specify infinite length, meaning that no line breaks are inserted.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIDepth\fR is the maximum print depth; defaults to -1, which means no limitation.
+
+.RE
+
+
+.RE
+.B
+\fBprintable_latin1_list(Term) -> boolean() when Term :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fITerm\fR is a flat list of printable ISO Latin-1 characters, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBprintable_list(Term) -> boolean() when Term :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fITerm\fR is a flat list of printable characters, otherwise \fIfalse\fR.
+
+.PP
+What is a printable character in this case is determined by startup flag \fI+pc\fR to the Erlang VM; see \fIio:printable_range/0\fR and \fIerl(1)\fR.
+
+
+.RE
+.B
+\fBprintable_unicode_list(Term) -> boolean() when Term :: term().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fITerm\fR is a flat list of printable Unicode characters, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBscan_format(Format, Data) -> FormatList\fR
+\fB                     when\fR
+\fB                         Format :: io:format(),\fR
+\fB                         Data :: [term()],\fR
+\fB                         FormatList :: [char() | format_spec()].\fR
+
+.br
+.RS
+.PP
+Returns a list corresponding to the specified format string, where control sequences have been replaced with corresponding tuples. This list can be passed to:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIbuild_text/1\fR to have the same effect as \fIformat(Format, Args)\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIunscan_format/1\fR to get the corresponding pair of \fIFormat\fR and \fIArgs\fR (with every \fI*\fR and corresponding argument expanded to numeric values)
+
+.RE
+
+.PP
+A typical use of this function is to replace unbounded-size control sequences like \fI~w\fR and \fI~p\fR with the depth-limited variants \fI~W\fR and \fI~P\fR before formatting to text in, for example, a logger.
+
+
+.RE
+.B
+\fBunscan_format(FormatList) -> {Format, Data}\fR
+\fB                       when\fR
+\fB                           FormatList :: [char() | format_spec()],\fR
+\fB                           Format :: io:format(),\fR
+\fB                           Data :: [term()].\fR
+
+.br
+.RS
+.PP
+For details, see \fIscan_format/2\fR.
+
+
+.RE
+.B
+\fBwrite(Term, Depth) -> chars()\fR
+\fB               when Term :: term(), Depth :: depth();\fR
+\fB           (Term, Options) -> chars()\fR
+\fB               when\fR
+\fB                   Term :: term(),\fR
+\fB                   Options :: [Option],\fR
+\fB                   Option ::\fR
+\fB                       {chars_limit, CharsLimit} |\fR
+\fB                       {depth, Depth} |\fR
+\fB                       {encoding, latin1 | utf8 | unicode} |\fR
+\fB                       {maps_order, maps:iterator_order()},\fR
+\fB                   CharsLimit :: chars_limit(),\fR
+\fB                   Depth :: depth().\fR
+
+.br
+.RS
+.PP
+Returns a character list that represents \fITerm\fR. Option \fIDepth\fR controls the depth of the structures written.
+
+.PP
+When the specified depth is reached, everything below this level is replaced by "\fI...\fR".
+
+.PP
+\fIDepth\fR defaults to -1, which means no limitation. Option \fICharsLimit\fR puts a soft limit on the number of characters returned. When the number of characters is reached, remaining structures are replaced by "\fI...\fR". \fICharsLimit\fR defaults to -1, which means no limit on the number of characters returned.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> lists:flatten(io_lib:write({1,[2],[3],[4,5],6,7,8,9})).
+"{1,[2],[3],[4,5],6,7,8,9}"
+2> lists:flatten(io_lib:write({1,[2],[3],[4,5],6,7,8,9}, 5)).
+"{1,[2],[3],[...],...}"
+3> lists:flatten(io_lib:write({[1,2,3],[4,5],6,7,8,9}, [{chars_limit,20}])).
+"{[1,2|...],[4|...],...}"
+
+.fi
+
+
+.RE
+.B
+\fBwrite_atom(Atom) -> chars() when Atom :: atom().\fR
+
+.br
+.RS
+.PP
+Returns the list of characters needed to print atom \fIAtom\fR.
+
+
+.RE
+.B
+\fBwrite_atom_as_latin1(Atom) -> latin1_string() when Atom :: atom().\fR
+
+.br
+.RS
+.PP
+Returns the list of characters needed to print atom \fIAtom\fR. Non-Latin-1 characters are escaped.
+
+
+.RE
+.B
+\fBwrite_char(Char) -> chars() when Char :: char().\fR
+
+.br
+.RS
+.PP
+Returns the list of characters needed to print a character constant in the Unicode character set.
+
+
+.RE
+.B
+\fBwrite_char_as_latin1(Char) -> latin1_string() when Char :: char().\fR
+
+.br
+.RS
+.PP
+Returns the list of characters needed to print a character constant in the Unicode character set. Non-Latin-1 characters are escaped.
+
+
+.RE
+.B
+\fBwrite_latin1_char(Latin1Char) -> latin1_string()\fR
+\fB                           when Latin1Char :: unicode:latin1_char().\fR
+
+.br
+.RS
+.PP
+Returns the list of characters needed to print a character constant in the ISO Latin-1 character set.
+
+
+.RE
+.B
+\fBwrite_latin1_string(Latin1String) -> latin1_string()\fR
+\fB                             when Latin1String :: latin1_string().\fR
+
+.br
+.RS
+.PP
+Returns the list of characters needed to print \fILatin1String\fR as a string.
+
+
+.RE
+.B
+\fBwrite_string(String) -> chars() when String :: string().\fR
+
+.br
+.RS
+.PP
+Returns the list of characters needed to print \fIString\fR as a string.
+
+
+.RE
+.B
+\fBwrite_string_as_latin1(String) -> latin1_string()\fR
+\fB                                when String :: string().\fR
+
+.br
+.RS
+.PP
+Returns the list of characters needed to print \fIString\fR as a string. Non-Latin-1 characters are escaped.
+
+
+.RE

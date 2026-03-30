@@ -1,0 +1,1396 @@
+.TH ct_ssh 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_ssh \- SSH/SFTP client module.
+
+.SH DESCRIPTION
+.PP
+This module uses application \fISSH\fR, which provides detailed information about, for example, functions, types, and options.
+
+.PP
+Argument \fIServer\fR in the SFTP functions is only to be used for SFTP sessions that have been started on existing SSH connections (that is, when the original connection type is \fIssh\fR). Whenever the connection type is \fIsftp\fR, use the SSH connection reference only.
+
+.PP
+The following options are valid for specifying an SSH/SFTP connection (that is, can be used as configuration elements):
+
+.IP
+.nf
+[{ConnType, Addr},
+ {port, Port},
+ {user, UserName}
+ {password, Pwd}
+ {user_dir, String}
+ {public_key_alg, PubKeyAlg}
+ {connect_timeout, Timeout}
+ {key_cb, KeyCallbackMod}]
+
+.fi
+
+.PP
+\fIConnType = ssh | sftp\fR.
+
+.PP
+For other types, see \fIssh\fR.
+
+.PP
+All time-out parameters in \fIct_ssh\fR functions are values in milliseconds.
+
+.SH DATA TYPES
+.LP
+.B
+\fBconnection() :: handle() | ct:target_name().\fR
+
+.br
+.RS
+.PP
+Reference to opened SSH/SFTP connection associated to either a \fIhandle\fR or \fItarget_name\fR.
+
+
+.RE
+.B
+\fBconnection_type() :: host | ssh | sftp.\fR
+
+.br
+.RS
+.PP
+Connection type used for connect.
+
+
+.RE
+.B
+\fBhandle() :: pid().\fR
+
+.br
+.RS
+.PP
+Handle for a specific SSH/SFTP connection, see module \fIct\fR.
+
+
+.RE
+.B
+\fBssh_channel_id() :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Data type representing a channel inside a connection.
+
+.PP
+"For \fIssh_channel_id\fR, see module \fIssh\fR.".
+
+
+.RE
+.B
+\fBssh_data_type_code() :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+The valid values are \fI0\fR ("normal") and \fI1\fR ("stderr"), see RFC 4254, Section 5.2.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBapread(SSH, Handle, Position, Length) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Position :: integer(),\fR
+\fB                    Length :: integer(),\fR
+\fB                    Result :: {async, N} | {error, Reason},\fR
+\fB                    N :: term(),\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBapread(SSH, Server, Handle, Position, Length) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Server :: pid(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Position :: integer(),\fR
+\fB                    Length :: integer(),\fR
+\fB                    Result :: {async, N} | {error, Reason},\fR
+\fB                    N :: term(),\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBapwrite(SSH, Handle, Position, Data) -> Result\fR
+\fB                 when\fR
+\fB                     SSH :: connection(),\fR
+\fB                     Handle :: term(),\fR
+\fB                     Position :: integer(),\fR
+\fB                     Data :: binary(),\fR
+\fB                     Result :: {async, N} | {error, Reason},\fR
+\fB                     N :: term(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBapwrite(SSH, Server, Handle, Position, Data) -> Result\fR
+\fB                 when\fR
+\fB                     SSH :: connection(),\fR
+\fB                     Server :: pid(),\fR
+\fB                     Handle :: term(),\fR
+\fB                     Position :: integer(),\fR
+\fB                     Data :: binary(),\fR
+\fB                     Result :: {async, N} | {error, Reason},\fR
+\fB                     N :: term(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBaread(SSH, Handle, Len) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Len :: integer(),\fR
+\fB                   Result :: {async, N} | {error, Reason},\fR
+\fB                   N :: term(),\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBaread(SSH, Server, Handle, Len) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   Server :: pid(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Len :: integer(),\fR
+\fB                   Result :: {async, N} | {error, Reason},\fR
+\fB                   N :: term(),\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBawrite(SSH, Handle, Data) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Data :: binary(),\fR
+\fB                    Result :: {async, N} | {error, Reason},\fR
+\fB                    N :: term(),\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBawrite(SSH, Server, Handle, Data) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Server :: pid(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Data :: binary(),\fR
+\fB                    Result :: {async, N} | {error, Reason},\fR
+\fB                    N :: term(),\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBclose(SSH, Handle) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Result :: ok | {error, Reason},\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBclose(SSH, Server, Handle) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   Server :: pid(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Result :: ok | {error, Reason},\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBconnect(KeyOrName, ConnType) -> {ok, Handle} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     KeyOrName :: ct:key_or_name(),\fR
+\fB                     ConnType :: connection_type(),\fR
+\fB                     Handle :: handle(),\fR
+\fB                     Reason :: term();\fR
+\fB             (KeyOrName, ExtraOpts) -> {ok, Handle} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     KeyOrName :: ct:key_or_name(),\fR
+\fB                     ExtraOpts :: [ExtraOption],\fR
+\fB                     ExtraOption ::\fR
+\fB                         {ssh, Address} |\fR
+\fB                         {sftp, Address} |\fR
+\fB                         ssh:client_option() |\fR
+\fB                         ssh_sftp:sftp_option(),\fR
+\fB                     Address :: ssh:host(),\fR
+\fB                     Handle :: handle(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Opens an SSH or SFTP connection using the information associated with \fIKeyOrName\fR (see \fIconnect/3\fR).
+
+.PP
+Equivalent to \fIconnect(KeyOrName, ConnType, [])\fR if called with ConnType being atom.
+
+.PP
+Equivalent to \fIconnect(KeyOrName, host, ExtraOpts)\fR if called with ExtraOpts being list.
+
+
+.RE
+.B
+\fBconnect(KeyOrName, ConnType, ExtraOpts) ->\fR
+\fB                 {ok, Handle} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     KeyOrName :: ct:key_or_name(),\fR
+\fB                     ConnType :: connection_type(),\fR
+\fB                     ExtraOpts :: [ExtraOption],\fR
+\fB                     ExtraOption ::\fR
+\fB                         {ssh, Address} |\fR
+\fB                         {sftp, Address} |\fR
+\fB                         ssh:client_option() |\fR
+\fB                         ssh_sftp:sftp_option(),\fR
+\fB                     Address :: ssh:host(),\fR
+\fB                     Handle :: handle(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Opens an SSH or SFTP connection using the information associated with \fIKeyOrName\fR.
+
+.PP
+If \fIName\fR (an alias name for \fIKey\fR) is used to identify the connection, this name can be used as connection reference for subsequent calls. Only one open connection at a time associated with \fIName\fR is possible. If \fIKey\fR is used, the returned handle must be used for subsequent calls (multiple connections can be opened using the configuration data specified by \fIKey\fR).
+
+.PP
+For information on how to create a new \fIName\fR, see \fIct:require/2\fR.
+
+.PP
+\fIConnType\fR always overrides the type specified in the address tuple in the configuration data (and in \fIExtraOpts\fR). So it is possible to, for example, open an SFTP connection directly using data originally specifying an SSH connection. Value \fIhost\fR means that the connection type specified by the host option (either in the configuration data or in \fIExtraOpts\fR) is used.
+
+.PP
+\fIExtraOpts\fR (optional) are extra SSH options to be added to the configuration data for \fIKeyOrName\fR. The extra options override any existing options with the same key in the configuration data. For details on valid SSH options, see application \fISSH\fR.
+
+
+.RE
+.B
+\fBdel_dir(SSH, Name) -> Result\fR
+\fB                 when\fR
+\fB                     SSH :: connection(),\fR
+\fB                     Name :: file:filename(),\fR
+\fB                     Result :: ok | {error, Reason},\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBdel_dir(SSH, Server, Name) -> Result\fR
+\fB                 when\fR
+\fB                     SSH :: connection(),\fR
+\fB                     Server :: pid(),\fR
+\fB                     Name :: file:filename(),\fR
+\fB                     Result :: ok | {error, Reason},\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBdelete(SSH, Name) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Name :: file:filename(),\fR
+\fB                    Result :: ok | {error, Reason},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBdelete(SSH, Server, Name) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Server :: pid(),\fR
+\fB                    Name :: file:filename(),\fR
+\fB                    Result :: ok | {error, Reason},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBdisconnect(SSH) -> ok | {error, Reason}\fR
+\fB                    when SSH :: connection(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Closes an SSH/SFTP connection.
+
+
+.RE
+.B
+\fBexec(SSH, Command, Timeout) ->\fR
+\fB              {ok, Data} | {timeout, Data} | {error, Reason}\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  Command :: string(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Data :: string(),\fR
+\fB                  Reason :: term();\fR
+\fB          (SSH, ChannelId, Command) ->\fR
+\fB              {ok, Data} | {timeout, Data} | {error, Reason}\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  ChannelId :: ssh_channel_id(),\fR
+\fB                  Command :: string(),\fR
+\fB                  Data :: string(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Requests server to perform \fICommand\fR, (see \fIexec/4\fR).
+
+.PP
+Equivalent to \fIexec(SSH, undefined, Command, Timeout)\fR if called with Command being string.
+
+.PP
+Equivalent to \fIexec(SSH, ChannelId, Command, DefaultTimeout)\fR if called with ChannelId being integer.
+
+
+.RE
+.B
+\fBexec(SSH, ChannelId, Command, Timeout) ->\fR
+\fB              {ok, Data} | {timeout, Data} | {error, Reason}\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  ChannelId :: ssh_channel_id() | undefined,\fR
+\fB                  Command :: string(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Data :: string(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Requests server to perform \fICommand\fR. A previously opened session channel is used for the request. \fIData\fR is received from the server as a result of the command.
+
+
+.RE
+.B
+\fBget_file_info(SSH, Handle) -> Result\fR
+\fB                       when\fR
+\fB                           SSH :: connection(),\fR
+\fB                           Handle :: term(),\fR
+\fB                           Result :: {ok, FileInfo} | {error, Reason},\fR
+\fB                           FileInfo :: file:file_info(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBget_file_info(SSH, Server, Handle) -> Result\fR
+\fB                       when\fR
+\fB                           SSH :: connection(),\fR
+\fB                           Server :: pid(),\fR
+\fB                           Handle :: term(),\fR
+\fB                           Result :: {ok, FileInfo} | {error, Reason},\fR
+\fB                           FileInfo :: file:file_info(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBlist_dir(SSH, Path) -> Result\fR
+\fB                  when\fR
+\fB                      SSH :: connection(),\fR
+\fB                      Path :: file:filename(),\fR
+\fB                      Result :: {ok, FileNames} | {error, Reason},\fR
+\fB                      FileNames :: [FileName],\fR
+\fB                      FileName :: file:filename(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBlist_dir(SSH, Server, Path) -> Result\fR
+\fB                  when\fR
+\fB                      SSH :: connection(),\fR
+\fB                      Server :: pid(),\fR
+\fB                      Path :: file:filename(),\fR
+\fB                      Result :: {ok, FileNames} | {error, Reason},\fR
+\fB                      FileNames :: [FileName],\fR
+\fB                      FileName :: file:filename(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBmake_dir(SSH, Name) -> Result\fR
+\fB                  when\fR
+\fB                      SSH :: connection(),\fR
+\fB                      Name :: file:filename(),\fR
+\fB                      Result :: ok | {error, Reason},\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBmake_dir(SSH, Server, Name) -> Result\fR
+\fB                  when\fR
+\fB                      SSH :: connection(),\fR
+\fB                      Server :: pid(),\fR
+\fB                      Name :: file:filename(),\fR
+\fB                      Result :: ok | {error, Reason},\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBmake_symlink(SSH, Name, Target) -> Result\fR
+\fB                      when\fR
+\fB                          SSH :: connection(),\fR
+\fB                          Name :: file:filename(),\fR
+\fB                          Target :: file:filename(),\fR
+\fB                          Result :: ok | {error, Reason},\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBmake_symlink(SSH, Server, Name, Target) -> Result\fR
+\fB                      when\fR
+\fB                          SSH :: connection(),\fR
+\fB                          Server :: pid(),\fR
+\fB                          Name :: file:filename(),\fR
+\fB                          Target :: file:filename(),\fR
+\fB                          Result :: ok | {error, Reason},\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBopen(SSH, File, Mode) -> Result\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  File :: file:filename(),\fR
+\fB                  Mode :: [read | write | append | binary | raw],\fR
+\fB                  Result :: {ok, Handle} | {error, Reason},\fR
+\fB                  Handle :: term(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBopen(SSH, Server, File, Mode) -> Result\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  Server :: pid(),\fR
+\fB                  File :: file:filename(),\fR
+\fB                  Mode :: [read | write | append | binary | raw],\fR
+\fB                  Result :: {ok, Handle} | {error, Reason},\fR
+\fB                  Handle :: term(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBopendir(SSH, Path) -> Result\fR
+\fB                 when\fR
+\fB                     SSH :: connection(),\fR
+\fB                     Path :: file:filename(),\fR
+\fB                     Result :: {ok, Handle} | {error, Reason},\fR
+\fB                     Handle :: term(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBopendir(SSH, Server, Path) -> Result\fR
+\fB                 when\fR
+\fB                     SSH :: connection(),\fR
+\fB                     Server :: pid(),\fR
+\fB                     Path :: file:filename(),\fR
+\fB                     Result :: {ok, Handle} | {error, Reason},\fR
+\fB                     Handle :: term(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBposition(SSH, Handle, Location) -> Result\fR
+\fB                  when\fR
+\fB                      SSH :: connection(),\fR
+\fB                      Handle :: term(),\fR
+\fB                      Location ::\fR
+\fB                          Offset |\fR
+\fB                          {bof, Offset} |\fR
+\fB                          {cur, Offset} |\fR
+\fB                          {eof, Offset} |\fR
+\fB                          bof | cur | eof,\fR
+\fB                      Offset :: integer(),\fR
+\fB                      Result :: {ok, NewPosition} | {error, Reason},\fR
+\fB                      NewPosition :: integer(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBposition(SSH, Server, Handle, Location) -> Result\fR
+\fB                  when\fR
+\fB                      SSH :: connection(),\fR
+\fB                      Server :: pid(),\fR
+\fB                      Handle :: term(),\fR
+\fB                      Location ::\fR
+\fB                          Offset |\fR
+\fB                          {bof, Offset} |\fR
+\fB                          {cur, Offset} |\fR
+\fB                          {eof, Offset} |\fR
+\fB                          bof | cur | eof,\fR
+\fB                      Offset :: integer(),\fR
+\fB                      Result :: {ok, NewPosition} | {error, Reason},\fR
+\fB                      NewPosition :: integer(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBpread(SSH, Handle, Position, Length) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Position :: integer(),\fR
+\fB                   Length :: integer(),\fR
+\fB                   Result :: {ok, Data} | eof | {error, Reason},\fR
+\fB                   Data :: string() | binary(),\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBpread(SSH, Server, Handle, Position, Length) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   Server :: pid(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Position :: integer(),\fR
+\fB                   Length :: integer(),\fR
+\fB                   Result :: {ok, Data} | eof | {error, Reason},\fR
+\fB                   Data :: string() | binary(),\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBpwrite(SSH, Handle, Position, Data) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Position :: integer(),\fR
+\fB                    Data :: iolist(),\fR
+\fB                    Result :: ok | {error, Reason},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBpwrite(SSH, Server, Handle, Position, Data) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Server :: pid(),\fR
+\fB                    Handle :: term(),\fR
+\fB                    Position :: integer(),\fR
+\fB                    Data :: iolist(),\fR
+\fB                    Result :: ok | {error, Reason},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread(SSH, Handle, Len) -> Result\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  Handle :: term(),\fR
+\fB                  Len :: integer(),\fR
+\fB                  Result :: {ok, Data} | eof | {error, Reason},\fR
+\fB                  Data :: string() | binary(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread(SSH, Server, Handle, Len) -> Result\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  Server :: pid(),\fR
+\fB                  Handle :: term(),\fR
+\fB                  Len :: integer(),\fR
+\fB                  Result :: {ok, Data} | eof | {error, Reason},\fR
+\fB                  Data :: string() | binary(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread_file(SSH, File) -> Result\fR
+\fB                   when\fR
+\fB                       SSH :: connection(),\fR
+\fB                       File :: file:filename(),\fR
+\fB                       Result :: {ok, Data} | {error, Reason},\fR
+\fB                       Data :: binary(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread_file(SSH, Server, File) -> Result\fR
+\fB                   when\fR
+\fB                       SSH :: connection(),\fR
+\fB                       Server :: pid(),\fR
+\fB                       File :: file:filename(),\fR
+\fB                       Result :: {ok, Data} | {error, Reason},\fR
+\fB                       Data :: binary(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread_file_info(SSH, Name) -> Result\fR
+\fB                        when\fR
+\fB                            SSH :: connection(),\fR
+\fB                            Name :: file:filename(),\fR
+\fB                            Result :: {ok, FileInfo} | {error, Reason},\fR
+\fB                            FileInfo :: file:file_info(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread_file_info(SSH, Server, Name) -> Result\fR
+\fB                        when\fR
+\fB                            SSH :: connection(),\fR
+\fB                            Server :: pid(),\fR
+\fB                            Name :: file:filename(),\fR
+\fB                            Result :: {ok, FileInfo} | {error, Reason},\fR
+\fB                            FileInfo :: file:file_info(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread_link(SSH, Name) -> Result\fR
+\fB                   when\fR
+\fB                       SSH :: connection(),\fR
+\fB                       Name :: file:filename(),\fR
+\fB                       Result :: {ok, Target} | {error, Reason},\fR
+\fB                       Target :: file:filename(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread_link(SSH, Server, Name) -> Result\fR
+\fB                   when\fR
+\fB                       SSH :: connection(),\fR
+\fB                       Server :: pid(),\fR
+\fB                       Name :: file:filename(),\fR
+\fB                       Result :: {ok, Target} | {error, Reason},\fR
+\fB                       Target :: file:filename(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread_link_info(SSH, Name) -> Result\fR
+\fB                        when\fR
+\fB                            SSH :: connection(),\fR
+\fB                            Name :: string(),\fR
+\fB                            Result :: {ok, FileInfo} | {error, Reason},\fR
+\fB                            FileInfo :: file:file_info(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBread_link_info(SSH, Server, Name) -> Result\fR
+\fB                        when\fR
+\fB                            SSH :: connection(),\fR
+\fB                            Server :: pid(),\fR
+\fB                            Name :: file:filename(),\fR
+\fB                            Result :: {ok, FileInfo} | {error, Reason},\fR
+\fB                            FileInfo :: file:file_info(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBreceive_response(SSH, ChannelId, End) ->\fR
+\fB                          {ok, Data} | {timeout, Data} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              End :: fun((string()) -> boolean()),\fR
+\fB                              Data :: string(),\fR
+\fB                              Reason :: term();\fR
+\fB                      (SSH, ChannelId, Timeout) ->\fR
+\fB                          {ok, Data} | {timeout, Data} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              Timeout :: timeout(),\fR
+\fB                              Data :: string(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Receives expected data from server on the specified session channel (see \fIreceive_response/4\fR).
+
+.PP
+Equivalent to \fIreceive_response(SSH, ChannelId, End, DefaultTimeout)\fR if called with End being function.
+
+.PP
+Equivalent to \fIreceive_response(SSH, ChannelId, close, Timeout)\fR if called with Timeout being integer.
+
+
+.RE
+.B
+\fBreceive_response(SSH, ChannelId, End, Timeout) ->\fR
+\fB                          {ok, Data} | {timeout, Data} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              End ::\fR
+\fB                                  close | timeout |\fR
+\fB                                  fun((string()) -> boolean()),\fR
+\fB                              Timeout :: timeout(),\fR
+\fB                              Data :: string(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Receives expected data from server on the specified session channel.
+
+.PP
+If \fIEnd == close\fR, data is returned to the caller when the channel is closed by the server. If a time-out occurs before this happens, the function returns \fI{timeout,Data}\fR (where \fIData\fR is the data received so far).
+
+.PP
+If \fIEnd == timeout\fR, a time-out is expected and \fI{ok,Data}\fR is returned both in the case of a time-out and when the channel is closed.
+
+.PP
+If \fIEnd\fR is a fun, this fun is called with one argument, the data value in a received \fIssh_cm\fR message (see \fIssh_connection\fR. The fun is to return either \fItrue\fR to end the receiving operation (and have the so far collected data returned) or \fIfalse\fR to wait for more data from the server. Even if a fun is supplied, the function returns immediately if the server closes the channel).
+
+
+.RE
+.B
+\fBrename(SSH, OldName, NewName) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    OldName :: file:filename(),\fR
+\fB                    NewName :: file:filename(),\fR
+\fB                    Result :: ok | {error, Reason},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBrename(SSH, Server, OldName, NewName) -> Result\fR
+\fB                when\fR
+\fB                    SSH :: connection(),\fR
+\fB                    Server :: pid(),\fR
+\fB                    OldName :: file:filename(),\fR
+\fB                    NewName :: file:filename(),\fR
+\fB                    Result :: ok | {error, Reason},\fR
+\fB                    Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBsend(SSH, ChannelId, Data, Timeout) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  ChannelId :: ssh_channel_id(),\fR
+\fB                  Data :: iodata(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Reason :: term();\fR
+\fB          (SSH, ChannelId, Type, Data) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  ChannelId :: ssh_channel_id(),\fR
+\fB                  Type :: ssh_data_type_code(),\fR
+\fB                  Data :: iodata(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Sends data to server on specified session channel (see \fIsend/5\fR).
+
+.PP
+Equivalent to \fIsend(SSH, ChannelId, 0, Data, Timeout)\fR if called with Timeout being integer.
+
+.PP
+Equivalent to \fIsend(SSH, ChannelId, Type, Data, DefaultTimeout)\fR if called with Type being integer.
+
+
+.RE
+.B
+\fBsend(SSH, ChannelId, Type, Data, Timeout) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  SSH :: connection(),\fR
+\fB                  ChannelId :: ssh_channel_id(),\fR
+\fB                  Type :: ssh_data_type_code(),\fR
+\fB                  Data :: iodata(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Sends data to server on specified session channel.
+
+
+.RE
+.B
+\fBsend_and_receive(SSH, ChannelId, Data, End) ->\fR
+\fB                          {ok, ReceivedData} |\fR
+\fB                          {timeout, ReceivedData} |\fR
+\fB                          {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              Data :: iodata(),\fR
+\fB                              End ::\fR
+\fB                                  close | timeout |\fR
+\fB                                  fun((string()) -> boolean()),\fR
+\fB                              ReceivedData :: string(),\fR
+\fB                              Reason :: term();\fR
+\fB                      (SSH, ChannelId, Data, Timeout) ->\fR
+\fB                          {ok, ReceivedData} |\fR
+\fB                          {timeout, ReceivedData} |\fR
+\fB                          {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              Data :: iodata(),\fR
+\fB                              Timeout :: timeout(),\fR
+\fB                              ReceivedData :: string(),\fR
+\fB                              Reason :: term();\fR
+\fB                      (SSH, ChannelId, Type, Data) ->\fR
+\fB                          {ok, ReceivedData} |\fR
+\fB                          {timeout, ReceivedData} |\fR
+\fB                          {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              Type :: ssh_data_type_code(),\fR
+\fB                              Data :: iodata(),\fR
+\fB                              ReceivedData :: string(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Sends data to server on specified session channel and waits to receive the server response (see \fIsend_and_receive/6\fR).
+
+.PP
+Equivalent to \fIsend_and_receive(SSH, ChannelId, 0, Data, End, DefaultTimeout)\fR if called with End being function.
+
+.PP
+Equivalent to \fIsend_and_receive(SSH, ChannelId, 0, Data, close, Timeout)\fR if called with Timeout being integer.
+
+.PP
+Equivalent to \fIsend_and_receive(SSH, ChannelId, Type, Data, close, DefaultTimeout)\fR if called with Type being integer.
+
+
+.RE
+.B
+\fBsend_and_receive(SSH, ChannelId, Data, End, Timeout) ->\fR
+\fB                          {ok, ReceivedData} |\fR
+\fB                          {timeout, Data} |\fR
+\fB                          {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              Data :: iodata(),\fR
+\fB                              End ::\fR
+\fB                                  close | timeout |\fR
+\fB                                  fun((string()) -> boolean()),\fR
+\fB                              Timeout :: timeout(),\fR
+\fB                              ReceivedData :: string(),\fR
+\fB                              Reason :: term();\fR
+\fB                      (SSH, ChannelId, Type, Data, Timeout) ->\fR
+\fB                          {ok, ReceivedData} |\fR
+\fB                          {timeout, ReceivedData} |\fR
+\fB                          {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              Type :: ssh_data_type_code(),\fR
+\fB                              Data :: iodata(),\fR
+\fB                              Timeout :: timeout(),\fR
+\fB                              ReceivedData :: string(),\fR
+\fB                              Reason :: term();\fR
+\fB                      (SSH, ChannelId, Type, Data, End) ->\fR
+\fB                          {ok, ReceivedData} |\fR
+\fB                          {timeout, ReceivedData} |\fR
+\fB                          {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              Type :: ssh_data_type_code(),\fR
+\fB                              Data :: iodata(),\fR
+\fB                              End ::\fR
+\fB                                  close | timeout |\fR
+\fB                                  fun((string()) -> boolean()),\fR
+\fB                              ReceivedData :: string(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Sends data to server on specified session channel and waits to receive the server response (see \fIsend_and_receive/6\fR).
+
+.PP
+Equivalent to \fIsend_and_receive(SSH, ChannelId, 0, Data, End, Timeout)\fR if called with Timeout being integer.
+
+.PP
+Equivalent to \fIsend_and_receive(SSH, ChannelId, Type, Data, close, Timeout)\fR if called with Type being integer.
+
+.PP
+Equivalent to \fIsend_and_receive(SSH, ChannelId, Type, Data, End, DefaultTimeout)\fR if called with End being function.
+
+
+.RE
+.B
+\fBsend_and_receive(SSH, ChannelId, Type, Data, End, Timeout) ->\fR
+\fB                          {ok, ReceivedData} |\fR
+\fB                          {timeout, ReceivedData} |\fR
+\fB                          {error, Reason}\fR
+\fB                          when\fR
+\fB                              SSH :: connection(),\fR
+\fB                              ChannelId :: ssh_channel_id(),\fR
+\fB                              Type :: ssh_data_type_code(),\fR
+\fB                              Data :: iodata(),\fR
+\fB                              End ::\fR
+\fB                                  close | timeout |\fR
+\fB                                  fun((string()) -> boolean()),\fR
+\fB                              Timeout :: timeout(),\fR
+\fB                              ReceivedData :: string(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Sends data to server on specified session channel and waits to receive the server response.
+
+.PP
+For details on argument \fIEnd\fR, see \fIct_ssh:receive_response/4\fR.
+
+
+.RE
+.B
+\fBsession_close(SSH, ChannelId) -> ok | {error, Reason}\fR
+\fB                       when\fR
+\fB                           SSH :: connection(),\fR
+\fB                           ChannelId :: ssh_channel_id(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Closes an SSH session channel.
+
+
+.RE
+.B
+\fBsession_open(SSH, Timeout) -> {ok, ChannelId} | {error, Reason}\fR
+\fB                      when\fR
+\fB                          SSH :: connection(),\fR
+\fB                          Timeout :: timeout(),\fR
+\fB                          ChannelId :: ssh_channel_id(),\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+Opens a channel for an SSH session.
+
+
+.RE
+.B
+\fBsftp_connect(SSH) -> {ok, Server} | {error, Reason}\fR
+\fB                      when\fR
+\fB                          SSH :: connection(),\fR
+\fB                          Server :: pid(),\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+Starts an SFTP session on an already existing SSH connection. \fIServer\fR identifies the new session and must be specified whenever SFTP requests are to be sent.
+
+
+.RE
+.B
+\fBshell(SSH, ChannelId, Timeout) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   ChannelId :: ssh:ssh_channel_id(),\fR
+\fB                   Timeout :: timeout(),\fR
+\fB                   Result :: ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Requests that the user's default shell (typically defined in \fI/etc/passwd\fR in Unix systems) is executed at the server end.
+
+
+.RE
+.B
+\fBsubsystem(SSH, ChannelId, Subsystem, Timeout) ->\fR
+\fB                   Status | {error, Reason}\fR
+\fB                   when\fR
+\fB                       SSH :: connection(),\fR
+\fB                       ChannelId :: ssh_channel_id(),\fR
+\fB                       Subsystem :: string(),\fR
+\fB                       Timeout :: timeout(),\fR
+\fB                       Status :: success | failure,\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Sends a request to execute a predefined subsystem.
+
+
+.RE
+.B
+\fBwrite(SSH, Handle, Data) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Data :: iodata(),\fR
+\fB                   Result :: ok | {error, Reason},\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBwrite(SSH, Server, Handle, Data) -> Result\fR
+\fB               when\fR
+\fB                   SSH :: connection(),\fR
+\fB                   Server :: pid(),\fR
+\fB                   Handle :: term(),\fR
+\fB                   Data :: iodata(),\fR
+\fB                   Result :: ok | {error, Reason},\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBwrite_file(SSH, File, Iolist) -> Result\fR
+\fB                    when\fR
+\fB                        SSH :: connection(),\fR
+\fB                        File :: file:filename(),\fR
+\fB                        Iolist :: iodata(),\fR
+\fB                        Result :: ok | {error, Reason},\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBwrite_file(SSH, Server, File, Iolist) -> Result\fR
+\fB                    when\fR
+\fB                        SSH :: connection(),\fR
+\fB                        Server :: pid(),\fR
+\fB                        File :: file:filename(),\fR
+\fB                        Iolist :: iodata(),\fR
+\fB                        Result :: ok | {error, Reason},\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBwrite_file_info(SSH, Name, Info) -> Result\fR
+\fB                         when\fR
+\fB                             SSH :: connection(),\fR
+\fB                             Name :: file:filename(),\fR
+\fB                             Info :: file:file_info(),\fR
+\fB                             Result :: ok | {error, Reason},\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE
+.B
+\fBwrite_file_info(SSH, Server, Name, Info) -> Result\fR
+\fB                         when\fR
+\fB                             SSH :: connection(),\fR
+\fB                             Server :: pid(),\fR
+\fB                             Name :: file:filename(),\fR
+\fB                             Info :: file:file_info(),\fR
+\fB                             Result :: ok | {error, Reason},\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+For information and other types, see \fIssh_sftp\fR.
+
+
+.RE

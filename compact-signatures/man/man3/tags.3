@@ -1,0 +1,199 @@
+.TH tags 3 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+tags \- Generate Emacs TAGS file from Erlang source files
+
+.SH DESCRIPTION
+.PP
+A \fITAGS\fR file is used by Emacs to find function and variable definitions in any source file in large projects. This module can generate a \fITAGS\fR file from Erlang source files. It recognises functions, records, and macro definitions.
+
+.SS "Options"
+
+.PP
+The functions in this module have an optional argument \fIOptions\fR. It is a list which can contain the following elements:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{outfile, NameOfTAGSFile}\fR Create a \fITAGS\fR file named \fINameOfTAGSFile\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{outdir, NameOfDirectory}\fR Create a file named \fITAGS\fR in the directory \fINameOfDirectory\fR.
+
+.RE
+
+.PP
+The default behaviour is to create a file named \fITAGS\fR in the current directory.
+
+.SS "Examples"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItags:root([{outfile, "root.TAGS"}]).\fR
+
+.PP
+This command will create a file named \fIroot.TAGS\fR in the current directory. The file will contain references to all Erlang source files in the Erlang distribution.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItags:files(["foo.erl", "bar.erl", "baz.erl"], [{outdir, "../projectdir"}]).\fR
+
+.PP
+This command will create a file named \fITAGS\fR placed it in the directory \fI../projectdir\fR. The file contains information about the functions, records, and macro definitions of the three files.
+
+.RE
+
+.PP
+\fBSee Also\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Richard M. Stallman. GNU Emacs Manual, chapter "Editing Programs", section "Tag Tables". Free Software Foundation, 1995.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Anders Lindgren. The Erlang editing mode for Emacs. Ericsson, 1998.
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBoption() ::\fR
+\fB          {outfile, NameOfTAGSFile :: file:filename()} |\fR
+\fB          {outdir, NameOfDirectory :: file:filename()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdir(Dir, Options) -> ok | error\fR
+\fB             when Dir :: file:filename(), Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Create a \fITAGS\fR file for all files in directory \fIDir\fR.
+
+
+.RE
+.B
+\fBdirs(DirList, Options) -> ok | error\fR
+\fB              when DirList :: [file:filename()], Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Create a \fITAGS\fR file for all files in any directory in \fIDirList\fR.
+
+
+.RE
+.B
+\fBfile(File, Options) -> ok | error\fR
+\fB              when File :: file:filename(), Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Create a \fITAGS\fR file for the file \fIFile\fR.
+
+
+.RE
+.B
+\fBfiles(FileList, Options) -> ok | error\fR
+\fB               when FileList :: [file:filename()], Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Create a \fITAGS\fR file for the files in the list \fIFileList\fR.
+
+
+.RE
+.B
+\fBroot(Options) -> ok | error when Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Create a \fITAGS\fR file covering all files in the Erlang distribution.
+
+
+.RE
+.B
+\fBsubdir(Dir, Options) -> ok | error\fR
+\fB                when Dir :: file:filename(), Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Descend recursively into the directory \fIDir\fR and create a \fITAGS\fR file based on all files found.
+
+
+.RE
+.B
+\fBsubdirs(DirList, Options) -> ok | error\fR
+\fB                 when\fR
+\fB                     DirList :: [file:filename()], Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Descend recursively into the directories in \fIDirList\fR and create a \fITAGS\fR file based on all files found.
+
+
+.RE

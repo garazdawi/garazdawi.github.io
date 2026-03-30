@@ -1,0 +1,1156 @@
+.TH tprof 3 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+tprof \- Process Tracing Profiling Tool
+
+.SH DESCRIPTION
+.PP
+\fItprof\fR provides convenience helpers for Erlang process profiling using the trace BIFs.
+
+.PP
+\fBWARNING: \fRThis module aims to replace \fIeprof\fR and \fIcprof\fR into a unified API for measuring call count, time, and allocation. It is experimental in Erlang/OTP 27.0.
+
+
+.PP
+It is possible to analyze the number of calls, the time spent by function, and heap allocations by function. Profiling can be done ad-hoc or run in a server-aided mode for deeper introspection of the code running in production. The server-aided mode can be run using the default tprof server or an isolated \fIserver/0\fR started through \fIstart(#{ session => atom() })\fR.
+
+.PP
+There are three kinds of profiling supported by this module:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcall_count\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcall_time\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcall_memory\fR
+
+.RE
+
+.PP
+The default is \fIcall_count\fR, which has the smallest performance impact and memory footprint, but it does not support per-process profiling. For this reason, all of the examples below uses \fIcall_memory\fR, which measures heap allocation, and provide a more complex feature set to demonstrate.
+
+.PP
+Erlang terms that do not fit in a single machine word are allocated on the process heap. For example, a function returning a tuple of two elements needs to allocate the tuple on the process heap. The actual consumption is three words, because the runtime systems also need an extra word to store the tuple size.
+
+.PP
+\fBNOTE: \fRExpect a slowdown in the program execution when profiling is enabled. For profiling convenience, measurements are accumulated for functions that are not enabled in some trace pattern. Consider this call stack example:
+
+.IP
+.nf
+top_traced_function(...)
+not_traced_function()
+bottom_traced_function()
+
+.fi
+
+.PP
+Allocations that happened within \fInot_traced_function\fR will be added to the allocations for \fItop_traced_function\fR. However, allocations that occurred within \fIbottom_traced_function\fR are not included in the \fItop_traced_function\fR. To only keep track of each function own allocations, it is necessary to trace all functions.
+
+
+.PP
+\fBWARNING: \fRAvoid hot code reloading for modules participating in the tracing. Reloading a module disables tracing and discards the accumulated statistics. The \fItprof\fR results will probably be incorrect when the profiled code was reloading during a profiling session.
+
+
+.SS "Ad-hoc profiling"
+
+.PP
+Ad-hoc profiling is convenient for profiling a single function call.
+
+.PP
+For example:
+
+.IP
+.nf
+1> tprof:profile(lists, seq, [1, 16], #{type => call_memory}).
+
+****** Process <0.92.0>  --  100.00% of total *** 
+FUNCTION          CALLS  WORDS  PER CALL  [     %]
+lists:seq_loop/3      5     32      6.40  [100.00]
+                            32            [ 100.0]
+ok
+
+.fi
+
+.PP
+By default tracing is enabled for all functions in all modules. When funs are created in the interactive shell, parts of shell code are also traced:
+
+.IP
+.nf
+1> tprof:profile(fun() -> lists:seq(1, 16) end, #{type => call_memory}).
+
+****** Process <0.95.0>  --  100.00% of total *** 
+FUNCTION                   CALLS  WORDS  PER CALL  [    %]
+erl_eval:do_apply/7            1      3      3.00  [ 3.61]
+erl_eval:match_list/6          1      3      3.00  [ 3.61]
+lists:reverse/1                1      4      4.00  [ 4.82]
+erl_eval:expr_list/7           3      7      2.33  [ 8.43]
+erl_eval:ret_expr/3            4     16      4.00  [19.28]
+erl_eval:merge_bindings/4      3     18      6.00  [21.69]
+lists:seq_loop/3               5     32      6.40  [38.55]
+                                     83            [100.0]
+ok
+
+.fi
+
+.PP
+However, it is possible to limit the trace to specific functions or modules:
+
+.IP
+.nf
+2> tprof:profile(fun() -> lists:seq(1, 16) end,
+                 #{type => call_memory, pattern => [{lists, seq_loop, '_'}]}).
+****** Process <0.98.0>  --  100.00% of total *** 
+FUNCTION          CALLS  WORDS  PER CALL  [     %]
+lists:seq_loop/3      5     32      6.40  [100.00]
+                            32            [ 100.0]
+
+ok
+
+.fi
+
+.PP
+Ad-hoc profiling results can be printed in a few different ways. The following examples use the \fItest\fR module defined like this:
+
+.IP
+.nf
+-module(test).
+-export([test_spawn/0]).
+test_spawn() ->
+    {Pid, MRef} = spawn_monitor(fun () -> lists:seq(1, 32) end),
+    receive
+        {'DOWN', MRef, process, Pid, normal} ->
+            done
+    end.
+
+.fi
+
+.PP
+By default per-process statistics is shown:
+
+.IP
+.nf
+1> tprof:profile(test, test_spawn, [], #{type => call_memory}).
+
+****** Process <0.176.0>    -- 23.66 % of total allocations ***
+FUNCTION                CALLS  WORDS  PER CALL  [    %]
+erlang:spawn_monitor/1      1      2         2  [ 9.09]
+erlang:spawn_opt/4          1      6         6  [27.27]
+test:test_spawn/0           1     14        14  [63.64]
+                                  22            [100.0]
+
+****** Process <0.177.0>    -- 76.34 % of total allocations ***
+FUNCTION           CALLS  WORDS  PER CALL  [    %]
+erlang:apply/2         1      7         7  [ 9.86]
+lists:seq_loop/3       9     64         7  [90.14]
+                             71            [100.0]
+
+.fi
+
+.PP
+The following example prints the combined memory allocation of all processes, sorted by the total number of allocated words in descending order:
+
+.IP
+.nf
+2> tprof:profile(test, test_spawn, [],
+                 #{type => call_memory, report => {total, {measurement, descending}}}).
+
+FUNCTION                CALLS  WORDS  PER CALL  [    %]
+lists:seq_loop/3            9     64         7  [68.82]
+test:test_spawn/0           1     14        14  [15.05]
+erlang:apply/2              1      7         7  [ 7.53]
+erlang:spawn_opt/4          1      6         6  [ 6.45]
+erlang:spawn_monitor/1      1      2         2  [ 2.15]
+                                  93            [100.0]
+
+.fi
+
+.PP
+The profiling data can also be collected for further inspection:
+
+.IP
+.nf
+3> {done, ProfileData} = tprof:profile(fun test:test_spawn/0,
+                                       #{type => call_memory, report => return}).
+<...>
+4> tprof:format(tprof:inspect(ProfileData, process, {percent, descending})).
+
+****** Process <0.223.0>    -- 23.66 % of total allocations ***
+FUNCTION                CALLS  WORDS  PER CALL  [    %]
+test:test_spawn/0           1     14        14  [63.64]
+erlang:spawn_opt/4          1      6         6  [27.27]
+erlang:spawn_monitor/1      1      2         2  [ 9.09]
+                                  22            [100.0]
+
+****** Process <0.224.0>    -- 76.34 % of total allocations ***
+FUNCTION           CALLS  WORDS  PER CALL  [    %]
+lists:seq_loop/3       9     64         7  [90.14]
+erlang:apply/2         1      7         7  [ 9.86]
+                             71            [100.0]
+
+.fi
+
+.PP
+Which processes that are profiled depends on the profiling type.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcall_count\fR (default) counts calls in all processes.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcall_time\fR and \fIcall_memory\fR limits the profiling to the processes spawned from the user-provided function (using the \fIset_on_spawn\fR option for \fItrace:process/4\fR).
+
+.RE
+
+.PP
+\fIcall_time\fR and \fIcall_memory\fR can be restricted to profile a single process:
+
+.IP
+.nf
+2> tprof:profile(test, test_spawn, [],
+                 #{type => call_memory, set_on_spawn => false}).
+
+****** Process <0.183.0>    -- 100.00 % of total allocations ***
+FUNCTION                CALLS  WORDS  PER CALL  [    %]
+erlang:spawn_monitor/1      1      2         2  [ 9.09]
+erlang:spawn_opt/4          1      6         6  [27.27]
+test:test_spawn/0           1     14        14  [63.64]
+
+.fi
+
+.PP
+Erlang programs can perform expensive operations in other processes than the original one. You can include multiple, new, or even all processes in the trace when measuring time or memory:
+
+.IP
+.nf
+7> pg:start_link().
+{ok,<0.252.0>}
+8> tprof:profile(fun() -> pg:join(group, self()) end,
+                 #{type => call_memory, rootset => [pg]}).
+****** Process <0.252.0>    -- 52.86 % of total allocations ***
+FUNCTION                      CALLS  WORDS  PER CALL  [    %]
+pg:leave_local_update_ets/5       1      2         2  [ 1.80]
+gen:reply/2                       1      3         3  [ 2.70]
+erlang:monitor/2                  1      3         3  [ 2.70]
+gen_server:try_handle_call/4      1      3         3  [ 2.70]
+gen_server:try_dispatch/4         1      3         3  [ 2.70]
+maps:iterator/1                   2      4         2  [ 3.60]
+maps:take/2                       1      6         6  [ 5.41]
+pg:join_local_update_ets/5        1      8         8  [ 7.21]
+pg:handle_info/2                  1      8         8  [ 7.21]
+pg:handle_call/3                  1      9         9  [ 8.11]
+gen_server:loop/7                 2      9         4  [ 8.11]
+ets:lookup/2                      2     10         5  [ 9.01]
+pg:join_local/3                   1     11        11  [ 9.91]
+pg:notify_group/5                 2     16         8  [14.41]
+erlang:setelement/3               2     16         8  [14.41]
+                                       111            [100.0]
+
+****** Process <0.255.0>    -- 47.14 % of total allocations ***
+FUNCTION                   CALLS  WORDS  PER CALL  [    %]
+erl_eval:match_list/6          1      3         3  [ 3.03]
+erlang:monitor/2               1      3         3  [ 3.03]
+lists:reverse/1                2      4         2  [ 4.04]
+pg:join/3                      1      4         4  [ 4.04]
+erl_eval:add_bindings/2        1      5         5  [ 5.05]
+erl_eval:do_apply/7            2      6         3  [ 6.06]
+gen:call/4                     1      8         8  [ 8.08]
+erl_eval:expr_list/7           4     10         2  [10.10]
+gen:do_call/4                  1     16        16  [16.16]
+erl_eval:ret_expr/3            4     16         4  [16.16]
+erl_eval:merge_bindings/4      3     24         8  [24.24]
+                                     99            [100.0]
+
+.fi
+
+.PP
+By default, there is no limit for the profiling time. For ad-hoc profiling, it is possible to configure a time limit. If the profiled function does not return before that time expires, the process is terminated with reason \fIkill\fR. Any unlinked children processes started by the user-supplied function are kept; it is the responsibility of the developer to take care of such processes.
+
+.IP
+.nf
+9> tprof:profile(timer, sleep, [100000], #{timeout => 1000}).
+
+.fi
+
+.PP
+By default, only one ad-hoc or server-aided profiling session is allowed at any point in time. It is possible to force multiple ad-hoc sessions concurrently, but it is the responsibility of the developer to ensure that trace patterns do not overlap:
+
+.IP
+.nf
+1> tprof:profile(fun() -> lists:seq(1, 32) end,
+    #{registered => false, pattern => [{lists, '_', '_'}]}).
+
+.fi
+
+.SS "Server-aided profiling"
+
+.PP
+Server-aided profiling can be done on a system that is up and running. To do that, start the \fItprof\fR server, and then add trace patterns and processes to trace while the system handles actual traffic. Data can extracted, inspected, and printed at any time. The following example traces activity of all processes supervised by the Kernel supervisor:
+
+.IP
+.nf
+1> tprof:start(#{type => call_memory}).
+{ok,<0.200.0>}
+2> tprof:enable_trace({all_children, kernel_sup}).
+34
+3> tprof:set_pattern('_', '_' , '_').
+16728
+4> Sample = tprof:collect().
+{call_memory,
+    [{gen_server,try_dispatch,4,[{<0.154.0>,2,6}]},
+     {erlang,iolist_to_iovec,1,[{<0.161.0>,1,8}]},
+<...>
+5 > tprof:format(tprof:inspect(Sample)).
+
+****** Process <0.154.0>    -- 14.21 % of total allocations ***
+FUNCTION                   CALLS  WORDS  PER CALL  [    %]
+maps:iterator/1                2      4         2  [15.38]
+gen_server:try_dispatch/4      2      6         3  [23.08]
+net_kernel:handle_info/2       2     16         8  [61.54]
+                                     26            [100.0]
+
+****** Process <0.161.0>    -- 85.79 % of total allocations ***
+FUNCTION                        CALLS  WORDS  PER CALL  [    %]
+disk_log:handle/2                   2      2         1  [ 1.27]
+disk_log_1:maybe_start_timer/1      1      3         3  [ 1.91]
+disk_log_1:mf_write_cache/1         1      3         3  [ 1.91]
+<...>
+
+.fi
+
+.PP
+It is possible to profile the entire running system, and then examine individual processes:
+
+.IP
+.nf
+1> tprof:start(#{type => call_memory}).
+2> tprof:enable_trace(all), tprof:set_pattern('_', '_' , '_').
+9041
+3> timer:sleep(10000), tprof:disable_trace(all), Sample = tprof:collect().
+{call_memory,
+    [{user_drv,server,3,[{<0.64.0>,12,136}]},
+     {user_drv,contains_ctrl_g_or_ctrl_c,1,[{<0.64.0>,80,10}]},
+<...>
+4> Inspected = tprof:inspect(Sample, process, measurement), Shell = maps:get(self(), Inspected).
+{call_memory, 2743,
+    [{shell,{enc,0},1,2,2,0.07291286912139992},
+<...>
+5> tprof:format(Shell).
+
+FUNCTION                           CALLS  WORDS  PER CALL  [    %]
+<...>
+erl_lint:start/2                       2    300       150  [10.94]
+shell:used_records/1                 114    342         3  [12.47]
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBcolumn() ::\fR
+\fB          module | function | calls | measurement |\fR
+\fB          measurement_per_call | percent.\fR
+
+.br
+.RS
+.PP
+Column to sort by \fIinspect/3\fR or \fIprofile/4\fR.
+
+module
+.RS 2
+Module name.
+
+
+.RE
+
+function
+.RS 2
+Function name.
+
+
+.RE
+
+calls
+.RS 2
+Number of calls to the function.
+
+
+.RE
+
+measurement
+.RS 2
+Total measurement (call count, time, or heap allocation) throughout all calls to the function.
+
+
+.RE
+
+measurement_per_call
+.RS 2
+Measurement (call count, time, or heap allocation) on average per function call.
+
+
+.RE
+
+percent
+.RS 2
+Percentage of measurement to total amount during the entire profile collection.
+
+
+.RE
+
+
+.RE
+.B
+\fBprocess() :: pid() | atom().\fR
+
+.br
+.RS
+.PP
+A process identifier (pid) or a registered process name.
+
+
+.RE
+.B
+\fBprofile_line() ::\fR
+\fB          {module(),\fR
+\fB           Function :: {atom(), arity()},\fR
+\fB           Count :: pos_integer(),\fR
+\fB           Measurement :: pos_integer(),\fR
+\fB           MeasurementPerCall :: non_neg_integer(),\fR
+\fB           Percent :: float()}.\fR
+
+.br
+.RS
+.PP
+Inspected data for a single function of the specified \fIModule\fR.
+
+
+.RE
+.B
+\fBprofile_options() ::\fR
+\fB          #{type => trace_type(),\fR
+\fB            timeout => timeout(),\fR
+\fB            pattern => trace_pattern() | [trace_pattern()],\fR
+\fB            set_on_spawn => boolean(),\fR
+\fB            rootset => rootset(),\fR
+\fB            report =>\fR
+\fB                return | process | total |\fR
+\fB                {process, sort_by()} |\fR
+\fB                {total, sort_by()},\fR
+\fB            device => io:device()}.\fR
+
+.br
+.RS
+.PP
+Ad-hoc profiler options; see \fIprofile/4\fR.
+
+
+.RE
+.B
+\fBprofile_result() ::\fR
+\fB          {trace_type(),\fR
+\fB           TotalMeasurement :: non_neg_integer(),\fR
+\fB           [profile_line()]}.\fR
+
+.br
+.RS
+.PP
+Profile of a single process, or combined profile of multiple processes, sorted by a selected column.
+
+
+.RE
+.B
+\fBrootset() :: [process()] | all | existing | new.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBserver() :: pid() | tprof.\fR
+
+.br
+.RS
+.PP
+A tprof server.
+
+.PP
+Each server uses a separate \fItrace:session/0\fR in order to keep profiling isolated.
+
+
+.RE
+.B
+\fBsort_by() ::\fR
+\fB          column() | {column(), ascending} | {column(), descending}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstart_options() :: #{type => trace_type(), session => atom()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_info() ::\fR
+\fB          {module(),\fR
+\fB           Fun :: atom(),\fR
+\fB           Arity :: non_neg_integer(),\fR
+\fB           [{pid(),\fR
+\fB             Count :: pos_integer(),\fR
+\fB             Measurement :: pos_integer()}]}.\fR
+
+.br
+.RS
+.PP
+Raw data extracted from tracing BIFs.
+
+
+.RE
+.B
+\fBtrace_map() :: #{module() => [{Fun :: atom(), arity()}]} | all.\fR
+
+.br
+.RS
+.PP
+Traced functions (with their arities) grouped by module name, or \fIall\fR if all code is traced.
+
+
+.RE
+.B
+\fBtrace_options() :: #{set_on_spawn => boolean()}.\fR
+
+.br
+.RS
+.PP
+Options for enabling profiling of the selected processes; see \fIenable_trace/2\fR.
+
+
+.RE
+.B
+\fBtrace_pattern() :: {module(), Fun :: atom(), arity() | '_'}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrace_type() :: call_count | call_time | call_memory.\fR
+
+.br
+.RS
+.PP
+The type of profiling that the tprof server will do.
+
+call_count
+.RS 2
+Counts the number of calls made to functions. This is a global profiling event that cannot be limited to specific processes. See call_count in 
+\fItrace:function/4\fR for more details.
+
+.RE
+call_time
+.RS 2
+Counts the accumulated time spent in functions. See call_time in 
+\fItrace:function/4\fR for more details.
+
+.RE
+call_memory
+.RS 2
+Counts the accumulated memory allocated in functions. See call_memory in 
+\fItrace:function/4\fR for more details.
+
+.RE
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBclear_pattern(module(), atom(), arity() | '_') -> ok.\fR
+
+.br
+.RS
+.PP
+Disables tracing functions matching the supplied pattern.
+
+.IP
+.nf
+1> tprof:set_pattern(lists, seq, '_').
+2
+2> tprof:clear_pattern(lists, seq, 3).
+1
+3> tprof:get_trace_map().
+#{lists => [{seq,2}]}
+
+.fi
+
+.PP
+Requires that the default \fItprof\fR server has been \fIstarted\fR.
+
+
+.RE
+.B
+\fBclear_pattern(server(), module(), atom(), arity() | '_') -> ok.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIclear_pattern(Mod, Fun, Arity)\fR but uses the provided \fIServer\fR.
+
+
+.RE
+.B
+\fBcollect() -> {trace_type(), [trace_info()]}.\fR
+
+.br
+.RS
+.PP
+Returns statistics for current trace map.
+
+
+.RE
+.B
+\fBcollect(server()) -> {trace_type(), [trace_info()]}.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIcollect/0\fR but uses the provided \fIServer\fR.
+
+
+.RE
+.B
+\fBcontinue() -> ok | not_paused.\fR
+
+.br
+.RS
+.PP
+Resumes previously paused profiling.
+
+
+.RE
+.B
+\fBcontinue(server()) -> ok | not_paused.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIcontinue/0\fR but uses the provided \fIServer\fR.
+
+
+.RE
+.B
+\fBdisable_trace(Spec, trace_options()) -> non_neg_integer()\fR
+\fB                       when\fR
+\fB                           Spec ::\fR
+\fB                               pid() |\fR
+\fB                               all | new | existing |\fR
+\fB                               {children | all_children, process()};\fR
+\fB                   ([process()], trace_options()) ->\fR
+\fB                       non_neg_integer() |\fR
+\fB                       {non_neg_integer(), [process()]}.\fR
+
+.br
+.RS
+.PP
+Stops accumulating traces for specified processes.
+
+.PP
+See \fIenable_trace/2\fR for a description of the options.
+
+.PP
+The profile data accumulated before the process is removed from the traced list is retained. This makes it possible to enable tracing for many or all processes in the system, sleep for a short period of time, then disable tracing for all processes (to avoid system overload), but keeping profile data.
+
+
+.RE
+.B
+\fBenable_trace(Spec, trace_options()) -> Traced :: non_neg_integer()\fR
+\fB                      when Spec :: pid() | all | new | existing;\fR
+\fB                  (Spec, trace_options()) ->\fR
+\fB                      Traced ::\fR
+\fB                          non_neg_integer() |\fR
+\fB                          {Traced :: non_neg_integer(),\fR
+\fB                           Failed :: [process()]}\fR
+\fB                      when\fR
+\fB                          Spec ::\fR
+\fB                              [process()] |\fR
+\fB                              {children | all_children, process()}.\fR
+
+.br
+.RS
+.PP
+Similar to \fItrace:process/4\fR, but supports a few more options for tracing convenience.
+
+.PP
+Tracing per process is not supported by \fIcall_count\fR profilers.
+
+.PP
+\fISpec\fR is either a process identifier (pid) for a local process, one of the following atoms, or a list of local process identifiers or their registered names:
+
+all
+.RS 2
+All currently existing processes and all that will be created in the future.
+
+
+.RE
+
+existing
+.RS 2
+All currently existing processes.
+
+
+.RE
+
+new
+.RS 2
+All processes that will be created in the future.
+
+
+.RE
+
+children
+.RS 2
+All currently running processes that were directly spawned by the specified process. This mode is helpful for tracing workers of a single supervisor.
+
+
+.RE
+
+all_children
+.RS 2
+All currently running processes that were spawned by the specified process, or any recursive descendant of it. This mode is designed to facilitate tracing of supervision trees.
+
+
+.RE
+
+.PP
+Returns the number of processes for which tracing was enabled.
+
+.PP
+When a list of pids, \fIchildren\fR or \fIall_children\fR is used, the processes that tracing failed to be enabled on will also be returned. Tracing can fail to be enabled if the process has terminated before tracing could be enabled.
+
+.PP
+\fBNOTE: \fRThe profiling server does not keep track of processes that were added to the tracing set. It is permitted to stop the profiling server (wiping out any accumulated data), restart the server, set entirely different tracing pattern keeping the list of traced processes for future use. Use \fIdisable_trace(Processes)\fR to clear the list of traced processes.
+
+
+.PP
+Specify \fIOptions\fR to modify tracing behavior:
+
+set_on_spawn
+.RS 2
+Automatically start tracing for processes spawned by the traced process. On by default.
+
+
+.RE
+
+
+.RE
+.B
+\fBenable_trace(server(), Spec, trace_options()) -> non_neg_integer()\fR
+\fB                      when\fR
+\fB                          Spec ::\fR
+\fB                              pid() |\fR
+\fB                              all | new | existing |\fR
+\fB                              {children | all_children, process()};\fR
+\fB                  (server(), [process()], trace_options()) ->\fR
+\fB                      non_neg_integer() |\fR
+\fB                      {non_neg_integer(), [process()]}.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIenable_trace/2\fR but uses the provided \fIServer\fR.
+
+
+.RE
+.B
+\fBformat(profile_result() | #{pid() | all => profile_result()}) ->\fR
+\fB                ok.\fR
+
+.br
+.RS
+.PP
+Formats profile data transformed with \fIinspect/3\fR, outputting to the default output device.
+
+
+.RE
+.B
+\fBformat(io:device(),\fR
+\fB             profile_result() | #{pid() | all => profile_result()}) ->\fR
+\fB                ok.\fR
+
+.br
+.RS
+.PP
+Formats profile transformed with \fIinspect/3\fR, outputting to device \fIIoDevice\fR.
+
+
+.RE
+.B
+\fBget_trace_map() -> trace_map().\fR
+
+.br
+.RS
+.PP
+Returns a map of module names to functions with their arities.
+
+
+.RE
+.B
+\fBget_trace_map(server()) -> trace_map().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIget_trace_map/0\fR but uses the provided \fIServer\fR.
+
+
+.RE
+.B
+\fBinspect({trace_type(), [trace_info()]}) ->\fR
+\fB                 #{all => profile_result()}.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIinspect(Profile, process, percent)\fR.
+
+.PP
+Transforms raw profile into a map of process identifiers to a tuple containing total count of words allocated, and a list of all traced functions sorted in the ascending order by the allocation percentage.
+
+
+.RE
+.B
+\fBinspect(Profile :: {trace_type(), [trace_info()]},\fR
+\fB              Type :: process | total,\fR
+\fB              SortBy :: sort_by()) ->\fR
+\fB                 #{pid() | all => profile_result()}.\fR
+
+.br
+.RS
+.PP
+Transforms raw data returned by tracing BIFs into a form convenient for subsequent analysis and formatting.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When the \fIType\fR argument is \fIprocess\fR, this function returns a map of process identifiers with corresponding profiling results sorted by the selected column.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When \fIType\fR argument is \fItotal\fR or when profiling by \fIcall_count\fR, this function returns a map with a single \fIall\fR key with profiling results from all processes.
+
+.RE
+
+.PP
+The inspected profile data can be leveraged to print profiling results.
+
+
+.RE
+.B
+\fBpause() -> ok | not_running.\fR
+
+.br
+.RS
+.PP
+Pauses trace collection for all currently traced functions, retaining existing traces.
+
+.PP
+Use \fIcontinue/0\fR to resume trace collection.
+
+
+.RE
+.B
+\fBpause(server()) -> ok | not_running.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIpause/0\fR but uses the provided \fIServer\fR.
+
+
+.RE
+.B
+\fBprofile(fun(() -> term()), profile_options()) ->\fR
+\fB                 ok | {term(), {trace_type(), [trace_info()]}}.\fR
+
+.br
+.RS
+.PP
+Does ad-hoc profiling of the call \fIFun()\fR.
+
+.PP
+By default, the result is formatted to the output device; use the \fIreport\fR option to change this behavior.
+
+.PP
+Ad-hoc profiling starts a new instance of \fItprof\fR server, runs the profiling routine, extracts results, and shuts down the server.
+
+.PP
+See \fIprofile/4\fR for a list of the supported options.
+
+
+.RE
+.B
+\fBprofile(module(),\fR
+\fB              Fun :: atom(),\fR
+\fB              Args :: [term()],\fR
+\fB              profile_options()) ->\fR
+\fB                 ok | {term(), {trace_type(), [trace_info()]}}.\fR
+
+.br
+.RS
+.PP
+Does ad-hoc profiling for the call \fIapply(Module, Function, Args)\fR.
+
+.PP
+By default, the result is formatted to the output device; use option \fIreport\fR to change this behavior.
+
+.PP
+Ad-hoc profiling starts a new instance of \fItprof\fR server, runs the profiling routine, extracts results, and shuts down the server.
+
+.PP
+The ad-hoc profiler supports the following \fIOptions\fR:
+
+type
+.RS 2
+The type of profiling to perform.
+
+
+.RE
+
+device
+.RS 2
+Specifies I/O devices to print the profile to. Useful to redirect text output to console or 
+\fIstandard_error\fR.
+
+.RE
+
+pattern
+.RS 2
+Specifies a trace pattern, or a list of trace patterns to enable. By default, all functions (
+\fI{'_', '_', '_'}\fR) are traced.
+
+.RE
+
+report
+.RS 2
+Controls output format. The default is 
+\fIprocess\fR; printing per-process profiling data sorted by percentage of the total allocation. Specify \fIreport => return\fR to suppress printing and get the raw data for further evaluation with \fIinspect/3\fR and formatting with \fIformat/2\fR.
+
+.RE
+
+rootset
+.RS 2
+Includes extra processes in the trace list. Useful for profiling allocations for 
+\fIgen_server\fR, calls, or other allocations caused by inter-process communications. See this example.
+
+.RE
+
+set_on_spawn
+.RS 2
+Automatically start tracing for processes spawned by the traced process. Enabled by default.
+
+
+.RE
+
+timeout
+.RS 2
+Terminate profiling after the specified amount of time (milliseconds).
+
+
+.RE
+
+
+.RE
+.B
+\fBrestart() -> ok.\fR
+
+.br
+.RS
+.PP
+Clears accumulated profiles and starts profiling if it was paused.
+
+
+.RE
+.B
+\fBrestart(server()) -> ok.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIrestart/0\fR but uses the provided \fIServer\fR.
+
+
+.RE
+.B
+\fBset_pattern(module(), atom(), arity() | '_') ->\fR
+\fB                     ok | {error, {trace_pattern, trace_pattern()}}.\fR
+
+.br
+.RS
+.PP
+Enables tracing for all functions matching the supplied pattern.
+
+.PP
+Patterns are additive, following the same rules as \fItrace:function/4\fR. Returns the number of functions matching the supplied pattern.
+
+.IP
+.nf
+1> tprof:set_pattern(lists, seq, '_').
+2
+2> tprof:set_pattern(lists, keyfind, 3).
+1
+3> tprof:get_trace_map().
+#{lists => [{keyfind,3},{seq,2},{seq,3}]}
+
+.fi
+
+.PP
+If no functions match the pattern, an \fIerror\fR tuple is returned:
+
+.IP
+.nf
+> tprof:set_pattern(no_module, func, '_').
+{error,{trace_pattern,no_module,func,'_'}}
+
+.fi
+
+.PP
+Requires that the default \fItprof\fR server has been \fIstarted\fR.
+
+
+.RE
+.B
+\fBset_pattern(server(), module(), atom(), arity() | '_') ->\fR
+\fB                     ok | {error, {trace_pattern, trace_pattern()}}.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIset_pattern/3\fR but uses the provided \fIServer\fR.
+
+
+.RE
+.B
+\fBstart(Config :: start_options()) -> {ok, Server} | {error, Reason}\fR
+\fB               when\fR
+\fB                   Server :: server(),\fR
+\fB                   Reason :: {already_started, pid()}.\fR
+
+.br
+.RS
+.PP
+Starts the server, not supervised.
+
+.PP
+Profiling server stores current trace patterns and owns the trace session used for profiling.
+
+.PP
+If no \fIsession\fR is provided in \fIConfig\fR, then a default session called \fItprof\fR is used and the profiling server is registered as \fItprof\fR.
+
+.PP
+If \fIsession\fR is provided in \fIConfig\fR, then a session with that name is created and all profiling is done within that session. The profiling server is not registered in this case. When using \fItprof\fR like this the \fIpid/0\fR returned from this function needs to be provided to the functions in this module.
+
+
+.RE
+.B
+\fBstart_link(Config :: start_options()) ->\fR
+\fB                    {ok, Server} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Server :: server(),\fR
+\fB                        Reason :: {already_started, pid()}.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIstart/1\fR but also links the profiling server to the caller.
+
+
+.RE
+.B
+\fBstop() -> ok.\fR
+
+.br
+.RS
+.PP
+Stops the default \fItprof\fR server and disable tracing enabled by the server.
+
+
+.RE
+.B
+\fBstop(server()) -> ok.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIstop/0\fR but uses the provided \fIServer\fR.
+
+
+.RE

@@ -1,0 +1,112 @@
+.TH wxMoveEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMoveEvent \- A move event holds information about window position change.
+
+.SH DESCRIPTION
+.PP
+These events are currently generated for top level (see \fIwxTopLevelWindow\fR) windows in all ports, but are not generated for the child windows in wxGTK.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+{X,Y}
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMoveEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxMoveEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMove() :: #wxMove{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxMoveEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxMoveEventType() :: move.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetPosition(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                     when This :: wxMoveEvent().\fR
+
+.br
+.RS
+.PP
+Returns the position of the window generating the move change event.
+
+
+.RE
+.B
+\fBgetRect(This) ->\fR
+\fB                 {X :: integer(),\fR
+\fB                  Y :: integer(),\fR
+\fB                  W :: integer(),\fR
+\fB                  H :: integer()}\fR
+\fB                 when This :: wxMoveEvent().\fR
+
+.br
+.RS
+
+.RE

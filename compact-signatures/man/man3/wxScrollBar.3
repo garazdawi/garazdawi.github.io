@@ -1,0 +1,558 @@
+.TH wxScrollBar 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxScrollBar \- A \fIwxScrollBar\fR is a control that represents a horizontal or vertical scrollbar.
+
+.SH DESCRIPTION
+.PP
+It is distinct from the two scrollbars that some windows provide automatically, but the two types of scrollbar share the way events are received.
+
+.PP
+Remark: A scrollbar has the following main attributes: range, thumb size, page size, and position. The range is the total number of units associated with the view represented by the scrollbar. For a table with 15 columns, the range would be 15. The thumb size is the number of units that are currently visible. For the table example, the window might be sized so that only 5 columns are currently visible, in which case the application would set the thumb size to 5. When the thumb size becomes the same as or greater than the range, the scrollbar will be automatically hidden on most platforms. The page size is the number of units that the scrollbar should scroll by, when 'paging' through the data. This value is normally the same as the thumb size length, because it is natural to assume that the visible window size defines a page. The scrollbar position is the current thumb position. Most applications will find it convenient to provide a function called AdjustScrollbars() which can be called initially, from an OnSize event handler, and whenever the application data changes in size. It will adjust the view, object and page size according to the size of the window and the size of the data.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSB_HORIZONTAL: Specifies a horizontal scrollbar.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSB_VERTICAL: Specifies a vertical scrollbar.
+
+.RE
+
+.PP
+The difference between EVT_SCROLL_THUMBRELEASE and EVT_SCROLL_CHANGED
+
+.PP
+The EVT_SCROLL_THUMBRELEASE event is only emitted when actually dragging the thumb using the mouse and releasing it (This EVT_SCROLL_THUMBRELEASE event is also followed by an EVT_SCROLL_CHANGED event).
+
+.PP
+The EVT_SCROLL_CHANGED event also occurs when using the keyboard to change the thumb position, and when clicking next to the thumb (In all these cases the EVT_SCROLL_THUMBRELEASE event does not happen).
+
+.PP
+In short, the EVT_SCROLL_CHANGED event is triggered when scrolling/moving has finished independently of the way it had started. Please see the page_samples_widgets ("Slider" page) to see the difference between EVT_SCROLL_THUMBRELEASE and EVT_SCROLL_CHANGED in action.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview scrolling
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxScrollBar
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_top\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_bottom\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_lineup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_linedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_pageup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_pagedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_thumbtrack\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_thumbrelease\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_top\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_bottom\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_lineup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_linedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_pageup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_pagedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_thumbtrack\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_thumbrelease\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_changed\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxScrollBar() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxScrollBar(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Scrollbar creation function called by the scrollbar constructor.
+
+.PP
+See \fInew/3\fR for details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxScrollBar()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetPageSize(This) -> integer() when This :: wxScrollBar().\fR
+
+.br
+.RS
+.PP
+Returns the page size of the scrollbar.
+
+.PP
+This is the number of scroll units that will be scrolled when the user pages up or down. Often it is the same as the thumb size.
+
+.PP
+See: \fIsetScrollbar/6\fR
+
+
+.RE
+.B
+\fBgetRange(This) -> integer() when This :: wxScrollBar().\fR
+
+.br
+.RS
+.PP
+Returns the length of the scrollbar.
+
+.PP
+See: \fIsetScrollbar/6\fR
+
+
+.RE
+.B
+\fBgetThumbPosition(This) -> integer() when This :: wxScrollBar().\fR
+
+.br
+.RS
+.PP
+Returns the current position of the scrollbar thumb.
+
+.PP
+See: \fIsetThumbPosition/2\fR
+
+
+.RE
+.B
+\fBgetThumbSize(This) -> integer() when This :: wxScrollBar().\fR
+
+.br
+.RS
+.PP
+Returns the thumb or 'view' size.
+
+.PP
+See: \fIsetScrollbar/6\fR
+
+
+.RE
+.B
+\fBnew() -> wxScrollBar().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxScrollBar()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a scrollbar.
+
+.PP
+See: \fIcreate/4\fR
+
+
+.RE
+.B
+\fBsetScrollbar(This, Position, ThumbSize, Range, PageSize, [Option]) ->\fR
+\fB                      ok\fR
+\fB                      when\fR
+\fB                          This :: wxScrollBar(),\fR
+\fB                          Position :: integer(),\fR
+\fB                          ThumbSize :: integer(),\fR
+\fB                          Range :: integer(),\fR
+\fB                          PageSize :: integer(),\fR
+\fB                          Option :: {refresh, boolean()}.\fR
+
+.br
+.RS
+.PP
+Sets the scrollbar properties.
+
+.PP
+Remark: Let's say you wish to display 50 lines of text, using the same font. The window is sized so that you can only see 16 lines at a time. You would use: The page size is 1 less than the thumb size so that the last line of the previous page will be visible on the next page, to help orient the user. Note that with the window at this size, the thumb position can never go above 50 minus 16, or 34. You can determine how many lines are currently visible by dividing the current view size by the character height in pixels. When defining your own scrollbar behaviour, you will always need to recalculate the scrollbar settings when the window size changes. You could therefore put your scrollbar calculations and \fIsetScrollbar/6\fR call into a function named AdjustScrollbars, which can be called initially and also from a \fIwxSizeEvent\fR event handler function.
+
+
+.RE
+.B
+\fBsetThumbPosition(This, ViewStart) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxScrollBar(),\fR
+\fB                              ViewStart :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the position of the scrollbar.
+
+.PP
+See: \fIgetThumbPosition/1\fR
+
+
+.RE

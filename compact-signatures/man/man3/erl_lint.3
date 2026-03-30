@@ -1,0 +1,258 @@
+.TH erl_lint 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_lint \- The Erlang code linter.
+
+.SH DESCRIPTION
+.PP
+This module is used to check Erlang code for illegal syntax and other bugs. It also warns against coding practices that are not recommended.
+
+.PP
+The errors detected include:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Redefined and undefined functions
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Unbound and unsafe variables
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Illegal record use
+
+.RE
+
+.PP
+The warnings detected include:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Unused functions and imports
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Unused variables
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Variables imported into matches
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Variables exported from \fIif\fR/\fIcase\fR/\fIreceive\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Variables shadowed in funs and list comprehensions
+
+.RE
+
+.PP
+Some of the warnings are optional, and can be turned on by specifying the appropriate option, described below.
+
+.PP
+The functions in this module are invoked automatically by the Erlang compiler. There is no reason to invoke these functions separately unless you have written your own Erlang compiler.
+
+.SS "Error Information"
+
+.PP
+\fIErrorInfo\fR is the standard \fIErrorInfo\fR structure that is returned from all I/O modules. The format is as follows:
+
+.IP
+.nf
+{ErrorLine, Module, ErrorDescriptor}
+
+.fi
+
+.PP
+A string describing the error is obtained with the following call:
+
+.IP
+.nf
+Module:format_error(ErrorDescriptor)
+
+.fi
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIepp\fR, \fIerl_parse\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBerror_description() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerror_info() ::\fR
+\fB          {erl_anno:location() | none, module(), error_description()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfa() :: {atom(), arity()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfun_used_vars() ::\fR
+\fB          #{erl_parse:abstract_expr() => {[atom()], fun_used_vars()}}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBformat_error(ErrorDescriptor) -> io_lib:chars()\fR
+\fB                      when ErrorDescriptor :: error_description().\fR
+
+.br
+.RS
+.PP
+Takes an \fIErrorDescriptor\fR and returns a string that describes the error or warning. This function is usually called implicitly when processing an \fIErrorInfo\fR structure (see section Error Information).
+
+
+.RE
+.B
+\fBis_guard_test(Expr) -> boolean()\fR
+\fB                       when Expr :: erl_parse:abstract_expr().\fR
+
+.br
+.RS
+.PP
+Tests if \fIExpr\fR is a legal guard test. \fIExpr\fR is an Erlang term representing the abstract form for the expression. \fIerl_parse:parse_exprs(Tokens)\fR can be used to generate a list of \fIExpr\fR.
+
+
+.RE
+.B
+\fBmodule(AbsForms, FileName, CompileOptions) ->\fR
+\fB                {ok, Warnings} | {error, Errors, Warnings}\fR
+\fB                when\fR
+\fB                    AbsForms ::\fR
+\fB                        [erl_parse:abstract_form() |\fR
+\fB                         erl_parse:form_info()],\fR
+\fB                    FileName :: atom() | string(),\fR
+\fB                    CompileOptions :: [compile:option()],\fR
+\fB                    Warnings :: [{SourceFile, [ErrorInfo]}],\fR
+\fB                    Errors :: [{SourceFile, [ErrorInfo]}],\fR
+\fB                    SourceFile :: file:filename(),\fR
+\fB                    ErrorInfo :: error_info().\fR
+
+.br
+.RS
+.PP
+Checks all the forms in a module for errors. It returns:
+
+{ok,Warnings}
+.RS 2
+There are no errors in the module.
+
+
+.RE
+
+{error,Errors,Warnings}
+.RS 2
+There are errors in the module.
+
+
+.RE
+
+.PP
+As this module is of interest only to the maintainers of the compiler, and to avoid the same description in two places, the elements of \fIOptions\fR that control the warnings are only described in the \fIcompile\fR module.
+
+.PP
+\fIAbsForms\fR of a module, which comes from a file that is read through \fIepp\fR, the Erlang preprocessor, can come from many files. This means that any references to errors must include the filename, see the \fIepp\fR module or parser (see the \fIerl_parse\fR module). The returned errors and warnings have the following format:
+
+.IP
+.nf
+[{SourceFile,[ErrorInfo]}]
+
+.fi
+
+.PP
+The errors and warnings are listed in the order in which they are encountered in the forms. The errors from one file can therefore be split into different entries in the list of errors.
+
+
+.RE

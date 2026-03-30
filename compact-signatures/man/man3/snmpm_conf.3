@@ -1,0 +1,414 @@
+.TH snmpm_conf 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpm_conf \- Utility functions for handling the manager config files.
+
+.SH DESCRIPTION
+.PP
+The module \fIsnmpm_conf\fR contains various utility functions to used for manipulating (write/append/read) the config files of the SNMP manager.
+
+.SH DATA TYPES
+.LP
+.B
+\fB-opaque agent_entry() \fR
+
+.br
+.RS
+.PP
+An opaque data structure containg all configuration for one agent for the manager.
+
+
+.RE
+.B
+\fB-opaque manager_entry() \fR
+
+.br
+.RS
+.PP
+An opaque data structure that represents one configuration entry for the manager.
+
+
+.RE
+.B
+\fB-opaque user_entry() \fR
+
+.br
+.RS
+.PP
+An opaque data structure containg all configuration for one user for the manager.
+
+
+.RE
+.B
+\fB-opaque usm_entry() \fR
+
+.br
+.RS
+.PP
+An opaque data structure containg information about security data for usm for the manager.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBagents_entry(UserId, TargetName, Comm, TDomain, TAddr, EngineID,\fR
+\fB                   Timeout, MaxMessageSize, Version, SecModel, SecName,\fR
+\fB                   SecLevel) ->\fR
+\fB                      Entry\fR
+\fB                      when\fR
+\fB                          UserId :: snmpm:user_id(),\fR
+\fB                          TargetName :: snmpm:target_name(),\fR
+\fB                          Comm :: snmp:community(),\fR
+\fB                          TDomain :: snmp:tdomain(),\fR
+\fB                          TAddr :: snmp:taddress(),\fR
+\fB                          EngineID :: snmp:engine_id(),\fR
+\fB                          Timeout :: snmpm:register_timeout(),\fR
+\fB                          MaxMessageSize :: snmp:mms(),\fR
+\fB                          Version :: snmp:version(),\fR
+\fB                          SecModel :: snmp:sec_model(),\fR
+\fB                          SecName :: snmp:sec_name(),\fR
+\fB                          SecLevel :: snmp:sec_level(),\fR
+\fB                          Entry :: agent_entry();\fR
+\fB                  (UserId, TargetName, Comm, Ip, Port, EngineID,\fR
+\fB                   Timeout, MaxMessageSize, Version, SecModel, SecName,\fR
+\fB                   SecLevel) ->\fR
+\fB                      Entry\fR
+\fB                      when\fR
+\fB                          UserId :: snmpm:user_id(),\fR
+\fB                          TargetName :: snmpm:target_name(),\fR
+\fB                          Comm :: snmp:community(),\fR
+\fB                          Ip :: inet:ip_address(),\fR
+\fB                          Port :: inet:port_number(),\fR
+\fB                          EngineID :: snmp:engine_id(),\fR
+\fB                          Timeout :: snmpm:register_timeout(),\fR
+\fB                          MaxMessageSize :: snmp:mms(),\fR
+\fB                          Version :: snmp:version(),\fR
+\fB                          SecModel :: snmp:sec_model(),\fR
+\fB                          SecName :: snmp:sec_name(),\fR
+\fB                          SecLevel :: snmp:sec_level(),\fR
+\fB                          Entry :: agent_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the manager agents config file, \fIagents.conf\fR.
+
+.PP
+See Agents for more info.
+
+
+.RE
+.B
+\fBappend_agents_config(Dir, Conf) -> ok\fR
+\fB                              when\fR
+\fB                                  Dir :: snmp:dir(),\fR
+\fB                                  Conf :: [agent_entry()].\fR
+
+.br
+.RS
+.PP
+Append the agents config to the current manager agents config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Agents for more info.
+
+
+.RE
+.B
+\fBappend_manager_config(Dir, Conf) -> ok\fR
+\fB                               when\fR
+\fB                                   Dir :: snmp:dir(),\fR
+\fB                                   Conf :: [manager_entry()].\fR
+
+.br
+.RS
+.PP
+Append the config to the current manager config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Manager Information for more info.
+
+
+.RE
+.B
+\fBappend_users_config(Dir, Conf) -> ok\fR
+\fB                             when\fR
+\fB                                 Dir :: snmp:dir(),\fR
+\fB                                 Conf :: [user_entry()].\fR
+
+.br
+.RS
+.PP
+Append the users config to the current manager users config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Users for more info.
+
+
+.RE
+.B
+\fBappend_usm_config(Dir, Conf) -> ok\fR
+\fB                           when Dir :: snmp:dir(), Conf :: [usm_entry()].\fR
+
+.br
+.RS
+.PP
+Append the usm config to the current manager usm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Security data for USM for more info.
+
+
+.RE
+.B
+\fBmanager_entry(Tag, Val) -> ManagerEntry\fR
+\fB                       when\fR
+\fB                           Tag ::\fR
+\fB                               transports | port | engine_id |\fR
+\fB                               max_message_size,\fR
+\fB                           Val :: term(),\fR
+\fB                           ManagerEntry :: manager_entry();\fR
+\fB                   (Tag, Val) -> ManagerEntry\fR
+\fB                       when\fR
+\fB                           Tag :: address,\fR
+\fB                           Val :: term(),\fR
+\fB                           ManagerEntry :: manager_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the manager config file, \fImanager.conf\fR.
+
+.PP
+The type of \fIVal\fR depends on the value of \fITag\fR, see Manager Information for more info.
+
+
+.RE
+.B
+\fBread_agents_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                            when\fR
+\fB                                Dir :: snmp:dir(),\fR
+\fB                                Conf :: [agent_entry()],\fR
+\fB                                Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current manager agents config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Agents for more info.
+
+
+.RE
+.B
+\fBread_manager_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 Dir :: snmp:dir(),\fR
+\fB                                 Conf :: [manager_entry()],\fR
+\fB                                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current manager config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Manager Information for more info.
+
+
+.RE
+.B
+\fBread_users_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                           when\fR
+\fB                               Dir :: snmp:dir(),\fR
+\fB                               Conf :: [user_entry()],\fR
+\fB                               Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current manager users config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Users for more info.
+
+
+.RE
+.B
+\fBread_usm_config(Dir) -> {ok, Conf} | {error, Reason}\fR
+\fB                         when\fR
+\fB                             Dir :: snmp:dir(),\fR
+\fB                             Conf :: [usm_entry()],\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+Read the current manager usm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+See Security data for USM for more info.
+
+
+.RE
+.B
+\fBusers_entry(UserId, UserMod, UserData, DefaultAgentConfig) ->\fR
+\fB                     UserEntry\fR
+\fB                     when\fR
+\fB                         UserId :: snmpm:user_id(),\fR
+\fB                         UserMod :: snmpm:snmpm_user(),\fR
+\fB                         UserData :: term(),\fR
+\fB                         DefaultAgentConfig :: [snmpm:agent_config()],\fR
+\fB                         UserEntry :: user_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the manager users config file, \fIusers.conf\fR.
+
+.PP
+See the \fIUsers\fR chapter of the (SNMP) \fIManager Configuration\fR User Guide for more info.
+
+
+.RE
+.B
+\fBusm_entry(EngineID, UserName, SecName, AuthP, AuthKey, PrivP,\fR
+\fB                PrivKey) ->\fR
+\fB                   UsmEntry\fR
+\fB                   when\fR
+\fB                       EngineID :: snmp:engine_id(),\fR
+\fB                       UserName :: snmp:usm_name(),\fR
+\fB                       SecName :: snmp:sec_name(),\fR
+\fB                       AuthP :: snmp:usm_auth_protocol(),\fR
+\fB                       AuthKey :: snmp:usm_auth_key(),\fR
+\fB                       PrivP :: snmp:usm_priv_protocol(),\fR
+\fB                       PrivKey :: snmp:usm_priv_key(),\fR
+\fB                       UsmEntry :: usm_entry().\fR
+
+.br
+.RS
+.PP
+Create an entry for the manager usm config file, \fIusm.conf\fR.
+
+.PP
+See \fISecurity data for USM\fR for more info.
+
+
+.RE
+.B
+\fBwrite_agents_config(Dir, Hdr, Conf) -> ok\fR
+\fB                             when\fR
+\fB                                 Dir :: snmp:dir(),\fR
+\fB                                 Hdr :: string(),\fR
+\fB                                 Conf :: [agent_entry()].\fR
+
+.br
+.RS
+.PP
+Write the manager agents config to the manager agents config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Agents for more info.
+
+
+.RE
+.B
+\fBwrite_manager_config(Dir, Hdr, Conf) -> ok\fR
+\fB                              when\fR
+\fB                                  Dir :: snmp:dir(),\fR
+\fB                                  Hdr :: string(),\fR
+\fB                                  Conf :: [manager_entry()].\fR
+
+.br
+.RS
+.PP
+Write the manager config to the manager config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Manager Information for more info.
+
+
+.RE
+.B
+\fBwrite_users_config(Dir, Hdr, Conf) -> ok\fR
+\fB                            when\fR
+\fB                                Dir :: snmp:dir(),\fR
+\fB                                Hdr :: string(),\fR
+\fB                                Conf :: [user_entry()].\fR
+
+.br
+.RS
+.PP
+Write the manager users config to the manager users config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Users for more info.
+
+
+.RE
+.B
+\fBwrite_usm_config(Dir, Hdr, Conf) -> ok\fR
+\fB                          when\fR
+\fB                              Dir :: snmp:dir(),\fR
+\fB                              Hdr :: string(),\fR
+\fB                              Conf :: [user_entry()].\fR
+
+.br
+.RS
+.PP
+Write the manager usm config to the manager usm config file.
+
+.PP
+\fIDir\fR is the path to the directory where to store the config file.
+
+.PP
+\fIHdr\fR is an optional file header (note that this text is written to the file as is).
+
+.PP
+See Security data for USM for more info.
+
+
+.RE

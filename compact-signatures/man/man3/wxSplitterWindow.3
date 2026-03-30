@@ -1,0 +1,959 @@
+.TH wxSplitterWindow 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSplitterWindow \- This class manages up to two subwindows.
+
+.SH DESCRIPTION
+.PP
+The current view can be split into two programmatically (perhaps from a menu command), and unsplit either programmatically or via the \fIwxSplitterWindow\fR user interface.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_3D: Draws a 3D effect border and sash.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_THIN_SASH: Draws a thin sash.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_3DSASH: Draws a 3D effect sash (part of default style).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_3DBORDER: Synonym for wxSP_BORDER.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_BORDER: Draws a standard border.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_NOBORDER: No border (default).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_NO_XP_THEME: Under Windows, switches off the attempt to draw the splitter using Windows theming, so the borders and sash will take on the pre-XP look.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_PERMIT_UNSPLIT: Always allow to unsplit, even with the minimum pane size other than zero.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSP_LIVE_UPDATE: Don't draw XOR line but resize the child windows immediately.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSplitterEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview splitterwindow
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSplitterWindow
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_splitter_sash_pos_changing\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_splitter_sash_pos_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_splitter_unsplit\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSplitterWindow() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxSplitterWindow(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option ::\fR
+\fB                        {id, integer()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Creation function, for two-step construction.
+
+.PP
+See \fInew/2\fR for details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxSplitterWindow()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetMinimumPaneSize(This) -> integer()\fR
+\fB                            when This :: wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Returns the current minimum pane size (defaults to zero).
+
+.PP
+See: \fIsetMinimumPaneSize/2\fR
+
+
+.RE
+.B
+\fBgetSashGravity(This) -> number() when This :: wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Returns the current sash gravity.
+
+.PP
+See: \fIsetSashGravity/2\fR
+
+
+.RE
+.B
+\fBgetSashPosition(This) -> integer() when This :: wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Returns the current sash position.
+
+.PP
+See: \fIsetSashPosition/3\fR
+
+
+.RE
+.B
+\fBgetSplitMode(This) -> wx:wx_enum() when This :: wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Gets the split mode.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetSplitMode/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitVertically/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitHorizontally/4\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetWindow1(This) -> wxWindow:wxWindow()\fR
+\fB                    when This :: wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Returns the left/top or only pane.
+
+
+.RE
+.B
+\fBgetWindow2(This) -> wxWindow:wxWindow()\fR
+\fB                    when This :: wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Returns the right/bottom pane.
+
+
+.RE
+.B
+\fBinitialize(This, Window) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxSplitterWindow(),\fR
+\fB                        Window :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Initializes the splitter window to have one pane.
+
+.PP
+The child window is shown if it is currently hidden.
+
+.PP
+Remark: This should be called if you wish to initially view only a single pane in the splitter window.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitVertically/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitHorizontally/4\fR
+
+.RE
+
+
+.RE
+.B
+\fBisSplit(This) -> boolean() when This :: wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Returns true if the window is split, false otherwise.
+
+
+.RE
+.B
+\fBnew() -> wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxSplitterWindow()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {id, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor for creating the window.
+
+.PP
+Remark: After using this constructor, you must create either one or two subwindows with the splitter window as parent, and then call one of \fIinitialize/2\fR, \fIsplitVertically/4\fR and \fIsplitHorizontally/4\fR in order to set the pane(s). You can create two windows, with one hidden when not being shown; or you can create and delete the second pane on demand.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinitialize/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitVertically/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitHorizontally/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcreate/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBreplaceWindow(This, WinOld, WinNew) -> boolean()\fR
+\fB                       when\fR
+\fB                           This :: wxSplitterWindow(),\fR
+\fB                           WinOld :: wxWindow:wxWindow(),\fR
+\fB                           WinNew :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+This function replaces one of the windows managed by the \fIwxSplitterWindow\fR with another one.
+
+.PP
+It is in general better to use it instead of calling \fIunsplit/2\fR and then resplitting the window back because it will provoke much less flicker (if any). It is valid to call this function whether the splitter has two windows or only one.
+
+.PP
+Both parameters should be non-NULL and \fIwinOld\fR must specify one of the windows managed by the splitter. If the parameters are incorrect or the window couldn't be replaced, false is returned. Otherwise the function will return true, but please notice that it will not delete the replaced window and you may wish to do it yourself.
+
+.PP
+See: \fIgetMinimumPaneSize/1\fR
+
+
+.RE
+.B
+\fBsetMinimumPaneSize(This, PaneSize) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxSplitterWindow(),\fR
+\fB                                PaneSize :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the minimum pane size.
+
+.PP
+Remark: The default minimum pane size is zero, which means that either pane can be reduced to zero by dragging the sash, thus removing one of the panes. To prevent this behaviour (and veto out-of-range sash dragging), set a minimum size, for example 20 pixels. If the wxSP_PERMIT_UNSPLIT style is used when a splitter window is created, the window may be unsplit even if minimum size is non-zero.
+
+.PP
+See: \fIgetMinimumPaneSize/1\fR
+
+
+.RE
+.B
+\fBsetSashGravity(This, Gravity) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxSplitterWindow(),\fR
+\fB                            Gravity :: number().\fR
+
+.br
+.RS
+.PP
+Sets the sash gravity.
+
+.PP
+Remark: Gravity is real factor which controls position of sash while resizing \fIwxSplitterWindow\fR. Gravity tells \fIwxSplitterWindow\fR how much will left/top window grow while resizing. Example values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+0: only the bottom/right window is automatically resized
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+5: both windows grow by equal size
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+0: only left/top window grows Gravity should be a real value between 0.0 and 1.0. Default value of sash gravity is 0.0. That value is compatible with previous (before gravity was introduced) behaviour of \fIwxSplitterWindow\fR.
+
+.RE
+
+.PP
+Notice that when sash gravity for a newly created splitter window, it is often necessary to explicitly set the splitter size using \fIwxWindow:setSize/6\fR to ensure that is big enough for its initial sash position. Otherwise, i.e. if the window is created with the default tiny size and only resized to its correct size later, the initial sash position will be affected by the gravity and typically result in sash being at the rightmost position for the gravity of 1. See the example code creating \fIwxSplitterWindow\fR in the splitter sample for more details.
+
+.PP
+See: \fIgetSashGravity/1\fR
+
+
+.RE
+.B
+\fBsetSashPosition(This, Position, [Option]) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxSplitterWindow(),\fR
+\fB                             Position :: integer(),\fR
+\fB                             Option :: {redraw, boolean()}.\fR
+
+.br
+.RS
+.PP
+Sets the sash position.
+
+.PP
+Remark: Does not currently check for an out-of-range value.
+
+.PP
+See: \fIgetSashPosition/1\fR
+
+
+.RE
+.B
+\fBsetSplitMode(This, Mode) -> ok\fR
+\fB                      when This :: wxSplitterWindow(), Mode :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the split mode.
+
+.PP
+Remark: Only sets the internal variable; does not update the display.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetSplitMode/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitVertically/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitHorizontally/4\fR
+
+.RE
+
+
+.RE
+.B
+\fBsplitHorizontally(This, Window1, Window2, [Option]) -> boolean()\fR
+\fB                           when\fR
+\fB                               This :: wxSplitterWindow(),\fR
+\fB                               Window1 :: wxWindow:wxWindow(),\fR
+\fB                               Window2 :: wxWindow:wxWindow(),\fR
+\fB                               Option :: {sashPosition, integer()}.\fR
+
+.br
+.RS
+.PP
+Initializes the top and bottom panes of the splitter window.
+
+.PP
+The child windows are shown if they are currently hidden.
+
+.PP
+Return: true if successful, false otherwise (the window was already split).
+
+.PP
+Remark: This should be called if you wish to initially view two panes. It can also be called at any subsequent time, but the application should check that the window is not currently split using \fIisSplit/1\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitVertically/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisSplit/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIunsplit/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsplitVertically(This, Window1, Window2, [Option]) -> boolean()\fR
+\fB                         when\fR
+\fB                             This :: wxSplitterWindow(),\fR
+\fB                             Window1 :: wxWindow:wxWindow(),\fR
+\fB                             Window2 :: wxWindow:wxWindow(),\fR
+\fB                             Option :: {sashPosition, integer()}.\fR
+
+.br
+.RS
+.PP
+Initializes the left and right panes of the splitter window.
+
+.PP
+The child windows are shown if they are currently hidden.
+
+.PP
+Return: true if successful, false otherwise (the window was already split).
+
+.PP
+Remark: This should be called if you wish to initially view two panes. It can also be called at any subsequent time, but the application should check that the window is not currently split using \fIisSplit/1\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitHorizontally/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisSplit/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIunsplit/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBunsplit(This, [Option]) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxSplitterWindow(),\fR
+\fB                     Option :: {toRemove, wxWindow:wxWindow()}.\fR
+
+.br
+.RS
+.PP
+Unsplits the window.
+
+.PP
+Return: true if successful, false otherwise (the window was not split).
+
+.PP
+Remark: This call will not actually delete the pane being removed; it calls \fIOnUnsplit()\fR (not implemented in wx) which can be overridden for the desired behaviour. By default, the pane being removed is hidden.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitHorizontally/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsplitVertically/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisSplit/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBupdateSize(This) -> ok when This :: wxSplitterWindow().\fR
+
+.br
+.RS
+.PP
+Causes any pending sizing of the sash and child panes to take place immediately.
+
+.PP
+Such resizing normally takes place in idle time, in order to wait for layout to be completed. However, this can cause unacceptable flicker as the panes are resized after the window has been shown. To work around this, you can perform window layout (for example by sending a size event to the parent window), and then call this function, before showing the top-level window.
+
+
+.RE

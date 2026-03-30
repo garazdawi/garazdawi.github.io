@@ -1,0 +1,189 @@
+.TH wxIcon 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxIcon \- An icon is a small rectangular bitmap usually used for denoting a minimized application.
+
+.SH DESCRIPTION
+.PP
+It differs from a \fIwxBitmap\fR in always having a mask associated with it for transparent drawing. On some platforms, icons and bitmaps are implemented identically, since there is no real distinction between a \fIwxBitmap\fR with a mask and an icon; and there is no specific icon format on some platforms (X-based applications usually standardize on XPMs for small bitmaps and icons). However, some platforms (such as Windows) make the distinction, so a separate class is provided.
+
+.PP
+Remark: It is usually desirable to associate a pertinent icon with a frame. Icons can also be used for other purposes, for example with \fIwxTreeCtrl\fR and \fIwxListCtrl\fR. Icons have different formats on different platforms therefore separate icons will usually be created for the different environments. Platform-specific methods for creating a \fIwxIcon\fR structure are catered for, and this is an occasion where conditional compilation will probably be required. Note that a new icon must be created for every time the icon is to be used for a new window. In Windows, the icon will not be reloaded if it has already been used. An icon allocated to a frame will be deleted when the frame is deleted. For more information please see overview_bitmap.
+
+.PP
+Predefined objects (include wx.hrl): ?wxNullIcon
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview bitmap
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview bitmap
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxIconBundle\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC:drawIcon/3\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCursor\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBitmap\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxIcon
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxIcon() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcopyFromBitmap(This, Bmp) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxIcon(), Bmp :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Copies \fIbmp\fR bitmap to this icon.
+
+.PP
+Under MS Windows the bitmap must have mask colour set.
+
+.PP
+See: \fIwxBitmap:loadFile/3\fR
+
+
+.RE
+.B
+\fBdestroy(This :: wxIcon()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew() -> wxIcon().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+.PP
+Constructs an icon object with no data; an assignment or another member function such as \fIwxBitmap:loadFile/3\fR must be called subsequently.
+
+
+.RE
+.B
+\fBnew(Name) -> wxIcon() when Name :: unicode:chardata();\fR
+\fB         (Icon) -> wxIcon() when Icon :: wxIcon().\fR
+
+.br
+.RS
+.PP
+Copy ctor.
+
+
+.RE
+.B
+\fBnew(Name, [Option]) -> wxIcon()\fR
+\fB             when\fR
+\fB                 Name :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {type, wx:wx_enum()} |\fR
+\fB                     {desiredWidth, integer()} |\fR
+\fB                     {desiredHeight, integer()}.\fR
+
+.br
+.RS
+.PP
+Loads an icon from a file or resource.
+
+.PP
+See: \fIwxBitmap:loadFile/3\fR
+
+
+.RE

@@ -1,0 +1,567 @@
+.TH c 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+c \- Command line interface module.
+
+.SH DESCRIPTION
+.PP
+This module enables users to enter the short form of some commonly used commands.
+
+.PP
+\fBNOTE: \fRThese functions are intended for interactive use in the Erlang shell only. The module prefix can be omitted.
+
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIfilename\fR, \fIcompile\fR, \fIerlang\fR, \fIyecc\fR, \fIxref\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBcmd_line_arg() :: atom() | string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBh_return() ::\fR
+\fB          ok | {error, missing | {unknown_format, unicode:chardata()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhcb_return() :: h_return() | {error, callback_missing}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhf_return() :: h_return() | {error, function_missing}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBht_return() :: h_return() | {error, type_missing}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbt(Pid) -> ok | undefined when Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Stack backtrace for a process. Equivalent to \fIerlang:process_display(Pid, backtrace)\fR.
+
+
+.RE
+.B
+\fBc(Module) -> {ok, ModuleName} | error\fR
+\fB           when Module :: file:name(), ModuleName :: module().\fR
+
+.br
+.RS
+.PP
+Works like \fIc(Module, [])\fR.
+
+
+.RE
+.B
+\fBc(Module, Options) -> {ok, ModuleName} | error\fR
+\fB           when\fR
+\fB               Module :: file:name(),\fR
+\fB               Options :: [compile:option()] | compile:option(),\fR
+\fB               ModuleName :: module().\fR
+
+.br
+.RS
+.PP
+Compiles and then purges and loads the code for a module. \fIModule\fR can be either a module name or a source file path, with or without \fI.erl\fR extension.
+
+.PP
+If \fIModule\fR is a string, it is assumed to be a source file path, and the compiler will attempt to compile the source file with the options \fIOptions\fR. If compilation fails, the old object file (if any) is deleted.
+
+.PP
+If \fIModule\fR is an atom, a source file with that exact name or with \fI.erl\fR extension will be looked for. If found, the source file is compiled with the options \fIOptions\fR. If compilation fails, the old object file (if any) is deleted.
+
+.PP
+If \fIModule\fR is an atom and is not the path of a source file, then the code path is searched to locate the object file for the module and extract its original compiler options and source path. If the source file is not found in the original location, \fIfilelib:find_source/1\fR is used to search for it relative to the directory of the object file.
+
+.PP
+The source file is compiled with the the original options appended to the given \fIOptions\fR, the output replacing the old object file if and only if compilation succeeds.
+
+.PP
+Notice that purging the code means that any processes lingering in old code for the module are killed without warning. For more information, see the \fIcode\fR module.
+
+
+.RE
+.B
+\fBc(Module, Options, Filter) -> {ok, ModuleName} | error\fR
+\fB           when\fR
+\fB               Module :: atom(),\fR
+\fB               Options :: [compile:option()],\fR
+\fB               Filter :: fun((compile:option()) -> boolean()),\fR
+\fB               ModuleName :: module().\fR
+
+.br
+.RS
+.PP
+Compiles and then purges and loads the code for module \fIModule\fR, which must be an atom.
+
+.PP
+The code path is searched to locate the object file for module \fIModule\fR and extract its original compiler options and source path. If the source file is not found in the original location, \fIfilelib:find_source/1\fR is used to search for it relative to the directory of the object file.
+
+.PP
+The source file is compiled with the the original options appended to the given \fIOptions\fR, the output replacing the old object file if and only if compilation succeeds. The function \fIFilter\fR specifies which elements to remove from the original compiler options before the new options are added. The \fIFilter\fR fun should return \fItrue\fR for options to keep, and \fIfalse\fR for options to remove.
+
+.PP
+Notice that purging the code means that any processes lingering in old code for the module are killed without warning. For more information, see the \fIcode\fR module.
+
+
+.RE
+.B
+\fBcd(Dir) -> ok when Dir :: file:name().\fR
+
+.br
+.RS
+.PP
+Changes working directory to \fIDir\fR, which can be a relative name, and then prints the name of the new working directory.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+2> cd("../erlang").
+/home/ron/erlang
+
+.fi
+
+
+.RE
+.B
+\fBerlangrc(PathList) -> {ok, file:filename()} | {error, term()}\fR
+\fB                  when PathList :: [Dir :: file:name()].\fR
+
+.br
+.RS
+.PP
+Search \fIPathList\fR and load \fI.erlang\fR resource file if found.
+
+
+.RE
+.B
+\fBflush() -> ok.\fR
+
+.br
+.RS
+.PP
+Flushes any messages sent to the shell.
+
+
+.RE
+.B
+\fBh(module()) -> h_return().\fR
+
+.br
+.RS
+.PP
+Print the documentation for \fIModule\fR
+
+
+.RE
+.B
+\fBh(module(), function()) -> hf_return().\fR
+
+.br
+.RS
+.PP
+Print the documentation for all \fIModule:Function\fRs (regardless of arity).
+
+
+.RE
+.B
+\fBh(module(), function(), arity()) -> hf_return().\fR
+
+.br
+.RS
+.PP
+Print the documentation for \fIModule:Function/Arity\fR.
+
+
+.RE
+.B
+\fBhcb(module()) -> h_return().\fR
+
+.br
+.RS
+.PP
+Print the callback documentation for \fIModule\fR
+
+
+.RE
+.B
+\fBhcb(module(), Callback :: atom()) -> hcb_return().\fR
+
+.br
+.RS
+.PP
+Print the callback documentation for all \fIModule:Callback\fRs (regardless of arity).
+
+
+.RE
+.B
+\fBhcb(module(), Callback :: atom(), arity()) -> hcb_return().\fR
+
+.br
+.RS
+.PP
+Print the callback documentation for \fIModule:Callback/Arity\fR.
+
+
+.RE
+.B
+\fBhelp() -> ok.\fR
+
+.br
+.RS
+.PP
+Displays help information: all valid shell internal commands, and commands in this module.
+
+
+.RE
+.B
+\fBht(module()) -> h_return().\fR
+
+.br
+.RS
+.PP
+Print the type documentation for \fIModule\fR
+
+
+.RE
+.B
+\fBht(module(), Type :: atom()) -> ht_return().\fR
+
+.br
+.RS
+.PP
+Print the type documentation for \fIType\fR in \fIModule\fR regardless of arity.
+
+
+.RE
+.B
+\fBht(module(), Type :: atom(), arity()) -> ht_return().\fR
+
+.br
+.RS
+.PP
+Print the type documentation for \fIType/Arity\fR in \fIModule\fR.
+
+
+.RE
+.B
+\fBi(X, Y, Z) -> [{atom(), term()}]\fR
+\fB           when\fR
+\fB               X :: non_neg_integer(),\fR
+\fB               Y :: non_neg_integer(),\fR
+\fB               Z :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Old alias for \fIpi(X, Y, Z)\fR. Note that the output of \fIi(X, Y, Z)\fR is very different from that of \fIi()\fR, so the new name is preferred.
+
+
+.RE
+.B
+\fBl(Module) -> code:load_ret() when Module :: module().\fR
+
+.br
+.RS
+.PP
+Purges and loads, or reloads, a module by calling \fIcode:purge(Module)\fR followed by \fIcode:load_file(Module)\fR.
+
+.PP
+Notice that purging the code means that any processes lingering in old code for the module are killed without warning. For more information, see \fIcode/3\fR.
+
+
+.RE
+.B
+\fBlc(Files) -> ok | error when Files :: [File :: cmd_line_arg()].\fR
+
+.br
+.RS
+.PP
+Compiles a list of files by calling \fIcompile:file(File, [report_errors, report_warnings])\fR for each \fIFile\fR in \fIFiles\fR.
+
+.PP
+For information about \fIFile\fR, see \fIfile:filename/0\fR.
+
+
+.RE
+.B
+\fBlm() -> [code:load_ret()].\fR
+
+.br
+.RS
+.PP
+Reloads all currently loaded modules that have changed on disk (see \fImm/0\fR). Returns the list of results from calling \fIl(M)\fR for each such \fIM\fR.
+
+
+.RE
+.B
+\fBls() -> ok.\fR
+
+.br
+.RS
+.PP
+Lists files in the current directory.
+
+
+.RE
+.B
+\fBls(Dir) -> ok when Dir :: file:name().\fR
+
+.br
+.RS
+.PP
+Lists files in directory \fIDir\fR or, if \fIDir\fR is a file, only lists it.
+
+
+.RE
+.B
+\fBm() -> ok.\fR
+
+.br
+.RS
+.PP
+Displays information about the loaded modules, including the files from which they have been loaded.
+
+
+.RE
+.B
+\fBm(Module) -> ok when Module :: module().\fR
+
+.br
+.RS
+.PP
+Displays information about \fIModule\fR.
+
+
+.RE
+.B
+\fBmemory() -> [{Type, Size}]\fR
+\fB                when Type :: atom(), Size :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Memory allocation information. Equivalent to \fIerlang:memory/0\fR.
+
+
+.RE
+.B
+\fBmemory(Type) -> Size\fR
+\fB                when Type :: atom(), Size :: non_neg_integer();\fR
+\fB            (Types) -> [{Type, Size}]\fR
+\fB                when\fR
+\fB                    Types :: [Type],\fR
+\fB                    Type :: atom(),\fR
+\fB                    Size :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Memory allocation information. Equivalent to \fIerlang:memory/1\fR.
+
+
+.RE
+.B
+\fBmm() -> [module()].\fR
+
+.br
+.RS
+.PP
+Lists all modified modules. Shorthand for \fIcode:modified_modules/0\fR.
+
+
+.RE
+.B
+\fBnc(File, Options) -> {ok, Module} | error\fR
+\fB            when\fR
+\fB                File :: file:name(),\fR
+\fB                Options :: [Option] | Option,\fR
+\fB                Option :: compile:option(),\fR
+\fB                Module :: module().\fR
+
+.br
+.RS
+.PP
+Compiles and then loads the code for a file on all nodes. \fIOptions\fR defaults to \fI[]\fR. Compilation is equivalent to:
+
+.IP
+.nf
+compile:file(File, Options ++ [report_errors, report_warnings])
+
+.fi
+
+
+.RE
+.B
+\fBni() -> ok.\fR
+
+.br
+.RS
+.PP
+\fIi/0\fR displays system information, listing information about all processes. \fIni/0\fR does the same, but for all nodes in the network.
+
+
+.RE
+.B
+\fBnl(Module) -> abcast | error when Module :: module().\fR
+
+.br
+.RS
+.PP
+Loads \fIModule\fR on all nodes.
+
+
+.RE
+.B
+\fBpi(Pid) -> [{atom(), term()}] when Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Displays information about a process, Equivalent to \fIprocess_info(Pid)\fR, but location transparent.
+
+
+.RE
+.B
+\fBpi(X, Y, Z) -> [{atom(), term()}]\fR
+\fB            when\fR
+\fB                X :: non_neg_integer(),\fR
+\fB                Y :: non_neg_integer(),\fR
+\fB                Z :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIpi(pid(X, Y, Z))\fR.
+
+
+.RE
+.B
+\fBpid(X, Y, Z) -> pid()\fR
+\fB             when\fR
+\fB                 X :: non_neg_integer(),\fR
+\fB                 Y :: non_neg_integer(),\fR
+\fB                 Z :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Converts \fIX\fR, \fIY\fR, \fIZ\fR to pid \fI<X.Y.Z>\fR. This function is only to be used when debugging.
+
+
+.RE
+.B
+\fBpwd() -> ok.\fR
+
+.br
+.RS
+.PP
+Prints the name of the working directory.
+
+
+.RE
+.B
+\fBq() -> no_return().\fR
+
+.br
+.RS
+.PP
+This function is shorthand for \fIinit:stop()\fR, that is, it causes the node to stop in a controlled fashion.
+
+
+.RE
+.B
+\fBregs() -> ok.\fR
+
+.br
+.RS
+.PP
+\fIregs/0\fR displays information about all registered processes. \fInregs/0\fR does the same, but for all nodes in the network.
+
+
+.RE
+.B
+\fBuptime() -> ok.\fR
+
+.br
+.RS
+.PP
+Prints the node uptime (as specified by \fIerlang:statistics(wall_clock)\fR) in human-readable form.
+
+
+.RE
+.B
+\fBxm(module() | file:filename()) -> XRefMRet :: term().\fR
+
+.br
+.RS
+.PP
+Finds undefined functions, unused functions, and calls to deprecated functions in a module by calling \fIxref:m/1\fR.
+
+
+.RE
+.B
+\fBy(file:name()) -> YeccFileRet :: term().\fR
+
+.br
+.RS
+.PP
+Generates an LALR-1 parser. Equivalent to:
+
+.IP
+.nf
+yecc:file(File)
+
+.fi
+
+.PP
+For information about \fIFile = name()\fR, see \fIfilename\fR. For information about \fIYeccRet\fR, see \fIyecc:file/2\fR.
+
+
+.RE
+.B
+\fBy(file:name(), [yecc:option()]) -> YeccFileRet :: yecc:yecc_ret().\fR
+
+.br
+.RS
+.PP
+Generates an LALR-1 parser. Equivalent to:
+
+.IP
+.nf
+yecc:file(File, Options)
+
+.fi
+
+.PP
+For information about \fIFile = name()\fR, see \fIfilename\fR. For information about \fIOptions\fR and \fIYeccRet\fR, see \fIyecc:file/2\fR.
+
+
+.RE

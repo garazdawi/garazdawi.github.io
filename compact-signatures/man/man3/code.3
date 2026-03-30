@@ -1,0 +1,1854 @@
+.TH code 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+code \- Interface to the Erlang code server process.
+
+.SH DESCRIPTION
+.PP
+This module contains the interface to the Erlang \fIcode server\fR, which deals with the loading of compiled code into a running Erlang runtime system.
+
+.PP
+The runtime system can be started in \fIinteractive\fR or \fIembedded\fR mode. Which one is decided by the command-line flag \fI-mode\fR:
+
+.IP
+.nf
+% erl -mode embedded
+
+.fi
+
+.PP
+The modes are as follows:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In \fIinteractive\fR mode, which is default, only the modules needed by the runtime system are loaded during system startup. Other code is dynamically loaded when first referenced. When a call to a function in a certain module is made, and that module is not loaded, the code server searches for and tries to load that module.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In \fIembedded\fR mode, modules are not auto-loaded. Trying to use a module that has not been loaded results in an error. This mode is recommended when the boot script loads all modules, as it is typically done in OTP releases. (Code can still be loaded later by explicitly ordering the code server to do so).
+
+.RE
+
+.PP
+To prevent accidentally reloading of modules affecting the Erlang runtime system, directories \fIkernel\fR, \fIstdlib\fR, and \fIcompiler\fR are considered \fIsticky\fR. This means that the system issues a warning and rejects the request if a user tries to reload a module residing in any of them. The feature can be disabled by using command-line flag \fI-nostick\fR.
+
+.SS "Code Path"
+
+.PP
+In interactive mode, the code server maintains a \fIcode path\fR, consisting of a list of directories, which it searches sequentially when trying to load a module.
+
+.PP
+Initially, the code path consists of the current working directory and all Erlang object code directories under library directory \fI$OTPROOT/lib\fR, where \fI$OTPROOT\fR is the installation directory of Erlang/OTP, \fIcode:root_dir()\fR. Directories can be named \fIName[-Vsn]\fR and the code server, by default, chooses the directory with the highest version number among those having the same \fIName\fR. Suffix \fI-Vsn\fR is optional. If an \fIebin\fR directory exists under \fIName[-Vsn]\fR, this directory is added to the code path.
+
+.PP
+Environment variable \fIERL_LIBS\fR (defined in the operating system) can be used to define more library directories to be handled in the same way as the standard OTP library directory described above, except that directories without an \fIebin\fR directory are ignored.
+
+.PP
+All application directories found in the additional directories appear before the standard OTP applications, except for the Kernel and STDLIB applications, which are placed before any additional applications. In other words, modules found in any of the additional library directories override modules with the same name in OTP, except for modules in Kernel and STDLIB.
+
+.PP
+Environment variable \fIERL_LIBS\fR (if defined) is to contain a colon-separated (for Unix-like systems) or semicolon-separated (for Windows) list of additional libraries.
+
+.PP
+\fIExample:\fR
+
+.PP
+On a Unix-like system, \fIERL_LIBS\fR can be set to the following:
+
+.IP
+.nf
+/usr/local/jungerl:/home/some_user/my_erlang_lib
+
+.fi
+
+.PP
+The code paths specified by \fI$OTPROOT\fR, \fIERL_LIBS\fR, and boot scripts have their listings cached by default (except for \fI"."\fR) The code server will lookup the contents in their directories once and avoid future file system traversals. Therefore, modules added to such directories after the Erlang VM boots will not be picked up. This behaviour can be disabled by setting \fI-cache_boot_paths false\fR or by calling \fIcode:set_path(code:get_path())\fR.
+
+.PP
+\fBCHANGE: \fRThe support for caching directories in the code path was added in Erlang/OTP 26.
+
+
+.PP
+Directories given by the command line options \fI-pa\fR and \fI-pz\fR are not cached by default. Many of the functions that manipulate the code path accept the \fIcache\fR atom as an optional argument to enable caching selectively.
+
+.SS "Loading of Code From Archive Files"
+
+.PP
+\fBCHANGE: \fRThe existing experimental support for archive files will be changed in a future release. As of Erlang/OTP 27, the function \fIcode:lib_dir/2\fR, the \fI-code_path_choice\fR flag, and using \fIerl_prim_loader\fR for reading files from an archive are deprecated. \fIescript\fR scripts that use archive files should use \fIescript:extract/2\fR to read data files from its archive instead of using \fIcode:lib_dir/2\fR and \fIerl_prim_loader\fR.
+
+
+.PP
+The Erlang archives are \fIZIP\fR files with extension \fI.ez\fR. Erlang archives can also be enclosed in \fIescript\fR files whose file extension is arbitrary.
+
+.PP
+Erlang archive files can contain entire Erlang applications or parts of applications. The structure in an archive file is the same as the directory structure for an application. If you, for example, create an archive of \fImnesia-4.4.7\fR, the archive file must be named \fImnesia-4.4.7.ez\fR and it must contain a top directory named \fImnesia-4.4.7\fR. If the version part of the name is omitted, it must also be omitted in the archive. That is, a \fImnesia.ez\fR archive must contain a \fImnesia\fR top directory.
+
+.PP
+An archive file for an application can, for example, be created like this:
+
+.IP
+.nf
+zip:create("mnesia-4.4.7.ez",
+	["mnesia-4.4.7"],
+	[{cwd, code:lib_dir()},
+	 {compress, all},
+	 {uncompress,[".beam",".app"]}]).
+
+.fi
+
+.PP
+Any file in the archive can be compressed, but to speed up the access of frequently read files, it can be a good idea to store \fIbeam\fR and \fIapp\fR files uncompressed in the archive.
+
+.PP
+Normally the top directory of an application is located in library directory \fI$OTPROOT/lib\fR or in a directory referred to by environment variable \fIERL_LIBS\fR. At startup, when the initial code path is computed, the code server also looks for archive files in these directories and possibly adds \fIebin\fR directories in archives to the code path. The code path then contains paths to directories that look like \fI$OTPROOT/lib/mnesia.ez/mnesia/ebin\fR or \fI$OTPROOT/lib/mnesia-4.4.7.ez/mnesia-4.4.7/ebin\fR.
+
+.PP
+The code server uses module \fIerl_prim_loader\fR in ERTS (possibly through \fIerl_boot_server\fR) to read code files from archives. However, the functions in \fIerl_prim_loader\fR can also be used by other applications to read files from archives. For example, the call \fIerl_prim_loader:list_dir( "/otp/root/lib/mnesia-4.4.7.ez/mnesia-4.4.7/examples/bench)"\fR would list the contents of a directory inside an archive. See \fIerl_prim_loader\fR.
+
+.PP
+An application archive file and a regular application directory can coexist. This can be useful when it is needed to have parts of the application as regular files. A typical case is the \fIpriv\fR directory, which must reside as a regular directory to link in drivers dynamically and start port programs. For other applications that do not need this, directory \fIpriv\fR can reside in the archive and the files under the directory \fIpriv\fR can be read through \fIerl_prim_loader\fR.
+
+.PP
+When a directory is added to the code path and when the entire code path is (re)set, the code server decides which subdirectories in an application that are to be read from the archive and which that are to be read as regular files. If directories are added or removed afterwards, the file access can fail if the code path is not updated (possibly to the same path as before, to trigger the directory resolution update).
+
+.PP
+For each directory on the second level in the application archive (\fIebin\fR, \fIpriv\fR, \fIsrc\fR, and so on), the code server first chooses the regular directory if it exists and second from the archive. Function \fIcode:lib_dir/2\fR returns the path to the subdirectory. For example, \fIcode:lib_dir(megaco, ebin)\fR can return \fI/otp/root/lib/megaco-3.9.1.1.ez/megaco-3.9.1.1/ebin\fR while \fIcode:lib_dir(megaco, priv)\fR can return \fI/otp/root/lib/megaco-3.9.1.1/priv\fR.
+
+.PP
+When an \fIescript\fR file contains an archive, there are no restrictions on the name of the \fIescript\fR and no restrictions on how many applications that can be stored in the embedded archive. Single Beam files can also reside on the top level in the archive. At startup, the top directory in the embedded archive and all (second level) \fIebin\fR directories in the embedded archive are added to the code path. See \fIescript\fR.
+
+.PP
+A future-proof way for \fIescript\fR scripts to read data files from the archive is to use the \fIescript:extract/2\fR function.
+
+.PP
+When the choice of directories in the code path is \fIstrict\fR (which is the default as of Erlang/OTP 27), the directory that ends up in the code path is exactly the stated one. This means that if, for example, the directory \fI$OTPROOT/lib/mnesia-4.4.7/ebin\fR is explicitly added to the code path, the code server does not load files from \fI$OTPROOT/lib/mnesia-4.4.7.ez/mnesia-4.4.7/ebin\fR.
+
+.PP
+This behavior can be controlled through command-line flag \fI-code_path_choice Choice\fR. If the flag is set to \fIrelaxed\fR, the code server instead chooses a suitable directory depending on the actual file structure. If a regular application \fIebin\fR directory exists, it is chosen. Otherwise, the directory \fIebin\fR in the archive is chosen if it exists. If neither of them exists, the original directory is chosen.
+
+.PP
+Command-line flag \fI-code_path_choice Choice\fR also affects how module \fIinit\fR interprets the \fIboot script\fR. The interpretation of the explicit code paths in the \fIboot script\fR can be \fIstrict\fR or \fIrelaxed\fR. It is particularly useful to set the flag to \fIrelaxed\fR when elaborating with code loading from archives without editing the \fIboot script\fR. The default has changed to \fIstrict\fR in OTP 27 and the option is scheduled for removal in OTP 28. See module \fIinit\fR in the Erts application.
+
+.SS "Current and Old Code"
+
+.PP
+The code for a module can exist in two variants in a system: \fIcurrent code\fR and \fIold code\fR. When a module is loaded into the system for the first time, the module code becomes \fIcurrent\fR and the global \fIexport table\fR is updated with references to all functions exported from the module.
+
+.PP
+When a new instance of the module is loaded, the code of the previous instance becomes \fIold\fR, and all export entries referring to the previous instance are removed. After that, the new instance is loaded as for the first time, and becomes current.
+
+.PP
+Both old and current code for a module are valid, and can even be executed concurrently. The difference is that exported functions in old code are unavailable. Hence, a global call cannot be made to an exported function in old code, but old code can still be executed because of processes lingering in it.
+
+.PP
+If a third instance of the module is loaded, the code server removes (purges) the old code and any processes lingering in it are terminated. Then the third instance becomes current and the previously current code becomes old.
+
+.PP
+For more information about old and current code, and how to make a process switch from old to current code, see section Compilation and Code Loading in the Erlang Reference Manual.
+
+.SS "Native Coverage Support"
+
+.PP
+In runtime systems that use the JIT, native coverage is a light-weight way to find out which functions or lines that have been executed, or how many times each function or line has been executed.
+
+.PP
+\fBCHANGE: \fRThe support for native coverage was added in Erlang/OTP 27.
+
+
+.PP
+Native coverage works by instrumenting code at load-time. When a module has been instrumented for native coverage collection it is not possible to later disable the coverage collection, except by reloading the module. However, the overhead for keeping coverage collection running is often neligible, especially for coverage mode \fIfunction\fR that only keeps track of which functions that have been executed.
+
+.PP
+The \fIcover\fR tool in the Tools application will automatically use the native coverage support if the runtime system supports it.
+
+.PP
+It is only necessary to use the functionality described next if \fIcover\fR is not sufficient, for example:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If one wants to collect coverage information for the code that runs when the runtime system is starting (module \fIinit\fR and so on). \fIcover\fR can only be used when the Erlang system has started, and it will reload every module that is to be analyzed.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If it is necessary to collect coverage information with the absolute minimum disturbance of the test system. \fIcover\fR always counts how many times each line is executed (coverage mode \fIline_counters\fR), but by using native coverage one can use a less expensive coverage mode such as \fIfunction\fR, which has almost negligible overhead.
+
+.RE
+
+.PP
+\fBShort summary of using native coverage\fR
+
+.PP
+If the \fIline\fR or \fIline_counters\fR coverage mode is to be used, the code to be tested must be compiled with option \fIline_coverage\fR.
+
+.PP
+Use set_coverage_mode(Mode) to set a coverage mode for all code subsequently loaded, or set it with option +JPcover for \fIerl\fR.
+
+.PP
+Optionally reset coverage information for all modules that are to be tested by calling reset_coverage(Module).
+
+.PP
+Run the code whose coverage information is to be collected.
+
+.PP
+Read out the counters for all interesting modules by calling get_coverage(Level, Module), where \fILevel\fR is either \fIfunction\fR or \fIline\fR.
+
+.PP
+\fBThe other native coverage BIFs\fR
+
+.PP
+The following BIFs are sometimes useful, for example to fail gracefully if the runtime system does not support native coverage:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+coverage_support() - check whether the runtime system supports native coverage
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+get_coverage_mode() - get the current coverage mode
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+get_coverage_mode(Module) - get the coverage mode for module \fIModule\fR
+
+.RE
+
+.SS "Argument Types and Invalid Arguments"
+
+.PP
+Module and application names are atoms, while file and directory names are strings. For backward compatibility reasons, some functions accept both strings and atoms, but a future release will probably only allow the arguments that are documented.
+
+.PP
+Functions in this module generally fail with an exception if they are passed an incorrect type (for example, an integer or a tuple where an atom is expected). An error tuple is returned if the argument type is correct, but there are some other errors (for example, a non-existing directory is specified to \fIset_path/1\fR).
+
+.SS "Error Reasons for Code-Loading Functions"
+
+.PP
+Functions that load code (such as \fIload_file/1\fR) will return \fI{error,Reason}\fR if the load operation fails. Here follows a description of the common reasons.
+
+badfile
+.RS 2
+The object code has an incorrect format or the module name in the object code is not the expected module name.
+
+
+.RE
+
+nofile
+.RS 2
+No file with object code was found.
+
+
+.RE
+
+not_purged
+.RS 2
+The object code could not be loaded because an old version of the code already existed.
+
+
+.RE
+
+on_load_failure
+.RS 2
+The module has an -on_load function that failed when it was called.
+
+
+.RE
+
+sticky_directory
+.RS 2
+The object code resides in a sticky directory.
+
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBadd_path_ret() :: true | {error, bad_directory}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcache() :: cache | nocache.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcoverage_mode() ::\fR
+\fB          none | function | function_counters | line | line_counters.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_atom_or_var()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_call()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_frame()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_info()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_line()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_name()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_source()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_value()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_var()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBload_error_rsn() ::\fR
+\fB          badfile | nofile | not_purged | on_load_failure |\fR
+\fB          sticky_directory.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBload_ret() ::\fR
+\fB          {error, What :: load_error_rsn()} |\fR
+\fB          {module, Module :: module()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBloaded_filename() ::\fR
+\fB          (Filename :: file:filename()) | loaded_ret_atoms().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBloaded_ret_atoms() :: cover_compiled | preloaded.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmodule_status() :: not_loaded | loaded | modified | removed.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque prepared_code() \fR
+
+.br
+.RS
+.PP
+An opaque term holding prepared code.
+
+
+.RE
+.B
+\fBreplace_path_ret() ::\fR
+\fB          true | {error, bad_directory | bad_name | {badarg, _}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBset_path_ret() :: true | {error, bad_directory}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_patha(Dir, cache()) -> add_path_ret()\fR
+\fB                   when Dir :: file:filename().\fR
+
+.br
+.RS
+.PP
+Adds \fIDir\fR to the beginning of the code path.
+
+.PP
+If \fIDir\fR exists, it is removed from the old position in the code path.
+
+.PP
+Argument \fICache\fR controls whether the content of the directory should be cached on first traversal. If \fICache\fR is \fIcache\fR the directory contents will be cached; if \fICache\fR is \fInocache\fR it will not be cached.
+
+.PP
+Returns \fItrue\fR if successful, or \fI{error, bad_directory}\fR if \fIDir\fR is not the name of a directory.
+
+
+.RE
+.B
+\fBadd_pathsa(Dirs, cache()) -> ok\fR
+\fB                    when Dirs :: [Dir :: file:filename()].\fR
+
+.br
+.RS
+.PP
+Traverses \fIDirs\fR and adds each \fIDir\fR to the beginning of the code path.
+
+.PP
+This means that the order of \fIDirs\fR is reversed in the resulting code path. For example, if \fIDirs\fR is \fI[Dir1,Dir2]\fR, the resulting path will be \fI[Dir2,Dir1|OldCodePath]\fR.
+
+.PP
+If a \fIDir\fR already exists in the code path, it is removed from the old position.
+
+.PP
+Argument \fICache\fR controls whether the content of the directory should be cached on first traversal. If \fICache\fR is \fIcache\fR the directory contents will be cached; if \fICache\fR is \fInocache\fR it will not be cached.
+
+.PP
+Always returns \fIok\fR, regardless of the validity of each individual \fIDir\fR.
+
+
+.RE
+.B
+\fBadd_pathsz(Dirs, cache()) -> ok\fR
+\fB                    when Dirs :: [Dir :: file:filename()].\fR
+
+.br
+.RS
+.PP
+Adds the directories in \fIDirs\fR to the end of the code path.
+
+.PP
+Directories that are already present in the path will not be added.
+
+.PP
+Argument \fICache\fR controls whether the content of the directory should be cached on first traversal. If \fICache\fR is \fIcache\fR the directory contents will be cached; if \fICache\fR is \fInocache\fR it will not be cached.
+
+.PP
+Always returns \fIok\fR, regardless of the validity of each individual \fIDir\fR.
+
+
+.RE
+.B
+\fBadd_pathz(Dir, cache()) -> add_path_ret()\fR
+\fB                   when Dir :: file:filename().\fR
+
+.br
+.RS
+.PP
+Adds \fIDir\fR as the directory last in the code path.
+
+.PP
+If \fIDir\fR already exists in the path, it is not added.
+
+.PP
+Argument \fICache\fR controls whether the content of the directory should be cached on first traversal. If \fICache\fR is \fIcache\fR the directory contents will be cached; if \fICache\fR is \fInocache\fR it will not be cached.
+
+.PP
+Returns \fItrue\fR if successful, or \fI{error, bad_directory}\fR if \fIDir\fR is not the name of a directory.
+
+
+.RE
+.B
+\fBall_available() -> [{Module, Filename, Loaded}]\fR
+\fB                       when\fR
+\fB                           Module :: string(),\fR
+\fB                           Filename :: loaded_filename(),\fR
+\fB                           Loaded :: boolean().\fR
+
+.br
+.RS
+.PP
+Returns a list of tuples \fI{Module, Filename, Loaded}\fR for all available modules.
+
+.PP
+A module is considered to be available if it either is loaded or would be loaded if called. \fIFilename\fR is normally the absolute filename, as described for \fIis_loaded/1\fR.
+
+
+.RE
+.B
+\fBall_loaded() -> [{Module, Loaded}]\fR
+\fB                    when Module :: module(), Loaded :: loaded_filename().\fR
+
+.br
+.RS
+.PP
+Returns a list of tuples \fI{Module, Loaded}\fR for all loaded modules.
+
+.PP
+\fILoaded\fR is normally the absolute filename, as described for \fIis_loaded/1\fR.
+
+
+.RE
+.B
+\fBatomic_load(Modules) -> ok | {error, [{Module, What}]}\fR
+\fB                     when\fR
+\fB                         Modules ::\fR
+\fB                             [Module | {Module, Filename, Binary}],\fR
+\fB                         Module :: module(),\fR
+\fB                         Filename :: file:filename(),\fR
+\fB                         Binary :: binary(),\fR
+\fB                         What ::\fR
+\fB                             badfile | nofile | on_load_not_allowed |\fR
+\fB                             duplicated | not_purged |\fR
+\fB                             sticky_directory | pending_on_load.\fR
+
+.br
+.RS
+.PP
+Tries to load all of the modules in the list \fIModules\fR atomically.
+
+.PP
+That means that either all modules are loaded at the same time, or none of the modules are loaded if there is a problem with any of the modules.
+
+.PP
+Loading can fail for one the following reasons:
+
+badfile
+.RS 2
+The object code has an incorrect format or the module name in the object code is not the expected module name.
+
+
+.RE
+
+nofile
+.RS 2
+No file with object code exists.
+
+
+.RE
+
+on_load_not_allowed
+.RS 2
+A module contains an -on_load function.
+
+
+.RE
+
+duplicated
+.RS 2
+A module is included more than once in 
+\fIModules\fR.
+
+.RE
+
+not_purged
+.RS 2
+The object code cannot be loaded because an old version of the code already exists.
+
+
+.RE
+
+sticky_directory
+.RS 2
+The object code resides in a sticky directory.
+
+
+.RE
+
+pending_on_load
+.RS 2
+A previously loaded module contains an 
+\fI-on_load\fR function that never finished.
+
+.RE
+
+.PP
+If it is important to minimize the time that an application is inactive while changing code, use \fIprepare_loading/1\fR and \fIfinish_loading/1\fR instead of \fIatomic_load/1\fR. Here is an example:
+
+.IP
+.nf
+{ok,Prepared} = code:prepare_loading(Modules),
+%% Put the application into an inactive state or do any
+%% other preparation needed before changing the code.
+ok = code:finish_loading(Prepared),
+%% Resume the application.
+
+.fi
+
+
+.RE
+.B
+\fBclash() -> ok.\fR
+
+.br
+.RS
+.PP
+Searches all directories in the code path for module names with identical names and writes a report to \fIstdout\fR.
+
+
+.RE
+.B
+\fBclear_cache() -> ok.\fR
+
+.br
+.RS
+.PP
+Clears the code path cache.
+
+.PP
+If a directory is cached, its cache is cleared once and then it will be recalculated and cached once more in a future traversal.
+
+.PP
+To clear the cache for a single path, either re-add it to the code path (with \fIadd_path/2\fR) or replace it (with \fIreplace_path/3\fR). To disable all caching, reset the code path with \fIcode:set_path(code:get_path())\fR.
+
+.PP
+Always returns \fIok\fR.
+
+
+.RE
+.B
+\fBcompiler_dir() -> file:filename().\fR
+
+.br
+.RS
+.PP
+Returns the compiler library directory.
+
+.PP
+Equivalent to \fIcode:lib_dir(compiler)\fR.
+
+
+.RE
+.B
+\fBcoverage_support() -> Supported when Supported :: boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if the system supports coverage and \fIfalse\fR otherwise.
+
+.PP
+\fISee also:\fR Native Coverage Support
+
+
+.RE
+.B
+\fBdel_path(NameOrDir) -> boolean() | {error, What}\fR
+\fB                  when\fR
+\fB                      NameOrDir :: Name | Dir,\fR
+\fB                      Name :: atom(),\fR
+\fB                      Dir :: file:filename(),\fR
+\fB                      What :: bad_name.\fR
+
+.br
+.RS
+.PP
+Deletes a directory from the code path.
+
+.PP
+The argument can be an atom \fIName\fR, in which case the directory with the name \fI.../Name-Vsn\fR is deleted from the code path. Also, the complete directory name \fIDir\fR can be specified as argument.
+
+.PP
+Returns:
+
+true
+.RS 2
+If successful
+
+
+.RE
+
+false
+.RS 2
+If the directory is not found
+
+
+.RE
+
+{error, bad_name}
+.RS 2
+If the argument is invalid
+
+
+.RE
+
+
+.RE
+.B
+\fBdel_paths(NamesOrDirs) -> ok\fR
+\fB                   when\fR
+\fB                       NamesOrDirs :: [Name | Dir],\fR
+\fB                       Name :: atom(),\fR
+\fB                       Dir :: file:filename().\fR
+
+.br
+.RS
+.PP
+Deletes directories from the code path.
+
+.PP
+The argument is a list of either atoms or complete directory names. If \fIName\fR is an atom, the directory with the name \fI.../Name-Vsn\fR is deleted from the code path.
+
+.PP
+Always returns \fIok\fR, regardless of the validity of each individual \fINamesOrDirs\fR.
+
+
+.RE
+.B
+\fBdelete(Module) -> boolean() when Module :: module().\fR
+
+.br
+.RS
+.PP
+Removes the current code for \fIModule\fR, that is, the current code for \fIModule\fR is made old.
+
+.PP
+This means that processes can continue to execute the code in the module, but no external function calls can be made to it.
+
+.PP
+Returns \fItrue\fR if successful, or \fIfalse\fR if there is old code for \fIModule\fR that must be purged first, or if \fIModule\fR is not a (loaded) module.
+
+
+.RE
+.B
+\fBensure_loaded(Module) -> {module, Module} | {error, What}\fR
+\fB                       when\fR
+\fB                           Module :: module(),\fR
+\fB                           What ::\fR
+\fB                               embedded | badfile | nofile |\fR
+\fB                               on_load_failure.\fR
+
+.br
+.RS
+.PP
+Tries to load a module in the same way as \fIload_file/1\fR, unless the module is already loaded.
+
+.PP
+If called concurrently, this function ensures that only one process attempts to load said module at a given time.
+
+.PP
+In embedded mode, it does not load a module that is not already loaded, but returns \fI{error, embedded}\fR instead. See Error Reasons for Code-Loading Functions for a description of other possible error reasons.
+
+
+.RE
+.B
+\fBensure_modules_loaded([Module]) -> ok | {error, [{Module, What}]}\fR
+\fB                               when\fR
+\fB                                   Module :: module(),\fR
+\fB                                   What ::\fR
+\fB                                       badfile | nofile |\fR
+\fB                                       on_load_failure.\fR
+
+.br
+.RS
+.PP
+Tries to load any modules not already loaded in the list \fIModules\fR in the same way as \fIload_file/1\fR.
+
+.PP
+Unlike \fIensure_loaded/1\fR, modules are loaded even in \fIembedded\fR mode.
+
+.PP
+Returns \fIok\fR if successful, or \fI{error,[{Module,Reason}]}\fR if loading of some modules fails. See Error Reasons for Code-Loading Functions for a description of other possible error reasons.
+
+
+.RE
+.B
+\fBfinish_loading(Prepared) -> ok | {error, [{Module, What}]}\fR
+\fB                        when\fR
+\fB                            Prepared :: prepared_code(),\fR
+\fB                            Module :: module(),\fR
+\fB                            What ::\fR
+\fB                                not_purged | sticky_directory |\fR
+\fB                                pending_on_load.\fR
+
+.br
+.RS
+.PP
+Tries to load code for all modules that have been previously prepared by \fIprepare_loading/1\fR.
+
+.PP
+The loading occurs atomically, meaning that either all modules are loaded at the same time, or none of the modules are loaded.
+
+.PP
+This function can fail with one of the following error reasons:
+
+not_purged
+.RS 2
+The object code cannot be loaded because an old version of the code already exists.
+
+
+.RE
+
+sticky_directory
+.RS 2
+The object code resides in a sticky directory.
+
+
+.RE
+
+pending_on_load
+.RS 2
+A previously loaded module contains an 
+\fI-on_load\fR function that never finished.
+
+.RE
+
+
+.RE
+.B
+\fBget_coverage(Level, module()) -> Result\fR
+\fB                      when\fR
+\fB                          Level :: function | line | cover_id_line,\fR
+\fB                          Result :: [{Entity, CoverageInfo}],\fR
+\fB                          Entity :: {Function, Arity} | Line | CoverId,\fR
+\fB                          CoverageInfo :: Covered | Counter,\fR
+\fB                          Function :: atom(),\fR
+\fB                          Arity :: arity(),\fR
+\fB                          Line :: non_neg_integer(),\fR
+\fB                          CoverId :: pos_integer(),\fR
+\fB                          Covered :: boolean(),\fR
+\fB                          Counter :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Return either \fIfunction\fR or \fIline\fR coverage data for module \fIModule\fR.
+
+.PP
+If Level is \fIfunction\fR, returns function coverage for the given module according to its coverage mode:
+
+function
+.RS 2
+For each function in module Module, a boolean indicating whether that function has been executed at least once is returned.
+
+
+.RE
+
+function_counters
+.RS 2
+For each function in module Module, an integer giving the number of times that line has been executed is returned.
+
+
+.RE
+
+line
+.RS 2
+For each function in module Module, a boolean indicating whether that function has been executed at least once is returned.
+
+
+.RE
+
+line_counters
+.RS 2
+For each function in module Module, a boolean indicating whether that function has been executed at least once is returned (note that in this mode, counters for the number of times each function has been executed 
+\fBcannot\fR be retrieved).
+
+.RE
+
+.PP
+If Level is \fIline\fR, returns line coverage for the given module according to its coverage mode:
+
+line
+.RS 2
+For each executable line in the module, a boolean indicating whether that line has been executed at least once is returned.
+
+
+.RE
+
+line_counters
+.RS 2
+For each executable line in the module, an integer giving the number of times that line was executed is returned.
+
+
+.RE
+
+.PP
+Level \fIcover_id_line\fR is used by the \fIcover\fR tool.
+
+.PP
+Failures:
+
+badarg
+.RS 2
+If 
+\fILevel\fR is not \fIfunction\fR or \fIline\fR.
+
+.RE
+
+badarg
+.RS 2
+If 
+\fIModule\fR is not an atom.
+
+.RE
+
+badarg
+.RS 2
+If 
+\fIModule\fR does not refer to a loaded module.
+
+.RE
+
+badarg
+.RS 2
+If 
+\fIModule\fR was not loaded in another coverage mode than \fInone\fR.
+
+.RE
+
+badarg
+.RS 2
+If Level is 
+\fIline\fR and \fIModule\fR has not been loaded with either \fIline\fR or \fIline_counters\fR enabled.
+
+.RE
+
+badarg
+.RS 2
+If the runtime system does not support coverage.
+
+
+.RE
+
+.PP
+\fISee also:\fR Native Coverage Support
+
+
+.RE
+.B
+\fBget_coverage_mode() -> Mode when Mode :: coverage_mode().\fR
+
+.br
+.RS
+.PP
+Returns the coverage mode as set by option +JPcover for \fIerl\fR or \fIset_coverage_mode/1\fR.
+
+.PP
+Failure:
+
+badarg
+.RS 2
+If the runtime system does not support coverage.
+
+
+.RE
+
+.PP
+\fISee also:\fR Native Coverage Support
+
+
+.RE
+.B
+\fBget_coverage_mode(Module) -> Mode\fR
+\fB                           when\fR
+\fB                               Module :: module(),\fR
+\fB                               Mode :: coverage_mode().\fR
+
+.br
+.RS
+.PP
+Get coverage mode for the given module.
+
+.PP
+Failures:
+
+badarg
+.RS 2
+If 
+\fIModule\fR is not an atom.
+
+.RE
+
+badarg
+.RS 2
+If 
+\fIModule\fR does not refer to a loaded module.
+
+.RE
+
+badarg
+.RS 2
+If the runtime system does not support coverage.
+
+
+.RE
+
+.PP
+\fISee also:\fR Native Coverage Support
+
+
+.RE
+.B
+\fBget_doc(Mod) -> {ok, Res} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Mod :: module(),\fR
+\fB                     Res :: #docs_v1{},\fR
+\fB                     Reason :: non_existing | missing | file:posix().\fR
+
+.br
+.RS
+.PP
+Returns EEP 48 style documentation for \fIModule\fR if available.
+
+.PP
+If \fIModule\fR is not found in the code path, this function returns \fI{error,non_existing}\fR.
+
+.PP
+If no documentation can be found this function attempts to generate documentation from the debug information in the module. If no debug information is available, this function returns \fI{error,missing}\fR.
+
+.PP
+For more information about the documentation chunk see Documentation Storage and Format in Kernel's User's Guide.
+
+
+.RE
+.B
+\fBget_mode() -> embedded | interactive.\fR
+
+.br
+.RS
+.PP
+Returns an atom describing the mode of the code server: \fIinteractive\fR or \fIembedded\fR.
+
+.PP
+This information is useful when an external entity (for example, an IDE) provides additional code for a running node. If the code server is in interactive mode, it only has to add the path to the code. If the code server is in embedded mode, the code must be loaded with \fIload_binary/3\fR.
+
+
+.RE
+.B
+\fBget_object_code(Module) -> {Module, Binary, Filename} | error\fR
+\fB                         when\fR
+\fB                             Module :: module(),\fR
+\fB                             Binary :: binary(),\fR
+\fB                             Filename :: file:filename().\fR
+
+.br
+.RS
+.PP
+Returns the object code for module \fIModule\fR if found in the code path.
+
+.PP
+Returns \fI{Module, Binary, Filename}\fR if successful, otherwise \fIerror\fR. \fIBinary\fR is a binary data object, which contains the object code for the module. This is useful if code is to be loaded on a remote node in a distributed system. For example, loading module \fIModule\fR on a node \fINode\fR is done as follows:
+
+.IP
+.nf
+...
+{_Module, Binary, Filename} = code:get_object_code(Module),
+erpc:call(Node, code, load_binary, [Module, Filename, Binary]),
+...
+
+.fi
+
+
+.RE
+.B
+\fBget_path() -> Path when Path :: [Dir :: file:filename()].\fR
+
+.br
+.RS
+.PP
+Returns the code path.
+
+
+.RE
+.B
+\fBis_loaded(Module) -> {file, Loaded} | false\fR
+\fB                   when Module :: module(), Loaded :: loaded_filename().\fR
+
+.br
+.RS
+.PP
+Checks whether \fIModule\fR is loaded.
+
+.PP
+If it is, \fI{file, Loaded}\fR is returned, otherwise \fIfalse\fR.
+
+.PP
+Normally, \fILoaded\fR is the absolute filename \fIFilename\fR from which the code is obtained. If the module is preloaded (see \fIscript(4)\fR), \fILoaded =:= preloaded\fR. If the module is Cover-compiled (see \fIcover\fR), \fILoaded =:= cover_compiled\fR.
+
+
+.RE
+.B
+\fBis_sticky(Module) -> boolean() when Module :: module().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIModule\fR is the name of a module that has been loaded from a sticky directory (in other words: an attempt to reload the module will fail), or \fIfalse\fR if \fIModule\fR is not a loaded module or is not sticky.
+
+
+.RE
+.B
+\fBlib_dir() -> file:filename().\fR
+
+.br
+.RS
+.PP
+Returns the library directory, \fI$OTPROOT/lib\fR, where \fI$OTPROOT\fR is the root directory of Erlang/OTP.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> code:lib_dir().
+"/usr/local/otp/lib"
+
+.fi
+
+
+.RE
+.B
+\fBlib_dir(Name) -> file:filename() | {error, bad_name}\fR
+\fB                 when Name :: atom().\fR
+
+.br
+.RS
+.PP
+Returns the path for the \fIlibrary directory\fR, the top directory, for an application \fIName\fR located under \fI$OTPROOT/lib\fR or in a directory referred to with environment variable \fIERL_LIBS\fR.
+
+.PP
+If a regular directory called \fIName\fR or \fIName-Vsn\fR exists in the code path with an \fIebin\fR subdirectory, the path to this directory is returned (not the \fIebin\fR directory).
+
+.PP
+If the directory refers to a directory in an archive, the archive name is stripped away before the path is returned. For example, if directory \fI/usr/local/otp/lib/mnesia-4.2.2.ez/mnesia-4.2.2/ebin\fR is in the path, \fI/usr/local/otp/lib/mnesia-4.2.2/ebin\fR is returned. This means that the library directory for an application is the same, regardless if the application resides in an archive or not.
+
+.PP
+\fBWARNING: \fRArchives are experimental. In a future release, they can be removed or their behavior can change.
+
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+> code:lib_dir(mnesia).
+"/usr/local/otp/lib/mnesia-4.23"
+
+.fi
+
+.PP
+Returns \fI{error, bad_name}\fR if \fIName\fR is not the name of an application under \fI$OTPROOT/lib\fR or on a directory referred to through environment variable \fIERL_LIBS\fR. Fails with an exception if \fIName\fR has the wrong type.
+
+.PP
+\fBWARNING: \fRFor backward compatibility, \fIName\fR is also allowed to be a string. That will probably change in a future release.
+
+
+
+.RE
+.B
+\fBlib_dir(Name, SubDir) -> file:filename() | {error, bad_name}\fR
+\fB                 when Name :: atom(), SubDir :: atom().\fR
+
+.RS
+.LP
+Deprecated: code:lib_dir/2 is deprecated; this functionality will be removed in a future release
+.RE
+
+.br
+.RS
+.PP
+Returns the path to a subdirectory directly under the top directory of an application.
+
+.PP
+\fBCHANGE: \fRThis function is part of the archive support, which is an experimental feature that will be changed or removed in a future release.
+
+
+.PP
+Normally the subdirectories reside under the top directory for the application, but when applications at least partly reside in an archive, the situation is different. Some of the subdirectories can reside as regular directories while others reside in an archive file. It is not checked whether this directory exists.
+
+.PP
+Instead of using this function, use \fIcode:lib_dir/1\fR and \fIfilename:join/2\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> filename:join(code:lib_dir(megaco), "priv").
+"/usr/local/otp/lib/megaco-3.9.1.1/priv"
+
+.fi
+
+.PP
+Fails with an exception if \fIName\fR or \fISubDir\fR has the wrong type.
+
+
+.RE
+.B
+\fBload_abs(Filename) -> load_ret() when Filename :: file:filename().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIload_file(Module)\fR, except that \fIFilename\fR is an absolute or relative filename.
+
+.PP
+The code path is not searched. It returns a value in the same way as \fIload_file/1\fR. Notice that \fIFilename\fR must not contain the extension (for example, \fI.beam\fR) because \fIload_abs/1\fR adds the correct extension.
+
+
+.RE
+.B
+\fBload_binary(Module, Filename, Binary) ->\fR
+\fB                     {module, Module} | {error, What}\fR
+\fB                     when\fR
+\fB                         Module :: module(),\fR
+\fB                         Filename :: loaded_filename(),\fR
+\fB                         Binary :: binary(),\fR
+\fB                         What :: badarg | load_error_rsn().\fR
+
+.br
+.RS
+.PP
+Loads object code from a binary.
+
+.PP
+This function can be used to load object code on remote Erlang nodes. Argument \fIBinary\fR must contain object code for \fIModule\fR. \fIFilename\fR is only used by the code server to keep a record of from which file the object code for \fIModule\fR originates. Thus, \fIFilename\fR is not opened and read by the code server.
+
+.PP
+Returns \fI{module, Module}\fR if successful, or \fI{error, Reason}\fR if loading fails. See Error Reasons for Code-Loading Functions for a description of the possible error reasons.
+
+
+.RE
+.B
+\fBload_file(Module) -> load_ret() when Module :: module().\fR
+
+.br
+.RS
+.PP
+Tries to load the Erlang module \fIModule\fR using the code path.
+
+.PP
+It looks for the object code file with an extension corresponding to the Erlang machine used, for example, \fIModule.beam\fR. The loading fails if the module name found in the object code differs from the name \fIModule\fR. Use \fIload_binary/3\fR to load object code with a module name that is different from the file name.
+
+.PP
+Returns \fI{module, Module}\fR if successful, or \fI{error, Reason}\fR if loading fails. See Error Reasons for Code-Loading Functions for a description of the possible error reasons.
+
+
+.RE
+.B
+\fBmodified_modules() -> [module()].\fR
+
+.br
+.RS
+.PP
+Returns the list of all currently loaded modules for which \fImodule_status/1\fR returns \fImodified\fR.
+
+.PP
+See also \fIall_loaded/0\fR.
+
+
+.RE
+.B
+\fBmodule_status() -> [{module(), module_status()}].\fR
+
+.br
+.RS
+.PP
+See \fImodule_status/1\fR and \fIall_loaded/0\fR for details.
+
+
+.RE
+.B
+\fBmodule_status(Module :: module() | [module()]) ->\fR
+\fB                       module_status() | [{module(), module_status()}].\fR
+
+.br
+.RS
+.PP
+Returns the status of \fIModule\fR in relation to object file on disk.
+
+.PP
+The status of a module can be one of:
+
+not_loaded
+.RS 2
+If 
+\fIModule\fR is not currently loaded.
+
+.RE
+
+loaded
+.RS 2
+If 
+\fIModule\fR is loaded, and the object file exists and contains the same code.
+
+.RE
+
+removed
+.RS 2
+If 
+\fIModule\fR is loaded, but no corresponding object file can be found in the code path.
+
+.RE
+
+modified
+.RS 2
+If 
+\fIModule\fR is loaded, but the object file contains code with a different MD5 checksum.
+
+.RE
+
+.PP
+Preloaded modules are always reported as \fIloaded\fR, without inspecting the contents on disk. Cover-compiled modules will always be reported as \fImodified\fR if an object file exists, or as \fIremoved\fR otherwise. Modules whose load path is an empty string (which is the convention for auto-generated code) will only be reported as \fIloaded\fR or \fInot_loaded\fR.
+
+.PP
+See also \fImodified_modules/0\fR.
+
+
+.RE
+.B
+\fBobjfile_extension() -> nonempty_string().\fR
+
+.br
+.RS
+.PP
+Returns the object code file extension corresponding to the Erlang machine used.
+
+.PP
+For the official Erlang/OTP release, the return value is always \fI.beam\fR.
+
+
+.RE
+.B
+\fBprepare_loading(Modules) ->\fR
+\fB                         {ok, Prepared} | {error, [{Module, What}]}\fR
+\fB                         when\fR
+\fB                             Modules ::\fR
+\fB                                 [Module | {Module, Filename, Binary}],\fR
+\fB                             Module :: module(),\fR
+\fB                             Filename :: file:filename(),\fR
+\fB                             Binary :: binary(),\fR
+\fB                             Prepared :: prepared_code(),\fR
+\fB                             What ::\fR
+\fB                                 badfile | nofile |\fR
+\fB                                 on_load_not_allowed | duplicated.\fR
+
+.br
+.RS
+.PP
+Prepares to load the modules in the list \fIModules\fR.
+
+.PP
+Finish the loading by calling finish_loading(Prepared).
+
+.PP
+This function can fail with one of the following error reasons:
+
+badfile
+.RS 2
+The object code has an incorrect format or the module name in the object code is not the expected module name.
+
+
+.RE
+
+nofile
+.RS 2
+No file with object code exists.
+
+
+.RE
+
+on_load_not_allowed
+.RS 2
+A module contains an -on_load function.
+
+
+.RE
+
+duplicated
+.RS 2
+A module is included more than once in 
+\fIModules\fR.
+
+.RE
+
+
+.RE
+.B
+\fBpriv_dir(Name) -> file:filename() | {error, bad_name}\fR
+\fB                  when Name :: atom().\fR
+
+.br
+.RS
+.PP
+Returns the path to the \fIpriv\fR directory in an application.
+
+.PP
+\fBWARNING: \fRFor backward compatibility, \fIName\fR is also allowed to be a string. That will probably change in a future release.
+
+
+
+.RE
+.B
+\fBpurge(Module) -> boolean() when Module :: module().\fR
+
+.br
+.RS
+.PP
+Purges the code for \fIModule\fR, that is, removes code marked as old.
+
+.PP
+If some processes still linger in the old code, these processes are killed before the code is removed.
+
+.PP
+\fBCHANGE: \fRAs of Erlang/OTP 20.0, a process is only considered to be lingering in the code if it has direct references to the code. For more information see documentation of \fIerlang:check_process_code/3\fR, which is used in order to determine whether a process is lingering.
+
+
+.PP
+Returns \fItrue\fR if successful and any process is needed to be killed, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBreplace_path(Name, Dir, cache()) -> replace_path_ret()\fR
+\fB                      when Name :: atom(), Dir :: file:filename().\fR
+
+.br
+.RS
+.PP
+Replaces an old occurrence of a directory named \fI.../Name-Vsn\fR in the code path, with \fIDir\fR.
+
+.PP
+If \fIName\fR does not exist, it adds the new directory \fIDir\fR last in the code path. The new directory must also be named \fI.../Name-Vsn\fR. This function is to be used if a new version of the directory (library) is added to a running system.
+
+.PP
+Argument \fICache\fR controls whether the content of the directory should be cached on first traversal. If \fICache\fR is \fIcache\fR the directory contents will be cached; if \fICache\fR is \fInocache\fR it will not be cached.
+
+.PP
+Returns:
+
+true
+.RS 2
+If successful
+
+
+.RE
+
+{error, bad_name}
+.RS 2
+If 
+\fIName\fR is not found
+
+.RE
+
+{error, bad_directory}
+.RS 2
+If 
+\fIDir\fR does not exist
+
+.RE
+
+{error, {badarg, [Name, Dir]}}
+.RS 2
+If 
+\fIName\fR or \fIDir\fR is invalid
+
+.RE
+
+
+.RE
+.B
+\fBreset_coverage(Module) -> ok when Module :: module().\fR
+
+.br
+.RS
+.PP
+Resets coverage information for module \fIModule\fR.
+
+.PP
+If the coverage mode is either \fIfunction\fR or \fIline\fR, all booleans for \fIModule\fR keeping track of executed functions or lines are set to \fIfalse\fR.
+
+.PP
+If the coverage mode is either \fIfunction_counters\fR or \fIline_counters\fR, all counters for \fIModule\fR are reset to zero.
+
+.PP
+Failures:
+
+badarg
+.RS 2
+If 
+\fIModule\fR is not an atom.
+
+.RE
+
+badarg
+.RS 2
+If 
+\fIModule\fR does not refer to a loaded module.
+
+.RE
+
+badarg
+.RS 2
+If 
+\fIModule\fR was not loaded with coverage enabled.
+
+.RE
+
+badarg
+.RS 2
+If the runtime system does not support coverage.
+
+
+.RE
+
+.PP
+\fISee also:\fR Native Coverage Support
+
+
+.RE
+.B
+\fBroot_dir() -> file:filename().\fR
+
+.br
+.RS
+.PP
+Returns the root directory of Erlang/OTP, which is the directory where it is installed.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+1> code:root_dir().
+"/usr/local/otp"
+
+.fi
+
+
+.RE
+.B
+\fBset_coverage_mode(Mode) -> OldMode\fR
+\fB                           when\fR
+\fB                               Mode :: coverage_mode(),\fR
+\fB                               OldMode :: coverage_mode().\fR
+
+.br
+.RS
+.PP
+Sets the coverage mode for modules that are subsequently loaded, similar to option +JPcover for \fIerl\fR.
+
+.PP
+The coverage mode will have the following effect on code that is loaded following this call:
+
+function
+.RS 2
+All modules that are loaded will be instrumented to keep track of which functions are executed. Information about which functions that have been executed can be retrieved by calling 
+\fIget_coverage(function, Module)\fR.
+
+.RE
+
+function_counters
+.RS 2
+All modules that are loaded will be instrumented to count how many times each function is executed. Information about how many times each function has been executed can be retrieved by calling 
+\fIget_coverage(function, Module)\fR.
+
+.RE
+
+line
+.RS 2
+When modules that have been compiled with the 
+\fIline_coverage\fR option are loaded, they will be instrumented to keep track of which lines have been executed. Information about which lines have been executed can be retrieved by calling \fIget_coverage(line, Module)\fR, and information about which functions that have been executed can be retrieved by calling \fIget_coverage(function, Module)\fR.
+
+.RE
+
+line_counters
+.RS 2
+When modules that have been compiled with the 
+\fIline_coverage\fR option are loaded, they will be instrumented to count the number of times each line is executed. Information about how many times each line has been executed can be retrieved by calling \fIget_coverage(line, Module)\fR, and information about which functions that have been executed can be retrieved by calling \fIget_coverage(function, Module)\fR (note that in this mode, counters for the number of times each function has been executed \fBcannot\fR be retrieved).
+
+.RE
+
+none
+.RS 2
+Modules will be loaded without coverage instrumentation.
+
+
+.RE
+
+.PP
+Returns the previous coverage mode.
+
+.PP
+Failures:
+
+badarg
+.RS 2
+If 
+\fIMode\fR is not a valid coverage mode.
+
+.RE
+
+badarg
+.RS 2
+If the runtime system does not support coverage.
+
+
+.RE
+
+.PP
+\fISee also:\fR Native Coverage Support
+
+
+.RE
+.B
+\fBset_path(Path, cache()) -> set_path_ret()\fR
+\fB                  when Path :: [Dir :: file:filename()].\fR
+
+.br
+.RS
+.PP
+Sets the code path to the list of directories \fIPath\fR.
+
+.PP
+Argument \fICache\fR controls whether the content of the directory should be cached on first traversal. If \fICache\fR is \fIcache\fR the directory contents will be cached; if \fICache\fR is \fInocache\fR it will not be cached.
+
+.PP
+Returns:
+
+true
+.RS 2
+If successful
+
+
+.RE
+
+{error, bad_directory}
+.RS 2
+If any 
+\fIDir\fR is not a directory name
+
+.RE
+
+
+.RE
+.B
+\fBsoft_purge(Module) -> boolean() when Module :: module().\fR
+
+.br
+.RS
+.PP
+Purges the code for \fIModule\fR, that is, removes code marked as old, but only if no processes linger in it.
+
+.PP
+\fBCHANGE: \fRAs of Erlang/OTP 20.0, a process is only considered to be lingering in the code if it has direct references to the code. For more information see documentation of \fIerlang:check_process_code/3\fR, which is used in order to determine whether a process is lingering.
+
+
+.PP
+Returns \fIfalse\fR if the module cannot be purged because of processes lingering in old code, otherwise \fItrue\fR.
+
+
+.RE
+.B
+\fBstick_dir(Dir) -> ok | error when Dir :: file:filename().\fR
+
+.br
+.RS
+.PP
+Marks \fIDir\fR as sticky.
+
+.PP
+Returns \fIok\fR if successful, otherwise \fIerror\fR.
+
+
+.RE
+.B
+\fBunstick_dir(Dir) -> ok | error when Dir :: file:filename().\fR
+
+.br
+.RS
+.PP
+Unsticks a directory that is marked as sticky.
+
+.PP
+Returns \fIok\fR if successful, otherwise \fIerror\fR.
+
+
+.RE
+.B
+\fBwhere_is_file(Filename) -> non_existing | Absname\fR
+\fB                       when\fR
+\fB                           Filename :: file:filename(),\fR
+\fB                           Absname :: file:filename().\fR
+
+.br
+.RS
+.PP
+Searches the code path for \fIFilename\fR, which is a file of arbitrary type.
+
+.PP
+If found, the full name is returned. \fInon_existing\fR is returned if the file cannot be found.  The function can be useful, for example, to locate application resource files.
+
+
+.RE
+.B
+\fBwhich(Module) -> Which\fR
+\fB               when\fR
+\fB                   Module :: module(),\fR
+\fB                   Which :: loaded_filename() | non_existing.\fR
+
+.br
+.RS
+.PP
+If the module is not loaded, this function searches the code path for the first file containing object code for \fIModule\fR and returns the absolute filename.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the module is loaded, it returns the name of the file containing the loaded object code.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the module is preloaded, \fIpreloaded\fR is returned.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the module is Cover-compiled, \fIcover_compiled\fR is returned.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the module cannot be found, \fInon_existing\fR is returned.
+
+.RE
+
+
+.RE

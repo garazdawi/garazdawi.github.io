@@ -1,0 +1,463 @@
+.TH xmerl_sax_parser 3 "xmerl 2.1.9" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+xmerl_sax_parser \- XML SAX parser API
+
+.SH DESCRIPTION
+.PP
+A SAX parser for XML that sends the events through a callback interface. SAX is the \fISimple API for XML\fR, originally a Java-only API. SAX was the first widely adopted API for XML in Java, and is a \fIde facto\fR standard where there are versions for several programming language environments other than Java.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcontinuation_fun() ::\fR
+\fB          fun((continuation_state()) ->\fR
+\fB                  {NewBytes :: binary() | list(), continuation_state()}).\fR
+
+.br
+.RS
+.PP
+Callback \fIfunction/0\fR that is called whenever the parser runs out if input data.
+
+.PP
+If the function can't get hold of more input an empty list or binary (depends on start input in stream/2) is returned.  Other types of errors are handled through  exceptions. Use \fIthrow/1\fR to send the following tuple: \fI{Tag = atom(), Reason = string()}\fR if the continuation function encounters a fatal error.  \fITag\fR is an atom that identifies the functional entity that sends the exception and \fIReason\fR is a string that describes the problem.
+
+
+.RE
+.B
+\fBcontinuation_state() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBevent() ::\fR
+\fB          startDocument | endDocument |\fR
+\fB          {startPrefixMapping, Prefix :: string(), Uri :: string()} |\fR
+\fB          {endPrefixMapping, Prefix :: string()} |\fR
+\fB          {startElement,\fR
+\fB           Uri :: string(),\fR
+\fB           LocalName :: string(),\fR
+\fB           QualifiedName :: string(),\fR
+\fB           Attributes :: string()} |\fR
+\fB          {endElement,\fR
+\fB           Uri :: string(),\fR
+\fB           LocalName :: string(),\fR
+\fB           QualifiedName :: string()} |\fR
+\fB          {characters, string()} |\fR
+\fB          {ignorableWhitespace, string()} |\fR
+\fB          {processingInstruction, Target :: string(), Data :: string()} |\fR
+\fB          {comment, string()} |\fR
+\fB          startCDATA | endCDATA |\fR
+\fB          {startDTD,\fR
+\fB           Name :: string(),\fR
+\fB           PublicId :: string(),\fR
+\fB           SystemId :: string()} |\fR
+\fB          endDTD |\fR
+\fB          {startEntity, SysId :: string()} |\fR
+\fB          {endEntity, SysId :: string()} |\fR
+\fB          {elementDecl, Name :: string(), Model :: string()} |\fR
+\fB          {attributeDecl,\fR
+\fB           ElementName :: string(),\fR
+\fB           AttributeName :: string(),\fR
+\fB           Type :: string(),\fR
+\fB           Mode :: string(),\fR
+\fB           Value :: string()} |\fR
+\fB          {internalEntityDecl, Name :: string(), Value :: string()} |\fR
+\fB          {externalEntityDecl,\fR
+\fB           Name :: string(),\fR
+\fB           PublicId :: string(),\fR
+\fB           SystemId :: string()} |\fR
+\fB          {unparsedEntityDecl,\fR
+\fB           Name :: string(),\fR
+\fB           PublicId :: string(),\fR
+\fB           SystemId :: string(),\fR
+\fB           Ndata :: string()} |\fR
+\fB          {notationDecl,\fR
+\fB           Name :: string(),\fR
+\fB           PublicId :: string(),\fR
+\fB           SystemId :: string()}.\fR
+
+.br
+.RS
+.PP
+SAX events that are sent to the user via the event callback.
+
+startDocument
+.RS 2
+Receive notification of the beginning of a document. The SAX parser will send this event only once before any other event callbacks.
+
+
+.RE
+
+endDocument
+.RS 2
+Receive notification of the end of a document. The SAX parser will send this event only once, and it will be the last event during the parse.
+
+
+.RE
+
+{startPrefixMapping, Prefix, Uri}
+.RS 2
+Begin the scope of a prefix-URI Namespace mapping. Note that 
+\fIstart/endPrefixMapping\fR events aren't guaranteed to be properly nested relative to each other: all \fIstartPrefixMapping\fR events will occur immediately before the corresponding \fIstartElement\fR event, and all \fIendPrefixMapping\fR events will occur immediately after the corresponding \fIendElement\fR event, but their order is not otherwise guaranteed. There will not be \fIstart/endPrefixMapping\fR events for the "xml" prefix, since it is predeclared and immutable.
+
+.RE
+
+{endPrefixMapping, Prefix}
+.RS 2
+End the scope of a prefix-URI mapping.
+
+
+.RE
+
+{startElement, Uri, LocalName, QualifiedName, Attributes}
+.RS 2
+Receive notification of the beginning of an element.  The Parser will send this event at the beginning of every element in the XML document; there will be a corresponding 
+\fIendElement\fR event for every \fIstartElement\fR event (even when the element is empty).  All of the element's content will be reported, in order, before the corresponding \fIendElement\fR event.
+
+.RE
+
+{endElement, Uri, LocalName, QualifiedName}
+.RS 2
+Receive notification of the end of an element. The SAX parser will send this event at the end of every element in the XML document; there will be a corresponding 
+\fIstartElement\fR event for every \fIendElement\fR event (even when the element is empty).
+
+.RE
+
+{characters, string()}
+.RS 2
+Receive notification of character data.
+
+
+.RE
+
+{ignorableWhitespace, string()}
+.RS 2
+Receive notification of ignorable whitespace in element content.
+
+
+.RE
+
+{processingInstruction, Target, Data}
+.RS 2
+Receive notification of a processing instruction. The Parser will send this event once for each processing instruction found: note that processing instructions may occur before or after the main document element.
+
+
+.RE
+
+{comment, string()}
+.RS 2
+Report an XML comment anywhere in the document (both inside and outside of the document element).
+
+
+.RE
+
+startCDATA
+.RS 2
+Report the start of a CDATA section. The contents of the CDATA section will be reported through the regular characters event.
+
+
+.RE
+
+endCDATA
+.RS 2
+Report the end of a CDATA section.
+
+
+.RE
+
+{startDTD, Name, PublicId, SystemId}
+.RS 2
+Report the start of DTD declarations, it's reporting the start of the DOCTYPE declaration. If the document has no DOCTYPE declaration, this event will not be sent.
+
+
+.RE
+
+endDTD
+.RS 2
+Report the end of DTD declarations, it's reporting the end of the DOCTYPE declaration.
+
+
+.RE
+
+{startEntity, SysId}
+.RS 2
+Report the beginning of some internal and external XML entities.
+
+
+.RE
+
+{endEntity, SysId}
+.RS 2
+Report the end of an entity.
+
+
+.RE
+
+{elementDecl, Name, Model}
+.RS 2
+Report an element type declaration. The content model will consist of the string "EMPTY", the string "ANY", or a parenthesised group, optionally followed by an occurrence indicator. The model will be normalized so that all parameter entities are fully resolved and all whitespace is removed,and will include the enclosing parentheses. Other normalization (such as removing redundant parentheses or simplifying occurrence indicators) is at the discretion of the parser.
+
+
+.RE
+
+{attributeDecl, ElementName, AttributeName, Type, Mode, Value}
+.RS 2
+Report an attribute type declaration.
+
+
+.RE
+
+{internalEntityDecl, Name, Value}
+.RS 2
+Report an internal entity declaration.
+
+
+.RE
+
+{externalEntityDecl, Name, PublicId, SystemId}
+.RS 2
+Report a parsed external entity declaration.
+
+
+.RE
+
+{unparsedEntityDecl, Name, PublicId, SystemId, Ndata}
+.RS 2
+Receive notification of an unparsed entity declaration event.
+
+
+.RE
+
+{notationDecl, Name, PublicId, SystemId}
+.RS 2
+Receive notification of a notation declaration event.
+
+
+.RE
+
+
+.RE
+.B
+\fBevent_fun() ::\fR
+\fB          fun((event(), event_location(), event_state()) ->\fR
+\fB                  event_state()).\fR
+
+.br
+.RS
+.PP
+Callback \fIfunction/0\fR that is called for every event sent by the parser.
+
+.PP
+The error handling is done through exceptions. Use \fIthrow/1\fR to send the following tuple: \fI{Tag = atom(), Reason = string()}\fR if the application encounters a fatal error.  \fITag\fR is an atom that identifies the functional entity that sends the exception and \fIReason\fR is a string that describes the problem.
+
+
+.RE
+.B
+\fBevent_location() ::\fR
+\fB          {CurrentLocation :: string(),\fR
+\fB           Entityname :: string(),\fR
+\fB           LineNo :: integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBevent_state() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlatin1_binary() :: unicode:latin1_binary().\fR
+
+.br
+.RS
+.PP
+Binary with characters encoded in iso-latin-1.
+
+
+.RE
+.B
+\fBoptions() ::\fR
+\fB          [{continuation_fun, continuation_fun()} |\fR
+\fB           {continuation_state, continuation_state()} |\fR
+\fB           {event_fun, event_fun()} |\fR
+\fB           {event_state, event_state()} |\fR
+\fB           {file_type, normal | dtd} |\fR
+\fB           {encoding,\fR
+\fB            utf | {utf16, big} | {utf16, little} | latin1 | list} |\fR
+\fB           skip_external_dtd | disallow_entities |\fR
+\fB           {entity_recurse_limit, non_neg_integer()} |\fR
+\fB           {external_entities, all | file | none} |\fR
+\fB           {fail_undeclared_ref, boolean()} |\fR
+\fB           {discard_ws_before_xml_document, boolean()}].\fR
+
+.br
+.RS
+.PP
+Options used to customize the behaviour of the parser.
+
+.PP
+Possible options are:
+
+{continuation_fun, ContinuationFun}
+.RS 2
+ContinuationFun is a callback function to decide what to do if the parser runs into EOF before the document is complete.
+
+
+.RE
+
+{continuation_state, ContinuationState}
+.RS 2
+State that is accessible in the continuation callback function.
+
+
+.RE
+
+{event_fun, EventFun}
+.RS 2
+EventFun is the callback function for parser events.
+
+
+.RE
+
+{event_state, EventState}
+.RS 2
+State that is accessible in the event callback function.
+
+
+.RE
+
+{file_type, FileType}
+.RS 2
+Flag that tells the parser if it's parsing a DTD or a normal XML file (default 
+\fInormal\fR).
+
+.RE
+
+{encoding, Encoding}
+.RS 2
+Set default character set used (default 
+\fIutf\fR, that is: UTF-8).  This character set is used only if not explicitly given by the XML document.
+
+.RE
+
+skip_external_dtd
+.RS 2
+Skips the external DTD during parsing. This option is the same as 
+\fI{external_entities, none}\fR and \fI{fail_undeclared_ref, false}\fR but just for the DTD.
+
+.RE
+
+disallow_entities
+.RS 2
+Implies that parsing fails if an ENTITY declaration is found.
+
+
+.RE
+
+{entity_recurse_limit, N}
+.RS 2
+Sets how many levels of recursion that is allowed for entities. Default is 3 levels.
+
+
+.RE
+
+{external_entities, Allowed}
+.RS 2
+Sets which types of external entities that should be allowed; if not allowed it is just skipped. Default is 
+\fInone\fR.
+
+.RE
+
+{fail_undeclared_ref, Boolean}
+.RS 2
+Decides how the parser should behave when an undeclared reference is found. Can be useful if one has turned of external entities so that an external DTD is not parsed. Default is 
+\fItrue\fR.
+
+.RE
+
+{discard_ws_before_xml_document, Boolean}
+.RS 2
+Discard whitespace before 
+\fIxml\fR tag instead of returning a fatal error. Default is \fIfalse\fR.
+
+.RE
+
+
+.RE
+.B
+\fBunicode_binary() :: binary().\fR
+
+.br
+.RS
+.PP
+Binary with characters encoded in UTF-8 or UTF-16.
+
+
+.RE
+.B
+\fBunicode_char() :: char().\fR
+
+.br
+.RS
+.PP
+Integer representing valid unicode codepoint.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBfile(Name, Options) -> {ok, EventState, Rest} | ErrorOrUserReturn\fR
+\fB              when\fR
+\fB                  Name :: file:filename(),\fR
+\fB                  Options :: options(),\fR
+\fB                  EventState :: event_state(),\fR
+\fB                  Rest :: unicode_binary() | latin1_binary(),\fR
+\fB                  ErrorOrUserReturn ::\fR
+\fB                      {Tag, Location, Reason, EndTags, EventState} |\fR
+\fB                      {error, {Name, Reason}},\fR
+\fB                  Tag :: fatal_error | atom(),\fR
+\fB                  Location :: event_location(),\fR
+\fB                  Reason :: term(),\fR
+\fB                  EndTags :: term().\fR
+
+.br
+.RS
+.PP
+Parse a file containing an XML document.
+
+.PP
+This functions uses a default continuation function to read the file in blocks.
+
+
+.RE
+.B
+\fBstream(Xml, Options) -> {ok, EventState, Rest} | ErrorOrUserReturn\fR
+\fB                when\fR
+\fB                    Xml ::\fR
+\fB                        unicode_binary() |\fR
+\fB                        latin1_binary() |\fR
+\fB                        [unicode_char],\fR
+\fB                    Options :: options(),\fR
+\fB                    EventState :: event_state(),\fR
+\fB                    Rest :: unicode_binary() | latin1_binary(),\fR
+\fB                    ErrorOrUserReturn ::\fR
+\fB                        {Tag, Location, Reason, EndTags, EventState},\fR
+\fB                    Tag :: fatal_error | atom(),\fR
+\fB                    Location :: event_location(),\fR
+\fB                    Reason :: term(),\fR
+\fB                    EndTags :: term().\fR
+
+.br
+.RS
+.PP
+Parse a stream containing an XML document.
+
+
+.RE

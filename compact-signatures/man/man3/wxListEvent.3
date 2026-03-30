@@ -1,0 +1,234 @@
+.TH wxListEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxListEvent \- A list event holds information about events associated with \fIwxListCtrl\fR objects.
+
+.SH DESCRIPTION
+.PP
+See: \fIwxListCtrl\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxNotifyEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxListEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxListEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxList() :: #wxList{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxListEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxListEventType() ::\fR
+\fB          command_list_begin_drag | command_list_begin_rdrag |\fR
+\fB          command_list_begin_label_edit | command_list_end_label_edit |\fR
+\fB          command_list_delete_item | command_list_delete_all_items |\fR
+\fB          command_list_key_down | command_list_insert_item |\fR
+\fB          command_list_col_click | command_list_col_right_click |\fR
+\fB          command_list_col_begin_drag | command_list_col_dragging |\fR
+\fB          command_list_col_end_drag | command_list_item_selected |\fR
+\fB          command_list_item_deselected | command_list_item_right_click |\fR
+\fB          command_list_item_middle_click | command_list_item_activated |\fR
+\fB          command_list_item_focused | command_list_cache_hint.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetCacheFrom(This) -> integer() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+For \fIEVT\\_LIST\\_CACHE\\_HINT\fR event only: return the first item which the list control advises us to cache.
+
+
+.RE
+.B
+\fBgetCacheTo(This) -> integer() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+For \fIEVT\\_LIST\\_CACHE\\_HINT\fR event only: return the last item (inclusive) which the list control advises us to cache.
+
+
+.RE
+.B
+\fBgetColumn(This) -> integer() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+The column position: it is only used with \fICOL\fR events.
+
+.PP
+For the column dragging events, it is the column to the left of the divider being dragged, for the column click events it may be -1 if the user clicked in the list control header outside any column.
+
+
+.RE
+.B
+\fBgetData(This) -> integer() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+The data.
+
+
+.RE
+.B
+\fBgetImage(This) -> integer() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+The image.
+
+
+.RE
+.B
+\fBgetIndex(This) -> integer() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+The item index.
+
+
+.RE
+.B
+\fBgetItem(This) -> wxListItem:wxListItem()\fR
+\fB                 when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+An item object, used by some events.
+
+.PP
+See also \fIwxListCtrl:setItem/5\fR.
+
+
+.RE
+.B
+\fBgetKeyCode(This) -> integer() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+Key code if the event is a keypress event.
+
+
+.RE
+.B
+\fBgetLabel(This) -> unicode:charlist() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+The (new) item label for \fIEVT_LIST_END_LABEL_EDIT\fR event.
+
+
+.RE
+.B
+\fBgetMask(This) -> integer() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+The mask.
+
+
+.RE
+.B
+\fBgetPoint(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                  when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+The position of the mouse pointer if the event is a drag event.
+
+
+.RE
+.B
+\fBgetText(This) -> unicode:charlist() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+The text.
+
+
+.RE
+.B
+\fBisEditCancelled(This) -> boolean() when This :: wxListEvent().\fR
+
+.br
+.RS
+.PP
+This method only makes sense for \fIEVT\\_LIST\\_END\\_LABEL\\_EDIT\fR message and returns true if it the label editing has been cancelled by the user (\fIgetLabel/1\fR returns an empty string in this case but it doesn't allow the application to distinguish between really cancelling the edit and the admittedly rare case when the user wants to rename it to an empty string).
+
+
+.RE

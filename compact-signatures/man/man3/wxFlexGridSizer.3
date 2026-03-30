@@ -1,0 +1,377 @@
+.TH wxFlexGridSizer 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxFlexGridSizer \- A flex grid sizer is a sizer which lays out its children in a two-dimensional table with all table fields in one row having the same height and all fields in one column having the same width, but all rows or all columns are not necessarily the same height or width as in the \fIwxGridSizer\fR.
+
+.SH DESCRIPTION
+.PP
+Since wxWidgets 2.5.0, \fIwxFlexGridSizer\fR can also size items equally in one direction but unequally ("flexibly") in the other. If the sizer is only flexible in one direction (this can be changed using \fIsetFlexibleDirection/2\fR), it needs to be decided how the sizer should grow in the other ("non-flexible") direction in order to fill the available space. The \fIsetNonFlexibleGrowMode/2\fR method serves this purpose.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview sizer
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxFlexGridSizer
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxFlexGridSizer() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddGrowableCol(This, Idx, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxFlexGridSizer(),\fR
+\fB                            Idx :: integer(),\fR
+\fB                            Option :: {proportion, integer()}.\fR
+
+.br
+.RS
+.PP
+Specifies that column \fIidx\fR (starting from zero) should be grown if there is extra space available to the sizer.
+
+.PP
+The \fIproportion\fR parameter has the same meaning as the stretch factor for the sizers (see \fIwxBoxSizer\fR) except that if all proportions are 0, then all columns are resized equally (instead of not being resized at all).
+
+.PP
+Notice that the column must not be already growable, if you need to change the proportion you must call \fIremoveGrowableCol/2\fR first and then make it growable (with a different proportion) again. You can use \fIIsColGrowable()\fR (not implemented in wx) to check whether a column is already growable.
+
+
+.RE
+.B
+\fBaddGrowableRow(This, Idx, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxFlexGridSizer(),\fR
+\fB                            Idx :: integer(),\fR
+\fB                            Option :: {proportion, integer()}.\fR
+
+.br
+.RS
+.PP
+Specifies that row idx (starting from zero) should be grown if there is extra space available to the sizer.
+
+.PP
+This is identical to \fIaddGrowableCol/3\fR except that it works with rows and not columns.
+
+
+.RE
+.B
+\fBdestroy(This :: wxFlexGridSizer()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetFlexibleDirection(This) -> integer()\fR
+\fB                              when This :: wxFlexGridSizer().\fR
+
+.br
+.RS
+.PP
+Returns a ?wxOrientation value that specifies whether the sizer flexibly resizes its columns, rows, or both (default).
+
+.PP
+Return: One of the following values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxVERTICAL: Rows are flexibly sized.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxHORIZONTAL: Columns are flexibly sized.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBOTH: Both rows and columns are flexibly sized (this is the default value).
+
+.RE
+
+.PP
+See: \fIsetFlexibleDirection/2\fR
+
+
+.RE
+.B
+\fBgetNonFlexibleGrowMode(This) -> wx:wx_enum()\fR
+\fB                                when This :: wxFlexGridSizer().\fR
+
+.br
+.RS
+.PP
+Returns the value that specifies how the sizer grows in the "non-flexible" direction if there is one.
+
+.PP
+The behaviour of the elements in the flexible direction (i.e. both rows and columns by default, or rows only if \fIgetFlexibleDirection/1\fR is \fIwxVERTICAL\fR or columns only if it is \fIwxHORIZONTAL\fR) is always governed by their proportion as specified in the call to \fIaddGrowableRow/3\fR or \fIaddGrowableCol/3\fR. What happens in the other direction depends on the value of returned by this function as described below.
+
+.PP
+Return: One of the following values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFLEX_GROWMODE_NONE: Sizer doesn't grow its elements at all in the non-flexible direction.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFLEX_GROWMODE_SPECIFIED: Sizer honors growable columns/rows set with \fIaddGrowableCol/3\fR and \fIaddGrowableRow/3\fR in the non-flexible direction as well. In this case equal sizing applies to minimum sizes of columns or rows (this is the default value).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFLEX_GROWMODE_ALL: Sizer equally stretches all columns or rows in the non-flexible direction, independently of the proportions applied in the flexible direction.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetFlexibleDirection/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetNonFlexibleGrowMode/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBnew(Cols, [Option]) -> wxFlexGridSizer()\fR
+\fB             when\fR
+\fB                 Cols :: integer(),\fR
+\fB                 Option :: {gap, {W :: integer(), H :: integer()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(Cols, Vgap, Hgap) -> wxFlexGridSizer()\fR
+\fB             when\fR
+\fB                 Cols :: integer(), Vgap :: integer(), Hgap :: integer();\fR
+\fB         (Rows, Cols, Gap) -> wxFlexGridSizer()\fR
+\fB             when\fR
+\fB                 Rows :: integer(),\fR
+\fB                 Cols :: integer(),\fR
+\fB                 Gap :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(Rows, Cols, Vgap, Hgap) -> wxFlexGridSizer()\fR
+\fB             when\fR
+\fB                 Rows :: integer(),\fR
+\fB                 Cols :: integer(),\fR
+\fB                 Vgap :: integer(),\fR
+\fB                 Hgap :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBremoveGrowableCol(This, Idx) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxFlexGridSizer(),\fR
+\fB                               Idx :: integer().\fR
+
+.br
+.RS
+.PP
+Specifies that the \fIidx\fR column index is no longer growable.
+
+
+.RE
+.B
+\fBremoveGrowableRow(This, Idx) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxFlexGridSizer(),\fR
+\fB                               Idx :: integer().\fR
+
+.br
+.RS
+.PP
+Specifies that the \fIidx\fR row index is no longer growable.
+
+
+.RE
+.B
+\fBsetFlexibleDirection(This, Direction) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxFlexGridSizer(),\fR
+\fB                                  Direction :: integer().\fR
+
+.br
+.RS
+.PP
+Specifies whether the sizer should flexibly resize its columns, rows, or both.
+
+.PP
+Argument \fIdirection\fR can be \fIwxVERTICAL\fR, \fIwxHORIZONTAL\fR or \fIwxBOTH\fR (which is the default value). Any other value is ignored.
+
+.PP
+See \fIgetFlexibleDirection/1\fR for the explanation of these values. Note that this method does not trigger relayout.
+
+
+.RE
+.B
+\fBsetNonFlexibleGrowMode(This, Mode) -> ok\fR
+\fB                                when\fR
+\fB                                    This :: wxFlexGridSizer(),\fR
+\fB                                    Mode :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Specifies how the sizer should grow in the non-flexible direction if there is one (so \fIsetFlexibleDirection/2\fR must have been called previously).
+
+.PP
+Argument \fImode\fR can be one of those documented in \fIgetNonFlexibleGrowMode/1\fR, please see there for their explanation. Note that this method does not trigger relayout.
+
+
+.RE

@@ -1,0 +1,27 @@
+.TH erl_expand_records 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_expand_records \- This module expands records in a module.
+
+.SH DESCRIPTION
+.PP
+\fBSee Also\fR
+
+.PP
+Section The Abstract Format in ERTS User's Guide.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBmodule(AbsForms, CompileOptions) -> AbsForms2\fR
+\fB                when\fR
+\fB                    AbsForms :: [erl_parse:abstract_form()],\fR
+\fB                    AbsForms2 :: [erl_parse:abstract_form()],\fR
+\fB                    CompileOptions :: [compile:option()].\fR
+
+.br
+.RS
+.PP
+Expands all records in a module to use explicit tuple operations and adds explicit module names to calls to BIFs and imported functions. The returned module has no references to records, attributes, or code.
+
+
+.RE

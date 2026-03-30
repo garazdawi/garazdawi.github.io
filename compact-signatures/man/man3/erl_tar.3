@@ -1,0 +1,683 @@
+.TH erl_tar 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_tar \- Unix 'tar' utility for reading and writing tar archives.
+
+.SH DESCRIPTION
+.PP
+This module archives and extract files to and from a tar file. This module supports reading most common tar formats, namely v7, STAR, USTAR, and PAX, as well as some of GNU tar's extensions to the USTAR format (sparse files most notably). It produces tar archives in USTAR format, unless the files being archived require PAX format due to restrictions in USTAR (such as unicode metadata, filename length, and more). As such, \fIerl_tar\fR supports tar archives produced by most all modern tar utilities, and produces tarballs which should be similarly portable.
+
+.PP
+By convention, the name of a tar file is to end in "\fI.tar\fR". To abide to the convention, add "\fI.tar\fR" to the name.
+
+.PP
+Tar files can be created in one operation using function \fIcreate/2\fR or \fIcreate/3\fR.
+
+.PP
+Alternatively, for more control, use functions \fIopen/2\fR, \fIadd/3,4\fR, and \fIclose/1\fR.
+
+.PP
+To extract all files from a tar file, use function \fIextract/1\fR. To extract only some files or to be able to specify some more options, use function \fIextract/2\fR.
+
+.PP
+To return a list of the files in a tar file, use function \fItable/1\fR or \fItable/2\fR. To print a list of files to the Erlang shell, use function \fIt/1\fR or \fItt/1\fR.
+
+.PP
+To convert an error term returned from one of the functions above to a readable message, use function \fIformat_error/1\fR.
+
+.SS "Unicode Support"
+
+.PP
+If \fIfile:native_name_encoding/0\fR returns \fIutf8\fR, path names are encoded in UTF-8 when creating tar files, and path names are assumed to be encoded in UTF-8 when extracting tar files.
+
+.PP
+If \fIfile:native_name_encoding/0\fR returns \fIlatin1\fR, no translation of path names is done.
+
+.PP
+Unicode metadata stored in PAX headers is preserved
+
+.SS "Other Storage Media"
+
+.PP
+The \fIftp\fR module normally accesses the tar file on disk using the \fIfile\fR module. When other needs arise, you can define your own low-level Erlang functions to perform the writing and reading on the storage media; use function \fIinit/3\fR.
+
+.PP
+An example of this is the SFTP support in \fIssh_sftp:open_tar/3\fR. This function opens a tar file on a remote machine using an SFTP channel.
+
+.SS "Limitations"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If you must remain compatible with the USTAR tar format, you must ensure file paths being stored are less than 255 bytes in total, with a maximum filename component length of 100 bytes. USTAR uses a header field (prefix) in addition to the name field, and splits file paths longer than 100 bytes into two parts. This split is done on a directory boundary, and is done in such a way to make the best use of the space available in those two fields, but in practice this will often mean that you have less than 255 bytes for a path. \fIerl_tar\fR will automatically upgrade the format to PAX to handle longer filenames, so this is only an issue if you need to extract the archive with an older implementation of \fIerl_tar\fR or \fItar\fR which does not support PAX. In this case, the PAX headers will be extracted as regular files, and you will need to apply them manually.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Like the above, if you must remain USTAR compatible, you must also ensure that paths for symbolic/hard links are no more than 100 bytes, otherwise PAX headers will be used.
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBadd_opt() ::\fR
+\fB          dereference | verbose |\fR
+\fB          {chunks, pos_integer()} |\fR
+\fB          {atime, non_neg_integer()} |\fR
+\fB          {mtime, non_neg_integer()} |\fR
+\fB          {ctime, non_neg_integer()} |\fR
+\fB          {mode, non_neg_integer()} |\fR
+\fB          {uid, non_neg_integer()} |\fR
+\fB          {gid, non_neg_integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcreate_opt() :: compressed | cooked | dereference | verbose.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBextract_opt() ::\fR
+\fB          {cwd, string()} |\fR
+\fB          {files, [name_in_archive()]} |\fR
+\fB          {chunks, pos_integer()} |\fR
+\fB          {max_size, pos_integer() | infinity} |\fR
+\fB          compressed | cooked | memory | keep_old_files | verbose.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfile_op() ::\fR
+\fB          fun((close, file:io_device()) -> ok | {error, term()}) |\fR
+\fB          fun((position, {file:io_device(), file:location()}) ->\fR
+\fB                  {ok, integer()} | {error, term()}) |\fR
+\fB          fun((read2, {file:io_device(), non_neg_integer()}) ->\fR
+\fB                  {ok, string() | binary()} | eof | {error, term()}) |\fR
+\fB          fun((write, {file:io_device(), iodata()}) ->\fR
+\fB                  ok | {error, term()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfilelist() ::\fR
+\fB          [file:filename() | {name_in_archive(), file:filename_all()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgid() :: non_neg_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmode() :: non_neg_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBname_in_archive() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBopen_type() ::\fR
+\fB          file:filename_all() |\fR
+\fB          {binary, binary()} |\fR
+\fB          {file, file:io_device()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque tar_descriptor() \fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtar_entry() ::\fR
+\fB          {Name :: name_in_archive(),\fR
+\fB           Type :: typeflag(),\fR
+\fB           Size :: non_neg_integer(),\fR
+\fB           MTime :: tar_time(),\fR
+\fB           Mode :: mode(),\fR
+\fB           Uid :: uid(),\fR
+\fB           Gid :: gid()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtar_time() :: non_neg_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtypeflag() ::\fR
+\fB          regular | link | symlink | char | block | directory | fifo |\fR
+\fB          reserved | unknown.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBuid() :: non_neg_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBuser_data() :: term().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd(TarDescriptor, Name, Options) -> ok | {error, term()}\fR
+\fB             when\fR
+\fB                 TarDescriptor :: tar_descriptor(),\fR
+\fB                 Name ::\fR
+\fB                     name_in_archive() |\fR
+\fB                     {name_in_archive(), file:filename_all()},\fR
+\fB                 Options :: [add_opt()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIadd/4\fR.
+
+.PP
+If \fIName\fR is \fIname_in_archive/0\fR, then \fIadd(TarDescriptor, Name, Name, Options)\fR is called.
+
+.PP
+If \fIName\fR is a two tuple then \fIadd(TarDescriptor, NameInArchive, Name, Options)\fR is called.
+
+
+.RE
+.B
+\fBadd(TarDescriptor, Filename, NameInArchive, Options) ->\fR
+\fB             ok | {error, term()}\fR
+\fB             when\fR
+\fB                 TarDescriptor :: tar_descriptor(),\fR
+\fB                 Filename :: file:filename_all(),\fR
+\fB                 NameInArchive :: name_in_archive(),\fR
+\fB                 Options :: [add_opt()].\fR
+
+.br
+.RS
+.PP
+Adds a file to a tar file that has been opened for writing by \fIopen/1\fR.
+
+.PP
+\fINameInArchive\fR is the name under which the file becomes stored in the tar file. The file gets this name when it is extracted from the tar file.
+
+.PP
+Options:
+
+dereference
+.RS 2
+By default, symbolic links are stored as symbolic links in the tar file. To override the default and store the file that the symbolic link points to into the tar file, use option 
+\fIdereference\fR.
+
+.RE
+
+verbose
+.RS 2
+Prints an informational message about the added file.
+
+
+.RE
+
+{chunks,ChunkSize}
+.RS 2
+Sets the chunk size, in bytes, for reading data from the file. Defaults to 65536 bytes.
+
+
+.RE
+{atime,non_neg_integer()}
+.RS 2
+Sets the last time, as POSIX time, when the file was read. See also 
+\fIfile:read_file_info/1\fR.
+
+.RE
+
+{mtime,non_neg_integer()}
+.RS 2
+Sets the last time, as POSIX time, when the file was written. See also 
+\fIfile:read_file_info/1\fR.
+
+.RE
+
+{ctime,non_neg_integer()}
+.RS 2
+Sets the time, as POSIX time, when the file was created. See also 
+\fIfile:read_file_info/1\fR.
+
+.RE
+
+{uid,non_neg_integer()}
+.RS 2
+Sets the file owner. 
+\fIfile:read_file_info/1\fR.
+
+.RE
+
+{gid,non_neg_integer()}
+.RS 2
+Sets the group that the file owner belongs to. 
+\fIfile:read_file_info/1\fR.
+
+.RE
+
+{mode,non_neg_integer()}
+.RS 2
+Sets the file permissions. See also 
+\fIfile:read_file_info/1\fR.
+
+.RE
+
+
+.RE
+.B
+\fBclose(TarDescriptor :: tar_descriptor()) -> ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Closes a tar file opened by \fIopen/2\fR.
+
+
+.RE
+.B
+\fBcreate(file:filename_all(), filelist()) ->\fR
+\fB                ok | {error, {string(), term()}}.\fR
+
+.br
+.RS
+.PP
+Creates a tar file and archives the files whose names are specified in \fIFileList\fR into it. The files can either be read from disk or be specified as binaries.
+
+
+.RE
+.B
+\fBcreate(file:filename_all(), filelist(), [create_opt()]) ->\fR
+\fB                ok | {error, term()} | {error, {string(), term()}}.\fR
+
+.br
+.RS
+.PP
+Creates a tar file and archives the files whose names are specified in \fIFileList\fR into it. The files can either be read from disk or be specified as binaries.
+
+.PP
+The options in \fIOptionList\fR modify the defaults as follows:
+
+compressed
+.RS 2
+The entire tar file is compressed, as if it has been run through the 
+\fIgzip\fR program. To abide to the convention that a compressed tar file is to end in "\fI.tar.gz\fR" or "\fI.tgz\fR", add the appropriate extension.
+
+.RE
+
+cooked
+.RS 2
+By default, function 
+\fIopen/2\fR opens the tar file in \fIraw\fR mode, which is faster but does not allow a remote (Erlang) file server to be used. Adding \fIcooked\fR to the mode list overrides the default and opens the tar file without option \fIraw\fR.
+
+.RE
+
+dereference
+.RS 2
+By default, symbolic links are stored as symbolic links in the tar file. To override the default and store the file that the symbolic link points to into the tar file, use option 
+\fIdereference\fR.
+
+.RE
+
+verbose
+.RS 2
+Prints an informational message about each added file.
+
+
+.RE
+
+
+.RE
+.B
+\fBextract(Open :: open_type()) -> ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Extracts all files from a tar archive.
+
+.PP
+If argument \fIName\fR is specified as \fI{binary,Binary}\fR, the contents of the binary is assumed to be a tar archive.
+
+.PP
+If argument \fIName\fR is specified as \fI{file,Fd}\fR, \fIFd\fR is assumed to be a file descriptor returned from function \fIfile:open/2\fR.
+
+.PP
+Otherwise, \fIName\fR is to be a filename.
+
+.PP
+\fBNOTE: \fRLeading slashes in tar member names will be removed before writing the file. That is, absolute paths will be turned into relative paths. There will be an info message written to the error logger when paths are changed in this way.
+
+
+.PP
+\fBWARNING: \fRThe \fIcompressed\fR and \fIcooked\fR flags are invalid when passing a file descriptor with \fI{file,Fd}\fR. The file is assumed to have been opened with the appropriate flags.
+
+
+
+.RE
+.B
+\fBextract(Open :: open_type(), []) -> ok | {error, term()};\fR
+\fB             (Open :: open_type(), [extract_opt(), ...]) ->\fR
+\fB                 ok | {ok, [{string(), binary()}]} | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Extracts files from a tar archive.
+
+.PP
+If argument \fIName\fR is specified as \fI{binary,Binary}\fR, the contents of the binary is assumed to be a tar archive.
+
+.PP
+If argument \fIName\fR is specified as \fI{file,Fd}\fR, \fIFd\fR is assumed to be a file descriptor returned from function \fIfile:open/2\fR.
+
+.PP
+Otherwise, \fIName\fR is to be a filename.
+
+.PP
+The following options modify the defaults for the extraction as follows:
+
+{cwd,Cwd}
+.RS 2
+Files with relative filenames are by default extracted to the current working directory. With this option, files are instead extracted into directory 
+\fICwd\fR.
+
+.RE
+
+{files,FileList}
+.RS 2
+By default, all files are extracted from the tar file. With this option, only those files are extracted whose names are included in 
+\fIFileList\fR.
+
+.RE
+
+compressed
+.RS 2
+With this option, the file is uncompressed while extracting. If the tar file is not compressed, this option is ignored.
+
+
+.RE
+
+cooked
+.RS 2
+By default, function 
+\fIopen/2\fR function opens the tar file in \fIraw\fR mode, which is faster but does not allow a remote (Erlang) file server to be used. Adding \fIcooked\fR to the mode list overrides the default and opens the tar file without option \fIraw\fR.
+
+.RE
+
+memory
+.RS 2
+Instead of extracting to a directory, this option gives the result as a list of tuples 
+\fI{Filename, Binary}\fR, where \fIBinary\fR is a binary containing the extracted data of the file named \fIFilename\fR in the tar file.
+
+.RE
+
+keep_old_files
+.RS 2
+By default, all existing files with the same name as files in the tar file are overwritten. With this option, existing files are not overwriten.
+
+
+.RE
+
+verbose
+.RS 2
+Prints an informational message for each extracted file.
+
+
+.RE
+
+{chunks,ChunkSize}
+.RS 2
+Sets the chunk size, in bytes, for writing extracted file data to disk. Defaults to 65536 bytes.
+
+
+.RE
+
+{max_size,Size}
+.RS 2
+Sets a limit on the total size of extracted data. If the cumulative size of all extracted files exceeds 
+\fISize\fR bytes, extraction fails with \fI{error, too_big}\fR. When extracting a compressed binary archive, the decompressed binary is also subject to this limit. Defaults to \fIinfinity\fR (no limit).
+
+.RE
+
+.PP
+\fBWARNING: \fRThe \fIcompressed\fR and \fIcooked\fR flags are invalid when passing a file descriptor with \fI{file,Fd}\fR. The file is assumed to have been opened with the appropriate flags.
+
+
+
+.RE
+.B
+\fBformat_error(term()) -> string().\fR
+
+.br
+.RS
+.PP
+Converts an error reason term to a human-readable error message string.
+
+
+.RE
+.B
+\fBinit(UserData :: user_data(), write | read, file_op()) ->\fR
+\fB              {ok, tar_descriptor()} | {error, badarg}.\fR
+
+.br
+.RS
+.PP
+The \fIFun\fR is the definition of what to do when the different storage operations functions are to be called from the higher tar handling functions (such as \fIadd/3\fR, \fIadd/4\fR, and \fIclose/1\fR).
+
+.PP
+The \fIFun\fR is called when the tar function wants to do a low-level operation, like writing a block to a file. The \fIFun\fR is called as \fIFun(Op, {UserData,Parameters...})\fR, where \fIOp\fR is the operation name, \fIUserData\fR is the term passed as the first argument to \fIinit/1\fR and \fIParameters...\fR are the data added by the tar function to be passed down to the storage handling function.
+
+.PP
+Parameter \fIUserData\fR is typically the result of opening a low-level structure like a file descriptor or an SFTP channel id. The different \fIFun\fR clauses operate on that very term.
+
+.PP
+The following are the fun clauses parameter lists:
+
+(write, {UserData,DataToWrite})
+.RS 2
+Writes term 
+\fIDataToWrite\fR using \fIUserData\fR.
+
+.RE
+
+(close, UserData)
+.RS 2
+Closes the access.
+
+
+.RE
+
+(read2, {UserData,Size})
+.RS 2
+Reads using 
+\fIUserData\fR but only \fISize\fR bytes. Notice that there is only an arity-2 read function, not an arity-1 function.
+
+.RE
+
+(position,{UserData,Position})
+.RS 2
+Sets the position of 
+\fIUserData\fR as defined for files in \fIfile:position/2\fR
+
+.RE
+
+.PP
+\fIExample:\fR
+
+.PP
+The following is a complete \fIFun\fR parameter for reading and writing on files using the \fIfile\fR module:
+
+.IP
+.nf
+ExampleFun =
+   fun(write, {Fd,Data}) ->  file:write(Fd, Data);
+      (position, {Fd,Pos}) -> file:position(Fd, Pos);
+      (read2, {Fd,Size}) -> file:read(Fd, Size);
+      (close, Fd) -> file:close(Fd)
+   end
+
+.fi
+
+.PP
+Here \fIFd\fR was specified to function \fIinit/3\fR as:
+
+.IP
+.nf
+{ok,Fd} = file:open(Name, ...).
+{ok,TarDesc} = erl_tar:init(Fd, write, ExampleFun),
+
+.fi
+
+.PP
+\fITarDesc\fR is then used:
+
+.IP
+.nf
+erl_tar:add(TarDesc, SomeValueIwantToAdd, FileNameInTarFile),
+...,
+erl_tar:close(TarDesc)
+
+.fi
+
+.PP
+When the \fIerl_tar\fR core wants to, for example, write a piece of \fIData\fR, it would call \fIExampleFun(write, {UserData,Data})\fR.
+
+.PP
+\fBNOTE: \fRThis example with the \fIfile\fR module operations is not necessary to use directly, as that is what function \fIopen/2\fR in principle does.
+
+
+.PP
+\fBWARNING: \fRThe \fITarDescriptor\fR term is not a file descriptor. You are advised not to rely on the specific contents of this term, as it can change in future Erlang/OTP releases when more features are added to this module.
+
+
+
+.RE
+.B
+\fBopen(Open :: open_type(), [write | compressed | cooked]) ->\fR
+\fB              {ok, tar_descriptor()} | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Creates a tar file for writing (any existing file with the same name is truncated).
+
+.PP
+By convention, the name of a tar file is to end in "\fI.tar\fR". To abide to the convention, add "\fI.tar\fR" to the name.
+
+.PP
+Except for the \fIwrite\fR atom, the following atoms can be added to \fIOpenModeList\fR:
+
+compressed
+.RS 2
+The entire tar file is compressed, as if it has been run through the 
+\fIgzip\fR program. To abide to the convention that a compressed tar file is to end in "\fI.tar.gz\fR" or "\fI.tgz\fR", add the appropriate extension.
+
+.RE
+
+cooked
+.RS 2
+By default, the tar file is opened in 
+\fIraw\fR mode, which is faster but does not allow a remote (Erlang) file server to be used. Adding \fIcooked\fR to the mode list overrides the default and opens the tar file without option \fIraw\fR.
+
+.RE
+
+.PP
+To add one file at the time into an opened tar file, use function \fIadd/3,4\fR. When you are finished adding files, use function \fIclose/1\fR to close the tar file.
+
+.PP
+\fBWARNING: \fRThe \fIcompressed\fR and \fIcooked\fR flags are invalid when passing a file descriptor with \fI{file,Fd}\fR. The file must already be opened with the appropriate flags.
+
+
+.PP
+\fBWARNING: \fRThe \fITarDescriptor\fR term is not a file descriptor. You are advised not to rely on the specific contents of this term, as it can change in future Erlang/OTP releases when more features are added to this module.
+
+
+
+.RE
+.B
+\fBt(file:filename()) -> ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Prints the names of all files in the tar file \fIName\fR to the Erlang shell (similar to "\fItar t\fR").
+
+
+.RE
+.B
+\fBtable(Open :: open_type(), [compressed | verbose | cooked]) ->\fR
+\fB               {ok, [name_in_archive() | tar_entry()]} | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Retrieves the names of all files in the tar file \fIName\fR.
+
+
+.RE
+.B
+\fBtt(open_type()) -> ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Prints names and information about all files in the tar file \fIName\fR to the Erlang shell (similar to "\fItar tv\fR").
+
+
+.RE

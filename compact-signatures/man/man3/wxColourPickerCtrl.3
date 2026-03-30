@@ -1,0 +1,282 @@
+.TH wxColourPickerCtrl 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxColourPickerCtrl \- This control allows the user to select a colour.
+
+.SH DESCRIPTION
+.PP
+The generic implementation is a button which brings up a \fIwxColourDialog\fR when clicked. Native implementation may differ but this is usually a (small) widget which give access to the colour-chooser dialog. It is only available if \fIwxUSE_COLOURPICKERCTRL\fR is set to 1 (the default).
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCLRP_DEFAULT_STYLE: The default style: 0.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCLRP_USE_TEXTCTRL: Creates a text control to the left of the picker button which is completely managed by the \fIwxColourPickerCtrl\fR and which can be used by the user to specify a colour (see SetColour). The text control is automatically synchronized with button's value. Use functions defined in \fIwxPickerBase\fR to modify the text control.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCLRP_SHOW_LABEL: Shows the colour in HTML form (AABBCC) as colour button label (instead of no label at all).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCLRP_SHOW_ALPHA: Allows selecting opacity in the colour-chooser (effective under wxGTK and wxOSX).
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxColourDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxColourPickerEvent\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPickerBase\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxColourPickerCtrl
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_colourpicker_changed\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxColourPickerCtrl() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxColourPickerCtrl(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {col, wx:wx_colour()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Creates a colour picker with the given arguments.
+
+.PP
+Return: true if the control was successfully created or false if creation failed.
+
+
+.RE
+.B
+\fBdestroy(This :: wxColourPickerCtrl()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetColour(This) -> wx:wx_colour4()\fR
+\fB                   when This :: wxColourPickerCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected colour.
+
+
+.RE
+.B
+\fBnew() -> wxColourPickerCtrl().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxColourPickerCtrl()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {col, wx:wx_colour()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Initializes the object and calls \fIcreate/4\fR with all the parameters.
+
+
+.RE
+.B
+\fBsetColour(This, Colname) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxColourPickerCtrl(),\fR
+\fB                       Colname :: unicode:chardata();\fR
+\fB               (This, Col) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxColourPickerCtrl(),\fR
+\fB                       Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the currently selected colour.
+
+.PP
+See \fIwxColour::Set()\fR (not implemented in wx).
+
+
+.RE

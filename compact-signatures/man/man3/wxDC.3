@@ -1,0 +1,1691 @@
+.TH wxDC 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxDC \- A \fIwxDC\fR is a \fI"device context"\fR onto which graphics and text can be drawn.
+
+.SH DESCRIPTION
+.PP
+It is intended to represent different output devices and offers a common abstract API for drawing on any of them.
+
+.PP
+wxWidgets offers an alternative drawing API based on the modern drawing backends GDI+, CoreGraphics, Cairo and Direct2D. See \fIwxGraphicsContext\fR, \fIwxGraphicsRenderer\fR and related classes. There is also a \fIwxGCDC\fR linking the APIs by offering the \fIwxDC\fR API on top of a \fIwxGraphicsContext\fR.
+
+.PP
+\fIwxDC\fR is an abstract base class and cannot be created directly. Use \fIwxPaintDC\fR, \fIwxClientDC\fR, \fIwxWindowDC\fR, \fIwxScreenDC\fR, \fIwxMemoryDC\fR or \fIwxPrinterDC\fR (not implemented in wx). Notice that device contexts which are associated with windows (i.e. \fIwxClientDC\fR, \fIwxWindowDC\fR and \fIwxPaintDC\fR) use the window font and colours by default (starting with wxWidgets 2.9.0) but the other device context classes use system-default values so you always must set the appropriate fonts and colours before using them.
+
+.PP
+In addition to the versions of the methods documented below, there are also versions which accept single {X,Y} parameter instead of the two wxCoord ones or {X,Y} and {Width,Height} instead of the four wxCoord parameters.
+
+.PP
+Beginning with wxWidgets 2.9.0 the entire \fIwxDC\fR code has been reorganized. All platform dependent code (actually all drawing code) has been moved into backend classes which derive from a common wxDCImpl class. The user-visible classes such as \fIwxClientDC\fR and \fIwxPaintDC\fR merely forward all calls to the backend implementation.
+
+.PP
+Device and logical units
+
+.PP
+In the \fIwxDC\fR context there is a distinction between \fIlogical\fR units and \fIdevice\fR units.
+
+.PP
+\fIDevice\fR units are the units native to the particular device; e.g. for a screen, a device unit is a \fIpixel\fR. For a printer, the device unit is defined by the resolution of the printer (usually given in \fIDPI:\fR dot-per-inch).
+
+.PP
+All \fIwxDC\fR functions use instead \fIlogical\fR units, unless where explicitly stated. Logical units are arbitrary units mapped to device units using the current mapping mode (see \fIsetMapMode/2\fR).
+
+.PP
+This mechanism allows reusing the same code which prints on e.g. a window on the screen to print on e.g. a paper.
+
+.PP
+Support for Transparency / Alpha Channel
+
+.PP
+In general \fIwxDC\fR methods don't support alpha transparency and the alpha component of \fIwx_color()\fR is simply ignored and you need to use \fIwxGraphicsContext\fR for full transparency support. There are, however, a few exceptions: first, under macOS and GTK+ 3 colours with alpha channel are supported in all the normal wxDC-derived classes as they use \fIwxGraphicsContext\fR internally. Second, under all platforms \fIwxSVGFileDC\fR (not implemented in wx) also fully supports alpha channel. In both of these cases the instances of \fIwxPen\fR or \fIwxBrush\fR that are built from \fIwx_color()\fR use the colour's alpha values when stroking or filling.
+
+.PP
+Support for Transformation Matrix
+
+.PP
+On some platforms (currently under MSW, GTK+ 3, macOS) \fIwxDC\fR has support for applying an arbitrary affine transformation matrix to its coordinate system (since 3.1.1 this feature is also supported by \fIwxGCDC\fR in all ports). Call \fICanUseTransformMatrix()\fR (not implemented in wx) to check if this support is available and then call \fISetTransformMatrix()\fR (not implemented in wx) if it is. If the transformation matrix is not supported, \fISetTransformMatrix()\fR (not implemented in wx) always simply returns \fIfalse\fR and doesn't do anything.
+
+.PP
+This feature is only available when \fIwxUSE_DC_TRANSFORM_MATRIX\fR build option is enabled.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview dc
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsContext\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxDC
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxDC() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBblit(This, Dest, Size, Source, Src, [Option]) -> boolean()\fR
+\fB              when\fR
+\fB                  This :: wxDC(),\fR
+\fB                  Dest :: {X :: integer(), Y :: integer()},\fR
+\fB                  Size :: {W :: integer(), H :: integer()},\fR
+\fB                  Source :: wxDC(),\fR
+\fB                  Src :: {X :: integer(), Y :: integer()},\fR
+\fB                  Option ::\fR
+\fB                      {rop, wx:wx_enum()} |\fR
+\fB                      {useMask, boolean()} |\fR
+\fB                      {srcPtMask, {X :: integer(), Y :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Copy from a source DC to this DC.
+
+.PP
+With this method you can specify the destination coordinates and the size of area to copy which will be the same for both the source and target DCs. If you need to apply scaling while copying, use \fIStretchBlit()\fR (not implemented in wx).
+
+.PP
+Notice that source DC coordinates \fIxsrc\fR and \fIysrc\fR are interpreted using the current source DC coordinate system, i.e. the scale, origin position and axis directions are taken into account when transforming them to physical (pixel) coordinates.
+
+.PP
+Remark: There is partial support for \fIblit/6\fR in \fIwxPostScriptDC\fR, under X.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMemoryDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBitmap\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMask\fR
+
+.RE
+
+
+.RE
+.B
+\fBcalcBoundingBox(This, X, Y) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxDC(),\fR
+\fB                             X :: integer(),\fR
+\fB                             Y :: integer().\fR
+
+.br
+.RS
+.PP
+Adds the specified point to the bounding box which can be retrieved with \fIminX/1\fR, \fImaxX/1\fR and \fIminY/1\fR, \fImaxY/1\fR functions.
+
+.PP
+See: \fIresetBoundingBox/1\fR
+
+
+.RE
+.B
+\fBclear(This) -> ok when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Clears the device context using the current background brush.
+
+.PP
+Note that \fIsetBackground/2\fR method must be used to set the brush used by \fIclear/1\fR, the brush used for filling the shapes set by \fIsetBrush/2\fR is ignored by it.
+
+.PP
+If no background brush was set, solid white brush is used to clear the device context.
+
+
+.RE
+.B
+\fBcrossHair(This, Pt) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxDC(),\fR
+\fB                       Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdestroyClippingRegion(This) -> ok when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Destroys the current clipping region so that none of the DC is clipped.
+
+.PP
+See: \fIsetClippingRegion/3\fR
+
+
+.RE
+.B
+\fBdeviceToLogicalX(This, X) -> integer()\fR
+\fB                          when This :: wxDC(), X :: integer().\fR
+
+.br
+.RS
+.PP
+Convert \fIdevice\fR X coordinate to logical coordinate, using the current mapping mode, user scale factor, device origin and axis orientation.
+
+
+.RE
+.B
+\fBdeviceToLogicalXRel(This, X) -> integer()\fR
+\fB                             when This :: wxDC(), X :: integer().\fR
+
+.br
+.RS
+.PP
+Convert \fIdevice\fR X coordinate to relative logical coordinate, using the current mapping mode and user scale factor but ignoring the axis orientation.
+
+.PP
+Use this for converting a width, for example.
+
+
+.RE
+.B
+\fBdeviceToLogicalY(This, Y) -> integer()\fR
+\fB                          when This :: wxDC(), Y :: integer().\fR
+
+.br
+.RS
+.PP
+Converts \fIdevice\fR Y coordinate to logical coordinate, using the current mapping mode, user scale factor, device origin and axis orientation.
+
+
+.RE
+.B
+\fBdeviceToLogicalYRel(This, Y) -> integer()\fR
+\fB                             when This :: wxDC(), Y :: integer().\fR
+
+.br
+.RS
+.PP
+Convert \fIdevice\fR Y coordinate to relative logical coordinate, using the current mapping mode and user scale factor but ignoring the axis orientation.
+
+.PP
+Use this for converting a height, for example.
+
+
+.RE
+.B
+\fBdrawArc(This, PtStart, PtEnd, Centre) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxDC(),\fR
+\fB                     PtStart :: {X :: integer(), Y :: integer()},\fR
+\fB                     PtEnd :: {X :: integer(), Y :: integer()},\fR
+\fB                     Centre :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawBitmap(This, Bmp, Pt, [Option]) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxDC(),\fR
+\fB                        Bmp :: wxBitmap:wxBitmap(),\fR
+\fB                        Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                        Option :: {useMask, boolean()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawCheckMark(This, Rect) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxDC(),\fR
+\fB                           Rect ::\fR
+\fB                               {X :: integer(),\fR
+\fB                                Y :: integer(),\fR
+\fB                                W :: integer(),\fR
+\fB                                H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawCircle(This, Pt, Radius) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxDC(),\fR
+\fB                        Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                        Radius :: integer().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawEllipse(This, Rect) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxDC(),\fR
+\fB                         Rect ::\fR
+\fB                             {X :: integer(),\fR
+\fB                              Y :: integer(),\fR
+\fB                              W :: integer(),\fR
+\fB                              H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawEllipse(This, Pt, Size) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxDC(),\fR
+\fB                         Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                         Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawEllipticArc(This, Pt, Sz, Sa, Ea) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxDC(),\fR
+\fB                             Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                             Sz :: {W :: integer(), H :: integer()},\fR
+\fB                             Sa :: number(),\fR
+\fB                             Ea :: number().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawIcon(This, Icon, Pt) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxDC(),\fR
+\fB                      Icon :: wxIcon:wxIcon(),\fR
+\fB                      Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawLabel(This, Text, Rect, [Option]) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxDC(),\fR
+\fB                       Text :: unicode:chardata(),\fR
+\fB                       Rect ::\fR
+\fB                           {X :: integer(),\fR
+\fB                            Y :: integer(),\fR
+\fB                            W :: integer(),\fR
+\fB                            H :: integer()},\fR
+\fB                       Option ::\fR
+\fB                           {alignment, integer()} |\fR
+\fB                           {indexAccel, integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawLine(This, Pt1, Pt2) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxDC(),\fR
+\fB                      Pt1 :: {X :: integer(), Y :: integer()},\fR
+\fB                      Pt2 :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawLines(This, Points, [Option]) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxDC(),\fR
+\fB                       Points :: [{X :: integer(), Y :: integer()}],\fR
+\fB                       Option ::\fR
+\fB                           {xoffset, integer()} | {yoffset, integer()}.\fR
+
+.br
+.RS
+.PP
+Draws lines using an array of points of size \fIn\fR adding the optional offset coordinate.
+
+.PP
+The current pen is used for drawing the lines.
+
+
+.RE
+.B
+\fBdrawPoint(This, Pt) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxDC(),\fR
+\fB                       Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawPolygon(This, Points, [Option]) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxDC(),\fR
+\fB                         Points :: [{X :: integer(), Y :: integer()}],\fR
+\fB                         Option ::\fR
+\fB                             {xoffset, integer()} |\fR
+\fB                             {yoffset, integer()} |\fR
+\fB                             {fillStyle, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Draws a filled polygon using an array of points of size \fIn\fR, adding the optional offset coordinate.
+
+.PP
+The first and last points are automatically closed.
+
+.PP
+The last argument specifies the fill rule: \fIwxODDEVEN_RULE\fR (the default) or \fIwxWINDING_RULE\fR.
+
+.PP
+The current pen is used for drawing the outline, and the current brush for filling the shape. Using a transparent brush suppresses filling.
+
+
+.RE
+.B
+\fBdrawRectangle(This, Rect) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxDC(),\fR
+\fB                           Rect ::\fR
+\fB                               {X :: integer(),\fR
+\fB                                Y :: integer(),\fR
+\fB                                W :: integer(),\fR
+\fB                                H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawRectangle(This, Pt, Sz) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxDC(),\fR
+\fB                           Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                           Sz :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawRotatedText(This, Text, Point, Angle) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxDC(),\fR
+\fB                             Text :: unicode:chardata(),\fR
+\fB                             Point :: {X :: integer(), Y :: integer()},\fR
+\fB                             Angle :: number().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawRoundedRectangle(This, Rect, Radius) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxDC(),\fR
+\fB                                  Rect ::\fR
+\fB                                      {X :: integer(),\fR
+\fB                                       Y :: integer(),\fR
+\fB                                       W :: integer(),\fR
+\fB                                       H :: integer()},\fR
+\fB                                  Radius :: number().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawRoundedRectangle(This, Pt, Sz, Radius) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxDC(),\fR
+\fB                                  Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                                  Sz :: {W :: integer(), H :: integer()},\fR
+\fB                                  Radius :: number().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBdrawText(This, Text, Pt) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxDC(),\fR
+\fB                      Text :: unicode:chardata(),\fR
+\fB                      Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBendDoc(This) -> ok when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Ends a document (only relevant when outputting to a printer).
+
+
+.RE
+.B
+\fBendPage(This) -> ok when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Ends a document page (only relevant when outputting to a printer).
+
+
+.RE
+.B
+\fBfloodFill(This, Pt, Col, [Option]) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxDC(),\fR
+\fB                       Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                       Col :: wx:wx_colour(),\fR
+\fB                       Option :: {style, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBgetBackground(This) -> wxBrush:wxBrush() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the brush used for painting the background.
+
+.PP
+See: \fIsetBackground/2\fR
+
+
+.RE
+.B
+\fBgetBackgroundMode(This) -> integer() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Returns the current background mode: \fIwxPENSTYLE\\_SOLID\fR or \fIwxPENSTYLE\\_TRANSPARENT\fR.
+
+.PP
+See: \fIsetBackgroundMode/2\fR
+
+
+.RE
+.B
+\fBgetBrush(This) -> wxBrush:wxBrush() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current brush.
+
+.PP
+See: \fIsetBrush/2\fR
+
+
+.RE
+.B
+\fBgetCharHeight(This) -> integer() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the character height of the currently set font.
+
+
+.RE
+.B
+\fBgetCharWidth(This) -> integer() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the average character width of the currently set font.
+
+
+.RE
+.B
+\fBgetClippingBox(This) -> Result\fR
+\fB                        when\fR
+\fB                            Result ::\fR
+\fB                                {X :: integer(),\fR
+\fB                                 Y :: integer(),\fR
+\fB                                 Width :: integer(),\fR
+\fB                                 Height :: integer()},\fR
+\fB                            This :: wxDC().\fR
+
+.br
+.RS
+.PP
+\fI Gets the rectangle surrounding the current clipping region. If no clipping region is set this function returns the extent of the device context. @remarks Clipping region is given in logical coordinates. @param x If non-<span class='literal'>NULL</span>, filled in with the logical horizontal coordinate of the top left corner of the clipping region if the function returns true or 0 otherwise. @param y If non-<span class='literal'>NULL</span>, filled in with the logical vertical coordinate of the top left corner of the clipping region if the function returns true or 0 otherwise. @param width If non-<span class='literal'>NULL</span>, filled in with the width of the clipping region if the function returns true or the device context width otherwise. @param height If non-<span class='literal'>NULL</span>, filled in with the height of the clipping region if the function returns true or the device context height otherwise. \fR
+
+.PP
+Return: true if there is a clipping region or false if there is no active clipping region (note that this return value is available only since wxWidgets 3.1.2, this function didn't return anything in the previous versions).
+
+
+.RE
+.B
+\fBgetFont(This) -> wxFont:wxFont() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current font.
+
+.PP
+Notice that even although each device context object has some default font after creation, this method would return a ?wxNullFont initially and only after calling \fIsetFont/2\fR a valid font is returned.
+
+
+.RE
+.B
+\fBgetLayoutDirection(This) -> wx:wx_enum() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current layout direction of the device context.
+
+.PP
+On platforms where RTL layout is supported, the return value will either be \fIwxLayout_LeftToRight\fR or \fIwxLayout_RightToLeft\fR. If RTL layout is not supported, the return value will be \fIwxLayout_Default\fR.
+
+.PP
+See: \fIsetLayoutDirection/2\fR
+
+
+.RE
+.B
+\fBgetLogicalFunction(This) -> wx:wx_enum() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current logical function.
+
+.PP
+See: \fIsetLogicalFunction/2\fR
+
+
+.RE
+.B
+\fBgetMapMode(This) -> wx:wx_enum() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current mapping mode for the device context.
+
+.PP
+See: \fIsetMapMode/2\fR
+
+
+.RE
+.B
+\fBgetMultiLineTextExtent(This, String) ->\fR
+\fB                                {W :: integer(), H :: integer()}\fR
+\fB                                when\fR
+\fB                                    This :: wxDC(),\fR
+\fB                                    String :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Gets the dimensions of the string using the currently selected font.
+
+.PP
+\fIstring\fR is the text string to measure.
+
+.PP
+Return: The text extent as a {Width,Height} object.
+
+.PP
+Note: This function works with both single-line and multi-line strings.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFont\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetFont/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetPartialTextExtents/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetTextExtent/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetMultiLineTextExtent(This, String, [Option]) ->\fR
+\fB                                {W :: integer(),\fR
+\fB                                 H :: integer(),\fR
+\fB                                 HeightLine :: integer()}\fR
+\fB                                when\fR
+\fB                                    This :: wxDC(),\fR
+\fB                                    String :: unicode:chardata(),\fR
+\fB                                    Option :: {font, wxFont:wxFont()}.\fR
+
+.br
+.RS
+.PP
+Gets the dimensions of the string using the currently selected font.
+
+.PP
+\fIstring\fR is the text string to measure, \fIheightLine\fR, if non NULL, is where to store the height of a single line.
+
+.PP
+The text extent is set in the given \fIw\fR and \fIh\fR pointers.
+
+.PP
+If the optional parameter \fIfont\fR is specified and valid, then it is used for the text extent calculation, otherwise the currently selected font is used.
+
+.PP
+If \fIstring\fR is empty, its horizontal extent is 0 but, for convenience when using this function for allocating enough space for a possibly multi-line string, its vertical extent is the same as the height of an empty line of text. Please note that this behaviour differs from that of \fIgetTextExtent/3\fR.
+
+.PP
+Note: This function works with both single-line and multi-line strings.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFont\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetFont/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetPartialTextExtents/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetTextExtent/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetPPI(This) -> {W :: integer(), H :: integer()}\fR
+\fB                when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Returns the resolution of the device in pixels per inch.
+
+
+.RE
+.B
+\fBgetPartialTextExtents(This, Text) -> Result\fR
+\fB                               when\fR
+\fB                                   Result ::\fR
+\fB                                       {Res :: boolean(),\fR
+\fB                                        Widths :: [integer()]},\fR
+\fB                                   This :: wxDC(),\fR
+\fB                                   Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Fills the \fIwidths\fR array with the widths from the beginning of \fItext\fR to the corresponding character of \fItext\fR.
+
+.PP
+The generic version simply builds a running total of the widths of each character using \fIgetTextExtent/3\fR, however if the various platforms have a native API function that is faster or more accurate than the generic implementation then it should be used instead.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMultiLineTextExtent/3\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetTextExtent/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetPen(This) -> wxPen:wxPen() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current pen.
+
+.PP
+See: \fIsetPen/2\fR
+
+
+.RE
+.B
+\fBgetPixel(This, Pos) -> Result\fR
+\fB                  when\fR
+\fB                      Result ::\fR
+\fB                          {Res :: boolean(), Colour :: wx:wx_colour4()},\fR
+\fB                      This :: wxDC(),\fR
+\fB                      Pos :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Gets in \fIcolour\fR the colour at the specified location.
+
+.PP
+This method isn't available for \fIwxPostScriptDC\fR or \fIwxMetafileDC\fR (not implemented in wx) nor for any DC in wxOSX port and simply returns false there.
+
+.PP
+Note: Setting a pixel can be done using \fIdrawPoint/2\fR.
+
+.PP
+Note: This method shouldn't be used with \fIwxPaintDC\fR as accessing the DC while drawing can result in unexpected results, notably in wxGTK.
+
+
+.RE
+.B
+\fBgetSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                 when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBgetSizeMM(This) -> {W :: integer(), H :: integer()}\fR
+\fB                   when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBgetTextBackground(This) -> wx:wx_colour4() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current text background colour.
+
+.PP
+See: \fIsetTextBackground/2\fR
+
+
+.RE
+.B
+\fBgetTextExtent(This, String) -> {W :: integer(), H :: integer()}\fR
+\fB                       when This :: wxDC(), String :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBgetTextExtent(This, String, [Option]) -> Result\fR
+\fB                       when\fR
+\fB                           Result ::\fR
+\fB                               {W :: integer(),\fR
+\fB                                H :: integer(),\fR
+\fB                                Descent :: integer(),\fR
+\fB                                ExternalLeading :: integer()},\fR
+\fB                           This :: wxDC(),\fR
+\fB                           String :: unicode:chardata(),\fR
+\fB                           Option :: {theFont, wxFont:wxFont()}.\fR
+
+.br
+.RS
+.PP
+Gets the dimensions of the string using the currently selected font.
+
+.PP
+\fIstring\fR is the text string to measure, \fIdescent\fR is the dimension from the baseline of the font to the bottom of the descender, and \fIexternalLeading\fR is any extra vertical space added to the font by the font designer (usually is zero).
+
+.PP
+The text extent is returned in \fIw\fR and \fIh\fR pointers or as a {Width,Height} object depending on which version of this function is used.
+
+.PP
+If the optional parameter \fIfont\fR is specified and valid, then it is used for the text extent calculation. Otherwise the currently selected font is.
+
+.PP
+If \fIstring\fR is empty, its extent is 0 in both directions, as expected.
+
+.PP
+Note: This function only works with single-line strings.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFont\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetFont/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetPartialTextExtents/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMultiLineTextExtent/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetTextForeground(This) -> wx:wx_colour4() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current text foreground colour.
+
+.PP
+See: \fIsetTextForeground/2\fR
+
+
+.RE
+.B
+\fBgetUserScale(This) -> {X :: number(), Y :: number()}\fR
+\fB                      when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the current user scale factor.
+
+.PP
+See: \fIsetUserScale/3\fR
+
+
+.RE
+.B
+\fBgradientFillConcentric(This, Rect, InitialColour, DestColour) ->\fR
+\fB                                ok\fR
+\fB                                when\fR
+\fB                                    This :: wxDC(),\fR
+\fB                                    Rect ::\fR
+\fB                                        {X :: integer(),\fR
+\fB                                         Y :: integer(),\fR
+\fB                                         W :: integer(),\fR
+\fB                                         H :: integer()},\fR
+\fB                                    InitialColour :: wx:wx_colour(),\fR
+\fB                                    DestColour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Fill the area specified by rect with a radial gradient, starting from \fIinitialColour\fR at the centre of the circle and fading to \fIdestColour\fR on the circle outside.
+
+.PP
+The circle is placed at the centre of \fIrect\fR.
+
+.PP
+Note: Currently this function is very slow, don't use it for real-time drawing.
+
+
+.RE
+.B
+\fBgradientFillConcentric(This, Rect, InitialColour, DestColour,\fR
+\fB                             CircleCenter) ->\fR
+\fB                                ok\fR
+\fB                                when\fR
+\fB                                    This :: wxDC(),\fR
+\fB                                    Rect ::\fR
+\fB                                        {X :: integer(),\fR
+\fB                                         Y :: integer(),\fR
+\fB                                         W :: integer(),\fR
+\fB                                         H :: integer()},\fR
+\fB                                    InitialColour :: wx:wx_colour(),\fR
+\fB                                    DestColour :: wx:wx_colour(),\fR
+\fB                                    CircleCenter ::\fR
+\fB                                        {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Fill the area specified by rect with a radial gradient, starting from \fIinitialColour\fR at the centre of the circle and fading to \fIdestColour\fR on the circle outside.
+
+.PP
+\fIcircleCenter\fR are the relative coordinates of centre of the circle in the specified \fIrect\fR.
+
+.PP
+Note: Currently this function is very slow, don't use it for real-time drawing.
+
+
+.RE
+.B
+\fBgradientFillLinear(This, Rect, InitialColour, DestColour,\fR
+\fB                         [Option]) ->\fR
+\fB                            ok\fR
+\fB                            when\fR
+\fB                                This :: wxDC(),\fR
+\fB                                Rect ::\fR
+\fB                                    {X :: integer(),\fR
+\fB                                     Y :: integer(),\fR
+\fB                                     W :: integer(),\fR
+\fB                                     H :: integer()},\fR
+\fB                                InitialColour :: wx:wx_colour(),\fR
+\fB                                DestColour :: wx:wx_colour(),\fR
+\fB                                Option :: {nDirection, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Fill the area specified by \fIrect\fR with a linear gradient, starting from \fIinitialColour\fR and eventually fading to \fIdestColour\fR.
+
+.PP
+The \fInDirection\fR specifies the direction of the colour change, default is to use \fIinitialColour\fR on the left part of the rectangle and \fIdestColour\fR on the right one.
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Returns true if the DC is ok to use.
+
+
+.RE
+.B
+\fBlogicalToDeviceX(This, X) -> integer()\fR
+\fB                          when This :: wxDC(), X :: integer().\fR
+
+.br
+.RS
+.PP
+Converts logical X coordinate to device coordinate, using the current mapping mode, user scale factor, device origin and axis orientation.
+
+
+.RE
+.B
+\fBlogicalToDeviceXRel(This, X) -> integer()\fR
+\fB                             when This :: wxDC(), X :: integer().\fR
+
+.br
+.RS
+.PP
+Converts logical X coordinate to relative device coordinate, using the current mapping mode and user scale factor but ignoring the axis orientation.
+
+.PP
+Use this for converting a width, for example.
+
+
+.RE
+.B
+\fBlogicalToDeviceY(This, Y) -> integer()\fR
+\fB                          when This :: wxDC(), Y :: integer().\fR
+
+.br
+.RS
+.PP
+Converts logical Y coordinate to device coordinate, using the current mapping mode, user scale factor, device origin and axis orientation.
+
+
+.RE
+.B
+\fBlogicalToDeviceYRel(This, Y) -> integer()\fR
+\fB                             when This :: wxDC(), Y :: integer().\fR
+
+.br
+.RS
+.PP
+Converts logical Y coordinate to relative device coordinate, using the current mapping mode and user scale factor but ignoring the axis orientation.
+
+.PP
+Use this for converting a height, for example.
+
+
+.RE
+.B
+\fBmaxX(This) -> integer() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the maximum horizontal extent used in drawing commands so far.
+
+
+.RE
+.B
+\fBmaxY(This) -> integer() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the maximum vertical extent used in drawing commands so far.
+
+
+.RE
+.B
+\fBminX(This) -> integer() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the minimum horizontal extent used in drawing commands so far.
+
+
+.RE
+.B
+\fBminY(This) -> integer() when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Gets the minimum vertical extent used in drawing commands so far.
+
+
+.RE
+.B
+\fBresetBoundingBox(This) -> ok when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Resets the bounding box: after a call to this function, the bounding box doesn't contain anything.
+
+.PP
+See: \fIcalcBoundingBox/3\fR
+
+
+.RE
+.B
+\fBsetAxisOrientation(This, XLeftRight, YBottomUp) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxDC(),\fR
+\fB                                XLeftRight :: boolean(),\fR
+\fB                                YBottomUp :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets the x and y axis orientation (i.e. the direction from lowest to highest values on the axis).
+
+.PP
+The default orientation is x axis from left to right and y axis from top down.
+
+
+.RE
+.B
+\fBsetBackground(This, Brush) -> ok\fR
+\fB                       when This :: wxDC(), Brush :: wxBrush:wxBrush().\fR
+
+.br
+.RS
+.PP
+Sets the current background brush for the DC.
+
+
+.RE
+.B
+\fBsetBackgroundMode(This, Mode) -> ok\fR
+\fB                           when This :: wxDC(), Mode :: integer().\fR
+
+.br
+.RS
+.PP
+\fImode\fR may be one of \fIwxPENSTYLE\\_SOLID\fR and \fIwxPENSTYLE\\_TRANSPARENT\fR.
+
+.PP
+This setting determines whether text will be drawn with a background colour or not.
+
+
+.RE
+.B
+\fBsetBrush(This, Brush) -> ok\fR
+\fB                  when This :: wxDC(), Brush :: wxBrush:wxBrush().\fR
+
+.br
+.RS
+.PP
+Sets the current brush for the DC.
+
+.PP
+If the argument is ?wxNullBrush (or another invalid brush; see \fIwxBrush:isOk/1\fR), the current brush is selected out of the device context (leaving \fIwxDC\fR without any valid brush), allowing the current brush to be destroyed safely.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBrush\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMemoryDC\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetClippingRegion(This, Rect) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxDC(),\fR
+\fB                               Rect ::\fR
+\fB                                   {X :: integer(),\fR
+\fB                                    Y :: integer(),\fR
+\fB                                    W :: integer(),\fR
+\fB                                    H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBsetClippingRegion(This, Pt, Sz) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxDC(),\fR
+\fB                               Pt :: {X :: integer(), Y :: integer()},\fR
+\fB                               Sz :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+
+.RE
+.B
+\fBsetDeviceOrigin(This, X, Y) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxDC(),\fR
+\fB                             X :: integer(),\fR
+\fB                             Y :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the device origin (i.e. the origin in pixels after scaling has been applied).
+
+.PP
+This function may be useful in Windows printing operations for placing a graphic on a page.
+
+
+.RE
+.B
+\fBsetFont(This, Font) -> ok\fR
+\fB                 when This :: wxDC(), Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the current font for the DC.
+
+.PP
+If the argument is ?wxNullFont (or another invalid font; see \fIwxFont:isOk/1\fR), the current font is selected out of the device context (leaving \fIwxDC\fR without any valid font), allowing the current font to be destroyed safely.
+
+.PP
+See: \fIwxFont\fR
+
+
+.RE
+.B
+\fBsetLayoutDirection(This, Dir) -> ok\fR
+\fB                            when This :: wxDC(), Dir :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the current layout direction for the device context.
+
+.PP
+See: \fIgetLayoutDirection/1\fR
+
+
+.RE
+.B
+\fBsetLogicalFunction(This, Function) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxDC(), Function :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the current logical function for the device context.
+
+.PP
+Note: This function is not fully supported in all ports, due to the limitations of the underlying drawing model. Notably, \fIwxINVERT\fR which was commonly used for drawing rubber bands or other moving outlines in the past, is not, and will not, be supported by wxGTK3 and wxMac. The suggested alternative is to draw temporarily objects normally and refresh the (affected part of the) window to remove them later.
+
+.PP
+It determines how a \fIsource\fR pixel (from a pen or brush colour, or source device context if using \fIblit/6\fR) combines with a \fIdestination\fR pixel in the current device context. Text drawing is not affected by this function.
+
+.PP
+See ?wxRasterOperationMode enumeration values for more info.
+
+.PP
+The default is \fIwxCOPY\fR, which simply draws with the current colour. The others combine the current colour and the background using a logical operation.
+
+
+.RE
+.B
+\fBsetMapMode(This, Mode) -> ok\fR
+\fB                    when This :: wxDC(), Mode :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+The mapping mode of the device context defines the unit of measurement used to convert \fIlogical\fR units to \fIdevice\fR units.
+
+.PP
+Note that in X, text drawing isn't handled consistently with the mapping mode; a font is always specified in point size. However, setting the user scale (see \fIsetUserScale/3\fR) scales the text appropriately. In Windows, scalable TrueType fonts are always used; in X, results depend on availability of fonts, but usually a reasonable match is found.
+
+.PP
+The coordinate origin is always at the top left of the screen/printer.
+
+.PP
+Drawing to a Windows printer device context uses the current mapping mode, but mapping mode is currently ignored for PostScript output.
+
+
+.RE
+.B
+\fBsetPalette(This, Palette) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxDC(), Palette :: wxPalette:wxPalette().\fR
+
+.br
+.RS
+.PP
+If this is a window DC or memory DC, assigns the given palette to the window or bitmap associated with the DC.
+
+.PP
+If the argument is ?wxNullPalette, the current palette is selected out of the device context, and the original palette restored.
+
+.PP
+See: \fIwxPalette\fR
+
+
+.RE
+.B
+\fBsetPen(This, Pen) -> ok when This :: wxDC(), Pen :: wxPen:wxPen().\fR
+
+.br
+.RS
+.PP
+Sets the current pen for the DC.
+
+.PP
+If the argument is ?wxNullPen (or another invalid pen; see \fIwxPen:isOk/1\fR), the current pen is selected out of the device context (leaving \fIwxDC\fR without any valid pen), allowing the current pen to be destroyed safely.
+
+.PP
+See: \fIwxMemoryDC\fR
+
+
+.RE
+.B
+\fBsetTextBackground(This, Colour) -> ok\fR
+\fB                           when This :: wxDC(), Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the current text background colour for the DC.
+
+
+.RE
+.B
+\fBsetTextForeground(This, Colour) -> ok\fR
+\fB                           when This :: wxDC(), Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the current text foreground colour for the DC.
+
+.PP
+See: \fIwxMemoryDC\fR
+
+
+.RE
+.B
+\fBsetUserScale(This, XScale, YScale) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxDC(),\fR
+\fB                          XScale :: number(),\fR
+\fB                          YScale :: number().\fR
+
+.br
+.RS
+.PP
+Sets the user scaling factor, useful for applications which require 'zooming'.
+
+
+.RE
+.B
+\fBstartDoc(This, Message) -> boolean()\fR
+\fB                  when This :: wxDC(), Message :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Starts a document (only relevant when outputting to a printer).
+
+.PP
+\fImessage\fR is a message to show while printing.
+
+
+.RE
+.B
+\fBstartPage(This) -> ok when This :: wxDC().\fR
+
+.br
+.RS
+.PP
+Starts a document page (only relevant when outputting to a printer).
+
+
+.RE

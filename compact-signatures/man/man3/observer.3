@@ -1,0 +1,63 @@
+.TH observer 3 "observer 2.18.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+observer \- A GUI tool for observing an Erlang system.
+
+.SH DESCRIPTION
+.PP
+Observer is a graphical tool for observing the characteristics of Erlang systems. The tool Observer displays system information, application supervisor trees, process information, ETS tables, Mnesia tables, and contains a front end for Erlang tracing with module \fIttb\fR.
+
+.PP
+For details about how to get started, see the \fIUser's Guide\fR.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBstart() -> ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Starts the Observer GUI. To stop the tool, close the window or call \fIstop/0\fR.
+
+
+.RE
+.B
+\fBstart(Node :: node() | [node()]) -> ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Starts the Observer GUI and tries to connect it to \fINode\fR.
+
+
+.RE
+.B
+\fBstart_and_wait() -> ok.\fR
+
+.br
+.RS
+.PP
+Starts the Observer GUI and only return when it is either stopped or the window is closed
+
+
+.RE
+.B
+\fBstart_and_wait(Node :: node() | [node()]) -> ok.\fR
+
+.br
+.RS
+.PP
+Starts the Observer GUI and only return when it is either stopped or the window is closed, connects it directly to \fINode\fR like \fIstart/1\fR.
+
+
+.RE
+.B
+\fBstop() -> ok.\fR
+
+.br
+.RS
+.PP
+Stops the Observer GUI.
+
+
+.RE

@@ -1,0 +1,357 @@
+.TH msacc 3 "runtime_tools 2.3.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+msacc \- Convenience functions for microstate accounting
+
+.SH DESCRIPTION
+.PP
+This module implements some convenience functions for analyzing microstate accounting data. For details about how to use the basic API and what the different states represent, see \fIerlang:statistics(microstate_accounting)\fR.
+
+.PP
+\fIBasic Scenario\fR
+
+.IP
+.nf
+1> msacc:start(1000).
+ok
+2> msacc:print().
+Average thread real-time    : 1000513 us
+Accumulated system run-time :    2213 us
+Average scheduler run-time  :    1076 us
+
+        Thread      aux check_io emulator       gc    other     port    sleep
+
+Stats per thread:
+     async( 0)    0.00%    0.00%    0.00%    0.00%    0.00%    0.00%  100.00%
+     async( 1)    0.00%    0.00%    0.00%    0.00%    0.00%    0.00%  100.00%
+       aux( 1)    0.00%    0.00%    0.00%    0.00%    0.00%    0.00%   99.99%
+ scheduler( 1)    0.00%    0.03%    0.13%    0.00%    0.01%    0.00%   99.82%
+ scheduler( 2)    0.00%    0.00%    0.00%    0.00%    0.03%    0.00%   99.97%
+
+Stats per type:
+         async    0.00%    0.00%    0.00%    0.00%    0.00%    0.00%  100.00%
+           aux    0.00%    0.00%    0.00%    0.00%    0.00%    0.00%   99.99%
+     scheduler    0.00%    0.02%    0.06%    0.00%    0.02%    0.00%   99.89%
+ok
+
+.fi
+
+.PP
+This first command enables microstate accounting for 1000 milliseconds. See \fIstart/0\fR, \fIstop/0\fR, \fIreset/0\fR, and \fIstart/1\fR for more details. The second command prints the statistics gathered during that time. First three general statistics are printed.
+
+Average real-time
+.RS 2
+The average time spent collecting data in the threads. This should be close to the time which data was collected.
+
+
+.RE
+
+System run-time
+.RS 2
+The total run-time of all threads in the system. This is what you get if you call 
+\fImsacc:stats(total_runtime,Stats).\fR
+
+.RE
+
+Average scheduler run-time
+.RS 2
+The average run-time for the schedulers. This is the average amount of time the schedulers did not sleep.
+
+
+.RE
+
+.PP
+Then one column per state is printed with a the percentage of time this thread spent in the state out of it's own real-time. After the thread specific time, the accumulated time for each type of thread is printed in a similar format.
+
+.PP
+Since we have the average real-time and the percentage spent in each state we can easily calculate the time spent in each state by multiplying \fIAverage thread real-time\fR with \fIThread state %\fR, that is, to get the time Scheduler 1 spent in the emulator state we do \fI1000513us * 0.13% = 1300us\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBmsacc_data() :: [msacc_data_thread()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmsacc_data_counters() :: #{msacc_state() => non_neg_integer()}.\fR
+
+.br
+.RS
+.PP
+A map containing the different microstate accounting states and the number of microseconds spent in it.
+
+
+.RE
+.B
+\fBmsacc_data_thread() ::\fR
+\fB          #{'$type' := msacc_data,\fR
+\fB            type := msacc_type(),\fR
+\fB            id := msacc_id(),\fR
+\fB            counters := msacc_data_counters()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmsacc_id() :: non_neg_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmsacc_print_options() :: #{system => boolean()}.\fR
+
+.br
+.RS
+.PP
+The different options that can be given to \fIprint/2\fR.
+
+
+.RE
+.B
+\fBmsacc_state() ::\fR
+\fB          alloc | aux | bif | busy_wait | check_io | emulator | ets |\fR
+\fB          gc | gc_fullsweep | nif | other | port | send | sleep | timers.\fR
+
+.br
+.RS
+.PP
+The different states that a thread can be in. See erlang:statistics(microstate_accounting) for details.
+
+
+.RE
+.B
+\fBmsacc_stats() :: [msacc_stats_thread()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmsacc_stats_counters() ::\fR
+\fB          #{msacc_state() => #{thread := float(), system := float()}}.\fR
+
+.br
+.RS
+.PP
+A map containing the different microstate accounting states. Each value in the map contains another map with the percentage of time that this thread has spent in the specific state. Both the percentage of \fIsystem\fR time and the time for that specific \fIthread\fR is part of the map.
+
+
+.RE
+.B
+\fBmsacc_stats_thread() ::\fR
+\fB          #{'$type' := msacc_stats,\fR
+\fB            type := msacc_type(),\fR
+\fB            id := msacc_id(),\fR
+\fB            system := float(),\fR
+\fB            counters := msacc_stats_counters()}.\fR
+
+.br
+.RS
+.PP
+A map containing information about a specific thread. The percentages in the map can be either run-time or real-time depending on if \fIruntime\fR or \fIrealtime\fR was requested from \fIstats/2\fR. \fIsystem\fR is the percentage of total system time for this specific thread.
+
+
+.RE
+.B
+\fBmsacc_type() ::\fR
+\fB          aux | async | dirty_cpu_scheduler | dirty_io_scheduler |\fR
+\fB          poll | scheduler.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBavailable() -> boolean().\fR
+
+.br
+.RS
+.PP
+This function checks whether microstate accounting is available or not.
+
+
+.RE
+.B
+\fBfrom_file(Filename) -> msacc_data()\fR
+\fB                   when Filename :: file:name_all().\fR
+
+.br
+.RS
+.PP
+Read a file dump produced by to_file(Filename).
+
+
+.RE
+.B
+\fBprint() -> ok.\fR
+
+.br
+.RS
+.PP
+Prints the current microstate accounting to standard out. Equivalent to \fImsacc:print(msacc:stats(), #{}).\fR
+
+
+.RE
+.B
+\fBprint(DataOrStats, Options) -> ok\fR
+\fB               when\fR
+\fB                   DataOrStats :: msacc_data() | msacc_stats(),\fR
+\fB                   Options :: msacc_print_options().\fR
+
+.br
+.RS
+.PP
+Print the given microstate statistics values to standard out. With many states this can be verbose. See the top of this reference manual for a brief description of what the fields mean.
+
+.PP
+It is possible to print more specific types of statistics by first manipulating the \fIDataOrStats\fR using \fIstats/2\fR. For instance if you want to print the percentage of run-time for each thread you can do:
+
+.IP
+.nf
+msacc:print(msacc:stats(runtime, msacc:stats())).
+
+.fi
+
+.PP
+If you want to only print run-time per thread type you can do:
+
+.IP
+.nf
+msacc:print(msacc:stats(type, msacc:stats(runtime, msacc:stats()))).
+
+.fi
+
+.PP
+\fIOptions\fR
+
+system
+.RS 2
+Print percentage of time spent in each state out of system time as well as thread time. Default: false.
+
+
+.RE
+
+
+.RE
+.B
+\fBprint(FileOrDevice, DataOrStats, Options) -> ok\fR
+\fB               when\fR
+\fB                   FileOrDevice :: file:filename() | io:device(),\fR
+\fB                   DataOrStats :: msacc_data() | msacc_stats(),\fR
+\fB                   Options :: msacc_print_options().\fR
+
+.br
+.RS
+.PP
+Print the given microstate statistics values to the given file or device. The other arguments behave the same way as for \fIprint/2\fR.
+
+
+.RE
+.B
+\fBreset() -> boolean().\fR
+
+.br
+.RS
+.PP
+Reset microstate accounting counters. Returns whether is was enabled or disabled.
+
+
+.RE
+.B
+\fBstart() -> boolean().\fR
+
+.br
+.RS
+.PP
+Start microstate accounting. Returns whether it was previously enabled or disabled.
+
+
+.RE
+.B
+\fBstart(Time) -> true when Time :: timeout().\fR
+
+.br
+.RS
+.PP
+Resets all counters and then starts microstate accounting for the given milliseconds.
+
+
+.RE
+.B
+\fBstats() -> msacc_data().\fR
+
+.br
+.RS
+.PP
+Returns a runtime system independent version of the microstate statistics data presented by \fIerlang:statistics(microstate_accounting)\fR. All counters have been normalized to be in microsecond resolution.
+
+
+.RE
+.B
+\fBstats(Analysis, Stats) -> non_neg_integer()\fR
+\fB               when\fR
+\fB                   Analysis :: system_realtime | system_runtime,\fR
+\fB                   Stats :: msacc_data();\fR
+\fB           (Analysis, Stats) -> msacc_stats()\fR
+\fB               when\fR
+\fB                   Analysis :: realtime | runtime, Stats :: msacc_data();\fR
+\fB           (Analysis, StatsOrData) -> msacc_data() | msacc_stats()\fR
+\fB               when\fR
+\fB                   Analysis :: type,\fR
+\fB                   StatsOrData :: msacc_data() | msacc_stats().\fR
+
+.br
+.RS
+.PP
+Returns the system time for the given microstate statistics values. System time is the accumulated time of all threads.
+
+realtime
+.RS 2
+Returns all time recorded for all threads.
+
+
+.RE
+
+runtime
+.RS 2
+Returns all time spent doing work for all threads, i.e. all time not spent in the 
+\fIsleep\fR state.
+
+.RE
+
+.PP
+Returns fractions of real-time or run-time spent in the various threads from the given microstate statistics values.
+
+.PP
+Returns a list of microstate statistics values where the values for all threads of the same type has been merged.
+
+
+.RE
+.B
+\fBstop() -> boolean().\fR
+
+.br
+.RS
+.PP
+Stop microstate accounting. Returns whether is was previously enabled or disabled.
+
+
+.RE
+.B
+\fBto_file(Filename) -> ok | {error, file:posix()}\fR
+\fB                 when Filename :: file:name_all().\fR
+
+.br
+.RS
+.PP
+Dumps the current microstate statistics counters to a file that can be parsed with \fIfile:consult/1\fR.
+
+
+.RE

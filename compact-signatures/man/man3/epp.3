@@ -1,0 +1,430 @@
+.TH epp 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+epp \- An Erlang code preprocessor.
+
+.SH DESCRIPTION
+.PP
+The Erlang code preprocessor includes functions that are used by the \fIcompile\fR module to preprocess macros and include files before the parsing takes place.
+
+.PP
+The Erlang source file \fIencoding\fR is selected by a comment in one of the first two lines of the source file. The first string matching the regular expression \fIcoding\\s*[:=]\\s*([-a-zA-Z0-9])+\fR selects the encoding. If the matching string is not a valid encoding, it is ignored. The valid encodings are \fILatin-1\fR and \fIUTF-8\fR, where the case of the characters can be chosen freely.
+
+.PP
+\fIExamples:\fR
+
+.IP
+.nf
+%% coding: utf-8
+
+.fi
+
+.IP
+.nf
+%% For this file we have chosen encoding = Latin-1
+
+.fi
+
+.IP
+.nf
+%% -*- coding: latin-1 -*-
+
+.fi
+
+.SS "Error Information"
+
+.PP
+\fIErrorInfo\fR is the standard \fIErrorInfo\fR structure that is returned from all I/O modules. The format is as follows:
+
+.IP
+.nf
+{ErrorLine, Module, ErrorDescriptor}
+
+.fi
+
+.PP
+A string describing the error is obtained with the following call:
+
+.IP
+.nf
+Module:format_error(ErrorDescriptor)
+
+.fi
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIerl_parse\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBepp_handle() :: pid().\fR
+
+.br
+.RS
+.PP
+Handle to the \fIepp\fR server.
+
+
+.RE
+.B
+\fBmacros() ::\fR
+\fB          [atom() | {atom(), term()} | {atom(), term(), redefine}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsource_encoding() :: latin1 | utf8.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwarning_info() :: {erl_anno:location(), module(), term()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBclose(Epp) -> ok when Epp :: epp_handle().\fR
+
+.br
+.RS
+.PP
+Closes the preprocessing of a file.
+
+
+.RE
+.B
+\fBdefault_encoding() -> source_encoding().\fR
+
+.br
+.RS
+.PP
+Returns the default encoding of Erlang source files.
+
+
+.RE
+.B
+\fBencoding_to_string(Encoding) -> string()\fR
+\fB                            when Encoding :: source_encoding().\fR
+
+.br
+.RS
+.PP
+Returns a string representation of an encoding. The string is recognized by \fIread_encoding/1,2\fR, \fIread_encoding_from_binary/1,2\fR, and \fIset_encoding/1,2\fR as a valid encoding.
+
+
+.RE
+.B
+\fBformat_error(ErrorDescriptor) -> io_lib:chars()\fR
+\fB                      when ErrorDescriptor :: term().\fR
+
+.br
+.RS
+.PP
+Takes an \fIErrorDescriptor\fR and returns a string that describes the error or warning. This function is usually called implicitly when processing an \fIErrorInfo\fR structure (see section Error Information).
+
+
+.RE
+.B
+\fBopen(Options) ->\fR
+\fB              {ok, Epp} | {ok, Epp, Extra} | {error, ErrorDescriptor}\fR
+\fB              when\fR
+\fB                  Options ::\fR
+\fB                      [{default_encoding,\fR
+\fB                        DefEncoding :: source_encoding()} |\fR
+\fB                       {includes,\fR
+\fB                        IncludePath :: [DirectoryName :: file:name()]} |\fR
+\fB                       {source_name, SourceName :: file:name()} |\fR
+\fB                       {deterministic, Enabled :: boolean()} |\fR
+\fB                       {macros, PredefMacros :: macros()} |\fR
+\fB                       {name, FileName :: file:name()} |\fR
+\fB                       {location, StartLocation :: erl_anno:location()} |\fR
+\fB                       {fd, FileDescriptor :: file:io_device()} |\fR
+\fB                       extra |\fR
+\fB                       {compiler_internal, [term()]}],\fR
+\fB                  Epp :: epp_handle(),\fR
+\fB                  Extra :: [{encoding, source_encoding() | none}],\fR
+\fB                  ErrorDescriptor :: term().\fR
+
+.br
+.RS
+.PP
+Opens a file for preprocessing.
+
+.PP
+If you want to change the file name of the implicit -file() attributes inserted during preprocessing, you can do with \fI{source_name, SourceName}\fR. If unset it will default to the name of the opened file.
+
+.PP
+Setting \fI{deterministic, Enabled}\fR will additionally reduce the file name of the implicit -file() attributes inserted during preprocessing to only the basename of the path.
+
+.PP
+If \fIextra\fR is specified in \fIOptions\fR, the return value is \fI{ok, Epp, Extra}\fR instead of \fI{ok, Epp}\fR.
+
+.PP
+The option \fIlocation\fR is forwarded to the Erlang token scanner, see \fIerl_scan:tokens/3,4\fR.
+
+.PP
+The \fI{compiler_internal,term()}\fR option is forwarded to the Erlang token scanner, see \fI{compiler_internal,term()}\fR.
+
+
+.RE
+.B
+\fBopen(FileName, IncludePath) ->\fR
+\fB              {ok, Epp} | {error, ErrorDescriptor}\fR
+\fB              when\fR
+\fB                  FileName :: file:name(),\fR
+\fB                  IncludePath :: [DirectoryName :: file:name()],\fR
+\fB                  Epp :: epp_handle(),\fR
+\fB                  ErrorDescriptor :: term().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIepp:open([{name, FileName}, {includes, IncludePath}])\fR.
+
+
+.RE
+.B
+\fBopen(FileName, IncludePath, PredefMacros) ->\fR
+\fB              {ok, Epp} | {error, ErrorDescriptor}\fR
+\fB              when\fR
+\fB                  FileName :: file:name(),\fR
+\fB                  IncludePath :: [DirectoryName :: file:name()],\fR
+\fB                  PredefMacros :: macros(),\fR
+\fB                  Epp :: epp_handle(),\fR
+\fB                  ErrorDescriptor :: term().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIepp:open([{name, FileName}, {includes, IncludePath}, {macros, PredefMacros}])\fR.
+
+
+.RE
+.B
+\fBparse_erl_form(Epp) ->\fR
+\fB                        {ok, AbsForm} |\fR
+\fB                        {error, ErrorInfo} |\fR
+\fB                        {warning, WarningInfo} |\fR
+\fB                        {eof, Location}\fR
+\fB                        when\fR
+\fB                            Epp :: epp_handle(),\fR
+\fB                            AbsForm :: erl_parse:abstract_form(),\fR
+\fB                            Location :: erl_anno:location(),\fR
+\fB                            ErrorInfo ::\fR
+\fB                                erl_scan:error_info() |\fR
+\fB                                erl_parse:error_info(),\fR
+\fB                            WarningInfo :: warning_info().\fR
+
+.br
+.RS
+.PP
+Returns the next Erlang form from the opened Erlang source file. Tuple \fI{eof, Location}\fR is returned at the end of the file. The first form corresponds to an implicit attribute \fI-file(File,1).\fR, where \fIFile\fR is the file name.
+
+
+.RE
+.B
+\fBparse_file(FileName, Options) ->\fR
+\fB                    {ok, [Form]} |\fR
+\fB                    {ok, [Form], Extra} |\fR
+\fB                    {error, OpenError}\fR
+\fB                    when\fR
+\fB                        FileName :: file:name(),\fR
+\fB                        Options ::\fR
+\fB                            [{includes,\fR
+\fB                              IncludePath ::\fR
+\fB                                  [DirectoryName :: file:name()]} |\fR
+\fB                             {source_name, SourceName :: file:name()} |\fR
+\fB                             {macros, PredefMacros :: macros()} |\fR
+\fB                             {default_encoding,\fR
+\fB                              DefEncoding :: source_encoding()} |\fR
+\fB                             {location,\fR
+\fB                              StartLocation :: erl_anno:location()} |\fR
+\fB                             {reserved_word_fun,\fR
+\fB                              Fun :: fun((atom()) -> boolean())} |\fR
+\fB                             {features, [Feature :: atom()]} |\fR
+\fB                             {deterministic, boolean()} |\fR
+\fB                             extra |\fR
+\fB                             {compiler_internal, [term()]}],\fR
+\fB                        Form ::\fR
+\fB                            erl_parse:abstract_form() |\fR
+\fB                            {error, ErrorInfo} |\fR
+\fB                            {eof, Location},\fR
+\fB                        Location :: erl_anno:location(),\fR
+\fB                        ErrorInfo ::\fR
+\fB                            erl_scan:error_info() |\fR
+\fB                            erl_parse:error_info(),\fR
+\fB                        Extra :: [{encoding, source_encoding() | none}],\fR
+\fB                        OpenError ::\fR
+\fB                            file:posix() | badarg | system_limit.\fR
+
+.br
+.RS
+.PP
+Preprocesses and parses an Erlang source file. Notice that tuple \fI{eof, Location}\fR returned at the end of the file is included as a "form".
+
+.PP
+If you want to change the file name of the implicit -file() attributes inserted during preprocessing, you can do with \fI{source_name, SourceName}\fR. If unset it will default to the name of the opened file.
+
+.PP
+If \fIextra\fR is specified in \fIOptions\fR, the return value is \fI{ok, [Form], Extra}\fR instead of \fI{ok, [Form]}\fR.
+
+.PP
+The option \fIlocation\fR is forwarded to the Erlang token scanner, see \fIerl_scan:tokens/3,4\fR.
+
+.PP
+The \fI{compiler_internal,term()}\fR option is forwarded to the Erlang token scanner, see \fI{compiler_internal,term()}\fR.
+
+
+.RE
+.B
+\fBparse_file(FileName, IncludePath, PredefMacros) ->\fR
+\fB                    {ok, [Form]} | {error, OpenError}\fR
+\fB                    when\fR
+\fB                        FileName :: file:name(),\fR
+\fB                        IncludePath :: [DirectoryName :: file:name()],\fR
+\fB                        Form ::\fR
+\fB                            erl_parse:abstract_form() |\fR
+\fB                            {error, ErrorInfo} |\fR
+\fB                            {eof, Location},\fR
+\fB                        PredefMacros :: macros(),\fR
+\fB                        Location :: erl_anno:location(),\fR
+\fB                        ErrorInfo ::\fR
+\fB                            erl_scan:error_info() |\fR
+\fB                            erl_parse:error_info(),\fR
+\fB                        OpenError ::\fR
+\fB                            file:posix() | badarg | system_limit.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIepp:parse_file(FileName, [{includes, IncludePath}, {macros, PredefMacros}])\fR.
+
+
+.RE
+.B
+\fBread_encoding(FileName, Options) -> source_encoding() | none\fR
+\fB                       when\fR
+\fB                           FileName :: file:name(),\fR
+\fB                           Options :: [Option],\fR
+\fB                           Option :: {in_comment_only, boolean()}.\fR
+
+.br
+.RS
+.PP
+Read the encoding from a file. Returns the read encoding, or \fInone\fR if no valid encoding is found.
+
+.PP
+Option \fIin_comment_only\fR is \fItrue\fR by default, which is correct for Erlang source files. If set to \fIfalse\fR, the encoding string does not necessarily have to occur in a comment.
+
+
+.RE
+.B
+\fBread_encoding_from_binary(Binary, Options) ->\fR
+\fB                                   source_encoding() | none\fR
+\fB                                   when\fR
+\fB                                       Binary :: binary(),\fR
+\fB                                       Options :: [Option],\fR
+\fB                                       Option ::\fR
+\fB                                           {in_comment_only, boolean()}.\fR
+
+.br
+.RS
+.PP
+Read the encoding from a binary. Returns the read encoding, or \fInone\fR if no valid encoding is found.
+
+.PP
+Option \fIin_comment_only\fR is \fItrue\fR by default, which is correct for Erlang source files. If set to \fIfalse\fR, the encoding string does not necessarily have to occur in a comment.
+
+
+.RE
+.B
+\fBscan_erl_form(Epp) ->\fR
+\fB                       {ok, Tokens} |\fR
+\fB                       {error, ErrorInfo} |\fR
+\fB                       {warning, WarningInfo} |\fR
+\fB                       {eof, Line}\fR
+\fB                       when\fR
+\fB                           Epp :: epp_handle(),\fR
+\fB                           Tokens :: erl_scan:tokens(),\fR
+\fB                           Line :: erl_anno:line(),\fR
+\fB                           ErrorInfo ::\fR
+\fB                               erl_scan:error_info() |\fR
+\fB                               erl_parse:error_info(),\fR
+\fB                           WarningInfo :: warning_info().\fR
+
+.br
+.RS
+.PP
+Returns the raw tokens of the next Erlang form from the opened Erlang source file. A tuple \fI{eof, Line}\fR is returned at the end of the file. The first form corresponds to an implicit attribute \fI-file(File,1).\fR, where \fIFile\fR is the file name.
+
+
+.RE
+.B
+\fBscan_file(FileName, Options) ->\fR
+\fB                   {ok, [Form], Extra} | {error, OpenError}\fR
+\fB                   when\fR
+\fB                       FileName :: file:name(),\fR
+\fB                       Options ::\fR
+\fB                           [{includes,\fR
+\fB                             IncludePath ::\fR
+\fB                                 [DirectoryName :: file:name()]} |\fR
+\fB                            {source_name, SourceName :: file:name()} |\fR
+\fB                            {macros, PredefMacros :: macros()} |\fR
+\fB                            {default_encoding,\fR
+\fB                             DefEncoding :: source_encoding()}],\fR
+\fB                       Form ::\fR
+\fB                           erl_scan:tokens() |\fR
+\fB                           {error, ErrorInfo} |\fR
+\fB                           {eof, Loc},\fR
+\fB                       Loc :: erl_anno:location(),\fR
+\fB                       ErrorInfo :: erl_scan:error_info(),\fR
+\fB                       Extra :: [{encoding, source_encoding() | none}],\fR
+\fB                       OpenError :: file:posix() | badarg | system_limit.\fR
+
+.br
+.RS
+.PP
+Preprocesses an Erlang source file returning a list of the lists of raw tokens of each form. Notice that the tuple \fI{eof, Line}\fR returned at the end of the file is included as a "form", and any failures to scan a form are included in the list as tuples \fI{error, ErrorInfo}\fR.
+
+
+.RE
+.B
+\fBset_encoding(File) -> source_encoding() | none\fR
+\fB                      when File :: io:device().\fR
+
+.br
+.RS
+.PP
+Reads the encoding from an I/O device and sets the encoding of the device accordingly. The position of the I/O device referenced by \fIFile\fR is not affected. If no valid encoding can be read from the I/O device, the encoding of the I/O device is set to the default encoding.
+
+.PP
+Returns the read encoding, or \fInone\fR if no valid encoding is found.
+
+
+.RE
+.B
+\fBset_encoding(File, Default) -> source_encoding() | none\fR
+\fB                      when\fR
+\fB                          Default :: source_encoding(),\fR
+\fB                          File :: io:device().\fR
+
+.br
+.RS
+.PP
+Reads the encoding from an I/O device and sets the encoding of the device accordingly. The position of the I/O device referenced by \fIFile\fR is not affected. If no valid encoding can be read from the I/O device, the encoding of the I/O device is set to the encoding specified by \fIDefault\fR.
+
+.PP
+Returns the read encoding, or \fInone\fR if no valid encoding is found.
+
+
+.RE

@@ -1,0 +1,937 @@
+.TH cover 3 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+cover \- A Coverage Analysis Tool for Erlang
+
+.SH DESCRIPTION
+.PP
+The module \fIcover\fR provides a set of functions for coverage analysis of Erlang programs, counting how many times each \fIexecutable line\fR of code is executed when a program is run. Executable lines are lines in the body of a clause in a function, \fIcase\fR, \fIreceive\fR, or \fItry\fR. Lines in clause heads, blank lines, and lines containing only comments are not executable.
+
+.PP
+Coverage analysis can be used to verify that test cases covers all relevant line in the code being test. It can also be helpful when looking for bottlenecks in the code.
+
+.PP
+Before any analysis can take place, the involved modules has to be \fIcover-compiled\fR.  This means that some extra information is added to the module before it is compiled into a binary which then is loaded. The source file of the module is not affected and no \fI.beam\fR file is created. If the runtime system supports coverage natively, Cover will automatically use that functionality to lower the execution overhead for cover-compiled code.
+
+.PP
+\fBCHANGE: \fRNative coverage support was added in Erlang/OTP 27.
+
+
+.PP
+Each time a function in a cover-compiled module is called, information about the call is added to an internal database of Cover. The coverage analysis is performed by examining the contents of the Cover database. The output \fIAnswer\fR is determined by two parameters: \fILevel\fR and \fIAnalysis\fR.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fILevel = module\fR
+
+.PP
+\fIAnswer = {Module,Value}\fR, where \fIModule\fR is the module name.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fILevel = function\fR
+
+.PP
+\fIAnswer = [{Function,Value}]\fR, one tuple for each function in the module. A function is specified by its module name \fIM\fR, function name \fIF\fR and arity \fIA\fR as a tuple \fI{M,F,A}\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fILevel = clause\fR
+
+.PP
+\fIAnswer = [{Clause,Value}]\fR, one tuple for each clause in the module. A clause is specified by its module name \fIM\fR, function name \fIF\fR, arity \fIA\fR and position in the function definition \fIC\fR as a tuple \fI{M,F,A,C}\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fILevel = line\fR
+
+.PP
+\fIAnswer = [{Line,Value}]\fR, one tuple for each executable line in the module. A line is specified by its module name \fIM\fR and line number in the source file \fIN\fR as a tuple \fI{M,N}\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIAnalysis = coverage\fR
+
+.PP
+\fIValue = {Cov,NotCov}\fR where \fICov\fR is the number of executable lines in the module, function, clause or line that have been executed at least once and \fINotCov\fR is the number of executable lines that have not been executed.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIAnalysis = calls\fR
+
+.PP
+\fIValue = Calls\fR which is the number of times the module, function, or clause has been called. In the case of line level analysis, \fICalls\fR is the number of times the line has been executed.
+
+.RE
+
+.PP
+\fBDistribution\fR
+
+.PP
+Cover can be used in a distributed Erlang system. One of the nodes in the system has to be selected as the \fImain node\fR, and all Cover commands must be executed from that node. The error reason \fInot_main_node\fR is returned if an interface function is called on one of the remote nodes.
+
+.PP
+Use \fIcover:start/1\fR and \fIcover:stop/1\fR to add or remove nodes. The same cover-compiled code will be loaded on each node, and analysis will collect and sum up coverage data results from all nodes.
+
+.PP
+To only collect data from remote nodes without stopping \fIcover\fR on those nodes, use \fIcover:flush/1\fR
+
+.PP
+If the connection to a remote node goes down, the main node will mark it as lost. If the node comes back it will be added again. If the remote node was alive during the disconnected period, cover data from before and during this period will be included in the analysis.
+
+.SH DATA TYPES
+.LP
+.B
+\fBanalyse_answer() ::\fR
+\fB          {ok, OutFile :: file:filename()} | {error, analyse_rsn()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyse_fail() :: [{not_cover_compiled, module()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyse_file_fail() :: [analyse_rsn()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyse_file_ok() :: [OutFile :: file:filename()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyse_item() ::\fR
+\fB          (Line :: {M :: module(), N :: non_neg_integer()}) |\fR
+\fB          (Clause ::\fR
+\fB               {M :: module(),\fR
+\fB                F :: atom(),\fR
+\fB                A :: arity(),\fR
+\fB                C :: non_neg_integer()}) |\fR
+\fB          (Function :: {M :: module(), F :: atom(), A :: arity()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyse_ok() ::\fR
+\fB          [{Module :: module(), Value :: analyse_value()}] |\fR
+\fB          [{Item :: analyse_item(), Value :: analyse_value()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyse_option() ::\fR
+\fB          html |\fR
+\fB          {outfile, OutFile :: file:filename()} |\fR
+\fB          {outdir, OutDir :: file:filename()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyse_rsn() ::\fR
+\fB          {not_cover_compiled, Module :: module()} |\fR
+\fB          {file, File :: file:filename(), Reason :: term()} |\fR
+\fB          {no_source_code_found, Module :: module()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalyse_value() ::\fR
+\fB          {Cov :: non_neg_integer(), NotCov :: non_neg_integer()} |\fR
+\fB          (Calls :: non_neg_integer()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanalysis() :: coverage | calls.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbeam_mod_file() ::\fR
+\fB          (Module :: module()) | (BeamFile :: file:filename()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbeam_mod_files() :: beam_mod_file() | [beam_mod_file()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcompile_beam_result() ::\fR
+\fB          {ok, module()} |\fR
+\fB          {error, BeamFile :: file:filename()} |\fR
+\fB          {error, Reason :: compile_beam_rsn()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcompile_beam_rsn() ::\fR
+\fB          non_existing |\fR
+\fB          {no_abstract_code, BeamFile :: file:filename()} |\fR
+\fB          {encrypted_abstract_code, BeamFile :: file:filename()} |\fR
+\fB          {already_cover_compiled, no_beam_found, module()} |\fR
+\fB          {{missing_backend, module()}, BeamFile :: file:filename()} |\fR
+\fB          {no_file_attribute, BeamFile :: file:filename()} |\fR
+\fB          not_main_node.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcompile_result() ::\fR
+\fB          {ok, Module :: module()} |\fR
+\fB          {error, file:filename()} |\fR
+\fB          {error, not_main_node}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexport_reason() ::\fR
+\fB          {not_cover_compiled, Module :: module()} |\fR
+\fB          {cant_open_file,\fR
+\fB           ExportFile :: file:filename(),\fR
+\fB           FileReason :: term()} |\fR
+\fB          not_main_node.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfile_error() :: eacces | enoent.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlevel() :: line | clause | function | module.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmod_file() :: (Module :: module()) | (File :: file:filename()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmod_files() :: mod_file() | [mod_file()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmodules() :: module() | [module()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBone_result() ::\fR
+\fB          {ok, {Module :: module(), Value :: analyse_value()}} |\fR
+\fB          {ok, [{Item :: analyse_item(), Value :: analyse_value()}]} |\fR
+\fB          {error, {not_cover_compiled, module()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {i, Dir :: file:filename()} |\fR
+\fB          {d, Macro :: atom()} |\fR
+\fB          {d, Macro :: atom(), Value :: term()} |\fR
+\fB          export_all.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBanalyse(Analysis) ->\fR
+\fB                 {result, analyse_ok(), analyse_fail()} |\fR
+\fB                 {error, not_main_node}\fR
+\fB                 when Analysis :: analysis();\fR
+\fB             (Level) ->\fR
+\fB                 {result, analyse_ok(), analyse_fail()} |\fR
+\fB                 {error, not_main_node}\fR
+\fB                 when Level :: level();\fR
+\fB             (Modules) ->\fR
+\fB                 OneResult |\fR
+\fB                 {result, analyse_ok(), analyse_fail()} |\fR
+\fB                 {error, not_main_node}\fR
+\fB                 when Modules :: modules(), OneResult :: one_result().\fR
+
+.br
+.RS
+.PP
+Analyzes one or more modules as specified by \fIArg\fR.
+
+.PP
+If \fIArg\fR is one of the values in \fIanalysis()\fR, this call is equivalent to \fIanalyse('_', Arg, function)\fR.
+
+.PP
+If \fIArg\fR is one of the values in \fIlevel()\fR, this call is equivalent to \fIanalyse('_', coverage, Arg)\fR.
+
+.PP
+Otherwise \fIArg\fR is assumed to be a module name, and this call is equivalent to \fIanalyse(Arg, coverage, function)\fR.
+
+.PP
+\fBNOTE: \fRTo analyze a module whose name overlaps with one the values in \fIanalysis()\fR or \fIlevel()\fR, the module name has to be in a list. For example, to analyze a module named \fIcalls\fR:
+
+.IP
+.nf
+cover:analyse([calls]).
+
+.fi
+
+
+
+.RE
+.B
+\fBanalyse(Analysis, Level) ->\fR
+\fB                 {result, analyse_ok(), analyse_fail()} |\fR
+\fB                 {error, not_main_node}\fR
+\fB                 when Analysis :: analysis(), Level :: level();\fR
+\fB             (Modules, Analysis) ->\fR
+\fB                 OneResult |\fR
+\fB                 {result, analyse_ok(), analyse_fail()} |\fR
+\fB                 {error, not_main_node}\fR
+\fB                 when\fR
+\fB                     Analysis :: analysis(),\fR
+\fB                     Modules :: modules(),\fR
+\fB                     OneResult :: one_result();\fR
+\fB             (Modules, Level) ->\fR
+\fB                 OneResult |\fR
+\fB                 {result, analyse_ok(), analyse_fail()} |\fR
+\fB                 {error, not_main_node}\fR
+\fB                 when\fR
+\fB                     Level :: level(),\fR
+\fB                     Modules :: modules(),\fR
+\fB                     OneResult :: one_result().\fR
+
+.br
+.RS
+.PP
+Analyzes one or more modules as specified by \fIArg1\fR and \fIArg2\fR.
+
+.PP
+If \fIArg1\fR is one of the values in \fIanalysis()\fR and \fIArg2\fR is one of the values in \fIlevel()\fR, this call is equivalent to \fIanalyse('_', Arg1, Arg2)\fR.
+
+.PP
+If \fIArg2\fR is one of the values in \fIanalysis()\fR, \fIArg1\fR is assumed to be a module and this call is equivalent to \fIanalyse(Arg1, Arg2, function)\fR.
+
+.PP
+If \fIArg2\fR is one of the values in \fIlevel()\fR, \fIArg1\fR is assumed to be a module and this call is equivalent to \fIanalyse(Arg1, coverage, Arg2)\fR.
+
+.PP
+\fBNOTE: \fRTo analyze a module whose name overlaps with one of the values in \fIanalysis()\fR, the module name needs to be in a list. For example, to analyze a module named \fIcalls\fR:
+
+.IP
+.nf
+cover:analyse([calls], function).
+
+.fi
+
+
+
+.RE
+.B
+\fBanalyse(Modules, Analysis, Level) ->\fR
+\fB                 OneResult |\fR
+\fB                 {result, analyse_ok(), analyse_fail()} |\fR
+\fB                 {error, not_main_node}\fR
+\fB                 when\fR
+\fB                     Analysis :: analysis(),\fR
+\fB                     Level :: level(),\fR
+\fB                     Modules :: modules(),\fR
+\fB                     OneResult :: one_result().\fR
+
+.br
+.RS
+.PP
+Perform analysis of one or more cover-compiled modules, as specified by \fIAnalysis\fR and \fILevel\fR, by examining the contents of the internal database.
+
+.PP
+If \fIModules\fR is an atom (a single module), the return is \fIOneResult\fR, otherwise the return is \fI{result, Ok, Fail}\fR.
+
+.PP
+If \fIModules\fR is atom \fI'_'\fR, all modules that have data in the cover data table are analysed. Note that this includes both cover-compiled modules and imported modules.
+
+.PP
+If a given module is not cover-compiled, this is indicated by the error reason \fI{not_cover_compiled, Module}\fR.
+
+
+.RE
+.B
+\fBanalyse_to_file(Modules) ->\fR
+\fB                         Answer |\fR
+\fB                         {result,\fR
+\fB                          analyse_file_ok(),\fR
+\fB                          analyse_file_fail()} |\fR
+\fB                         {error, not_main_node}\fR
+\fB                         when\fR
+\fB                             Modules :: modules(),\fR
+\fB                             Answer :: analyse_answer();\fR
+\fB                     (Options) ->\fR
+\fB                         {result,\fR
+\fB                          analyse_file_ok(),\fR
+\fB                          analyse_file_fail()} |\fR
+\fB                         {error, not_main_node}\fR
+\fB                         when Options :: [analyse_option()].\fR
+
+.br
+.RS
+.PP
+If \fIArg\fR is a list of \fIanalyse_option()\fR options, this call is equivalent to \fIanalyse_to_file('_', Arg)\fR.
+
+.PP
+Otherwise \fIArg\fR is assumed to be a module, and this call is equivalent to \fIanalyse_to_file(Arg, [])\fR.
+
+.PP
+\fBNOTE: \fRTo analyze a module of the name \fIhtml\fR (which overlaps with an option in \fIanalyse_option()\fR), it is necessary to use \fIcover:analyse_to_file/2\fR:
+
+.IP
+.nf
+cover:analyse_to_file([html], []).
+
+.fi
+
+
+
+.RE
+.B
+\fBanalyse_to_file(Modules, Options) ->\fR
+\fB                         Answer |\fR
+\fB                         {result,\fR
+\fB                          analyse_file_ok(),\fR
+\fB                          analyse_file_fail()} |\fR
+\fB                         {error, not_main_node}\fR
+\fB                         when\fR
+\fB                             Modules :: modules(),\fR
+\fB                             Options :: [analyse_option()],\fR
+\fB                             Answer :: analyse_answer().\fR
+
+.br
+.RS
+.PP
+Outputs copies of the source code for the given modules annotated with execution counts for each executable line.
+
+.PP
+The output file \fIOutFile\fR defaults to \fIModule.COVER.out\fR, and to \fIModule.COVER.html\fR if option \fIhtml\fR is used.
+
+.PP
+If \fIModules\fR is an atom (one module), the return will be \fIAnswer\fR, otherwise the return will be a list, \fI{result, Ok, Fail}\fR.
+
+.PP
+If \fIModules\fR is '_', all modules that have data in the Cover data table are analysed. Note that this includes both cover-compiled modules and imported modules.
+
+.PP
+If a module is not cover-compiled, this is indicated by the error reason \fI{not_cover_compiled, Module}\fR.
+
+.PP
+If the source file and/or the output file cannot be opened using \fIfile:open/2\fR, the function returns \fI{error, {file, File, Reason}}\fR, where \fIFile\fR is the file name and \fIReason\fR is the error reason.
+
+.PP
+If a module was cover compiled from the \fI.beam\fR file, that is, using \fIcompile_beam/1\fR or \fIcompile_beam_directory/0,1\fR , it is assumed that the source code can be found in one of the following locations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the same directory as the \fI.beam\fR file
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+./src\fI relative to the directory with \fR.beam file
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the source path in \fIModule:module_info(compile)\fR, in which case two paths are examined:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+first the one constructed by joining \fI../src\fR and the tail of the compiled path below a trailing \fIsrc\fR component
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the compiled path itself
+
+.RE
+
+.RE
+
+.PP
+If no source code is found, this is indicated by the error reason \fI{no_source_code_found, Module}\fR.
+
+
+.RE
+.B
+\fBasync_analyse_to_file(Module, OutFile, Options) -> pid()\fR
+\fB                               when\fR
+\fB                                   Module :: module(),\fR
+\fB                                   OutFile :: file:filename(),\fR
+\fB                                   Options :: [Option],\fR
+\fB                                   Option :: html.\fR
+
+.br
+.RS
+.PP
+This function works the same way as \fIanalyse_to_file/2\fR except that it is asynchronous instead of synchronous.
+
+.PP
+The spawned process will link with the caller when created. If an error of type \fIanalyse_rsn()\fR occurs while doing the cover analysis the process will crash with the same error reason as \fIanalyse_to_file\fR would return.
+
+
+.RE
+.B
+\fBcompile_beam(ModFiles) -> Result | [Result]\fR
+\fB                      when\fR
+\fB                          ModFiles :: beam_mod_files(),\fR
+\fB                          Result :: compile_beam_result().\fR
+
+.br
+.RS
+.PP
+Cover-compiles one or more modules based \fI.beam\fR files containing abstract code (option \fIdebug_info\fR).
+
+.PP
+Cover-compiling from \fI.beam\fR files is faster than compiling from source and less hassle, because there is no need to supply options for include paths or macros. However, the existing \fI.beam\fR files must have been compiled with option \fIdebug_info\fR so that they contain \fIabstract code\fR.
+
+.PP
+If abstract code is missing, the error reason \fI{no_abstract_code, BeamFile}\fR is returned. If the abstract code is encrypted, and no key is available for decrypting it, the error reason \fI{encrypted_abstract_code, BeamFile}\fR is returned.
+
+.PP
+If only the module name (that is, not the full name of the \fI.beam\fR file) is given to this function, the \fI.beam\fR file is found by calling \fIcode:which(Module)\fR. If no \fI.beam\fR file is found, the error reason \fInon_existing\fR is returned. If the module is already cover compiled with \fIcompile_beam/1\fR, the \fI.beam\fR file will be picked from the same location as the first time it was compiled. If the module is already cover-compiled with \fIcompile_module/2\fR, there is no way to find the correct \fI.beam\fR file, so the error reason \fI{already_cover_compiled, no_beam_found, Module}\fR is returned.
+
+.PP
+\fI{error, BeamFile}\fR is returned if the compiled code cannot be loaded on the node.
+
+.PP
+If a list of \fIModFiles\fR is given as input, a list of \fIResult\fR will be returned. The order of the returned list is undefined.
+
+
+.RE
+.B
+\fBcompile_beam_directory(Dir) -> [Result] | {error, Reason}\fR
+\fB                                when\fR
+\fB                                    Dir :: file:filename(),\fR
+\fB                                    Reason :: file_error(),\fR
+\fB                                    Result :: compile_beam_result().\fR
+
+.br
+.RS
+.PP
+Cover-compiles all \fI.beam\fR files in directory \fIDir\fR in the same way as \fIcompile_beam/1\fR.
+
+.PP
+This function returns a list of \fIcompile_beam_result()\fR if successful. Otherwise, it returns  \fI{error, eacces}\fR if the directory is not readable, and \fI{error, enoent}\fR if the directory does not exist.
+
+
+.RE
+.B
+\fBcompile_directory(Dir, Options) -> [Result] | {error, Reason}\fR
+\fB                           when\fR
+\fB                               Dir :: file:filename(),\fR
+\fB                               Options :: [option()],\fR
+\fB                               Reason :: file_error(),\fR
+\fB                               Result :: compile_result().\fR
+
+.br
+.RS
+.PP
+Compiles all modules (\fI.erl\fR files) in a directory \fIDir\fR for Cover analysis the same way as \fIcompile_module/1,2\fR and returns a list of \fIResult\fR.
+
+.PP
+This function returns \fI{error, eacces}\fR if the directory is not readable or \fI{error, enoent}\fR if the directory does not exist.
+
+
+.RE
+.B
+\fBcompile_module(ModFiles, Options) -> Result | [Result]\fR
+\fB                        when\fR
+\fB                            ModFiles :: mod_files(),\fR
+\fB                            Options :: [option()],\fR
+\fB                            Result :: compile_result().\fR
+
+.br
+.RS
+.PP
+Cover-compiles one or more modules.
+
+.PP
+The module is given by its module name \fIModule\fR or by its file name \fIFile\fR.
+
+.PP
+The \fI.erl\fR extension can be omitted. If the module is not located in the current directory, the full path to it must be specified.
+
+.PP
+\fIOptions\fR is a list of compiler options. Only options defining include file directories and macros are passed to \fIcompile:file/2\fR; everything else is ignored.
+
+.PP
+If the module is successfully cover-compiled, the function returns \fI{ok, Module}\fR. Otherwise the function returns \fI{error, File}\fR. Errors and warnings are printed as they occur.
+
+.PP
+If a list of \fIModFiles\fR is given as input, a list of \fIResult\fR will be returned. The order of the returned results in the list is undefined.
+
+.PP
+Note that the internal database is initialized during the compilation, which means that any previously collected coverage data for the module is lost.
+
+
+.RE
+.B
+\fBexport(File, Module) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    File :: file:filename(),\fR
+\fB                    Module :: module(),\fR
+\fB                    Reason :: export_reason().\fR
+
+.br
+.RS
+.PP
+Exports the current coverage data for \fIModule\fR to the file \fIExportFile\fR.
+
+.PP
+It is recommended to name the \fIExportFile\fR with the extension \fI.coverdata\fR.
+
+.PP
+If \fIModule\fR is '_', data for all cover-compiled or earlier imported modules is exported.
+
+.PP
+This function is useful if coverage data from different systems is to be merged.
+
+.PP
+See also \fIimport/1\fR.
+
+
+.RE
+.B
+\fBflush(Nodes) -> ok | {error, not_main_node}\fR
+\fB               when Nodes :: node() | [node()].\fR
+
+.br
+.RS
+.PP
+Fetches data from the Cover database on the remote nodes and stores it on the main node.
+
+
+.RE
+.B
+\fBimport(ExportFile) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    ExportFile :: file:filename(),\fR
+\fB                    Reason ::\fR
+\fB                        {cant_open_file, ExportFile,\fR
+\fB                         FileReason :: term()} |\fR
+\fB                        not_main_node.\fR
+
+.br
+.RS
+.PP
+Imports coverage data from the file \fIExportFile\fR created with \fIexport/1,2\fR.
+
+.PP
+Any analysis performed after this call will include the imported data.
+
+.PP
+Note that when compiling a module \fIall existing coverage data is removed\fR, including imported data. If a module is already compiled when data is imported, the imported data is \fIadded\fR to the existing coverage data.
+
+.PP
+Coverage data from several export files can be imported into one system. The coverage data is then added up when analysing.
+
+.PP
+Coverage data for a module cannot be imported from the same file twice unless the module is first reset or compiled. The check is based on the filename, so you can easily fool the system by renaming your export file.
+
+
+.RE
+.B
+\fBimported() -> [file:filename()] | {error, not_main_node}.\fR
+
+.br
+.RS
+.PP
+Returns a list of all imported files.
+
+
+.RE
+.B
+\fBimported_modules() -> [module()] | {error, not_main_node}.\fR
+
+.br
+.RS
+.PP
+Returns a list of all modules for which there are imported data.
+
+
+.RE
+.B
+\fBis_compiled(Module) ->\fR
+\fB                     {file, File :: file:filename()} |\fR
+\fB                     false |\fR
+\fB                     {error, not_main_node}\fR
+\fB                     when Module :: module().\fR
+
+.br
+.RS
+.PP
+Returns \fI{file, File}\fR if the module \fIModule\fR is cover-compiled, or \fIfalse\fR otherwise.
+
+.PP
+\fIFile\fR is the \fI.erl\fR file used by \fIcompile_module/1,2\fR or the \fI.beam\fR file used by \fIcompile_beam/1\fR.
+
+
+.RE
+.B
+\fBlocal_only() -> ok | {error, too_late}.\fR
+
+.br
+.RS
+.PP
+Only support running Cover on the local node.
+
+.PP
+This function has to be called before any modules have been compiled or any nodes added. When running in this mode, modules will be cover-compiled in a more efficient way, but the resulting code will only work on the same node they were compiled on.
+
+
+.RE
+.B
+\fBmodules() -> [module()] | {error, not_main_node}.\fR
+
+.br
+.RS
+.PP
+Returns a list with all modules that are currently cover-compiled.
+
+
+.RE
+.B
+\fBreset() -> ok | {error, not_main_node}.\fR
+
+.br
+.RS
+.PP
+Resets all coverage data for all cover-compiled modules in the Cover database on all nodes.
+
+
+.RE
+.B
+\fBreset(Module) ->\fR
+\fB               ok |\fR
+\fB               {error, not_main_node} |\fR
+\fB               {error, {not_cover_compiled, Module}}\fR
+\fB               when Module :: module().\fR
+
+.br
+.RS
+.PP
+Resets all coverage data for the cover-compiled module \fIModule\fR in the Cover database on all nodes.
+
+.PP
+If \fIModule\fR is not cover-compiled, the function returns \fI{error, {not_cover_compiled, Module}}\fR.
+
+
+.RE
+.B
+\fBstart() -> {ok, pid()} | {error, Reason}\fR
+\fB               when Reason :: {already_started, pid()} | term().\fR
+
+.br
+.RS
+.PP
+Starts the Cover server which owns the Cover internal database. This function is called automatically by the other functions in the module.
+
+
+.RE
+.B
+\fBstart(Nodes) ->\fR
+\fB               {ok, StartedNodes} |\fR
+\fB               {error, not_main_node} |\fR
+\fB               {error, local_only}\fR
+\fB               when Nodes :: node() | [node()], StartedNodes :: [node()].\fR
+
+.br
+.RS
+.PP
+Starts a Cover server on the each of given nodes, and loads all cover compiled modules.
+
+.PP
+This call will fail if \fIcover:local_only/0\fR has been called.
+
+
+.RE
+.B
+\fBstop() -> ok | {error, not_main_node}.\fR
+
+.br
+.RS
+.PP
+Stops the Cover server and unloads all cover-compiled code.
+
+
+.RE
+.B
+\fBstop(Nodes) -> ok | {error, not_main_node}\fR
+\fB              when Nodes :: node() | [node()].\fR
+
+.br
+.RS
+.PP
+Stops the Cover server and unloads all cover-compiled code on the given nodes.
+
+.PP
+Data stored in the Cover database on the remote nodes is fetched and stored on the main node.
+
+
+.RE
+.B
+\fBwhich_nodes() -> [node()].\fR
+
+.br
+.RS
+.PP
+Returns a list with all nodes that are part of the coverage analysis.
+
+.PP
+Note that the current node is not included, because it is always part of the analysis.
+
+
+.RE

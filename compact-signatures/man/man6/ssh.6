@@ -1,0 +1,1518 @@
+.TH SSH Application 6 "ssh 5.5.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+SSH Application \- The ssh application implements the Secure Shell (SSH) protocol and provides an SSH File Transfer Protocol (SFTP) client and server
+.SH DESCRIPTION
+.PP
+The \fIssh\fR application is an implementation of the SSH protocol in Erlang. \fIssh\fR offers API functions to write customized SSH clients and servers as well as making the Erlang shell available over SSH. An SFTP client, \fIssh_sftp\fR, and server, \fIssh_sftpd\fR, are also included.
+
+.SS "Dependencies"
+
+.PP
+The \fIssh\fR application uses the applications \fIpublic_key\fR and \fIcrypto\fR to handle public keys and encryption. Hence, these applications must be loaded for the \fIssh\fR application to work. The call \fIssh:start/0\fR will do the necessary calls to application:start/1,2 before it starts the \fIssh\fR itself.
+
+.SS "Configuration"
+
+.PP
+The SSH application uses Configuration Parameters. Where to set them are described in config User's Guide with SSH details in Configuration in SSH.
+
+.PP
+Some special configuration files from OpenSSH are also used:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIknown_hosts\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIauthorized_keys\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIauthorized_keys2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIid_dsa\fR \fI(supported but disabled by default)\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIid_rsa\fR \fI(SHA1 sign/verify are supported but disabled by default from OTP-24)\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIid_ecdsa\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIid_ed25519\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIid_ed448\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIssh_host_dsa_key\fR \fI(supported but disabled by default)\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIssh_host_rsa_key\fR \fI(SHA1 sign/verify are supported but disabled by default from OTP-24)\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIssh_host_ecdsa_key\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIssh_host_ed25519_key\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIssh_host_ed448_key\fR
+
+.RE
+
+.PP
+By default, \fIssh\fR looks for \fIid_*\fR, \fIknown_hosts\fR, and \fIauthorized_keys\fR in \fI~/.ssh\fR, and for the ssh_host_*_key files in \fI/etc/ssh\fR. These locations can be changed by the options \fIuser_dir\fR and \fIsystem_dir\fR. More about where to set them is described in Configuration in SSH.
+
+.PP
+Public key handling can also be customized through a callback module that implements the behaviors \fIssh_client_key_api\fR and \fIssh_server_key_api\fR.
+
+.PP
+See also the default callback module documentation in \fIssh_file\fR.
+
+.PP
+Disabled public key algorithms can be enabled with the preferred_algorithms or modify_algorithms options. See Example 9 in Configuring algorithms in SSH for a description.
+
+.SS "Public Keys"
+
+.PP
+\fIid_*\fR are the users private key files. Notice that the public key is part of the private key so the \fIssh\fR application does not use the \fIid_*.pub\fR files. These are for the user's convenience when it is needed to convey the user's public key.
+
+.PP
+See ssh_file for details.
+
+.SS "Known Hosts"
+
+.PP
+The \fIknown_hosts\fR file contains a list of approved servers and their public keys. Once a server is listed, it can be verified without user interaction.
+
+.PP
+See ssh_file for details.
+
+.SS "Authorized Keys"
+
+.PP
+The \fIauthorized_key\fR file keeps track of the user's authorized public keys. The most common use of this file is to let users log in without entering their password, which is supported by the Erlang \fIssh\fR daemon.
+
+.PP
+See ssh_file for details.
+
+.SS "Host Keys"
+
+.PP
+RSA, DSA (if enabled), ECDSA, ED25519 and ED448 host keys are supported and are expected to be found in files named \fIssh_host_rsa_key\fR, \fIssh_host_dsa_key\fR, \fIssh_host_ecdsa_key\fR, \fIssh_host_ed25519_key\fR and \fIssh_host_ed448_key\fR.
+
+.PP
+See ssh_file for details.
+
+.SS "Error Logger and Event Handlers"
+
+.PP
+The \fIssh\fR application uses the default OTP error logger to log unexpected errors or print information about special events.
+
+.SS "Supported Specifications and Standards"
+
+.PP
+The supported SSH version is 2.0.
+
+.SS "Algorithms"
+
+.PP
+The actual set of algorithms may vary depending on which OpenSSL crypto library that is installed on the machine. For the list on a particular installation, use the command \fIssh:default_algorithms/0\fR. The user may override the default algorithm configuration both on the server side and the client side. See the options preferred_algorithms and modify_algorithms in the ssh:daemon/1,2,3 and ssh:connect/3,4 functions.
+
+.PP
+Supported algorithms are (in the default order):
+
+.PP
+\fBKey exchange algorithms\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+curve25519-sha256
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+curve25519-sha256@libssh.org
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+curve448-sha512
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ecdh-sha2-nistp521
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ecdh-sha2-nistp384
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ecdh-sha2-nistp256
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+diffie-hellman-group-exchange-sha256
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+diffie-hellman-group16-sha512
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+diffie-hellman-group18-sha512
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+diffie-hellman-group14-sha256
+
+.RE
+
+.PP
+The following unsecure \fISHA1\fR algorithms are now disabled by default:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(diffie-hellman-group14-sha1)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(diffie-hellman-group-exchange-sha1)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(diffie-hellman-group1-sha1)
+
+.RE
+
+.PP
+They can be enabled with the preferred_algorithms or modify_algorithms options. Use for example the Option value \fI{modify_algorithms, [{append, [{kex,['diffie-hellman-group1-sha1']}]}]}\fR)
+
+.PP
+\fBPublic key algorithms\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssh-ed25519
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssh-ed448
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ecdsa-sha2-nistp521
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ecdsa-sha2-nistp384
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ecdsa-sha2-nistp256
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+rsa-sha2-512
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+rsa-sha2-256
+
+.RE
+
+.PP
+The following unsecure \fISHA1\fR algorithms are supported but disabled by default:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(ssh-dss)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(ssh-rsa)
+
+.RE
+
+.PP
+Disabled public key algorithms can be enabled with the preferred_algorithms or modify_algorithms options. See Example 9 in Configuring algorithms in SSH for a description.
+
+.PP
+\fBMAC algorithms\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+hmac-sha2-512-etm@openssh.com
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+hmac-sha2-256-etm@openssh.com
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+hmac-sha2-512
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+hmac-sha2-256
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+hmac-sha1-etm@openssh.com
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+hmac-sha1
+
+.RE
+
+.PP
+The following unsecure \fISHA1\fR algorithm is disabled by default:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(hmac-sha1-96)
+
+.RE
+
+.PP
+It can be enabled with the preferred_algorithms or modify_algorithms options. Use for example the Option value \fI{modify_algorithms, [{append, [{mac,['hmac-sha1-96']}]}]}\fR)
+
+.PP
+\fBEncryption algorithms (ciphers)\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+aes256-gcm@openssh.com
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+aes256-ctr
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+aes192-ctr
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+aes128-gcm@openssh.com
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+aes128-ctr
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+chacha20-poly1305@openssh.com
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+aes256-cbc
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+aes192-cbc
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+aes128-cbc
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+3des-cbc
+
+.RE
+
+.PP
+The following unsecure algorithms are disabled by default:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(AEAD_AES_128_GCM)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(AEAD_AES_256_GCM)
+
+.RE
+
+.PP
+See the text at the description of the rfc 5647 further down for more information regarding AEAD_AES_*_GCM.
+
+.PP
+Following the internet de-facto standard, the cipher and mac algorithm AEAD_AES_128_GCM is selected when the cipher aes128-gcm@openssh.com is negotiated. The cipher and mac algorithm AEAD_AES_256_GCM is selected when the cipher aes256-gcm@openssh.com is negotiated.
+
+.PP
+\fBCompression algorithms\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+none
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+zlib@openssh.com
+
+.RE
+
+.PP
+The following compression algorithm is disabled by default:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(zlib)
+
+.RE
+
+.PP
+It can be enabled with the preferred_algorithms or modify_algorithms options.
+
+.SS "Unicode support"
+
+.PP
+Unicode filenames are supported if the emulator and the underlying OS supports it. See \fIfile\fR manual page in Kernel for information about this subject.
+
+.PP
+The shell and the cli both support unicode.
+
+.SS "RFCs"
+
+.PP
+The following RFCs are supported:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 4251, The Secure Shell (SSH) Protocol Architecture.
+
+.PP
+Except
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+9.4.6 Host-Based Authentication
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+9.5.2 Proxy Forwarding
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+9.5.3 X11 Forwarding
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 4252, The Secure Shell (SSH) Authentication Protocol.
+
+.PP
+Except
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+9. Host-Based Authentication: "hostbased"
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 4253, The Secure Shell (SSH) Transport Layer Protocol.
+
+.PP
+Except
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+8.1. diffie-hellman-group1-sha1
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+6.6. Public Key Algorithms
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssh-dss
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ssh-rsa
+
+.RE
+
+.RE
+
+.PP
+They are disabled by default as they now are regarded insecure, but they can be enabled with the preferred_algorithms or modify_algorithms options. See Example 8 (diffie-hellman-group1-sha1) and Example 9 (ssh-dss) in Configuring algorithms in SSH for descriptions.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 4254, The Secure Shell (SSH) Connection Protocol.
+
+.PP
+Except
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+6.3. X11 Forwarding
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+7. TCP/IP Port Forwarding
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 4256, Generic Message Exchange Authentication for the Secure Shell Protocol (SSH).
+
+.PP
+Except
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInum-prompts > 1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+password changing
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+other identification methods than userid-password
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 4419, Diffie-Hellman Group Exchange for the Secure Shell (SSH) Transport Layer Protocol.
+
+.PP
+Except
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+4.1. diffie-hellman-group-exchange-sha1
+
+.RE
+
+.PP
+It is disabled by default as it now is regarded insecure, but it can be enabled with the preferred_algorithms or modify_algorithms options.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 4716, The Secure Shell (SSH) Public Key File Format.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 5647, AES Galois Counter Mode for the Secure Shell Transport Layer Protocol.
+
+.PP
+There is an ambiguity in the synchronized selection of cipher and mac algorithm. This is resolved by OpenSSH in the ciphers aes128-gcm@openssh.com and aes256-gcm@openssh.com which are implemented. If the explicit ciphers and macs AEAD_AES_128_GCM or AEAD_AES_256_GCM are needed, they could be enabled with the options preferred_algorithms or modify_algorithms.
+
+.PP
+\fBWARNING: \fRIf the client or the server is not Erlang/OTP, it is the users responsibility to check that other implementation has the same interpretation of AEAD_AES_*_GCM as the Erlang/OTP SSH before enabling them. The aes*-gcm@openssh.com variants are always safe to use since they lack the ambiguity.
+
+
+.PP
+The second paragraph in section 5.1 is resolved as:
+
+.nr li 0 1
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+If the negotiated cipher is AEAD_AES_128_GCM, the mac algorithm is set to AEAD_AES_128_GCM.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+If the negotiated cipher is AEAD_AES_256_GCM, the mac algorithm is set to AEAD_AES_256_GCM.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+If the mac algorithm is AEAD_AES_128_GCM, the cipher is set to AEAD_AES_128_GCM.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+If the mac algorithm is AEAD_AES_256_GCM, the cipher is set to AEAD_AES_256_GCM.
+
+.RE
+
+.PP
+The first rule that matches when read in order from the top is applied
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 5656, Elliptic Curve Algorithm Integration in the Secure Shell Transport Layer.
+
+.PP
+Except
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+5. ECMQV Key Exchange
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+6.4. ECMQV Key Exchange and Verification Method Name
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+7.2. ECMQV Message Numbers
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+10.2. Recommended Curves
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 6668, SHA-2 Data Integrity Verification for the Secure Shell (SSH) Transport Layer Protocol
+
+.PP
+Comment: Defines hmac-sha2-256 and hmac-sha2-512
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Draft-ietf-curdle-ssh-kex-sha2 (work in progress), Key Exchange (KEX) Method Updates and Recommendations for Secure Shell (SSH).
+
+.PP
+Deviations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdiffie-hellman-group1-sha1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdiffie-hellman-group-exchange-sha1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdiffie-hellman-group14-sha1\fR
+
+.RE
+
+.PP
+are not enabled by default as they now are regarded insecure, but are still supported and can be enabled with the options preferred_algorithms or modify_algorithms.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 8332, Use of RSA Keys with SHA-256 and SHA-512 in the Secure Shell (SSH) Protocol.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 8308, Extension Negotiation in the Secure Shell (SSH) Protocol.
+
+.PP
+Implemented are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The Extension Negotiation Mechanism
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The extension \fIserver-sig-algs\fR
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Secure Shell (SSH) Key Exchange Method Using Curve25519 and Curve448
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+RFC 8709 Ed25519 and Ed448 public key algorithms for the Secure Shell (SSH) protocol
+
+.RE
+
+.SS "See Also"
+
+.PP
+\fIapplication\fR
+

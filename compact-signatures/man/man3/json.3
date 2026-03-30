@@ -1,0 +1,902 @@
+.TH json 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+json \- A library for encoding and decoding JSON.
+
+.SH DESCRIPTION
+.PP
+This module implements EEP68.
+
+.PP
+Both encoder and decoder fully conform to RFC 8259 and ECMA 404 standards. The decoder is tested using JSONTestSuite.
+
+.SH DATA TYPES
+.LP
+.B
+\fBarray_finish_fun() ::\fR
+\fB          fun((ArrayAcc :: dynamic(), OldAcc :: dynamic()) ->\fR
+\fB                  {dynamic(), dynamic()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBarray_push_fun() ::\fR
+\fB          fun((Value :: dynamic(), Acc :: dynamic()) ->\fR
+\fB                  NewAcc :: dynamic()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBarray_start_fun() ::\fR
+\fB          fun((Acc :: dynamic()) -> ArrayAcc :: dynamic()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque continuation_state() \fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdecode_value() ::\fR
+\fB          integer() |\fR
+\fB          float() |\fR
+\fB          boolean() |\fR
+\fB          null |\fR
+\fB          binary() |\fR
+\fB          [decode_value()] |\fR
+\fB          #{binary() => decode_value()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdecoders() ::\fR
+\fB          #{array_start => array_start_fun(),\fR
+\fB            array_push => array_push_fun(),\fR
+\fB            array_finish => array_finish_fun(),\fR
+\fB            object_start => object_start_fun(),\fR
+\fB            object_push => object_push_fun(),\fR
+\fB            object_finish => object_finish_fun(),\fR
+\fB            float => from_binary_fun(),\fR
+\fB            integer => from_binary_fun(),\fR
+\fB            string => from_binary_fun(),\fR
+\fB            null => term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBencode_map(Value) :: #{binary() | atom() | integer() => Value}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBencode_value() ::\fR
+\fB          integer() |\fR
+\fB          float() |\fR
+\fB          boolean() |\fR
+\fB          null |\fR
+\fB          binary() |\fR
+\fB          atom() |\fR
+\fB          [encode_value()] |\fR
+\fB          encode_map(encode_value()).\fR
+
+.br
+.RS
+.PP
+Simple JSON value encodeable with \fIjson:encode/1\fR.
+
+
+.RE
+.B
+\fBencoder() :: fun((dynamic(), encoder()) -> iodata()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBformatter() ::\fR
+\fB          fun((Term :: dynamic(),\fR
+\fB               Encoder :: formatter(),\fR
+\fB               State :: map()) ->\fR
+\fB                  iodata()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfrom_binary_fun() :: fun((binary()) -> dynamic()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBobject_finish_fun() ::\fR
+\fB          fun((ObjectAcc :: dynamic(), OldAcc :: dynamic()) ->\fR
+\fB                  {dynamic(), dynamic()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBobject_push_fun() ::\fR
+\fB          fun((Key :: dynamic(), Value :: dynamic(), Acc :: dynamic()) ->\fR
+\fB                  NewAcc :: dynamic()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBobject_start_fun() ::\fR
+\fB          fun((Acc :: dynamic()) -> ObjectAcc :: dynamic()).\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdecode(binary()) -> decode_value().\fR
+
+.br
+.RS
+.PP
+Parses a JSON value from \fIBinary\fR.
+
+.PP
+Supports basic data mapping:
+
+.IP
+.nf
+.TS
+allbox;
+c c
+l l.
+**JSON**	**Erlang**
+Number	`integer() \	float()`
+Boolean	`true \	false`
+Null	\fInull\fR
+String	\fIbinary()\fR
+Object	\fI#{binary() => _}\fR
+.TE
+.fi
+
+.SS "Errors"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror(unexpected_end)\fR if \fIBinary\fR contains incomplete JSON value
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror({invalid_byte, Byte})\fR if \fIBinary\fR contains unexpected byte or invalid UTF-8 byte
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror({unexpected_sequence, Bytes})\fR if \fIBinary\fR contains invalid UTF-8 escape
+
+.RE
+
+.SS "Example"
+
+.IP
+.nf
+> json:decode(<<"{\\"foo\\": 1}">>).
+#{<<"foo">> => 1}
+
+.fi
+
+
+.RE
+.B
+\fBdecode(binary(), dynamic(), decoders()) ->\fR
+\fB                {Result :: dynamic(), Acc :: dynamic(), binary()}.\fR
+
+.br
+.RS
+.PP
+Parses a JSON value from \fIBinary\fR.
+
+.PP
+Similar to \fIdecode/1\fR except the decoding process can be customized with the callbacks specified in \fIDecoders\fR. The callbacks will use the \fIAcc\fR value as the initial accumulator.
+
+.PP
+Any leftover, unparsed data in \fIBinary\fR will be returned.
+
+.SS "Default callbacks"
+
+.PP
+All callbacks are optional. If not provided, they will fall back to implementations used by the \fIdecode/1\fR function:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIarray_start\fR: \fIfun(_) -> [] end\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIarray_push\fR: \fIfun(Elem, Acc) -> [Elem | Acc] end\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIarray_finish\fR: \fIfun(Acc, OldAcc) -> {lists:reverse(Acc), OldAcc} end\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIobject_start\fR: \fIfun(_) -> [] end\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIobject_push\fR: \fIfun(Key, Value, Acc) -> [{Key, Value} | Acc] end\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIobject_finish\fR: \fIfun(Acc, OldAcc) -> {maps:from_list(Acc), OldAcc} end\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIfloat\fR: \fIfun erlang:binary_to_float/1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIinteger\fR: \fIfun erlang:binary_to_integer/1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fIstring\fR: \fIfun (Value) -> Value end\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+for \fInull\fR: the atom \fInull\fR
+
+.RE
+
+.SS "Errors"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror({invalid_byte, Byte})\fR if \fIBinary\fR contains unexpected byte or invalid UTF-8 byte
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror({unexpected_sequence, Bytes})\fR if \fIBinary\fR contains invalid UTF-8 escape
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror(unexpected_end)\fR if \fIBinary\fR contains incomplete JSON value
+
+.RE
+
+.SS "Example"
+
+.PP
+Decoding object keys as atoms:
+
+.IP
+.nf
+> Push = fun(Key, Value, Acc) -> [{binary_to_existing_atom(Key), Value} | Acc] end.
+> json:decode(<<"{\\"foo\\": 1}">>, ok, #{object_push => Push}).
+{#{foo => 1},ok,<<>>}
+
+.fi
+
+
+.RE
+.B
+\fBdecode_continue(binary() | end_of_input,\fR
+\fB                      State :: continuation_state()) ->\fR
+\fB                         {Result :: dynamic(),\fR
+\fB                          Acc :: dynamic(),\fR
+\fB                          binary()} |\fR
+\fB                         {continue, continuation_state()}.\fR
+
+.br
+.RS
+.PP
+Continue parsing a stream of bytes of a JSON value.
+
+.PP
+Similar to \fIdecode_start/3\fR, if the function returns \fI{continue, State}\fR and there is no more data, use \fIend_of_input\fR instead of a binary.
+
+.IP
+.nf
+> {continue, State} = json:decode_start(<<"{\\"foo\\":">>, ok, #{}).
+> json:decode_continue(<<"1}">>, State).
+{#{foo => 1},ok,<<>>}
+
+.fi
+
+.IP
+.nf
+> {continue, State} = json:decode_start(<<"123">>, ok, #{}).
+> json:decode_continue(end_of_input, State).
+{123,ok,<<>>}
+
+.fi
+
+
+.RE
+.B
+\fBdecode_start(binary(), dynamic(), decoders()) ->\fR
+\fB                      {Result :: dynamic(), Acc :: dynamic(), binary()} |\fR
+\fB                      {continue, continuation_state()}.\fR
+
+.br
+.RS
+.PP
+Begin parsing a stream of bytes of a JSON value.
+
+.PP
+Similar to \fIdecode/3\fR but returns when a complete JSON value can be parsed or returns \fI{continue, State}\fR for incomplete data, the \fIState\fR can be fed to the \fIdecode_continue/2\fR function when more data is available.
+
+
+.RE
+.B
+\fBencode(encode_value()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Generates JSON corresponding to \fITerm\fR.
+
+.PP
+Supports basic data mapping:
+
+.IP
+.nf
+.TS
+allbox;
+c c
+l l.
+**Erlang**	**JSON**
+`integer() \	float()`	Number
+`true \	false `	Boolean
+\fInull\fR	Null
+\fIbinary()\fR	String
+\fIatom()\fR	String
+\fIlist()\fR	Array
+\fI#{binary() => _}\fR	Object
+\fI#{atom() => _}\fR	Object
+\fI#{integer() => _}\fR	Object
+.TE
+.fi
+
+.PP
+This is equivalent to \fIencode(Term, fun json:encode_value/2)\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+> iolist_to_binary(json:encode(#{foo => <<"bar">>})).
+<<"{\\"foo\\":\\"bar\\"}">>
+
+.fi
+
+
+.RE
+.B
+\fBencode(dynamic(), encoder()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Generates JSON corresponding to \fITerm\fR.
+
+.PP
+Can be customised with the \fIEncoder\fR callback. The callback will be recursively called for all the data to be encoded and is expected to return the corresponding encoded JSON as iodata.
+
+.PP
+Various \fIencode_*\fR functions in this module can be used to help in constructing such callbacks.
+
+.SS "Examples"
+
+.PP
+An encoder that uses a heuristic to differentiate object-like lists of key-value pairs from plain lists:
+
+.IP
+.nf
+> encoder([{_, _} | _] = Value, Encode) -> json:encode_key_value_list(Value, Encode);
+> encoder(Other, Encode) -> json:encode_value(Other, Encode).
+> custom_encode(Value) -> json:encode(Value, fun(Value, Encode) -> encoder(Value, Encode) end).
+> iolist_to_binary(custom_encode([{a, []}, {b, 1}])).
+<<"{\\"a\\":[],\\"b\\":1}">>
+
+.fi
+
+
+.RE
+.B
+\fBencode_atom(atom(), encoder()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Default encoder for atoms used by \fIjson:encode/1\fR.
+
+.PP
+Encodes the atom \fInull\fR as JSON \fInull\fR, atoms \fItrue\fR and \fIfalse\fR as JSON booleans, and everything else as JSON strings calling the \fIEncode\fR callback with the corresponding binary.
+
+
+.RE
+.B
+\fBencode_binary(binary()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Default encoder for binaries as JSON strings used by \fIjson:encode/1\fR.
+
+.SS "Errors"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror(unexpected_end)\fR if the binary contains incomplete UTF-8 sequences.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror({invalid_byte, Byte})\fR if the binary contains invalid UTF-8 sequences.
+
+.RE
+
+
+.RE
+.B
+\fBencode_binary_escape_all(binary()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Encoder for binaries as JSON strings producing pure-ASCII JSON.
+
+.PP
+For any non-ASCII unicode character, a corresponding \fI\\\\uXXXX\fR sequence is used.
+
+.SS "Errors"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror(unexpected_end)\fR if the binary contains incomplete UTF-8 sequences.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIerror({invalid_byte, Byte})\fR if the binary contains invalid UTF-8 sequences.
+
+.RE
+
+
+.RE
+.B
+\fBencode_float(float()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Default encoder for floats as JSON numbers used by \fIjson:encode/1\fR.
+
+
+.RE
+.B
+\fBencode_integer(integer()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Default encoder for integers as JSON numbers used by \fIjson:encode/1\fR.
+
+
+.RE
+.B
+\fBencode_key_value_list([{term(), term()}], encoder()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Encoder for lists of key-value pairs as JSON objects.
+
+.PP
+Accepts lists with atom, binary, integer, or float keys.
+
+
+.RE
+.B
+\fBencode_key_value_list_checked([{term(), term()}], encoder()) ->\fR
+\fB                                       iodata().\fR
+
+.br
+.RS
+.PP
+Encoder for lists of key-value pairs as JSON objects.
+
+.PP
+Accepts lists with atom, binary, integer, or float keys. Verifies that no duplicate keys will be produced in the resulting JSON object.
+
+.SS "Errors"
+
+.PP
+Raises \fIerror({duplicate_key, Key})\fR if there are duplicates.
+
+
+.RE
+.B
+\fBencode_list(list(), encoder()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Default encoder for lists as JSON arrays used by \fIjson:encode/1\fR.
+
+
+.RE
+.B
+\fBencode_map(encode_map(dynamic()), encoder()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Default encoder for maps as JSON objects used by \fIjson:encode/1\fR.
+
+.PP
+Accepts maps with atom, binary, integer, or float keys.
+
+
+.RE
+.B
+\fBencode_map_checked(map(), encoder()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Encoder for maps as JSON objects.
+
+.PP
+Accepts maps with atom, binary, integer, or float keys. Verifies that no duplicate keys will be produced in the resulting JSON object.
+
+.SS "Errors"
+
+.PP
+Raises \fIerror({duplicate_key, Key})\fR if there are duplicates.
+
+
+.RE
+.B
+\fBencode_value(dynamic(), encoder()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Default encoder used by \fIjson:encode/1\fR.
+
+.PP
+Recursively calls \fIEncode\fR on all the values in \fIValue\fR.
+
+
+.RE
+.B
+\fBformat(Term :: encode_value()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Generates formatted JSON corresponding to \fITerm\fR.
+
+.PP
+Similiar to \fIencode/1\fR but with added whitespaces for formatting.
+
+.IP
+.nf
+> io:put_chars(json:format(#{foo => <<"bar">>, baz => 52})).
+{
+  "baz": 52,
+  "foo": "bar"
+}
+ok
+
+.fi
+
+
+.RE
+.B
+\fBformat(Term :: encode_value(), Opts :: map()) -> iodata();\fR
+\fB            (Term :: dynamic(), Encoder :: formatter()) -> iodata().\fR
+
+.br
+.RS
+.PP
+Generates formatted JSON corresponding to \fITerm\fR.
+
+.PP
+Equivalent to \fIformat(Term, fun json:format_value/3, Options)\fR or \fIformat(Term, Encoder, #{})\fR
+
+
+.RE
+.B
+\fBformat(Term :: dynamic(),\fR
+\fB             Encoder :: formatter(),\fR
+\fB             Options :: map()) ->\fR
+\fB                iodata().\fR
+
+.br
+.RS
+.PP
+Generates formatted JSON corresponding to \fITerm\fR.
+
+.PP
+Similar to \fIencode/2\fR, can be customised with the \fIEncoder\fR callback and \fIOptions\fR.
+
+.PP
+\fIOptions\fR can include 'indent' to specify number of spaces per level and 'max' which loosely limits the width of lists.
+
+.PP
+The \fIEncoder\fR will get a 'State' argument which contains the 'Options' maps merged with other data when recursing through 'Term'.
+
+.PP
+\fIformat_value/3\fR or various \fIencode_*\fR functions in this module can be used to help in constructing such callbacks.
+
+.IP
+.nf
+> formatter({posix_time, SysTimeSecs}, Encode, State) ->
+    TimeStr = calendar:system_time_to_rfc3339(SysTimeSecs, [{offset, "Z"}]),
+    json:format_value(unicode:characters_to_binary(TimeStr), Encode, State);
+> formatter(Other, Encode, State) -> json:format_value(Other, Encode, State).
+>
+> Fun = fun(Value, Encode, State) -> formatter(Value, Encode, State) end.
+> Options = #{indent => 4}.
+> Term = #{id => 1, time => {posix_time, erlang:system_time(seconds)}}.
+>
+> io:put_chars(json:format(Term, Fun, Options)).
+{
+    "id": 1,
+    "time": "2024-05-23T16:07:48Z"
+}
+ok
+
+.fi
+
+
+.RE
+.B
+\fBformat_key_value_list([{term(), term()}],\fR
+\fB                            Encode :: formatter(),\fR
+\fB                            State :: map()) ->\fR
+\fB                               iodata().\fR
+
+.br
+.RS
+.PP
+Format function for lists of key-value pairs as JSON objects.
+
+.PP
+Accepts lists with atom, binary, integer, or float keys.
+
+
+.RE
+.B
+\fBformat_key_value_list_checked([{term(), term()}],\fR
+\fB                                    Encoder :: formatter(),\fR
+\fB                                    State :: map()) ->\fR
+\fB                                       iodata().\fR
+
+.br
+.RS
+.PP
+Format function for lists of key-value pairs as JSON objects.
+
+.PP
+Accepts lists with atom, binary, integer, or float keys. Verifies that no duplicate keys will be produced in the resulting JSON object.
+
+.SS "Errors"
+
+.PP
+Raises \fIerror({duplicate_key, Key})\fR if there are duplicates.
+
+
+.RE
+.B
+\fBformat_value(Value :: dynamic(),\fR
+\fB                   Encode :: formatter(),\fR
+\fB                   State :: map()) ->\fR
+\fB                      iodata().\fR
+
+.br
+.RS
+.PP
+Default format function used by \fIjson:format/1\fR.
+
+.PP
+Recursively calls \fIEncode\fR on all the values in \fIValue\fR, and indents objects and lists.
+
+
+.RE

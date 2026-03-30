@@ -1,0 +1,1541 @@
+.TH array 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+array \- Functional, extendible arrays.
+
+.SH DESCRIPTION
+.PP
+Arrays can have fixed size, or can grow automatically as needed. A default value is used for entries that have not been explicitly set.
+
+.PP
+Arrays uses _zero_-based indexing. This is a deliberate design choice and differs from other Erlang data structures, for example, tuples.
+
+.PP
+Unless specified by the user when the array is created, the default value is the atom \fIundefined\fR. There is no difference between an unset entry and an entry that has been explicitly set to the same value as the default one (compare \fIreset/2\fR). If you need to differentiate between unset and set entries, ensure that the default value cannot be confused with the values of set entries.
+
+.PP
+The array never shrinks automatically. If an index \fII\fR has been used to set an entry successfully, all indices in the range \fI[0,I]\fR stay accessible unless the array size is explicitly changed by calling \fIresize/2\fR.
+
+.SS "Examples"
+
+.PP
+Create a fixed-size array with entries 0-9 set to \fIundefined\fR:
+
+.IP
+.nf
+A0 = array:new(10).
+10 = array:size(A0).
+
+.fi
+
+.PP
+Create an extendible array and set entry 17 to \fItrue\fR, causing the array to grow automatically:
+
+.IP
+.nf
+A1 = array:set(17, true, array:new()).
+18 = array:size(A1).
+
+.fi
+
+.PP
+Read back a stored value:
+
+.IP
+.nf
+true = array:get(17, A1).
+
+.fi
+
+.PP
+Accessing an unset entry returns the default value:
+
+.IP
+.nf
+undefined = array:get(3, A1)
+
+.fi
+
+.PP
+Accessing an entry beyond the last set entry also returns the default value, if the array does not have fixed size:
+
+.IP
+.nf
+undefined = array:get(18, A1).
+
+.fi
+
+.PP
+"Sparse" functions ignore default-valued entries:
+
+.IP
+.nf
+A2 = array:set(4, false, A1).
+[{4, false}, {17, true}] = array:sparse_to_orddict(A2).
+
+.fi
+
+.PP
+An extendible array can be made fixed-size later:
+
+.IP
+.nf
+A3 = array:fix(A2).
+
+.fi
+
+.PP
+A fixed-size array does not grow automatically and does not allow accesses beyond the last set entry:
+
+.IP
+.nf
+{'EXIT',{badarg,_}} = (catch array:set(18, true, A3)).
+{'EXIT',{badarg,_}} = (catch array:get(18, A3)).
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBarray() :: array(dynamic()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque array(Type) \fR
+
+.br
+.RS
+.PP
+A functional, extendible array.
+
+.PP
+The representation is not documented and is subject to change without notice. Notice that arrays cannot be directly compared for equality.
+
+
+.RE
+.B
+\fBarray_indx() :: non_neg_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBarray_opt() ::\fR
+\fB          {fixed, boolean()} |\fR
+\fB          fixed |\fR
+\fB          {default, Type :: dynamic()} |\fR
+\fB          {size, N :: non_neg_integer()} |\fR
+\fB          (N :: non_neg_integer()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBarray_opts() :: array_opt() | [array_opt()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBindx_pair(Type) :: {Index :: array_indx(), Type}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBindx_pairs(Type) :: [indx_pair(Type)].\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBappend(Value :: any(), Array :: array(Type)) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Append a single value to the right side of the array.
+
+.PP
+The operation is always allowed even if the array is fixed.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,9)).
+2> array:get(array:size(A), array:append(last, A)).
+last
+
+.fi
+
+.PP
+See also \fIprepend/2\fR, \fIconcat/2\fR.
+
+
+.RE
+.B
+\fBconcat(Arrays :: [array(Type)]) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Concatenates a nonempty list of arrays.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list([a]).
+2> B = array:from_list([b]).
+3> array:to_list(array:concat([A,B])).
+[a,b]
+
+.fi
+
+.PP
+See also \fIconcat/2\fR.
+
+
+.RE
+.B
+\fBconcat(A :: array(Type), B :: array(Type)) -> AB :: array(Type).\fR
+
+.br
+.RS
+.PP
+Concatenates two arrays.
+
+.PP
+Adds the elements of \fIB\fR onto \fIA\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:set(1, a, array:new([{default, xa}, {size,3}, {fixed, true}])).
+2> B = array:set(2, b, array:new([{default, xb}, {size,4}, {fixed, false}])).
+3> AB = array:concat(A,B).
+4> array:to_list(AB).
+[xa,a,xa,xb,xb,b,xb]
+
+.fi
+
+.PP
+See also \fIconcat/1\fR, \fIappend/2\fR, \fIprepend/2\fR.
+
+
+.RE
+.B
+\fBdefault(Array :: array(Type)) -> Value :: Type.\fR
+
+.br
+.RS
+.PP
+Gets the value used for uninitialized entries.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:default(array:new()).
+undefined
+2> array:get(52, array:new()).
+undefined
+3> array:default(array:new([{default, 0}])).
+0
+4> array:get(52, array:new([{default, 0}])).
+0
+
+.fi
+
+.PP
+See also \fInew/2\fR.
+
+
+.RE
+.B
+\fBfix(Array :: array(Type)) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Fixes the array size to prevent it from growing automatically upon insertion.
+
+.PP
+Note that operations which explicitly increase the array size, such as \fIappend/2\fR, may still be used on a fixed size array.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:get(1, array:from_list([a,b,c])).
+b
+2> array:get(10, array:from_list([a,b,c])).
+undefined
+3> array:get(10, array:fix(array:from_list([a,b,c]))).
+** exception error: bad argument
+     in function  array:get/2
+
+.fi
+
+.PP
+See also \fIrelax/1\fR, \fIset/3\fR.
+
+
+.RE
+.B
+\fBfoldl(Function, InitialAcc :: A, Array :: array(Type)) -> A\fR
+\fB               when\fR
+\fB                   Function ::\fR
+\fB                       fun((Index :: array_indx(),\fR
+\fB                            Value :: Type,\fR
+\fB                            Acc :: A) ->\fR
+\fB                               A).\fR
+
+.br
+.RS
+.PP
+Folds the array elements using the specified function and initial accumulator value.
+
+.PP
+The elements are visited in order from the lowest index to the highest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,3)).
+2> array:foldl(fun(_K, V, Acc) -> V+Acc end, 0, A).
+6
+
+.fi
+
+.PP
+See also \fIfoldl/5\fR, \fIfoldr/3\fR, \fIsparse_foldl/3\fR.
+
+
+.RE
+.B
+\fBfoldl(Low, High, Function, InitialAcc :: A, Array) -> A\fR
+\fB               when\fR
+\fB                   Low :: array_indx(),\fR
+\fB                   High :: array_indx(),\fR
+\fB                   Function ::\fR
+\fB                       fun((Index :: array_indx(),\fR
+\fB                            Value :: Type,\fR
+\fB                            Acc :: A) ->\fR
+\fB                               A),\fR
+\fB                   Array :: array(Type).\fR
+
+.br
+.RS
+.PP
+Folds the array elements from \fILow\fR to \fIHigh\fR using the specified function and initial accumulator value.
+
+.PP
+The elements are visited in order from the lowest index to the highest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,100)).
+2> array:foldl(50, 59, fun(_K, V, Acc) -> V+Acc end, 0, A).
+545
+
+.fi
+
+.PP
+See also \fIfoldl/3\fR, \fIsparse_foldl/5\fR.
+
+
+.RE
+.B
+\fBfoldr(Function, InitialAcc :: A, Array :: array(Type)) -> A\fR
+\fB               when\fR
+\fB                   Function ::\fR
+\fB                       fun((Index :: array_indx(),\fR
+\fB                            Value :: Type,\fR
+\fB                            Acc :: A) ->\fR
+\fB                               A).\fR
+
+.br
+.RS
+.PP
+Folds the array elements right-to-left using the specified function and initial accumulator value.
+
+.PP
+The elements are visited in order from the highest index to the lowest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fIfoldr/5\fR, \fIfoldl/3\fR, \fIsparse_foldr/3\fR.
+
+
+.RE
+.B
+\fBfoldr(Low, High, Function, InitialAcc :: A, Array :: array(Type)) ->\fR
+\fB               A\fR
+\fB               when\fR
+\fB                   Low :: array_indx(),\fR
+\fB                   High :: array_indx(),\fR
+\fB                   Function ::\fR
+\fB                       fun((Index :: array_indx(),\fR
+\fB                            Value :: Type,\fR
+\fB                            Acc :: A) ->\fR
+\fB                               A).\fR
+
+.br
+.RS
+.PP
+Folds the array elements from \fIHigh\fR to \fILow\fR using the specified function and initial accumulator value.
+
+.PP
+The elements are visited in order from the highest index to the lowest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fIfoldr/3\fR, \fIfoldl/5\fR.
+
+
+.RE
+.B
+\fBfrom(Function, State :: term()) -> array(Type)\fR
+\fB              when\fR
+\fB                  Function ::\fR
+\fB                      fun((State0 :: term()) ->\fR
+\fB                              {Type, State1 :: term()} | done).\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIfrom(Fun, State, undefined)\fR.
+
+
+.RE
+.B
+\fBfrom(Function, State :: term(), Default :: term()) -> array(Type)\fR
+\fB              when\fR
+\fB                  Function ::\fR
+\fB                      fun((State0 :: term()) ->\fR
+\fB                              {Type, State1 :: term()} | done).\fR
+
+.br
+.RS
+.PP
+Creates an extendible array with values obtained with \fIFunction(State)\fR.
+
+.PP
+The 'Function(State)' shall return \fI{Value, NewState}\fR or \fIdone\fR, and is invoked until \fIdone\fR is returned, otherwise the call fails with reason \fIbadarg\fR.
+
+.PP
+\fIDefault\fR is used as the value for uninitialized entries of the array.
+
+.PP
+Note: Use \fIfix/1\fR on the resulting array if you want to prevent accesses outside the size range.
+
+.SS "Examples"
+
+.IP
+.nf
+1> Floats = << <<N:32/float-native>> || N <- lists:seq(0, 2047)>>.
+2> BinToVal = fun(I) ->
+     case Floats of
+         <<_:I/binary, N:32/float-native, _/binary>> ->
+             {N, I+4};
+         _ ->
+             done
+     end
+   end.
+3> A = array:from(BinToVal, 0).
+4> array:get(10, A).
+10.0
+5> array:size(A).
+2048
+6> ValToBin = fun(_K, V, Acc) -> <<Acc/binary, V:32/float-native>> end.
+7> Floats == array:foldl(ValToBin, <<>>, A).
+true
+
+.fi
+
+.PP
+See also \fInew/2\fR, \fIfrom_list/1\fR, \fIfoldl/3\fR.
+
+
+.RE
+.B
+\fBfrom_list(List :: [Value :: Type]) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIfrom_list(List, undefined)\fR.
+
+
+.RE
+.B
+\fBfrom_list(List :: [Value :: Type], Default :: term()) ->\fR
+\fB                   array(Type).\fR
+
+.br
+.RS
+.PP
+Converts a list to an extendible array.
+
+.PP
+\fIDefault\fR is used as the value for uninitialized entries of the array.
+
+.PP
+If \fIList\fR is not a proper list, the call fails with reason \fIbadarg\fR.
+
+.PP
+Note: Use \fIfix/1\fR on the resulting array if you want to prevent accesses outside the size range.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,2), default).
+2> array:to_list(array:reset(1, A)).
+[0,default,2]
+
+.fi
+
+.PP
+See also \fInew/2\fR, \fIto_list/1\fR.
+
+
+.RE
+.B
+\fBfrom_orddict(Orddict :: indx_pairs(Value :: Type)) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIfrom_orddict(Orddict, undefined)\fR.
+
+
+.RE
+.B
+\fBfrom_orddict(Orddict :: indx_pairs(Value :: Type),\fR
+\fB                   Default :: dynamic()) ->\fR
+\fB                      array(Type).\fR
+
+.br
+.RS
+.PP
+Converts an ordered list of pairs \fI{Index, Value}\fR to a corresponding extendible array.
+
+.PP
+\fIDefault\fR is used as the value for uninitialized entries of the array.
+
+.PP
+If \fIOrddict\fR is not a proper, ordered list of pairs whose first elements are non-negative integers, the call fails with reason \fIbadarg\fR.
+
+.PP
+Note: Use \fIfix/1\fR on the resulting array if you want to prevent accesses outside the size range.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_orddict([{K,V} || K <:- lists:seq(2,4) && V <- [v1,v2,v3]], vx).
+2> array:to_orddict(A).
+[{0,vx},{1,vx},{2,v1},{3,v2},{4,v3}]
+
+.fi
+
+.PP
+See also \fInew/2\fR, \fIto_orddict/1\fR.
+
+
+.RE
+.B
+\fBget(I :: array_indx(), Array :: array(Type)) -> Value :: Type.\fR
+
+.br
+.RS
+.PP
+Gets the value of entry \fII\fR.
+
+.PP
+If \fII\fR is not a non-negative integer, or if the array has fixed size and \fII\fR is larger than the maximum index, the call fails with reason \fIbadarg\fR.
+
+.PP
+If the array does not have fixed size, the default value for any index \fII\fR greater than \fIsize(Array)-1\fR is returned.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,9)).
+2> array:get(4,A).
+4
+3> array:get(10, A).
+undefined
+
+.fi
+
+.PP
+See also \fIset/3\fR.
+
+
+.RE
+.B
+\fBis_array(X :: term()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIX\fR is an array, otherwise \fIfalse\fR.
+
+.PP
+Notice that the check is only shallow, as there is no guarantee that \fIX\fR is a well-formed array representation even if this function returns \fItrue\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:is_array(array:new(4, [])).
+true
+
+.fi
+
+
+.RE
+.B
+\fBis_fix(Array :: array()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Checks if the array has fixed size.
+
+.PP
+Returns \fItrue\fR if the array is fixed, otherwise \fIfalse\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:is_fix(array:new()).
+false
+2> array:is_fix(array:new({fixed, true})).
+true
+
+.fi
+
+.PP
+See also \fIfix/1\fR.
+
+
+.RE
+.B
+\fBmap(Function, Array :: array(Type1)) -> array(Type1 | Type2)\fR
+\fB             when\fR
+\fB                 Function ::\fR
+\fB                     fun((Index :: array_indx(), Type1) -> Type2).\fR
+
+.br
+.RS
+.PP
+Maps the specified function onto each array element.
+
+.PP
+The elements are visited in order from the lowest index to the highest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,3)).
+2> B = array:map(fun(K, V) -> K*V end, A).
+3> array:to_orddict(B).
+[{0,0},{1,1},{2,4},{3,9}]
+
+.fi
+
+.PP
+See also \fImapfoldl/3\fR, \fIsparse_map/2\fR.
+
+
+.RE
+.B
+\fBmapfoldl(Function, InitialAcc :: A, Array :: array(Type)) ->\fR
+\fB                  {array(Type), A}\fR
+\fB                  when\fR
+\fB                      Function ::\fR
+\fB                          fun((Index :: array_indx(),\fR
+\fB                               Value :: Type,\fR
+\fB                               Acc :: A) ->\fR
+\fB                                  {Type, A}).\fR
+
+.br
+.RS
+.PP
+Combined map and fold over the array elements using the specified function and initial accumulator value.
+
+.PP
+The elements are visited in order from the lowest index to the highest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,3)).
+2> {B, Acc} = array:mapfoldl(fun(K, V, Sum) -> {K*V, V+Sum} end, 0, A).
+3> Acc.
+6
+4> array:to_orddict(B).
+[{0,0}, {1,1}, {2,4}, {3,9}]
+
+.fi
+
+.PP
+See also \fImapfoldl/5\fR, \fIfoldl/3\fR, \fImap/2\fR, \fIsparse_mapfoldl/3\fR.
+
+
+.RE
+.B
+\fBmapfoldl(Low, High, Function,\fR
+\fB               InitialAcc :: A,\fR
+\fB               Array :: array(Type)) ->\fR
+\fB                  {array(Type), A}\fR
+\fB                  when\fR
+\fB                      Low :: array_indx(),\fR
+\fB                      High :: array_indx(),\fR
+\fB                      Function ::\fR
+\fB                          fun((Index :: array_indx(),\fR
+\fB                               Value :: Type,\fR
+\fB                               Acc :: A) ->\fR
+\fB                                  {Type, A}).\fR
+
+.br
+.RS
+.PP
+Combined map and fold over the array elements from \fILow\fR to \fIHigh\fR using the specified function and initial accumulator value.
+
+.PP
+The elements are visited in order from the lowest index to the highest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fImapfoldl/3\fR, \fIsparse_mapfoldl/5\fR.
+
+
+.RE
+.B
+\fBmapfoldr(Function, InitialAcc :: A, Array :: array(Type)) ->\fR
+\fB                  {array(Type), A}\fR
+\fB                  when\fR
+\fB                      Function ::\fR
+\fB                          fun((Index :: array_indx(),\fR
+\fB                               Value :: Type,\fR
+\fB                               Acc :: A) ->\fR
+\fB                                  {Type, A}).\fR
+
+.br
+.RS
+.PP
+Combined map and fold over the array elements using the specified function and initial accumulator value.
+
+.PP
+The elements are visited in order from the highest index to the lowest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fImapfoldr/5\fR, \fIfoldr/3\fR, \fImap/2\fR, \fIsparse_mapfoldr/3\fR.
+
+
+.RE
+.B
+\fBmapfoldr(Low, High, Function,\fR
+\fB               InitialAcc :: A,\fR
+\fB               Array :: array(Type)) ->\fR
+\fB                  {array(Type), A}\fR
+\fB                  when\fR
+\fB                      Low :: array_indx(),\fR
+\fB                      High :: array_indx(),\fR
+\fB                      Function ::\fR
+\fB                          fun((Index :: array_indx(),\fR
+\fB                               Value :: Type,\fR
+\fB                               Acc :: A) ->\fR
+\fB                                  {Type, A}).\fR
+
+.br
+.RS
+.PP
+Combined map and fold over the array elements from \fILow\fR to \fIHigh\fR using the specified function and initial accumulator value.
+
+.PP
+The elements are visited in order from the highest index to the lowest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fImapfoldr/3\fR, \fImapfoldl/5\fR, \fIsparse_mapfoldr/5\fR.
+
+
+.RE
+.B
+\fBnew() -> array().\fR
+
+.br
+.RS
+.PP
+Creates a new, extendible array with initial size zero.
+
+
+.RE
+.B
+\fBnew(Options :: array_opts()) -> array().\fR
+
+.br
+.RS
+.PP
+Creates a new array according to the specified options.
+
+.PP
+By default, the array is extendible and has initial size zero. Array indices start at \fI0\fR.
+
+.PP
+\fIOptions\fR is a single term or a list of terms, selected from the following:
+
+N::integer() >= 0 or {size, N::integer() >= 0}
+.RS 2
+Specifies the initial array size; this also implies 
+\fI{fixed, true}\fR. If \fIN\fR is not a non-negative integer, the call fails with reason \fIbadarg\fR.
+
+.RE
+
+fixed or {fixed, true}
+.RS 2
+Creates a fixed-size array. See also 
+\fIfix/1\fR.
+
+.RE
+
+{fixed, false}
+.RS 2
+Creates an extendible (non-fixed-size) array.
+
+
+.RE
+
+{default, Value}
+.RS 2
+Sets the default value for the array to 
+\fIValue\fR.
+
+.RE
+
+.PP
+Options are processed in the order they occur in the list, that is, later options have higher precedence.
+
+.PP
+The default value is used as the value of uninitialized entries, and cannot be changed once the array has been created.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:new(100).
+
+.fi
+
+.PP
+creates a fixed-size array of size 100.
+
+.IP
+.nf
+1> array:new({default,0}).
+
+.fi
+
+.PP
+creates an empty, extendible array whose default value is \fI0\fR.
+
+.IP
+.nf
+1> array:new([{size,10},{fixed,false},{default,-1}]).
+
+.fi
+
+.PP
+creates an extendible array with initial size 10 whose default value is \fI-1\fR.
+
+.PP
+See also \fIfix/1\fR, \fIfrom_list/2\fR, \fIget/2\fR, \fInew/0\fR, \fInew/2\fR, \fIset/3\fR.
+
+
+.RE
+.B
+\fBnew(Size :: non_neg_integer(), Options :: array_opts()) -> array().\fR
+
+.br
+.RS
+.PP
+Creates a new array according to the specified size and options.
+
+.PP
+If \fISize\fR is not a non-negative integer, the call fails with reason \fIbadarg\fR. By default, the array has fixed size. Notice that any size specifications in \fIOptions\fR override parameter \fISize\fR.
+
+.PP
+If \fIOptions\fR is a list, this is equivalent to \fInew([{size, Size} | Options])\fR](\fInew/1\fR), otherwise it is equivalent to [\fInew([{size, Size} | [Options]])\fR. However, using this function directly is more efficient.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:new(100, {default,0}).
+
+.fi
+
+.PP
+Creates a fixed-size array of size 100, whose default value is \fI0\fR.
+
+
+.RE
+.B
+\fBprepend(Value :: Type, Array :: array(Type)) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Prepend a single value to the left side of the array.
+
+.PP
+The operation is always allowed even if the array is fixed.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,9)).
+2> array:get(0, array:prepend(first, A)).
+first
+
+.fi
+
+.PP
+See also \fIappend/2\fR, \fIconcat/2\fR.
+
+
+.RE
+.B
+\fBrelax(Array :: array(Type)) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Makes the array extendible, reversing the effects of \fIfix/1\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:get(10, array:new({fixed, true})).
+** exception error: bad argument
+     in function  array:get/2
+2> array:get(10, array:relax(array:new())).
+undefined
+
+.fi
+
+.PP
+See also \fIfix/1\fR.
+
+
+.RE
+.B
+\fBreset(I :: array_indx(), Array :: array(Type)) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Resets entry \fII\fR to the default value for the array.
+
+.PP
+If the value of entry \fII\fR is the default value, the array is returned unchanged.
+
+.PP
+Reset never changes the array size. Shrinking can be done explicitly by calling \fIresize/2\fR.
+
+.PP
+If \fII\fR is not a non-negative integer, or if the array has fixed size and \fII\fR is larger than the maximum index, the call fails with reason \fIbadarg\fR; compare \fIset/3\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,9)).
+2> array:get(5, array:reset(5, A)).
+undefined
+
+.fi
+
+.PP
+See also \fInew/2\fR, \fIset/3\fR.
+
+
+.RE
+.B
+\fBresize(Array :: array(Type)) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Changes the array size to that reported by \fIsparse_size/1\fR.
+
+.PP
+If the specified array has fixed size, the resulting array also has fixed size.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:set(1, x, array:new(4, [])).
+2> array:size(A).
+4
+3> array:size(array:resize(A)).
+2
+
+.fi
+
+.PP
+See also \fIresize/2\fR, \fIsparse_size/1\fR.
+
+
+.RE
+.B
+\fBresize(Size :: non_neg_integer(), Array :: array(Type)) ->\fR
+\fB                array(Type).\fR
+
+.br
+.RS
+.PP
+Change the array size.
+
+.PP
+If \fISize\fR is not a non-negative integer, the call fails with reason \fIbadarg\fR. If the specified array has fixed size, also the resulting array has fixed size.
+
+.PP
+Note: As of OTP 29, resizing ensures that entries outside the new range are pruned so that garbage collection can recover the memory.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:get(10, array:new({fixed, true})).
+** exception error: bad argument
+     in function  array:get/2
+2> array:get(10, array:resize(20, array:new({fixed, true}))).
+undefined
+
+.fi
+
+.PP
+See also \fIshift/2\fR.
+
+
+.RE
+.B
+\fBset(I :: array_indx(), Value :: Type, Array :: array(Type)) ->\fR
+\fB             array(Type).\fR
+
+.br
+.RS
+.PP
+Sets entry \fII\fR of the array to \fIValue\fR.
+
+.PP
+If \fII\fR is not a non-negative integer, or if the array has fixed size and \fII\fR is larger than the maximum index, the call fails with reason \fIbadarg\fR.
+
+.PP
+If the array does not have fixed size, and \fII\fR is greater than \fIsize(Array)-1\fR, the array grows to size \fII+1\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:new(4, [{fixed,true}]).
+2> array:set(1, x, A).
+3> array:set(5, x, A).
+** exception error: bad argument
+     in function  array:set/3
+
+.fi
+
+.PP
+See also \fIget/2\fR, \fIreset/2\fR.
+
+
+.RE
+.B
+\fBshift(Steps :: integer(), Array :: array(Type)) -> array(Type).\fR
+
+.br
+.RS
+.PP
+Shift the array a number of steps to the left, or to the right if the number is negative.
+
+.PP
+Shifting left drops elements from the left side, reducing the array size, and shifting right adds space on the left, increasing the array size.
+
+.PP
+The fixed option does not affect the result of shift.
+
+.PP
+Note: For efficiency, this does not prune the representation, which means that a subsequent shift or similar operation can bring back the values that were shifted out. Use \fIresize/2\fR or \fIresize/1\fR if you want to ensure that values outside the range get pruned.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:new(10, [{fixed, true}]).
+2> array:size(A).
+10
+3> array:size(array:shift(-5, A)).
+15
+4> array:size(array:shift(5, A)).
+5
+
+.fi
+
+
+.RE
+.B
+\fBsize(Array :: array()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Gets the number of entries in the array.
+
+.PP
+Entries are numbered from \fI0\fR to \fIsize(Array)-1\fR. Hence, this is also the index of the first entry that is guaranteed to not have been previously set.
+
+.SS "Examples"
+
+.IP
+.nf
+1> array:size(array:new(4, [])).
+4
+2> array:size(array:set(5, value, array:new())).
+6
+
+.fi
+
+
+.RE
+.B
+\fBslice(I :: array_indx(),\fR
+\fB            Length :: non_neg_integer(),\fR
+\fB            Array :: array(Type)) ->\fR
+\fB               array(Type).\fR
+
+.br
+.RS
+.PP
+Extract a slice of the array.
+
+.PP
+This drops elements before \fII\fR as with \fIshift/2\fR, and takes the following \fILength\fR elements starting from \fII\fR.
+
+.PP
+If \fIN\fR is less than or equal to zero, the resulting array is empty. To extract a slice from \fIStart\fR to \fIEnd\fR inclusive, use \fIslice(Start, End-Start+1, Array)\fR.
+
+.PP
+Note: For efficiency, this does not prune the representation, which means that a subsequent shift or similar operation can bring back the values that were shifted out. Use \fIresize/2\fR or \fIresize/1\fR if you want to ensure that values outside the range get pruned.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,9)).
+2> array:to_list(array:slice(2,3,A)).
+[2,3,4]
+
+.fi
+
+
+.RE
+.B
+\fBsparse_foldl(Function, InitialAcc :: A, Array :: array(Type)) -> A\fR
+\fB                      when\fR
+\fB                          Function ::\fR
+\fB                              fun((Index :: array_indx(),\fR
+\fB                                   Value :: Type,\fR
+\fB                                   Acc :: A) ->\fR
+\fB                                      A).\fR
+
+.br
+.RS
+.PP
+Folds the array elements using the specified function and initial accumulator value, skipping default-valued entries.
+
+.PP
+The elements are visited in order from the lowest index to the highest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fIsparse_foldl/5\fR, \fIfoldl/3\fR.
+
+
+.RE
+.B
+\fBsparse_foldl(Low :: array_indx(),\fR
+\fB                   High :: array_indx(),\fR
+\fB                   Function,\fR
+\fB                   InitialAcc :: A,\fR
+\fB                   Array :: array(Type)) ->\fR
+\fB                      A\fR
+\fB                      when\fR
+\fB                          Function ::\fR
+\fB                              fun((Index :: array_indx(),\fR
+\fB                                   Value :: Type,\fR
+\fB                                   Acc :: A) ->\fR
+\fB                                      A).\fR
+
+.br
+.RS
+.PP
+Folds the array elements from \fILow\fR to \fIHigh\fR using the specified function and initial accumulator value, skipping default-valued entries.
+
+.PP
+The elements are visited in order from the lowest index to the highest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fIsparse_foldl/3\fR, \fIfoldl/5\fR.
+
+
+.RE
+.B
+\fBsparse_foldr(Function, InitialAcc :: A, Array :: array(Type)) -> A\fR
+\fB                      when\fR
+\fB                          Function ::\fR
+\fB                              fun((Index :: array_indx(),\fR
+\fB                                   Value :: Type,\fR
+\fB                                   Acc :: A) ->\fR
+\fB                                      A).\fR
+
+.br
+.RS
+.PP
+Folds the array elements right-to-left using the specified function and initial accumulator value, skipping default-valued entries.
+
+.PP
+The elements are visited in order from the highest index to the lowest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fIsparse_foldr/5\fR, \fIfoldr/3\fR, \fIsparse_foldl/3\fR.
+
+
+.RE
+.B
+\fBsparse_foldr(Low :: array_indx(),\fR
+\fB                   High :: array_indx(),\fR
+\fB                   Function,\fR
+\fB                   InitialAcc :: A,\fR
+\fB                   Array :: array(Type)) ->\fR
+\fB                      A\fR
+\fB                      when\fR
+\fB                          Function ::\fR
+\fB                              fun((Index :: array_indx(),\fR
+\fB                                   Value :: Type,\fR
+\fB                                   Acc :: A) ->\fR
+\fB                                      A).\fR
+
+.br
+.RS
+.PP
+Folds the array elements from \fIHigh\fR to \fILow\fR using the specified function and initial accumulator value, skipping default-valued entries.
+
+.PP
+The elements are visited in order from the highest index to the lowest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fIsparse_foldr/3\fR, \fIfoldr/5\fR.
+
+
+.RE
+.B
+\fBsparse_map(Function, Array :: array(Type1)) ->\fR
+\fB                    array(Type1 | Type2)\fR
+\fB                    when\fR
+\fB                        Function ::\fR
+\fB                            fun((Index :: array_indx(), Type1) -> Type2).\fR
+
+.br
+.RS
+.PP
+Maps the specified function onto each array element, skipping default-valued entries.
+
+.PP
+The elements are visited in order from the lowest index to the highest.
+
+.PP
+If \fIFunction\fR is not a function, the call fails with reason \fIbadarg\fR.
+
+.PP
+See also \fImap/2\fR.
+
+
+.RE
+.B
+\fBsparse_mapfoldl(Function, InitialAcc :: A, Array) -> {ArrayRes, A}\fR
+\fB                         when\fR
+\fB                             Array :: array(Type1),\fR
+\fB                             Function ::\fR
+\fB                                 fun((Index :: array_indx(),\fR
+\fB                                      Value :: Type1,\fR
+\fB                                      Acc :: A) ->\fR
+\fB                                         {Type2, A}),\fR
+\fB                             ArrayRes :: array(Type1 | Type2).\fR
+
+.br
+.RS
+.PP
+Like \fImapfoldl/3\fR but skips default-valued entries.
+
+.PP
+See also \fIsparse_mapfoldl/5\fR, \fIsparse_mapfoldr/3\fR.
+
+
+.RE
+.B
+\fBsparse_mapfoldl(Low, High, Function, InitialAcc :: A, Array) ->\fR
+\fB                         {ArrayRes, A}\fR
+\fB                         when\fR
+\fB                             Low :: array_indx(),\fR
+\fB                             High :: array_indx(),\fR
+\fB                             Function ::\fR
+\fB                                 fun((Index :: array_indx(),\fR
+\fB                                      Value :: Type1,\fR
+\fB                                      Acc :: A) ->\fR
+\fB                                         {Type2, A}),\fR
+\fB                             Array :: array(Type1),\fR
+\fB                             ArrayRes :: array(Type1 | Type2).\fR
+
+.br
+.RS
+.PP
+Like \fImapfoldl/5\fR but skips default-valued entries.
+
+.PP
+See also \fIsparse_mapfoldl/3\fR, \fIsparse_mapfoldr/5\fR.
+
+
+.RE
+.B
+\fBsparse_mapfoldr(Function, InitialAcc :: A, Array) -> {ArrayRes, A}\fR
+\fB                         when\fR
+\fB                             Array :: array(Type1),\fR
+\fB                             Function ::\fR
+\fB                                 fun((Index :: array_indx(),\fR
+\fB                                      Value :: Type1,\fR
+\fB                                      Acc :: A) ->\fR
+\fB                                         {Type2, A}),\fR
+\fB                             ArrayRes :: array(Type1 | Type2).\fR
+
+.br
+.RS
+.PP
+Like \fImapfoldr/3\fR but skips default-valued entries.
+
+.PP
+See also \fIsparse_mapfoldr/5\fR, \fIsparse_mapfoldl/3\fR.
+
+
+.RE
+.B
+\fBsparse_mapfoldr(Low, High, Function, InitialAcc :: A, Array) ->\fR
+\fB                         {ArrayRes, A}\fR
+\fB                         when\fR
+\fB                             Low :: array_indx(),\fR
+\fB                             High :: array_indx(),\fR
+\fB                             Function ::\fR
+\fB                                 fun((Index :: array_indx(),\fR
+\fB                                      Value :: Type1,\fR
+\fB                                      Acc :: A) ->\fR
+\fB                                         {Type2, A}),\fR
+\fB                             Array :: array(Type1),\fR
+\fB                             ArrayRes :: array(Type1 | Type2).\fR
+
+.br
+.RS
+.PP
+Like \fImapfoldr/5\fR but skips default-valued entries.
+
+.PP
+See also \fIsparse_mapfoldr/3\fR, \fIsparse_mapfoldl/5\fR.
+
+
+.RE
+.B
+\fBsparse_size(Array :: array()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Gets the number of entries in the array up until the last non-default-valued entry.
+
+.PP
+That is, returns \fII+1\fR if \fII\fR is the last non-default-valued entry in the array, or zero if no such entry exists.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:set(3, 42, array:new(10)).
+2> array:size(A).
+10
+3> array:sparse_size(A).
+4
+
+.fi
+
+.PP
+See also \fIresize/1\fR, \fIsize/1\fR.
+
+
+.RE
+.B
+\fBsparse_to_list(Array :: array(Type)) -> [Value :: Type].\fR
+
+.br
+.RS
+.PP
+Converts the array to a list, skipping default-valued entries.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:set(2, x, array:new()).
+2> array:to_list(A).
+[undefined,undefined,x]
+3> array:sparse_to_list(A).
+[x]
+
+.fi
+
+.PP
+See also \fIto_list/1\fR  and \fIto_orddict/1\fR.
+
+
+.RE
+.B
+\fBsparse_to_orddict(Array :: array(Type)) ->\fR
+\fB                           indx_pairs(Value :: Type).\fR
+
+.br
+.RS
+.PP
+Converts the array to an ordered list of pairs \fI{Index, Value}\fR, skipping default-valued entries.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,2), default).
+2> array:to_orddict(array:reset(1, A)).
+[{0,0},{1,default},{2,2}]
+3> array:sparse_to_orddict(array:reset(1, A)).
+[{0,0},{2,2}]
+
+.fi
+
+.PP
+See also \fIto_orddict/1\fR.
+
+
+.RE
+.B
+\fBto_list(Array :: array(Type)) -> [Value :: Type].\fR
+
+.br
+.RS
+.PP
+Converts the array to a list.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:set(2, x, array:new()).
+2> array:to_list(A).
+[undefined,undefined,x]
+
+.fi
+
+.PP
+See also \fIfrom_list/2\fR, \fIsparse_to_list/1\fR and \fIto_orddict/1\fR.
+
+
+.RE
+.B
+\fBto_orddict(Array :: array(Type)) -> indx_pairs(Value :: Type).\fR
+
+.br
+.RS
+.PP
+Converts the array to an ordered list of pairs \fI{Index, Value}\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> A = array:from_list(lists:seq(0,2), default).
+2> array:to_orddict(array:reset(1, A)).
+[{0,0},{1,default},{2,2}]
+
+.fi
+
+.PP
+See also \fIfrom_orddict/2\fR, \fIsparse_to_orddict/1\fR and \fIto_list/1\fR.
+
+
+.RE

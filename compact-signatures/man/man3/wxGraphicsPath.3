@@ -1,0 +1,397 @@
+.TH wxGraphicsPath 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGraphicsPath \- A \fIwxGraphicsPath\fR is a native representation of a geometric path.
+
+.SH DESCRIPTION
+.PP
+The contents are specific and private to the respective renderer. Instances are reference counted and can therefore be assigned as usual. The only way to get a valid instance is by using \fIwxGraphicsContext:createPath/1\fR or \fIwxGraphicsRenderer:createPath/1\fR.
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsObject\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGraphicsPath
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGraphicsPath() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddArc(This, C, R, StartAngle, EndAngle, Clockwise) -> ok\fR
+\fB                when\fR
+\fB                    This :: wxGraphicsPath(),\fR
+\fB                    C :: {X :: float(), Y :: float()},\fR
+\fB                    R :: number(),\fR
+\fB                    StartAngle :: number(),\fR
+\fB                    EndAngle :: number(),\fR
+\fB                    Clockwise :: boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaddArc(This, X, Y, R, StartAngle, EndAngle, Clockwise) -> ok\fR
+\fB                when\fR
+\fB                    This :: wxGraphicsPath(),\fR
+\fB                    X :: number(),\fR
+\fB                    Y :: number(),\fR
+\fB                    R :: number(),\fR
+\fB                    StartAngle :: number(),\fR
+\fB                    EndAngle :: number(),\fR
+\fB                    Clockwise :: boolean().\fR
+
+.br
+.RS
+.PP
+Adds an arc of a circle.
+
+.PP
+The circle is defined by the coordinates of its centre (\fIx\fR, \fIy\fR) or \fIc\fR and its radius \fIr\fR. The arc goes from the starting angle \fIstartAngle\fR to \fIendAngle\fR either clockwise or counter-clockwise depending on the value of \fIclockwise\fR argument.
+
+.PP
+The angles are measured in radians but, contrary to the usual mathematical convention, are always \fIclockwise\fR from the horizontal axis.
+
+.PP
+If for clockwise arc \fIendAngle\fR is less than \fIstartAngle\fR it will be progressively increased by 2*pi until it is greater than \fIstartAngle\fR. If for counter-clockwise arc \fIendAngle\fR is greater than \fIstartAngle\fR it will be progressively decreased by 2*pi until it is less than \fIstartAngle\fR.
+
+.PP
+If there is a current point set, an initial line segment will be added to the path to connect the current point to the beginning of the arc.
+
+
+.RE
+.B
+\fBaddArcToPoint(This, X1, Y1, X2, Y2, R) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxGraphicsPath(),\fR
+\fB                           X1 :: number(),\fR
+\fB                           Y1 :: number(),\fR
+\fB                           X2 :: number(),\fR
+\fB                           Y2 :: number(),\fR
+\fB                           R :: number().\fR
+
+.br
+.RS
+.PP
+Adds an arc (of a circle with radius \fIr\fR) that is tangent to the line connecting current point and (\fIx1\fR, \fIy1\fR) and to the line connecting (\fIx1\fR, \fIy1\fR) and (\fIx2\fR, \fIy2\fR).
+
+.PP
+If the current point and the starting point of the arc are different, a straight line connecting these points is also appended. If there is no current point before the call to \fIaddArcToPoint/6\fR this function will behave as if preceded by a call to MoveToPoint(0, 0). After this call the current point will be at the ending point of the arc.
+
+
+.RE
+.B
+\fBaddCircle(This, X, Y, R) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxGraphicsPath(),\fR
+\fB                       X :: number(),\fR
+\fB                       Y :: number(),\fR
+\fB                       R :: number().\fR
+
+.br
+.RS
+.PP
+Appends a circle around (\fIx\fR,\fIy\fR) with radius \fIr\fR as a new closed subpath.
+
+.PP
+After this call the current point will be at (x+\fIr\fR, \fIy\fR).
+
+
+.RE
+.B
+\fBaddCurveToPoint(This, C1, C2, E) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxGraphicsPath(),\fR
+\fB                             C1 :: {X :: float(), Y :: float()},\fR
+\fB                             C2 :: {X :: float(), Y :: float()},\fR
+\fB                             E :: {X :: float(), Y :: float()}.\fR
+
+.br
+.RS
+.PP
+Adds a cubic bezier curve from the current point, using two control points and an end point.
+
+.PP
+If there is no current point before the call to \fIaddCurveToPoint/7\fR this function will behave as if preceded by a call to MoveToPoint(\fIc1\fR).
+
+
+.RE
+.B
+\fBaddCurveToPoint(This, Cx1, Cy1, Cx2, Cy2, X, Y) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxGraphicsPath(),\fR
+\fB                             Cx1 :: number(),\fR
+\fB                             Cy1 :: number(),\fR
+\fB                             Cx2 :: number(),\fR
+\fB                             Cy2 :: number(),\fR
+\fB                             X :: number(),\fR
+\fB                             Y :: number().\fR
+
+.br
+.RS
+.PP
+Adds a cubic bezier curve from the current point, using two control points and an end point.
+
+.PP
+If there is no current point before the call to \fIaddCurveToPoint/7\fR this function will behave as if preceded by a call to MoveToPoint(\fIcx1\fR, \fIcy1\fR).
+
+
+.RE
+.B
+\fBaddEllipse(This, X, Y, W, H) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxGraphicsPath(),\fR
+\fB                        X :: number(),\fR
+\fB                        Y :: number(),\fR
+\fB                        W :: number(),\fR
+\fB                        H :: number().\fR
+
+.br
+.RS
+.PP
+Appends an ellipse fitting into the passed in rectangle as a new closed subpath.
+
+.PP
+After this call the current point will be at (x+\fIw\fR, y+\fIh/2\fR).
+
+
+.RE
+.B
+\fBaddLineToPoint(This, P) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxGraphicsPath(),\fR
+\fB                            P :: {X :: float(), Y :: float()}.\fR
+
+.br
+.RS
+.PP
+Adds a straight line from the current point to \fIp\fR.
+
+.PP
+If current point is not yet set before the call to \fIaddLineToPoint/3\fR this function will behave as \fImoveToPoint/3\fR.
+
+
+.RE
+.B
+\fBaddLineToPoint(This, X, Y) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxGraphicsPath(),\fR
+\fB                            X :: number(),\fR
+\fB                            Y :: number().\fR
+
+.br
+.RS
+.PP
+Adds a straight line from the current point to (\fIx\fR,\fIy\fR).
+
+.PP
+If current point is not yet set before the call to \fIaddLineToPoint/3\fR this function will behave as \fImoveToPoint/3\fR.
+
+
+.RE
+.B
+\fBaddPath(This, Path) -> ok\fR
+\fB                 when This :: wxGraphicsPath(), Path :: wxGraphicsPath().\fR
+
+.br
+.RS
+.PP
+Adds another path onto the current path.
+
+.PP
+After this call the current point will be at the added path's current point. For Direct2D the path being appended shouldn't contain a started non-empty subpath when this function is called.
+
+
+.RE
+.B
+\fBaddQuadCurveToPoint(This, Cx, Cy, X, Y) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxGraphicsPath(),\fR
+\fB                                 Cx :: number(),\fR
+\fB                                 Cy :: number(),\fR
+\fB                                 X :: number(),\fR
+\fB                                 Y :: number().\fR
+
+.br
+.RS
+.PP
+Adds a quadratic bezier curve from the current point, using a control point and an end point.
+
+.PP
+If there is no current point before the call to \fIaddQuadCurveToPoint/5\fR this function will behave as if preceded by a call to MoveToPoint(\fIcx\fR, \fIcy\fR).
+
+
+.RE
+.B
+\fBaddRectangle(This, X, Y, W, H) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxGraphicsPath(),\fR
+\fB                          X :: number(),\fR
+\fB                          Y :: number(),\fR
+\fB                          W :: number(),\fR
+\fB                          H :: number().\fR
+
+.br
+.RS
+.PP
+Appends a rectangle as a new closed subpath.
+
+.PP
+After this call the current point will be at (\fIx\fR, \fIy\fR).
+
+
+.RE
+.B
+\fBaddRoundedRectangle(This, X, Y, W, H, Radius) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxGraphicsPath(),\fR
+\fB                                 X :: number(),\fR
+\fB                                 Y :: number(),\fR
+\fB                                 W :: number(),\fR
+\fB                                 H :: number(),\fR
+\fB                                 Radius :: number().\fR
+
+.br
+.RS
+.PP
+Appends a rounded rectangle as a new closed subpath.
+
+.PP
+If \fIradius\fR equals 0 this function will behave as \fIaddRectangle/5\fR, otherwise after this call the current point will be at (x+\fIw\fR, y+\fIh/2\fR).
+
+
+.RE
+.B
+\fBcloseSubpath(This) -> ok when This :: wxGraphicsPath().\fR
+
+.br
+.RS
+.PP
+Closes the current sub-path.
+
+.PP
+After this call the current point will be at the joined endpoint of the sub-path.
+
+
+.RE
+.B
+\fBcontains(This, X, Y) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsPath(),\fR
+\fB                      X :: number(),\fR
+\fB                      Y :: number();\fR
+\fB              (This, C, [Option]) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsPath(),\fR
+\fB                      C :: {X :: float(), Y :: float()},\fR
+\fB                      Option :: {fillStyle, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Return: true if the point is within the path.
+
+
+.RE
+.B
+\fBcontains(This, X, Y, [Option]) -> boolean()\fR
+\fB                  when\fR
+\fB                      This :: wxGraphicsPath(),\fR
+\fB                      X :: number(),\fR
+\fB                      Y :: number(),\fR
+\fB                      Option :: {fillStyle, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Return: true if the point is within the path.
+
+
+.RE
+.B
+\fBgetBox(This) ->\fR
+\fB                {X :: float(), Y :: float(), W :: float(), H :: float()}\fR
+\fB                when This :: wxGraphicsPath().\fR
+
+.br
+.RS
+.PP
+Gets the bounding box enclosing all points (possibly including control points).
+
+
+.RE
+.B
+\fBgetCurrentPoint(This) -> {X :: float(), Y :: float()}\fR
+\fB                         when This :: wxGraphicsPath().\fR
+
+.br
+.RS
+.PP
+Gets the last point of the current path, (0,0) if not yet set.
+
+
+.RE
+.B
+\fBmoveToPoint(This, P) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxGraphicsPath(),\fR
+\fB                         P :: {X :: float(), Y :: float()}.\fR
+
+.br
+.RS
+.PP
+Begins a new subpath at \fIp\fR.
+
+
+.RE
+.B
+\fBmoveToPoint(This, X, Y) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxGraphicsPath(),\fR
+\fB                         X :: number(),\fR
+\fB                         Y :: number().\fR
+
+.br
+.RS
+.PP
+Begins a new subpath at (\fIx\fR,\fIy\fR).
+
+
+.RE
+.B
+\fBtransform(This, Matrix) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxGraphicsPath(),\fR
+\fB                       Matrix :: wxGraphicsMatrix:wxGraphicsMatrix().\fR
+
+.br
+.RS
+.PP
+Transforms each point of this path by the matrix.
+
+.PP
+For Direct2D the current path shouldn't contain a started non-empty subpath when this function is called.
+
+
+.RE

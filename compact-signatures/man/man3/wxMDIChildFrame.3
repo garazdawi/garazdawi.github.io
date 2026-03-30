@@ -1,0 +1,329 @@
+.TH wxMDIChildFrame 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMDIChildFrame \- An MDI child frame is a frame that can only exist inside a \fIwxMDIClientWindow\fR, which is itself a child of \fIwxMDIParentFrame\fR.
+
+.SH DESCRIPTION
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+.PP
+All of the standard \fIwxFrame\fR styles can be used but most of them are ignored by TDI-based MDI implementations.
+
+.PP
+Remark: Although internally an MDI child frame is a child of the MDI client window, in wxWidgets you create it as a child of \fIwxMDIParentFrame\fR. In fact, you can usually forget that the client window exists. MDI child frames are clipped to the area of the MDI client window, and may be iconized on the client window. You can associate a menubar with a child frame as usual, although an MDI child doesn't display its menubar under its own title bar. The MDI parent frame's menubar will be changed to reflect the currently active child frame. If there are currently no children, the parent frame's own menubar will be displayed.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMDIClientWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMDIParentFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMDIChildFrame
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMDIChildFrame() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBactivate(This) -> ok when This :: wxMDIChildFrame().\fR
+
+.br
+.RS
+.PP
+Activates this MDI child frame.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaximize/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrestore/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBcreate(This, Parent, Id, Title, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxMDIChildFrame(),\fR
+\fB                    Parent :: wxMDIParentFrame:wxMDIParentFrame(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Title :: unicode:chardata(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Used in two-step frame construction.
+
+.PP
+See \fInew/4\fR for further details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxMDIChildFrame()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBmaximize(This, [Option]) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxMDIChildFrame(),\fR
+\fB                      Option :: {maximize, boolean()}.\fR
+
+.br
+.RS
+.PP
+Maximizes this MDI child frame.
+
+.PP
+This function doesn't do anything if \fIIsAlwaysMaximized()\fR (not implemented in wx) returns true.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIactivate/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrestore/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBnew() -> wxMDIChildFrame().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Title, [Option]) -> wxMDIChildFrame()\fR
+\fB             when\fR
+\fB                 Parent :: wxMDIParentFrame:wxMDIParentFrame(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Title :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating the window.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBrestore(This) -> ok when This :: wxMDIChildFrame().\fR
+
+.br
+.RS
+.PP
+Restores this MDI child frame (unmaximizes).
+
+.PP
+This function doesn't do anything if \fIIsAlwaysMaximized()\fR (not implemented in wx) returns true.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIactivate/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImaximize/2\fR
+
+.RE
+
+
+.RE

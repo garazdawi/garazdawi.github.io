@@ -1,0 +1,335 @@
+.TH et_viewer 3 "et 1.7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+et_viewer \- Displays a sequence chart for trace events (messages/actions)
+
+.SH DESCRIPTION
+.SH DATA TYPES
+.LP
+.B
+\fBactors() :: [term()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfirst_key() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {title, string()} |\fR
+\fB          {detail_level, 0..100} |\fR
+\fB          {is_suspended, boolean()} |\fR
+\fB          {scale, integer()} |\fR
+\fB          {width, integer()} |\fR
+\fB          {height, integer()} |\fR
+\fB          {collector_pid, pid() | undefined} |\fR
+\fB          {active_filter, atom()} |\fR
+\fB          {max_events, integer() | undefined} |\fR
+\fB          {max_actors, integer() | undefined} |\fR
+\fB          {actors, actors()} |\fR
+\fB          {first_event, first_key()} |\fR
+\fB          {hide_unknown, boolean()} |\fR
+\fB          {hide_actions, boolean()} |\fR
+\fB          {display_mode,\fR
+\fB           all |\fR
+\fB           {search_actors, forward | reverse, first_key(), actors()}}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBfile(FileName :: file:filename()) -> {ok, pid()} | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Start a new event viewer and a corresponding collector and load them with trace events from a trace file.
+
+
+.RE
+.B
+\fBget_collector_pid(ViewerPid :: pid()) -> pid().\fR
+
+.br
+.RS
+.PP
+Returns the identifier of the collector process.
+
+
+.RE
+.B
+\fBstart() -> {ok, pid()} | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Simplified start of a sequence chart viewer with global tracing activated.
+
+.PP
+Convenient to be used from the command line (erl -s et_viewer).
+
+
+.RE
+.B
+\fBstart(GUIorOptions) -> {ok, Viewer :: pid()} | {error, term()}\fR
+\fB               when\fR
+\fB                   GUIorOptions :: wx | default | Options,\fR
+\fB                   Options :: [option() | et_collector:option()].\fR
+
+.br
+.RS
+.PP
+Start of a sequence chart viewer without linking to the parent process.
+
+
+.RE
+.B
+\fBstart_link(GUIorOptions) ->\fR
+\fB                    {ok, Viewer :: pid()} | {error, term()}\fR
+\fB                    when\fR
+\fB                        GUIorOptions :: wx | default | Options,\fR
+\fB                        Options :: [option() | et_collector:option()].\fR
+
+.br
+.RS
+.PP
+Start a sequence chart viewer for trace events (messages/actions)
+
+.PP
+A filter_fun() takes an event record as sole argument and returns \fIfalse | true | {true, NewEvent}\fR.
+
+.PP
+If the \fIcollector_pid\fR is \fIundefined\fR a new \fIet_collector\fR will be started with the following parameter settings: \fIparent_pid\fR, \fIevent_order\fR, \fItrace_global\fR, \fItrace_pattern\fR, \fItrace_port\fR, \fItrace_max_queue\fR, \fItrace_client\fR, \fIdict_insert\fR and \fIdict_delete\fR. The new \fIet_viewer\fR will register itself as an \fIet_collector\fR subscriber.
+
+.PP
+Default values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+parent_pid - self().
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+title - "et_viewer".
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+detail_level - max.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+is_suspended - false.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+scale - 2.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+width - 800.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+height - 600.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+collector_pid - undefined.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+event_order - trace_ts.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+active_filter - collector.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+max_actors - 5.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+actors - ["UNKNOWN"].
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+first_event - first.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+hide_unknown - false.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+hide_actions - false.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+display_mode - all.
+
+.RE
+
+
+.RE
+.B
+\fBstop(ViewerPid :: pid()) -> ok.\fR
+
+.br
+.RS
+.PP
+Stops a viewer process.
+
+
+.RE

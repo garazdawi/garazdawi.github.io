@@ -1,0 +1,85 @@
+.TH megaco_digit_map 3 "megaco 4.8.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+megaco_digit_map \- Digit Map utility module.
+
+.SH DESCRIPTION
+.PP
+This is a Digit Map utility module (types).
+
+.SS "Version note"
+
+.PP
+This module has existed in the megaco app for long time, but as of 27.0, its also documented.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcancel() :: $z | $Z | cancel.\fR
+
+.br
+.RS
+.PP
+\fI$z | $Z | cancel\fR
+
+
+.RE
+.B
+\fBevent() :: letter() | pause() | cancel().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBkind() :: full | unambiguous.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBletter() :: $0..$9 | $a..$k | $A..$K.\fR
+
+.br
+.RS
+.PP
+\fI$0..$9 | $a..$k | $A..$K\fR
+
+
+.RE
+.B
+\fBone_second() :: $s | $S.\fR
+
+.br
+.RS
+.PP
+\fI$s | $S\fR
+
+
+.RE
+.B
+\fBpause() :: one_second() | ten_seconds().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBten_seconds() :: $l | $L.\fR
+
+.br
+.RS
+.PP
+\fI$l | $L\fR
+
+
+.RE
+.B
+\fBvalue() :: #'DigitMapValue'{}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP

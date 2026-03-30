@@ -1,0 +1,50 @@
+.TH ssl_crl_cache 3 "ssl 11.5.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ssl_crl_cache \- CRL cache
+
+.SH DESCRIPTION
+.PP
+Implements an internal CRL (Certificate Revocation List) cache. In addition to implementing the \fIssl_crl_cache_api\fR behaviour the following functions are available.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcrl_src() ::\fR
+\fB          {file, file:filename()} | {der, public_key:der_encoded()}.\fR
+
+.br
+.RS
+.PP
+A source to input CRLs
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdelete(Entries) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    Entries :: crl_src() | uri_string:uri_string(),\fR
+\fB                    Reason :: ssl:reason().\fR
+
+.br
+.RS
+.PP
+Delete CRLs from the ssl applications local cache.
+
+
+.RE
+.B
+\fBinsert(DistPointURI, CRLSrc) -> ok | {error, Reason}\fR
+\fB                when\fR
+\fB                    DistPointURI :: uri_string:uri_string(),\fR
+\fB                    CRLSrc :: crl_src(),\fR
+\fB                    Reason :: ssl:reason().\fR
+
+.br
+.RS
+.PP
+Insert CRLs into the ssl applications local cache, with or without a distribution point reference URI
+
+
+.RE

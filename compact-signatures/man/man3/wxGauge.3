@@ -1,0 +1,335 @@
+.TH wxGauge 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGauge \- A gauge is a horizontal or vertical bar which shows a quantity (often time).
+
+.SH DESCRIPTION
+.PP
+\fIwxGauge\fR supports two working modes: determinate and indeterminate progress.
+
+.PP
+The first is the usual working mode (see \fIsetValue/2\fR and \fIsetRange/2\fR) while the second can be used when the program is doing some processing but you don't know how much progress is being done. In this case, you can periodically call the \fIpulse/1\fR function to make the progress bar switch to indeterminate mode (graphically it's usually a set of blocks which move or bounce in the bar control).
+
+.PP
+\fIwxGauge\fR supports dynamic switch between these two work modes.
+
+.PP
+There are no user commands for the gauge.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxGA_HORIZONTAL: Creates a horizontal gauge.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxGA_VERTICAL: Creates a vertical gauge.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxGA_SMOOTH: Creates smooth progress bar with one pixel wide update step (not supported by all platforms).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxGA_TEXT: Display the current value in percents in the gauge itself. This style is only supported in wxQt and ignored under the other platforms. This flag is only available in wxWidgets 3.1.0 and later.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxGA_PROGRESS: Reflect the value of gauge in the application taskbar button under Windows 7 and later and the dock icon under macOS, ignored under the other platforms. This flag is only available in wxWidgets 3.1.0 and later.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSlider\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxScrollBar\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGauge
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGauge() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Range, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxGauge(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Range :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Creates the gauge for two-step construction.
+
+.PP
+See \fInew/4\fR for further details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxGauge()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetRange(This) -> integer() when This :: wxGauge().\fR
+
+.br
+.RS
+.PP
+Returns the maximum position of the gauge.
+
+.PP
+See: \fIsetRange/2\fR
+
+
+.RE
+.B
+\fBgetValue(This) -> integer() when This :: wxGauge().\fR
+
+.br
+.RS
+.PP
+Returns the current position of the gauge.
+
+.PP
+See: \fIsetValue/2\fR
+
+
+.RE
+.B
+\fBisVertical(This) -> boolean() when This :: wxGauge().\fR
+
+.br
+.RS
+.PP
+Returns true if the gauge is vertical (has \fIwxGA_VERTICAL\fR style) and false otherwise.
+
+
+.RE
+.B
+\fBnew() -> wxGauge().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Range, [Option]) -> wxGauge()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Range :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a gauge.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBpulse(This) -> ok when This :: wxGauge().\fR
+
+.br
+.RS
+.PP
+Switch the gauge to indeterminate mode (if required) and makes the gauge move a bit to indicate the user that some progress has been made.
+
+.PP
+Note: After calling this function the value returned by \fIgetValue/1\fR is undefined and thus you need to explicitly call \fIsetValue/2\fR if you want to restore the determinate mode.
+
+
+.RE
+.B
+\fBsetRange(This, Range) -> ok\fR
+\fB                  when This :: wxGauge(), Range :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the range (maximum value) of the gauge.
+
+.PP
+This function makes the gauge switch to determinate mode, if it's not already.
+
+.PP
+When the gauge is in indeterminate mode, under wxMSW the gauge repeatedly goes from zero to \fIrange\fR and back; under other ports when in indeterminate mode, the \fIrange\fR setting is ignored.
+
+.PP
+See: \fIgetRange/1\fR
+
+
+.RE
+.B
+\fBsetValue(This, Pos) -> ok when This :: wxGauge(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the position of the gauge.
+
+.PP
+The \fIpos\fR must be between 0 and the gauge range as returned by \fIgetRange/1\fR, inclusive.
+
+.PP
+This function makes the gauge switch to determinate mode, if it was in indeterminate mode before.
+
+.PP
+See: \fIgetValue/1\fR
+
+
+.RE

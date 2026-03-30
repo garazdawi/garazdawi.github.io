@@ -1,0 +1,155 @@
+.TH wxPaintDC 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPaintDC \- A \fIwxPaintDC\fR must be constructed if an application wishes to paint on the client area of a window from within an EVT_PAINT() event handler.
+
+.SH DESCRIPTION
+.PP
+This should normally be constructed as a temporary stack object; don't store a \fIwxPaintDC\fR object. If you have an EVT_PAINT() handler, you \fImust\fR create a \fIwxPaintDC\fR object within it even if you don't actually use it.
+
+.PP
+Using \fIwxPaintDC\fR within your EVT_PAINT() handler is important because it automatically sets the clipping area to the damaged area of the window. Attempts to draw outside this area do not appear.
+
+.PP
+A \fIwxPaintDC\fR object is initialized to use the same font and colours as the window it is associated with.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxClientDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMemoryDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindowDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxScreenDC\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindowDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPaintDC
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPaintDC() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxPaintDC()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew(Window) -> wxPaintDC() when Window :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Pass a pointer to the window on which you wish to paint.
+
+
+.RE

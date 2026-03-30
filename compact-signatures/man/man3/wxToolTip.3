@@ -1,0 +1,99 @@
+.TH wxToolTip 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxToolTip \- This class holds information about a tooltip associated with a window (see \fIwxWindow:setToolTip/2\fR).
+
+.SH DESCRIPTION
+.PP
+The four static methods, \fIenable/1\fR, \fIsetDelay/1\fR \fIwxToolTip::SetAutoPop()\fR (not implemented in wx) and \fIwxToolTip::SetReshow()\fR (not implemented in wx) can be used to globally alter tooltips behaviour.
+
+.PP
+wxWidgets docs: wxToolTip
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxToolTip() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxToolTip()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBenable(Flag) -> ok when Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Enable or disable tooltips globally.
+
+.PP
+Note: May not be supported on all platforms (eg. wxCocoa).
+
+
+.RE
+.B
+\fBgetTip(This) -> unicode:charlist() when This :: wxToolTip().\fR
+
+.br
+.RS
+.PP
+Get the tooltip text.
+
+
+.RE
+.B
+\fBgetWindow(This) -> wxWindow:wxWindow() when This :: wxToolTip().\fR
+
+.br
+.RS
+.PP
+Get the associated window.
+
+
+.RE
+.B
+\fBnew(Tip) -> wxToolTip() when Tip :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBsetDelay(Msecs) -> ok when Msecs :: integer().\fR
+
+.br
+.RS
+.PP
+Set the delay after which the tooltip appears.
+
+.PP
+Note: May not be supported on all platforms.
+
+
+.RE
+.B
+\fBsetTip(This, Tip) -> ok\fR
+\fB                when This :: wxToolTip(), Tip :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the tooltip text.
+
+
+.RE

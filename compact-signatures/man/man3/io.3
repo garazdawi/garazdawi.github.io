@@ -1,0 +1,1795 @@
+.TH io 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+io \- Standard I/O server interface functions.
+
+.SH DESCRIPTION
+.PP
+This module provides an interface to standard Erlang I/O servers. The output functions all return \fIok\fR if they are successful, or exit if they are not.
+
+.PP
+All functions in this module have an optional parameter \fIIoDevice\fR. If included, it must be the pid of a process that handles the I/O protocols. Normally, it is an \fIIoDevice\fR returned by \fIfile:open/2\fR. If no \fIIoDevice\fR is given, \fIstandard_io\fR is used.
+
+.PP
+For a description of the I/O protocols, see section The Erlang I/O Protocol in the User's Guide.
+
+.PP
+\fBWARNING: \fRThe data supplied to function \fIput_chars/2\fR is to be in the \fIunicode:chardata/0\fR format. This means that programs supplying binaries to this function must convert them to UTF-8 before trying to output the data on an I/O device. If an I/O device is set in binary mode, functions \fIget_chars/2,3\fR and \fIget_line/1,2\fR can return binaries instead of lists. The binaries are encoded in UTF-8. To work with binaries in ISO Latin-1 encoding, use the \fIfile\fR module instead. For conversion functions between character encodings, see the \fIunicode\fR module.
+
+
+.SS "Error Information"
+
+.PP
+The \fIErrorInfo\fR mentioned in this module is the standard \fIErrorInfo\fR structure that is returned from all I/O modules. It has the following format:
+
+.IP
+.nf
+{ErrorLocation, Module, ErrorDescriptor}
+
+.fi
+
+.PP
+A string that describes the error is obtained with the following call:
+
+.IP
+.nf
+Module:format_error(ErrorDescriptor)
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBdevice() ::\fR
+\fB          atom() |\fR
+\fB          pid() |\fR
+\fB          file:io_server() |\fR
+\fB          standard_io() |\fR
+\fB          standard_error() |\fR
+\fB          user().\fR
+
+.br
+.RS
+.PP
+An I/O device, either \fIstandard_io/0\fR, \fIstandard_error/0\fR, \fIuser/0\fR, a \fIfile:io_server/0\fR, a registered name, or any pid handling I/O protocols.
+
+
+.RE
+.B
+\fBencoding() ::\fR
+\fB          latin1 | unicode | utf8 | utf16 | utf32 |\fR
+\fB          {utf16, big | little} |\fR
+\fB          {utf32, big | little}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexpand_fun() :: fun((string()) -> {yes | no, string(), list()}).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBformat() :: atom() | string() | binary().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetopt() ::\fR
+\fB          {terminal | stdin | stdout | stderr, boolean()} | option().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {binary, boolean()} |\fR
+\fB          {echo, boolean()} |\fR
+\fB          {expand_fun, expand_fun()} |\fR
+\fB          {encoding, encoding()} |\fR
+\fB          {atom(), term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBparse_form_ret() ::\fR
+\fB          {ok,\fR
+\fB           AbsForm :: erl_parse:abstract_form(),\fR
+\fB           EndLocation :: erl_anno:location()} |\fR
+\fB          {eof, EndLocation :: erl_anno:location()} |\fR
+\fB          {error,\fR
+\fB           ErrorInfo :: erl_scan:error_info() | erl_parse:error_info(),\fR
+\fB           ErrorLocation :: erl_anno:location()} |\fR
+\fB          server_no_data().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBparse_ret() ::\fR
+\fB          {ok,\fR
+\fB           ExprList :: [erl_parse:abstract_expr()],\fR
+\fB           EndLocation :: erl_anno:location()} |\fR
+\fB          {eof, EndLocation :: erl_anno:location()} |\fR
+\fB          {error,\fR
+\fB           ErrorInfo :: erl_scan:error_info() | erl_parse:error_info(),\fR
+\fB           ErrorLocation :: erl_anno:location()} |\fR
+\fB          server_no_data().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBprompt() :: atom() | unicode:chardata().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBserver_no_data() :: {error, ErrorDescription :: term()} | eof.\fR
+
+.br
+.RS
+.PP
+What the I/O server sends when there is no data.
+
+
+.RE
+.B
+\fBsetopt() :: binary | list | option().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstandard_error() :: standard_error.\fR
+
+.br
+.RS
+.PP
+The I/O device \fIstandard_error\fR can be used to direct output to whatever the current operating system considers a suitable I/O device for error output. This can be useful when standard output is redirected.
+
+.PP
+Example on a Unix-like operating system:
+
+.IP
+.nf
+$ erl -noinput -eval 'io:format(standard_error,"Error: ~s~n",["error 11"]),'\\
+'init:stop().' > /dev/null
+Error: error 11
+
+.fi
+
+
+.RE
+.B
+\fBstandard_io() :: standard_io.\fR
+
+.br
+.RS
+.PP
+The default standard I/O device assigned to a process. This device is used when no \fIIoDevice\fR argument is specified in the function calls in this module.
+
+.PP
+It is sometimes desirable to use an explicit \fIIoDevice\fR argument that refers to the default I/O device. This is the case with functions that can access either a file or the default I/O device. The atom \fIstandard_io\fR has this special meaning. The following example illustrates this:
+
+.IP
+.nf
+27> io:read('enter>').
+enter>foo.
+{ok,foo}
+28> io:read(standard_io, 'enter>').
+enter>bar.
+{ok,bar}
+
+.fi
+
+.PP
+By default all I/O sent to \fIstandard_io\fR will end up in the \fIuser\fR I/O device of the node that spawned the calling process.
+
+.PP
+\fIstandard_io\fR is an alias for \fIgroup_leader/0\fR, so in order to change where the default input/output requests are sent you can change the group leader of the current process using \fIgroup_leader(NewGroupLeader, self())\fR.
+
+
+.RE
+.B
+\fBuser() :: user.\fR
+
+.br
+.RS
+.PP
+An I/O device that can be used to interact with the node local \fIstdout\fR and \fIstdin\fR. This can be either a terminal, a pipe, a file, or a combination.
+
+.PP
+Use \fIgetopts/1\fR to get more information about the I/O device.
+
+.PP
+See The Interactive Shell and Escripts and non-interactive I/O in the Using Unicode In Erlang User's Guide for details on how Unicode is handled by \fIuser\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcolumns(IoDevice) -> {ok, pos_integer()} | {error, enotsup}\fR
+\fB                 when IoDevice :: device().\fR
+
+.br
+.RS
+.PP
+Retrieves the number of columns of the \fIIoDevice\fR (that is, the width of a terminal).
+
+.PP
+The function succeeds for terminal devices and returns \fI{error, enotsup}\fR for all other I/O devices.
+
+
+.RE
+.B
+\fBfread(IoDevice, Prompt, Format) -> Result\fR
+\fB               when\fR
+\fB                   IoDevice :: device(),\fR
+\fB                   Prompt :: prompt(),\fR
+\fB                   Format :: format(),\fR
+\fB                   Result ::\fR
+\fB                       {ok, Terms :: [term()]} |\fR
+\fB                       {error,\fR
+\fB                        {fread, FreadError :: io_lib:fread_error()}} |\fR
+\fB                       server_no_data().\fR
+
+.br
+.RS
+.PP
+Reads characters from \fIIoDevice\fR, prompting it with \fIPrompt\fR. Interprets the characters in accordance with \fIFormat\fR.
+
+.PP
+\fIFormat\fR can contain the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Whitespace characters (\fISpace\fR, \fITab\fR, and \fINewline\fR) that cause input to be read to the next non-whitespace character.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Ordinary characters that must match the next input character.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Control sequences, which have the general format \fI~*FMC\fR, where:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Character \fI*\fR is an optional return suppression character. It provides a method to specify a field that is to be omitted.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIF\fR is the \fIfield width\fR of the input field.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIM\fR is an optional translation modifier (of which \fIt\fR is the only supported, meaning Unicode translation).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIC\fR determines the type of control sequence.
+
+.RE
+
+.PP
+Unless otherwise specified, leading whitespace is ignored for all control sequences. An input field cannot be more than one line wide.
+
+.PP
+\fIAvailable control sequences:\fR
+
+~
+.RS 2
+A single 
+\fI~\fR is expected in the input.
+
+.RE
+
+d
+.RS 2
+A decimal integer is expected.
+
+
+.RE
+
+u
+.RS 2
+An unsigned integer in base 2-36 is expected. The field width parameter is used to specify base. Leading whitespace characters are not skipped.
+
+
+.RE
+
+-
+.RS 2
+An optional sign character is expected. A sign character 
+\fI-\fR gives return value \fI-1\fR. Sign character \fI+\fR or none gives \fI1\fR. The field width parameter is ignored. Leading whitespace characters are not skipped.
+
+.RE
+
+#
+.RS 2
+An integer in base 2-36 with Erlang-style base prefix (for example, 
+\fI"16#ffff"\fR) is expected.
+
+.RE
+
+f
+.RS 2
+A floating point number is expected. It must follow the Erlang floating point number syntax.
+
+
+.RE
+
+s
+.RS 2
+A string of non-whitespace characters is read. If a field width has been specified, this number of characters are read and all trailing whitespace characters are stripped. An Erlang string (list of characters) is returned.
+
+.PP
+If Unicode translation is in effect (\fI~ts\fR), characters > 255 are accepted, otherwise not. With the translation modifier, the returned list can as a consequence also contain integers > 255:
+
+.IP
+.nf
+1> io:fread("Prompt> ","~s").
+Prompt> <Characters beyond latin1 range not printable in this medium>
+{error,{fread,string}}
+2> io:fread("Prompt> ","~ts").
+Prompt> <Characters beyond latin1 range not printable in this medium>
+{ok,[[1091,1085,1080,1094,1086,1076,1077]]}
+
+.fi
+
+
+.RE
+
+a
+.RS 2
+Similar to 
+\fIs\fR, but the resulting string is converted into an atom.
+
+.RE
+
+c
+.RS 2
+The number of characters equal to the field width are read (default is 1) and returned as an Erlang string. However, leading and trailing whitespace characters are not omitted as they are with 
+\fIs\fR. All characters are returned.
+.PP
+The Unicode translation modifier works as with \fIs\fR:
+
+.IP
+.nf
+1> io:fread("Prompt> ","~c").
+Prompt> <Character beyond latin1 range not printable in this medium>
+{error,{fread,string}}
+2> io:fread("Prompt> ","~tc").
+Prompt> <Character beyond latin1 range not printable in this medium>
+{ok,[[1091]]}
+
+.fi
+
+
+.RE
+
+l
+.RS 2
+Returns the number of characters that have been scanned up to that point, including whitespace characters.
+
+
+.RE
+
+.PP
+The function returns:
+
+{ok, Terms}
+.RS 2
+The read was successful and 
+\fITerms\fR is the list of successfully matched and read items.
+
+.RE
+
+eof
+.RS 2
+End of file was encountered.
+
+
+.RE
+
+{error, FreadError}
+.RS 2
+The reading failed and 
+\fIFreadError\fR gives a hint about the error.
+
+.RE
+
+{error, ErrorDescription}
+.RS 2
+The read operation failed and parameter 
+\fIErrorDescription\fR gives a hint about the error.
+
+.RE
+
+.RE
+
+.PP
+\fIExamples:\fR
+
+.IP
+.nf
+20> io:fread('enter>', "~f~f~f").
+enter>1.9 35.5e3 15.0
+{ok,[1.9,3.55e4,15.0]}
+21> io:fread('enter>', "~10f~d").
+enter>     5.67899
+{ok,[5.678,99]}
+22> io:fread('enter>', ":~10s:~10c:").
+enter>:   alan   :   joe    :
+{ok, ["alan", "   joe    "]}
+
+.fi
+
+
+.RE
+.B
+\fBfwrite(IoDevice, Format, Data) -> ok\fR
+\fB                when\fR
+\fB                    IoDevice :: device(),\fR
+\fB                    Format :: format(),\fR
+\fB                    Data :: [term()].\fR
+
+.br
+.RS
+.PP
+Writes the items in \fIData\fR on the \fIIoDevice\fR in accordance with \fIFormat\fR.
+
+.PP
+\fIFormat\fR contains plain characters that are copied to the output device, and control sequences for formatting, see below. If \fIFormat\fR is an atom or a binary, it is first converted to a list with the aid of \fIatom_to_list/1\fR or \fIbinary_to_list/1\fR. Example:
+
+.IP
+.nf
+1> io:fwrite("Hello world!~n", []).
+Hello world!
+ok
+
+.fi
+
+.PP
+The general format of a control sequence is \fI~F.P.PadModC\fR.
+
+.PP
+The character \fIC\fR determines the type of control sequence to be used. It is the only required field. All of \fIF\fR, \fIP\fR, \fIPad\fR, and \fIMod\fR are optional. For example, to use a \fI#\fR for \fIPad\fR but use the default values for \fIF\fR and \fIP\fR, you can write \fI~..#C\fR.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIF\fR is the \fIfield width\fR of the printed argument. A negative value means that the argument is left-justified within the field, otherwise right-justified. If no field width is specified, the required print width is used. If the field width specified is too small, the whole field is filled with \fI*\fR characters.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIP\fR is the \fIprecision\fR of the printed argument. A default value is used if no precision is specified. The interpretation of precision depends on the control sequences. Unless otherwise specified, argument \fIwithin\fR is used to determine print width.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIPad\fR is the padding character. This is the character used to pad the printed representation of the argument so that it conforms to the specified field width and precision. Only one padding character can be specified and, whenever applicable, it is used for both the field width and precision. The default padding character is \fI' '\fR (space).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIMod\fR is the control sequence modifier. This is one or more characters that change the interpretation of \fIData\fR.
+
+.PP
+The current modifiers are:
+
+t
+.RS 2
+For Unicode translation.
+
+
+.RE
+
+l
+.RS 2
+For stopping 
+\fIp\fR and \fIP\fR from detecting printable characters.
+
+.RE
+
+k
+.RS 2
+For use with 
+\fIp\fR, \fIP\fR, \fIw\fR, and \fIW\fR to format maps in map-key \fIordered\fR order (see \fImaps:iterator_order/0\fR).
+
+.RE
+
+K
+.RS 2
+Similar to 
+\fIk\fR, for formatting maps in map-key order, but takes an extra argument that specifies the \fImaps:iterator_order/0\fR.
+.PP
+For example:
+
+.IP
+.nf
+> M = #{ a => 1, b => 2 }.
+#{a => 1,b => 2}
+> io:format("~Kp~n", [reversed, M]).
+#{b => 2,a => 1}
+ok
+
+.fi
+
+
+.RE
+
+.RE
+
+.PP
+If \fIF\fR, \fIP\fR, or \fIPad\fR is a \fI*\fR character, the next argument in \fIData\fR is used as the value. For example:
+
+.IP
+.nf
+1> io:fwrite("~*.*.0f~n",[9, 5, 3.14159265]).
+003.14159
+ok
+
+.fi
+
+.PP
+To use a literal \fI*\fR character as \fIPad\fR, it must be passed as an argument:
+
+.IP
+.nf
+2> io:fwrite("~*.*.*f~n",[9, 5, $*, 3.14159265]).
+**3.14159
+ok
+
+.fi
+
+.PP
+\fIAvailable control sequences:\fR
+
+~
+.RS 2
+Character 
+\fI~\fR is written.
+
+.RE
+
+c
+.RS 2
+The argument is a number that is interpreted as an ASCII code. The precision is the number of times the character is printed and defaults to the field width, which in turn defaults to 1. Example:
+
+.IP
+.nf
+1> io:fwrite("|~10.5c|~-10.5c|~5c|~n", [$a, $b, $c]).
+|     aaaaa|bbbbb     |ccccc|
+ok
+
+.fi
+
+.PP
+If the Unicode translation modifier (\fIt\fR) is in effect, the integer argument can be any number representing a valid Unicode codepoint, otherwise it is to be an integer less than or equal to 255, otherwise it is masked with 16#FF:
+
+.IP
+.nf
+2> io:fwrite("~tc~n",[1024]).
+\\x{400}
+ok
+3> io:fwrite("~c~n",[1024]).
+^@
+ok
+
+.fi
+
+
+.RE
+
+f
+.RS 2
+The argument is a float that is written as 
+\fI[-]ddd.ddd\fR, where the precision is the number of digits after the decimal point. The default precision is 6 and it cannot be < 1.
+
+.RE
+
+e
+.RS 2
+The argument is a float that is written as 
+\fI[-]d.ddde+-ddd\fR, where the precision is the number of digits written. The default precision is 6 and it cannot be < 2.
+
+.RE
+
+g
+.RS 2
+The argument is a float that is written as 
+\fIf\fR, if it is >= 0.1 and < 10000.0. Otherwise, it is written in the \fIe\fR format. The precision is the number of significant digits. It defaults to 6 and is not to be < 2. If the absolute value of the float does not allow it to be written in the \fIf\fR format with the desired number of significant digits, it is also written in the \fIe\fR format.
+
+.RE
+
+s
+.RS 2
+Prints the argument with the string syntax. The argument is, if no Unicode translation modifier is present, an 
+\fIiolist/0\fR, a \fIbinary/0\fR, or an \fIatom/0\fR. If the Unicode translation modifier (\fIt\fR) is in effect, the argument is \fIunicode:chardata()\fR, meaning that binaries are in UTF-8. The characters are printed without quotes. The string is first truncated by the specified precision and then padded and justified to the specified field width. The default precision is the field width.
+.PP
+This format can be used for printing any object and truncating the output so it fits a specified field:
+
+.IP
+.nf
+1> io:fwrite("|~10w|~n", [{hey, hey, hey}]).
+|**********|
+ok
+2> io:fwrite("|~10s|~n", [io_lib:write({hey, hey, hey})]).
+|{hey,hey,h|
+3> io:fwrite("|~-10.8s|~n", [io_lib:write({hey, hey, hey})]).
+|{hey,hey  |
+ok
+
+.fi
+
+.PP
+A list with integers > 255 is considered an error if the Unicode translation modifier is not specified:
+
+.IP
+.nf
+4> io:fwrite("~ts~n",[[1024]]).
+\\x{400}
+ok
+5> io:fwrite("~s~n",[[1024]]).
+** exception error: bad argument
+     in function  io:format/3
+        called as io:format(<0.53.0>,"~s~n",[[1024]])
+
+.fi
+
+
+.RE
+
+w
+.RS 2
+Writes data with the standard syntax. This is used to output Erlang terms. Atoms are printed within quotes if they contain embedded non-printable characters. Atom characters > 255 are escaped unless the Unicode translation modifier (
+\fIt\fR) is used. Floats are printed accurately as the shortest, correctly rounded string.
+
+.RE
+
+p
+.RS 2
+Writes the data with standard syntax in the same way as 
+\fI~w\fR, but breaks terms whose printed representation is longer than one line into many lines and indents each line sensibly. Left-justification is not supported. It also tries to detect flat lists of printable characters and output these as strings. For example:
+.IP
+.nf
+1> T = [{attributes,[[{id,age,1.50000},{mode,explicit},
+{typename,"INTEGER"}], [{id,cho},{mode,explicit},{typename,'Cho'}]]},
+{typename,'Person'},{tag,{'PRIVATE',3}},{mode,implicit}].
+...
+2> io:fwrite("~w~n", [T]).
+[{attributes,[[{id,age,1.5},{mode,explicit},{typename,
+[73,78,84,69,71,69,82]}],[{id,cho},{mode,explicit},{typena
+me,'Cho'}]]},{typename,'Person'},{tag,{'PRIVATE',3}},{mode
+,implicit}]
+ok
+3> io:fwrite("~62p~n", [T]).
+[{attributes,[[{id,age,1.5},
+               {mode,explicit},
+               {typename,"INTEGER"}],
+              [{id,cho},{mode,explicit},{typename,'Cho'}]]},
+ {typename,'Person'},
+ {tag,{'PRIVATE',3}},
+ {mode,implicit}]
+ok
+
+.fi
+
+.PP
+The field width specifies the maximum line length. It defaults to 80. The precision specifies the initial indentation of the term. It defaults to the number of characters printed on this line in the \fIsame\fR call to \fIwrite/1\fR or \fIformat/1,2,3\fR. For example, using \fIT\fR above:
+
+.IP
+.nf
+4> io:fwrite("Here T = ~62p~n", [T]).
+Here T = [{attributes,[[{id,age,1.5},
+                        {mode,explicit},
+                        {typename,"INTEGER"}],
+                       [{id,cho},
+                        {mode,explicit},
+                        {typename,'Cho'}]]},
+          {typename,'Person'},
+          {tag,{'PRIVATE',3}},
+          {mode,implicit}]
+ok
+
+.fi
+
+.PP
+As from Erlang/OTP 21.0, a field width of value \fI0\fR can be used for specifying that a line is infinitely long, which means that no line breaks are inserted. For example:
+
+.IP
+.nf
+5> io:fwrite("~0p~n", [lists:seq(1, 30)]).
+[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
+ok
+
+.fi
+
+.PP
+When the modifier \fIl\fR is specified, no detection of printable character lists takes place, for example:
+
+.IP
+.nf
+6> S = [{a,"a"}, {b, "b"}],
+   io:fwrite("~15p~n", [S]).
+[{a,"a"},
+ {b,"b"}]
+ok
+7> io:fwrite("~15lp~n", [S]).
+[{a,[97]},
+ {b,[98]}]
+ok
+
+.fi
+
+.PP
+The Unicode translation modifier \fIt\fR specifies how to treat characters outside the Latin-1 range of codepoints, in atoms, strings, and binaries. For example, printing an atom containing a character > 255:
+
+.IP
+.nf
+8> io:fwrite("~p~n",[list_to_atom([1024])]).
+'\\x{400}'
+ok
+9> io:fwrite("~tp~n",[list_to_atom([1024])]).
+'Ѐ'
+ok
+
+.fi
+
+.PP
+By default, Erlang only detects lists of characters in the Latin-1 range as strings, but the \fI+pc unicode\fR flag can be used to change this (see \fIprintable_range/0\fR for details). For example:
+
+.IP
+.nf
+10> io:fwrite("~p~n",[[214]]).
+"Ö"
+ok
+11> io:fwrite("~p~n",[[1024]]).
+[1024]
+ok
+12> io:fwrite("~tp~n",[[1024]]).
+[1024]
+ok
+
+.fi
+
+.PP
+but if Erlang was started with \fI+pc unicode\fR:
+
+.IP
+.nf
+13> io:fwrite("~p~n",[[1024]]).
+[1024]
+ok
+14> io:fwrite("~tp~n",[[1024]]).
+"Ѐ"
+ok
+
+.fi
+
+.PP
+Similarly, binaries that look like UTF-8 encoded strings are output with the binary string syntax if the \fIt\fR modifier is specified:
+
+.IP
+.nf
+15> io:fwrite("~p~n", [<<208,128>>]).
+<<208,128>>
+ok
+16> io:fwrite("~tp~n", [<<208,128>>]).
+<<"Ѐ"/utf8>>
+ok
+17> io:fwrite("~tp~n", [<<128,128>>]).
+<<128,128>>
+ok
+
+.fi
+
+
+.RE
+
+W
+.RS 2
+Writes data in the same way as 
+\fI~w\fR, but takes an extra argument that is the maximum depth to which terms are printed. Anything below this depth is replaced with \fI...\fR. For example, using \fIT\fR above:
+.IP
+.nf
+8> io:fwrite("~W~n", [T,9]).
+[{attributes,[[{id,age,1.5},{mode,explicit},{typename,...}],
+[{id,cho},{mode,...},{...}]]},{typename,'Person'},
+{tag,{'PRIVATE',3}},{mode,implicit}]
+ok
+
+.fi
+
+.PP
+If the maximum depth is reached, it cannot be read in the resultant output. Also, the \fI,...\fR form in a tuple denotes that there are more elements in the tuple but these are below the print depth.
+
+
+.RE
+
+P
+.RS 2
+Writes data in the same way as 
+\fI~p\fR, but takes an extra argument that is the maximum depth to which terms are printed. Anything below this depth is replaced with \fI...\fR, for example:
+.IP
+.nf
+9> io:fwrite("~62P~n", [T,9]).
+[{attributes,[[{id,age,1.5},{mode,explicit},{typename,...}],
+              [{id,cho},{mode,...},{...}]]},
+ {typename,'Person'},
+ {tag,{'PRIVATE',3}},
+ {mode,implicit}]
+ok
+
+.fi
+
+
+.RE
+
+B
+.RS 2
+Writes an integer in base 2-36, the default base is 10. A leading dash is printed for negative integers.
+
+.PP
+The precision field selects base, for example:
+
+.IP
+.nf
+1> io:fwrite("~.16B~n", [31]).
+1F
+ok
+2> io:fwrite("~.2B~n", [-19]).
+-10011
+ok
+3> io:fwrite("~.36B~n", [5*36+35]).
+5Z
+ok
+
+.fi
+
+
+.RE
+
+X
+.RS 2
+Like 
+\fIB\fR, but takes an extra argument that is a prefix to insert before the number, but after the leading dash, if any.
+.PP
+The prefix can be a possibly deep list of characters or an atom. Example:
+
+.IP
+.nf
+1> io:fwrite("~X~n", [31,"10#"]).
+10#31
+ok
+2> io:fwrite("~.16X~n", [-31,"0x"]).
+-0x1F
+ok
+
+.fi
+
+
+.RE
+
+#
+.RS 2
+Like 
+\fIB\fR, but prints the number with an Erlang style \fI#\fR-separated base prefix. Example:
+.IP
+.nf
+1> io:fwrite("~.10#~n", [31]).
+10#31
+ok
+2> io:fwrite("~.16#~n", [-31]).
+-16#1F
+ok
+
+.fi
+
+
+.RE
+
+b
+.RS 2
+Like 
+\fIB\fR, but prints lowercase letters.
+
+.RE
+
+x
+.RS 2
+Like 
+\fIX\fR, but prints lowercase letters.
+
+.RE
+
++
+.RS 2
+Like 
+\fI#\fR, but prints lowercase letters.
+
+.RE
+
+n
+.RS 2
+Writes a new line.
+
+
+.RE
+
+i
+.RS 2
+Ignores the next term.
+
+
+.RE
+
+.PP
+The function returns:
+
+ok
+.RS 2
+The formatting succeeded.
+
+
+.RE
+
+.PP
+If an error occurs, there is no output. Example:
+
+.IP
+.nf
+1> io:fwrite("~s ~w ~i ~w ~c ~n",['abc def', 'abc def', {foo, 1},{foo, 1}, 65]).
+abc def 'abc def'  {foo,1} A
+ok
+2> io:fwrite("~s", [65]).
+** exception error: bad argument
+     in function  io:format/3
+        called as io:format(<0.53.0>,"~s","A")
+
+.fi
+
+.PP
+In this example, an attempt was made to output the single character 65 with the aid of the string formatting directive \fI"~s"\fR.
+
+
+.RE
+.B
+\fBget_chars(IoDevice, Prompt, Count) -> Data | server_no_data()\fR
+\fB                   when\fR
+\fB                       IoDevice :: device(),\fR
+\fB                       Prompt :: prompt(),\fR
+\fB                       Count :: non_neg_integer(),\fR
+\fB                       Data :: string() | unicode:unicode_binary().\fR
+
+.br
+.RS
+.PP
+Reads \fICount\fR characters from \fIIoDevice\fR, prompting it with \fIPrompt\fR.
+
+.PP
+The function returns:
+
+Data
+.RS 2
+The input characters. If the I/O device supports Unicode, the data can represent codepoints > 255 (the 
+\fIlatin1\fR range). If the I/O server is set to deliver binaries, they are encoded in UTF-8 (regardless of whether the I/O device supports Unicode). If you want the data to be returned as a latin1 encoded binary you should use \fIfile:read/2\fR instead.
+
+.RE
+
+eof
+.RS 2
+End of file was encountered.
+
+
+.RE
+
+{error, ErrorDescription}
+.RS 2
+Other (rare) error condition, such as 
+\fI{error, estale}\fR if reading from an NFS file system.
+
+.RE
+
+
+.RE
+.B
+\fBget_line(IoDevice, Prompt) -> Data | server_no_data()\fR
+\fB                  when\fR
+\fB                      IoDevice :: device(),\fR
+\fB                      Prompt :: prompt(),\fR
+\fB                      Data :: string() | unicode:unicode_binary().\fR
+
+.br
+.RS
+.PP
+Reads a line from \fIIoDevice\fR, prompting it with \fIPrompt\fR.
+
+.PP
+The function returns:
+
+Data
+.RS 2
+The characters in the line terminated by a line feed (or end of file). If the I/O device supports Unicode, the data can represent codepoints > 255 (the 
+\fIlatin1\fR range). If the I/O server is set to deliver binaries, they are encoded in UTF-8 (regardless of if the I/O device supports Unicode). If you want the data to be returned as a latin1 encoded binary you should use \fIfile:read_line/1\fR instead.
+
+.RE
+
+eof
+.RS 2
+End of file was encountered.
+
+
+.RE
+
+{error, ErrorDescription}
+.RS 2
+Other (rare) error condition, such as 
+\fI{error, estale}\fR if reading from an NFS file system.
+
+.RE
+
+
+.RE
+.B
+\fBget_password() -> Data | server_no_data()\fR
+\fB                      when Data :: string() | unicode:unicode_binary().\fR
+
+.br
+.RS
+.PP
+Reads a password from \fIuser/0\fR. Works just as \fIget_line/2\fR except that the typed characters are not printed to the terminal.
+
+.PP
+In order for this function to work, the \fIshell\fR must be in \fI{noshell, raw}\fR mode. See \fIshell:start_interactive/1\fR for details on what that means.
+
+.PP
+\fIExample\fR:
+
+.IP
+.nf
+#!/usr/bin/env escript
+%%! -noshell
+
+main(_) ->
+    ok = shell:start_interactive({noshell, raw}),
+    try
+        io:get_password()
+    after
+        shell:start_interactive({noshell, cooked})
+    end.
+
+.fi
+
+
+.RE
+.B
+\fBgetopts(IoDevice) -> [getopt()] | {error, Reason}\fR
+\fB                 when IoDevice :: device(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Requests all available options and their current values for a \fIIoDevice\fR.
+
+.PP
+For example:
+
+.IP
+.nf
+1> {ok,F} = file:open("/dev/null",[read]).
+{ok,<0.42.0>}
+2> io:getopts(F).
+[{binary,false},{encoding,latin1}]
+
+.fi
+
+.PP
+Here the file I/O server returns all available options for a file, which are the expected ones, \fIencoding\fR and \fIbinary\fR. However, the standard shell has some more options:
+
+.IP
+.nf
+3> io:getopts().
+[{expand_fun,#Fun<group.0.120017273>},
+ {echo,true},
+ {binary,false},
+ {encoding,unicode},
+ {terminal,true},
+ {stdout,true},
+ {stderr,true},
+ {stdin,true}]
+
+.fi
+
+.PP
+This example is, as can be seen, run in an environment where the terminal supports Unicode input and output.
+
+.PP
+The \fIstdin\fR, \fIstdout\fR and \fIstderr\fR options are read only and indicates whether the stream is a terminal or not. When it is a terminal, most systems that Erlang runs on allows the use of ANSI escape codes to control what the terminal inputs or outputs.
+
+.PP
+\fIterminal\fR is an alias for \fIstdout\fR.
+
+.PP
+See \fIsetopts/2\fR for a description of the other options.
+
+
+.RE
+.B
+\fBnl(IoDevice) -> ok when IoDevice :: device().\fR
+
+.br
+.RS
+.PP
+Writes new line to the standard output (\fIIoDevice\fR).
+
+
+.RE
+.B
+\fBparse_erl_exprs(IoDevice, Prompt, StartLocation, Options) ->\fR
+\fB                         Result\fR
+\fB                         when\fR
+\fB                             IoDevice :: device(),\fR
+\fB                             Prompt :: prompt(),\fR
+\fB                             StartLocation :: erl_anno:location(),\fR
+\fB                             Options :: erl_scan:options(),\fR
+\fB                             Result :: parse_ret().\fR
+
+.br
+.RS
+.PP
+Reads data from \fIIoDevice\fR, prompting it with \fIPrompt\fR.
+
+.PP
+Starts reading at location \fIStartLocation\fR. Argument \fIOptions\fR is passed on as argument \fIOptions\fR of function \fIerl_scan:tokens/4\fR. The data is tokenized and parsed as if it was a sequence of Erlang expressions until a final dot (\fI.\fR) is reached.
+
+.PP
+The function returns:
+
+{ok, ExprList, EndLocation}
+.RS 2
+The parsing was successful.
+
+
+.RE
+
+{eof, EndLocation}
+.RS 2
+End of file was encountered by the tokenizer.
+
+
+.RE
+
+eof
+.RS 2
+End of file was encountered by the I/O server.
+
+
+.RE
+
+{error, ErrorInfo, ErrorLocation}
+.RS 2
+An error occurred while tokenizing or parsing.
+
+
+.RE
+
+{error, ErrorDescription}
+.RS 2
+Other (rare) error condition, such as 
+\fI{error, estale}\fR if reading from an NFS file system.
+
+.RE
+
+.PP
+Example:
+
+.IP
+.nf
+25> io:parse_erl_exprs('enter>').
+enter>abc(), "hey".
+{ok, [{call,1,{atom,1,abc},[]},{string,1,"hey"}],2}
+26> io:parse_erl_exprs('enter>').
+enter>abc("hey".
+{error,{1,erl_parse,["syntax error before: ",["'.'"]]},2}
+
+.fi
+
+
+.RE
+.B
+\fBparse_erl_form(IoDevice, Prompt, StartLocation, Options) -> Result\fR
+\fB                        when\fR
+\fB                            IoDevice :: device(),\fR
+\fB                            Prompt :: prompt(),\fR
+\fB                            StartLocation :: erl_anno:location(),\fR
+\fB                            Options :: erl_scan:options(),\fR
+\fB                            Result :: parse_form_ret().\fR
+
+.br
+.RS
+.PP
+Reads data from \fIIoDevice\fR, prompting it with \fIPrompt\fR.
+
+.PP
+Starts reading at location \fIStartLocation\fR. Argument \fIOptions\fR is passed on as argument \fIOptions\fR of function \fIerl_scan:tokens/4\fR. The data is tokenized and parsed as if it was an Erlang form (one of the valid Erlang expressions in an Erlang source file) until a final dot (\fI.\fR) is reached.
+
+.PP
+The function returns:
+
+{ok, AbsForm, EndLocation}
+.RS 2
+The parsing was successful.
+
+
+.RE
+
+{eof, EndLocation}
+.RS 2
+End of file was encountered by the tokenizer.
+
+
+.RE
+
+eof
+.RS 2
+End of file was encountered by the I/O server.
+
+
+.RE
+
+{error, ErrorInfo, ErrorLocation}
+.RS 2
+An error occurred while tokenizing or parsing.
+
+
+.RE
+
+{error, ErrorDescription}
+.RS 2
+Other (rare) error condition, such as 
+\fI{error, estale}\fR if reading from an NFS file system.
+
+.RE
+
+
+.RE
+.B
+\fBprintable_range() -> unicode | latin1.\fR
+
+.br
+.RS
+.PP
+Returns the user-requested range of printable Unicode characters.
+
+.PP
+The user can request a range of characters that are to be considered printable in heuristic detection of strings by the shell and by the formatting functions. This is done by supplying \fI+pc <range>\fR when starting Erlang.
+
+.PP
+The only valid values for \fI<range>\fR are \fIlatin1\fR and \fIunicode\fR. \fIlatin1\fR means that only code points < 256 (except control characters, and so on) are considered printable. \fIunicode\fR means that all printable characters in all Unicode character ranges are considered printable by the I/O functions.
+
+.PP
+By default, Erlang is started so that only the \fIlatin1\fR range of characters indicate that a list of integers is a string.
+
+.PP
+The simplest way to use the setting is to call \fIio_lib:printable_list/1\fR, which uses the return value of this function to decide if a list is a string of printable characters.
+
+.PP
+\fBNOTE: \fRIn a future release, this function may return more values and ranges. To avoid compatibility problems, it is recommended to use function \fIio_lib:printable_list/1\fR.
+
+
+
+.RE
+.B
+\fBput_chars(IoDevice, CharData) -> ok\fR
+\fB                   when\fR
+\fB                       IoDevice :: device(),\fR
+\fB                       CharData :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Writes the characters of \fICharData\fR to the \fIIoDevice\fR.
+
+.PP
+If you want to write latin1 encoded bytes to the \fIIoDevice\fR you should use \fIfile:write/2\fR instead.
+
+
+.RE
+.B
+\fBread(IoDevice, Prompt) -> Result\fR
+\fB              when\fR
+\fB                  IoDevice :: device(),\fR
+\fB                  Prompt :: prompt(),\fR
+\fB                  Result ::\fR
+\fB                      {ok, Term :: term()} |\fR
+\fB                      server_no_data() |\fR
+\fB                      {error, ErrorInfo},\fR
+\fB                  ErrorInfo ::\fR
+\fB                      erl_scan:error_info() | erl_parse:error_info().\fR
+
+.br
+.RS
+.PP
+Reads a term \fITerm\fR from the standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR.
+
+.PP
+The function returns:
+
+{ok, Term}
+.RS 2
+The parsing was successful.
+
+
+.RE
+
+eof
+.RS 2
+End of file was encountered.
+
+
+.RE
+
+{error, ErrorInfo}
+.RS 2
+The parsing failed.
+
+
+.RE
+
+{error, ErrorDescription}
+.RS 2
+Other (rare) error condition, such as 
+\fI{error, estale}\fR if reading from an NFS file system.
+
+.RE
+
+
+.RE
+.B
+\fBread(IoDevice, Prompt, StartLocation, Options) -> Result\fR
+\fB              when\fR
+\fB                  IoDevice :: device(),\fR
+\fB                  Prompt :: prompt(),\fR
+\fB                  StartLocation :: erl_anno:location(),\fR
+\fB                  Options :: erl_scan:options(),\fR
+\fB                  Result ::\fR
+\fB                      {ok,\fR
+\fB                       Term :: term(),\fR
+\fB                       EndLocation :: erl_anno:location()} |\fR
+\fB                      {eof, EndLocation :: erl_anno:location()} |\fR
+\fB                      server_no_data() |\fR
+\fB                      {error, ErrorInfo,\fR
+\fB                       ErrorLocation :: erl_anno:location()},\fR
+\fB                  ErrorInfo ::\fR
+\fB                      erl_scan:error_info() | erl_parse:error_info().\fR
+
+.br
+.RS
+.PP
+Reads a term \fITerm\fR from \fIIoDevice\fR, prompting it with \fIPrompt\fR.
+
+.PP
+Reading starts at location \fIStartLocation\fR. Argument \fIOptions\fR is passed on as argument \fIOptions\fR of function \fIerl_scan:tokens/4\fR.
+
+.PP
+The function returns:
+
+{ok, Term, EndLocation}
+.RS 2
+The parsing was successful.
+
+
+.RE
+
+{eof, EndLocation}
+.RS 2
+End of file was encountered.
+
+
+.RE
+
+{error, ErrorInfo, ErrorLocation}
+.RS 2
+The parsing failed.
+
+
+.RE
+
+{error, ErrorDescription}
+.RS 2
+Other (rare) error condition, such as 
+\fI{error, estale}\fR if reading from an NFS file system.
+
+.RE
+
+
+.RE
+.B
+\fBrows(IoDevice) -> {ok, pos_integer()} | {error, enotsup}\fR
+\fB              when IoDevice :: device().\fR
+
+.br
+.RS
+.PP
+Retrieves the number of rows of \fIIoDevice\fR (that is, the height of a terminal).
+
+.PP
+The function only succeeds for terminal devices, for all other I/O devices the function returns \fI{error, enotsup}\fR.
+
+
+.RE
+.B
+\fBscan_erl_exprs(Device, Prompt, StartLocation, Options) -> Result\fR
+\fB                        when\fR
+\fB                            Device :: device(),\fR
+\fB                            Prompt :: prompt(),\fR
+\fB                            StartLocation :: erl_anno:location(),\fR
+\fB                            Options :: erl_scan:options(),\fR
+\fB                            Result ::\fR
+\fB                                erl_scan:tokens_result() |\fR
+\fB                                server_no_data().\fR
+
+.br
+.RS
+.PP
+Reads data from \fIIoDevice\fR, prompting it with \fIPrompt\fR.
+
+.PP
+Reading starts at location \fIStartLocation\fR. Argument \fIOptions\fR is passed on as argument \fIOptions\fR of function \fIerl_scan:tokens/4\fR. The data is tokenized as if it were a sequence of Erlang expressions until a final dot (\fI.\fR) is reached. This token is also returned.
+
+.PP
+The function returns:
+
+{ok, Tokens, EndLocation}
+.RS 2
+The tokenization succeeded.
+
+
+.RE
+
+{eof, EndLocation}
+.RS 2
+End of file was encountered by the tokenizer.
+
+
+.RE
+
+eof
+.RS 2
+End of file was encountered by the I/O server.
+
+
+.RE
+
+{error, ErrorInfo, ErrorLocation}
+.RS 2
+An error occurred while tokenizing.
+
+
+.RE
+
+{error, ErrorDescription}
+.RS 2
+Other (rare) error condition, such as 
+\fI{error, estale}\fR if reading from an NFS file system.
+
+.RE
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+23> io:scan_erl_exprs('enter>').
+enter>abc(), "hey".
+{ok,[{atom,1,abc},{'(',1},{')',1},{',',1},{string,1,"hey"},{dot,1}],2}
+24> io:scan_erl_exprs('enter>').
+enter>1.0er.
+{error,{1,erl_scan,{illegal,float}},2}
+
+.fi
+
+
+.RE
+.B
+\fBscan_erl_form(IoDevice, Prompt, StartLocation, Options) -> Result\fR
+\fB                       when\fR
+\fB                           IoDevice :: device(),\fR
+\fB                           Prompt :: prompt(),\fR
+\fB                           StartLocation :: erl_anno:location(),\fR
+\fB                           Options :: erl_scan:options(),\fR
+\fB                           Result ::\fR
+\fB                               erl_scan:tokens_result() |\fR
+\fB                               server_no_data().\fR
+
+.br
+.RS
+.PP
+Reads data from \fIIoDevice\fR, prompting it with \fIPrompt\fR.
+
+.PP
+Starts reading at location \fIStartLocation\fR (\fI1\fR). Argument \fIOptions\fR is passed on as argument \fIOptions\fR of function \fIerl_scan:tokens/4\fR. The data is tokenized as if it was an Erlang form (one of the valid Erlang expressions in an Erlang source file) until a final dot (\fI.\fR) is reached. This last token is also returned.
+
+.PP
+The return values are the same as for \fIscan_erl_exprs/4\fR.
+
+
+.RE
+.B
+\fBsetopts(IoDevice, Opts) -> ok | {error, Reason}\fR
+\fB                 when\fR
+\fB                     IoDevice :: device(),\fR
+\fB                     Opts :: [setopt()],\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Set options for \fIIoDevice\fR. Possible options and values vary depending on the I/O device.
+
+.PP
+For a list of supported options and their current values on a specific I/O device, use function \fIgetopts/1\fR.
+
+.PP
+The options and values supported by the OTP I/O devices are as follows:
+
+binary, list, or {binary, boolean()}
+.RS 2
+If set in binary mode (
+\fIbinary\fR or \fI{binary, true}\fR), the I/O server sends binary data (encoded in UTF-8) as answers to the \fIget_line\fR, \fIget_chars\fR, and, if possible, \fIget_until\fR requests (for details, see section The Erlang I/O Protocol) in the User's Guide). The immediate effect is that \fIget_chars/2,3\fR and \fIget_line/1,2\fR return UTF-8 binaries instead of lists of characters for the affected I/O device.
+.PP
+By default, all I/O devices in OTP are set in \fIlist\fR mode. However, the I/O functions can handle any of these modes and so should other, user-written, modules behaving as clients to I/O servers.
+
+.PP
+This option is supported by the \fIstandard_io/0\fR, \fIuser/0\fR and \fIfile:io_server/0\fR I/O servers.
+
+
+.RE
+
+{echo, boolean()}
+.RS 2
+Denotes if the terminal is to echo input. Only supported for the standard shell I/O server (
+\fIgroup.erl\fR)
+
+.RE
+
+{expand_fun, expand_fun()}
+.RS 2
+Provides a function for tab-completion (expansion) like the Erlang shell. This function is called when the user presses the 
+\fITab\fR key. The expansion is active when calling line-reading functions, such as \fIget_line/1,2\fR.
+.PP
+The function is called with the current line, up to the cursor, as a reversed string. It is to return a three-tuple: \fI{yes|no, string(), list()}\fR. The first element gives a beep if \fIno\fR, otherwise the expansion is silent; the second is a string that will be entered at the cursor position; the third is a list of possible expansions. If this list is not empty, it is printed below the current input line. The list of possible expansions can be formatted in different ways to make more advanced expansion suggestions more readable to the user, see \fIedlin_expand:expand/2\fR for documentation of that.
+
+.PP
+Trivial example (beep on anything except empty line, which is expanded to \fI"quit"\fR):
+
+.IP
+.nf
+fun("") -> {yes, "quit", []};
+   (_) -> {no, "", ["quit"]} end
+
+.fi
+
+.PP
+This option is only supported by the standard shell (\fIgroup.erl\fR).
+
+
+.RE
+
+{line_history, true | false}
+.RS 2
+Specifies if 
+\fIget_line\fR and \fIget_until\fR I/O requests should be saved in the \fIshell\fR history buffer.
+.PP
+This option is only supported by the standard shell (\fIgroup.erl\fR).
+
+
+.RE
+
+{log, none | output | input | all}
+.RS 2
+Tells the I/O server that it should log I/O requests. Requests will be logged at 
+\fIinfo\fR level to the \fI[otp, kernel, io, input | output | ctrl]\fR domain with the following report:
+.IP
+.nf
+#{ request := IoRequest, server := pid(), server_name => term() }.
+
+.fi
+
+.PP
+It is important to note that extra care should be taken so that these log reports are not logged to \fIstandard_io/0\fR as that may cause the system to enter an infinite loop.
+
+.PP
+Example:
+
+.IP
+.nf
+1> logger:set_primary_config(level, info).
+ok
+2> logger:add_handler(stdout, logger_std_h, #{ config => #{ file => "stdout.log" }}).
+ok
+3> io:setopts(user, [{log, output}]).
+ok
+4> io:format(user, "Hello~n", []).
+Hello
+ok
+5> file:read_file("stdout.log").
+{ok,<<"2024-11-14T09:53:49.275085+01:00 info: <0.89.0> wrote to user, Hello\\n">>}
+
+.fi
+
+.PP
+Not all I/O servers support this option. Use \fIio:getopts/1\fR to check if it is available.
+
+.PP
+\fBNOTE: \fRThe I/O servers in Erlang/OTP will set the logger domain to \fI[otp, kernel, io, input | output]\fR. The default \fIlogger\fR handler will not print this domain, so you need to enable it. This can be done by adding a new filter like this:
+
+.IP
+.nf
+logger:add_handler_filter(default, io_domain,
+   {fun logger_filters:domain/2, {log,sub,[otp,kernel,io]}}).
+
+.fi
+
+
+
+.RE
+
+{encoding, latin1 | unicode}
+.RS 2
+Specifies how characters are input or output from or to the I/O device, implying that, for example, a terminal is set to handle Unicode input and output or a file is set to handle UTF-8 data encoding.
+
+.PP
+The option \fIdoes not\fR affect how data is returned from the I/O functions or how it is sent in the I/O protocol, it only affects how the I/O device is to handle Unicode characters to the "physical" device.
+
+.PP
+The standard shell is set for \fIunicode\fR or \fIlatin1\fR encoding when the system is started. The encoding is set with the help of the \fILANG\fR or \fILC_CTYPE\fR environment variables on Unix-like system or by other means on other systems. So, the user can input Unicode characters and the I/O device is in \fI{encoding, unicode}\fR mode if the I/O device supports it. The mode can be changed, if the assumption of the runtime system is wrong, by setting this option.
+
+.PP
+\fBNOTE: \fRPrior to OTP 26.0, when Erlang was started with the \fI-oldshell\fR or \fI-noshell\fR flags (for example, in an \fIescript\fR), the default encoding for \fIstandard_io\fR was set to \fIlatin1\fR, meaning that any characters > codepoint 255 were escaped and that input was expected to be plain 8-bit ISO Latin-1. As of OTP 26.0, \fIstandard_io\fR always defaults to \fIunicode\fR if its supported, otherwise \fIlatin1\fR. If you want to send raw bytes on \fIstandard_io\fR, you now always need to explicitly set the encoding to \fIlatin1\fR; otherwise, code points 128-255 will be converted to UTF-8. This is best done by setting the kernel configuration parameter standard_io_encoding to \fIlatin1\fR.
+
+
+.PP
+Files can also be set in \fI{encoding, unicode}\fR, meaning that data is written and read as UTF-8. More encodings are possible for files, see below.
+
+.PP
+\fI{encoding, unicode | latin1}\fR is supported by both the standard shell (\fIgroup.erl\fR including \fIwerl\fR on Windows), the 'oldshell' (\fIuser.erl\fR), and the file I/O servers.
+
+
+.RE
+
+{encoding, utf8 | utf16 | utf32 | {utf16,big} | {utf16,little} | {utf32,big} | {utf32,little}}
+.RS 2
+For disk files, the encoding can be set to various UTF variants. This has the effect that data is expected to be read as the specified encoding from the file, and the data is written in the specified encoding to the disk file.
+
+.PP
+\fI{encoding, utf8}\fR has the same effect as \fI{encoding, unicode}\fR on files.
+
+.PP
+The extended encodings are only supported on disk files (opened by function \fIfile:open/2\fR).
+
+
+.RE
+
+
+.RE
+.B
+\fBwrite(IoDevice, Term) -> ok\fR
+\fB               when IoDevice :: device(), Term :: term().\fR
+
+.br
+.RS
+.PP
+Writes term \fITerm\fR to \fIIoDevice\fR.
+
+
+.RE

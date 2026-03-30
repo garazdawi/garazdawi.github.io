@@ -1,0 +1,395 @@
+.TH wx_object 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wx_object \- wx_object - Generic wx object behaviour
+
+.SH DESCRIPTION
+.PP
+This is a behaviour module that can be used for "sub classing" wx objects. It works like a regular gen_server module and creates a server per object.
+
+.PP
+NOTE: Currently no form of inheritance is implemented.
+
+.PP
+The user module should export:
+
+.PP
+init(Args) should return  {wxWindow, State} | {wxWindow, State, Timeout} | ignore | {stop, Reason}
+
+.PP
+Asynchronous window event handling:  handle_event(#wx{}, State) should return  {noreply, State} | {noreply, State, Timeout} | {stop, Reason, State}
+
+.PP
+The user module can export the following callback functions:
+
+.PP
+handle_call(Msg, {From, Tag}, State) should return  {reply, Reply, State} | {reply, Reply, State, Timeout} | {noreply, State} | {noreply, State, Timeout} | {stop, Reason, Reply, State}
+
+.PP
+handle_cast(Msg, State) should return  {noreply, State} | {noreply, State, Timeout} | {stop, Reason, State}
+
+.PP
+If the above are not exported but called, the wx_object process will crash. The user module can also export:
+
+.PP
+Info is message e.g. {'EXIT', P, R}, {nodedown, N}, ...  handle_info(Info, State) should return , ...  {noreply, State} | {noreply, State, Timeout} | {stop, Reason, State}
+
+.PP
+If a message is sent to the wx_object process when handle_info is not exported, the message will be dropped and ignored.
+
+.PP
+When stop is returned in one of the functions above with Reason = normal | shutdown | Term, terminate(State) is called. It lets the user module clean up, it is always called when server terminates or when wx_object() in the driver is deleted. If the Parent process terminates the Module:terminate/2 function is called.  terminate(Reason, State)
+
+.PP
+Example:
+
+.IP
+.nf
+  -module(myDialog).
+  -export([new/2, show/1, destroy/1]).  %% API
+  -export([init/1, handle_call/3, handle_event/2,
+           handle_info/2, code_change/3, terminate/2]).
+           new/2, showModal/1, destroy/1]).  %% Callbacks
+
+  %% Client API
+  new(Parent, Msg) ->
+     wx_object:start(?MODULE, [Parent,Id], []).
+
+  show(Dialog) ->
+     wx_object:call(Dialog, show_modal).
+
+  destroy(Dialog) ->
+     wx_object:call(Dialog, destroy).
+
+  %% Server Implementation ala gen_server
+  init([Parent, Str]) ->
+     Dialog = wxDialog:new(Parent, 42, "Testing", []),
+     ...
+     wxDialog:connect(Dialog, command_button_clicked),
+     {Dialog, MyState}.
+
+  handle_call(show, _From, State) ->
+     wxDialog:show(State#state.win),
+     {reply, ok, State};
+  ...
+  handle_event(#wx{}, State) ->
+     io:format("Users clicked button~n",[]),
+     {noreply, State};
+  ...
+
+.fi
+
+.SS "DATA TYPES"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB request_id() = term()\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB server_ref() = wx:wx_object() | atom() | pid()\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBevent() ::\fR
+\fB          wxActivateEvent:wxActivate() |\fR
+\fB          wxAuiManagerEvent:wxAuiManager() |\fR
+\fB          wxAuiNotebookEvent:wxAuiNotebook() |\fR
+\fB          wxBookCtrlEvent:wxBookCtrl() |\fR
+\fB          wxCalendarEvent:wxCalendar() |\fR
+\fB          wxChildFocusEvent:wxChildFocus() |\fR
+\fB          wxClipboardTextEvent:wxClipboardText() |\fR
+\fB          wxCloseEvent:wxClose() |\fR
+\fB          wxColourPickerEvent:wxColourPicker() |\fR
+\fB          wxCommandEvent:wxCommand() |\fR
+\fB          wxContextMenuEvent:wxContextMenu() |\fR
+\fB          wxDateEvent:wxDate() |\fR
+\fB          wxDisplayChangedEvent:wxDisplayChanged() |\fR
+\fB          wxDropFilesEvent:wxDropFiles() |\fR
+\fB          wxEraseEvent:wxErase() |\fR
+\fB          wxFileDirPickerEvent:wxFileDirPicker() |\fR
+\fB          wxFocusEvent:wxFocus() |\fR
+\fB          wxFontPickerEvent:wxFontPicker() |\fR
+\fB          wxGridEvent:wxGrid() |\fR
+\fB          wxHelpEvent:wxHelp() |\fR
+\fB          wxHtmlLinkEvent:wxHtmlLink() |\fR
+\fB          wxIconizeEvent:wxIconize() |\fR
+\fB          wxIdleEvent:wxIdle() |\fR
+\fB          wxInitDialogEvent:wxInitDialog() |\fR
+\fB          wxJoystickEvent:wxJoystick() |\fR
+\fB          wxKeyEvent:wxKey() |\fR
+\fB          wxListEvent:wxList() |\fR
+\fB          wxMaximizeEvent:wxMaximize() |\fR
+\fB          wxMenuEvent:wxMenu() |\fR
+\fB          wxMouseCaptureChangedEvent:wxMouseCaptureChanged() |\fR
+\fB          wxMouseCaptureLostEvent:wxMouseCaptureLost() |\fR
+\fB          wxMouseEvent:wxMouse() |\fR
+\fB          wxMoveEvent:wxMove() |\fR
+\fB          wxNavigationKeyEvent:wxNavigationKey() |\fR
+\fB          wxPaintEvent:wxPaint() |\fR
+\fB          wxPaletteChangedEvent:wxPaletteChanged() |\fR
+\fB          wxQueryNewPaletteEvent:wxQueryNewPalette() |\fR
+\fB          wxSashEvent:wxSash() |\fR
+\fB          wxScrollEvent:wxScroll() |\fR
+\fB          wxScrollWinEvent:wxScrollWin() |\fR
+\fB          wxSetCursorEvent:wxSetCursor() |\fR
+\fB          wxShowEvent:wxShow() |\fR
+\fB          wxSizeEvent:wxSize() |\fR
+\fB          wxSpinEvent:wxSpin() |\fR
+\fB          wxSplitterEvent:wxSplitter() |\fR
+\fB          wxStyledTextEvent:wxStyledText() |\fR
+\fB          wxSysColourChangedEvent:wxSysColourChanged() |\fR
+\fB          wxTaskBarIconEvent:wxTaskBarIcon() |\fR
+\fB          wxTreeEvent:wxTree() |\fR
+\fB          wxUpdateUIEvent:wxUpdateUI() |\fR
+\fB          wxWebViewEvent:wxWebView() |\fR
+\fB          wxWindowCreateEvent:wxWindowCreate() |\fR
+\fB          wxWindowDestroyEvent:wxWindowDestroy().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrequest_id() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBserver_ref() :: Obj :: wx:wx_object() | atom() | pid().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcall(Obj, Request) -> term()\fR
+\fB              when\fR
+\fB                  Obj :: wx:wx_object() | atom() | pid(),\fR
+\fB                  Request :: term().\fR
+
+.br
+.RS
+.PP
+Make a call to a wx_object server. The call waits until it gets a result. Invokes handle_call(Request, From, State) in the server
+
+
+.RE
+.B
+\fBcall(Obj, Request, Timeout) -> term()\fR
+\fB              when\fR
+\fB                  Obj :: wx:wx_object() | atom() | pid(),\fR
+\fB                  Request :: term(),\fR
+\fB                  Timeout :: integer().\fR
+
+.br
+.RS
+.PP
+Make a call to a wx_object server with a timeout. Invokes handle_call(Request, From, State) in server
+
+
+.RE
+.B
+\fBcast(Obj, Request) -> ok\fR
+\fB              when\fR
+\fB                  Obj :: wx:wx_object() | atom() | pid(),\fR
+\fB                  Request :: term().\fR
+
+.br
+.RS
+.PP
+Make a cast to a wx_object server. Invokes handle_cast(Request, State) in the server
+
+
+.RE
+.B
+\fBcheck_response(Msg :: term(), Key :: request_id()) ->\fR
+\fB                        {reply, Reply :: term()} |\fR
+\fB                        false |\fR
+\fB                        {error, {term(), server_ref()}}.\fR
+
+.br
+.RS
+.PP
+Check if a received message was a reply to a RequestId
+
+
+.RE
+.B
+\fBget_pid(Obj) -> pid() when Obj :: wx:wx_object() | atom() | pid().\fR
+
+.br
+.RS
+.PP
+Get the pid of the object handle.
+
+
+.RE
+.B
+\fBreply({pid(), Tag :: term()}, Reply :: term()) -> pid().\fR
+
+.br
+.RS
+.PP
+Get the pid of the object handle.
+
+
+.RE
+.B
+\fBsend_request(Obj, Request :: term()) -> request_id()\fR
+\fB                      when Obj :: wx:wx_object() | atom() | pid().\fR
+
+.br
+.RS
+.PP
+Make an send_request to a generic server. and return a RequestId which can/should be used with wait_response/[1|2]. Invokes handle_call(Request, From, State) in server.
+
+
+.RE
+.B
+\fBset_pid(Obj, Pid :: pid()) -> wx:wx_object()\fR
+\fB                 when Obj :: wx:wx_object() | atom() | pid().\fR
+
+.br
+.RS
+.PP
+Sets the controlling process of the object handle.
+
+
+.RE
+.B
+\fBstart(Name, Mod, Args, Options) ->\fR
+\fB               wxWindow:wxWindow() | {error, term()}\fR
+\fB               when\fR
+\fB                   Name :: {local, atom()},\fR
+\fB                   Mod :: atom(),\fR
+\fB                   Args :: term(),\fR
+\fB                   Flag ::\fR
+\fB                       trace | log |\fR
+\fB                       {logfile, string()} |\fR
+\fB                       statistics | debug,\fR
+\fB                   Options :: [{timeout, timeout()} | {debug, [Flag]}].\fR
+
+.br
+.RS
+.PP
+Starts a generic wx_object server and invokes Mod:init(Args) in the new process.
+
+
+.RE
+.B
+\fBstart_link(Mod, Args, Options) ->\fR
+\fB                    wxWindow:wxWindow() | {error, term()}\fR
+\fB                    when\fR
+\fB                        Mod :: atom(),\fR
+\fB                        Args :: term(),\fR
+\fB                        Flag ::\fR
+\fB                            trace | log |\fR
+\fB                            {logfile, string()} |\fR
+\fB                            statistics | debug,\fR
+\fB                        Options ::\fR
+\fB                            [{timeout, timeout()} | {debug, [Flag]}].\fR
+
+.br
+.RS
+.PP
+Starts a generic wx_object server and invokes Mod:init(Args) in the new process.
+
+
+.RE
+.B
+\fBstart_link(Name, Mod, Args, Options) ->\fR
+\fB                    wxWindow:wxWindow() | {error, term()}\fR
+\fB                    when\fR
+\fB                        Name :: {local, atom()},\fR
+\fB                        Mod :: atom(),\fR
+\fB                        Args :: term(),\fR
+\fB                        Flag ::\fR
+\fB                            trace | log |\fR
+\fB                            {logfile, string()} |\fR
+\fB                            statistics | debug,\fR
+\fB                        Options ::\fR
+\fB                            [{timeout, timeout()} | {debug, [Flag]}].\fR
+
+.br
+.RS
+.PP
+Starts a generic wx_object server and invokes Mod:init(Args) in the new process.
+
+
+.RE
+.B
+\fBstop(Obj) -> ok when Obj :: wx:wx_object() | atom() | pid().\fR
+
+.br
+.RS
+.PP
+Stops a generic wx_object server with reason 'normal'. Invokes terminate(Reason,State) in the server. The call waits until the process is terminated. If the process does not exist, an exception is raised.
+
+
+.RE
+.B
+\fBstop(Obj, Reason, Timeout) -> ok\fR
+\fB              when\fR
+\fB                  Obj :: wx:wx_object() | atom() | pid(),\fR
+\fB                  Reason :: term(),\fR
+\fB                  Timeout :: timeout().\fR
+
+.br
+.RS
+.PP
+Stops a generic wx_object server with the given Reason. Invokes terminate(Reason,State) in the server. The call waits until the process is terminated. If the call times out, or if the process does not exist, an exception is raised.
+
+
+.RE
+.B
+\fBwait_response(RequestId :: request_id()) ->\fR
+\fB                       {reply, Reply :: term()} |\fR
+\fB                       {error, {term(), server_ref()}}.\fR
+
+.br
+.RS
+.PP
+Wait infinitely for a reply from a generic server.
+
+
+.RE
+.B
+\fBwait_response(Key :: request_id(), Timeout :: timeout()) ->\fR
+\fB                       {reply, Reply :: term()} |\fR
+\fB                       timeout |\fR
+\fB                       {error, {term(), server_ref()}}.\fR
+
+.br
+.RS
+.PP
+Wait 'timeout' for a reply from a generic server.
+
+
+.RE
+.SH CALLBACKS
+.LP

@@ -1,0 +1,307 @@
+.TH wxFontPickerCtrl 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxFontPickerCtrl \- This control allows the user to select a font.
+
+.SH DESCRIPTION
+.PP
+The generic implementation is a button which brings up a \fIwxFontDialog\fR when clicked. Native implementation may differ but this is usually a (small) widget which give access to the font-chooser dialog. It is only available if \fIwxUSE_FONTPICKERCTRL\fR is set to 1 (the default).
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFNTP_DEFAULT_STYLE: The default style: wxFNTP_FONTDESC_AS_LABEL | wxFNTP_USEFONT_FOR_LABEL.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFNTP_USE_TEXTCTRL: Creates a text control to the left of the picker button which is completely managed by the \fIwxFontPickerCtrl\fR and which can be used by the user to specify a font (see SetSelectedFont). The text control is automatically synchronized with button's value. Use functions defined in \fIwxPickerBase\fR to modify the text control.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFNTP_FONTDESC_AS_LABEL: Keeps the label of the button updated with the fontface name and the font size. E.g. choosing "Times New Roman bold, italic with size 10" from the fontdialog, will update the label (overwriting any previous label) with the "Times New Roman, 10" text.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxFNTP_USEFONT_FOR_LABEL: Uses the currently selected font to draw the label of the button.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFontDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFontPickerEvent\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPickerBase\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxFontPickerCtrl
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_fontpicker_changed\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxFontPickerCtrl() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxFontPickerCtrl(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {initial, wxFont:wxFont()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Creates this widget with given parameters.
+
+.PP
+Return: true if the control was successfully created or false if creation failed.
+
+
+.RE
+.B
+\fBdestroy(This :: wxFontPickerCtrl()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetMaxPointSize(This) -> integer() when This :: wxFontPickerCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the maximum point size value allowed for the user-chosen font.
+
+
+.RE
+.B
+\fBgetSelectedFont(This) -> wxFont:wxFont()\fR
+\fB                         when This :: wxFontPickerCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the currently selected font.
+
+.PP
+Note that this function is completely different from \fIwxWindow:getFont/1\fR.
+
+
+.RE
+.B
+\fBnew() -> wxFontPickerCtrl().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxFontPickerCtrl()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {initial, wxFont:wxFont()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Initializes the object and calls \fIcreate/4\fR with all the parameters.
+
+
+.RE
+.B
+\fBsetMaxPointSize(This, Max) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxFontPickerCtrl(),\fR
+\fB                             Max :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the maximum point size value allowed for the user-chosen font.
+
+.PP
+The default value is 100. Note that big fonts can require a lot of memory and CPU time both for creation and for rendering; thus, specially because the user has the option to specify the fontsize through a text control (see wxFNTP_USE_TEXTCTRL), it's a good idea to put a limit to the maximum font size when huge fonts do not make much sense.
+
+
+.RE
+.B
+\fBsetSelectedFont(This, Font) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxFontPickerCtrl(),\fR
+\fB                             Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the currently selected font.
+
+.PP
+Note that this function is completely different from \fIwxWindow:setFont/2\fR.
+
+
+.RE

@@ -1,0 +1,120 @@
+.TH wxListItemAttr 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxListItemAttr \- Functions for wxListItemAttr class
+
+.SH DESCRIPTION
+.PP
+wxWidgets docs: wxListItemAttr
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxListItemAttr() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxListItemAttr()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetBackgroundColour(This) -> wx:wx_colour4()\fR
+\fB                             when This :: wxListItemAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetFont(This) -> wxFont:wxFont() when This :: wxListItemAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetTextColour(This) -> wx:wx_colour4()\fR
+\fB                       when This :: wxListItemAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhasBackgroundColour(This) -> boolean()\fR
+\fB                             when This :: wxListItemAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhasFont(This) -> boolean() when This :: wxListItemAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhasTextColour(This) -> boolean() when This :: wxListItemAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew() -> wxListItemAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(ColText, ColBack, Font) -> wxListItemAttr()\fR
+\fB             when\fR
+\fB                 ColText :: wx:wx_colour(),\fR
+\fB                 ColBack :: wx:wx_colour(),\fR
+\fB                 Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetBackgroundColour(This, ColBack) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxListItemAttr(),\fR
+\fB                                 ColBack :: wx:wx_colour().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetFont(This, Font) -> ok\fR
+\fB                 when This :: wxListItemAttr(), Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetTextColour(This, ColText) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxListItemAttr(),\fR
+\fB                           ColText :: wx:wx_colour().\fR
+
+.br
+.RS
+
+.RE

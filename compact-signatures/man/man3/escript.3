@@ -1,0 +1,237 @@
+.TH escript 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+escript \- This module provides functions to create and inspect escripts.
+
+.SH DESCRIPTION
+.PP
+See the escript program documentation for more details on how to use escripts.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcomment() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBemu_args() :: string().\fR
+
+.br
+.RS
+.PP
+Any arguments that should be passed to erl when starting.
+
+
+.RE
+.B
+\fBextract_option() :: compile_source | {section, [section_name()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsection() ::\fR
+\fB          shebang |\fR
+\fB          {shebang, shebang() | default | undefined} |\fR
+\fB          comment |\fR
+\fB          {comment, comment() | default | undefined} |\fR
+\fB          {emu_args, emu_args() | undefined} |\fR
+\fB          {source, file:filename() | binary()} |\fR
+\fB          {beam, file:filename() | binary()} |\fR
+\fB          {archive, zip:filename() | binary()} |\fR
+\fB          {archive, [zip_file()], [zip:create_option()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsection_name() :: shebang | comment | emu_args | body.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBshebang() :: string().\fR
+
+.br
+.RS
+.PP
+The initial \fI#!\fR line.
+
+.PP
+For example:
+
+.IP
+.nf
+#!/usr/bin/env escript
+
+.fi
+
+
+.RE
+.B
+\fBzip_file() ::\fR
+\fB          zip:filename() |\fR
+\fB          {zip:filename(), binary()} |\fR
+\fB          {zip:filename(), binary(), file:file_info()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(file:filename() | binary(), [section()]) ->\fR
+\fB                ok | {ok, binary()} | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Creates an escript from a list of sections.
+
+.PP
+The sections can be specified in any order. An escript begins with an optional \fIHeader\fR followed by a mandatory \fIBody\fR. If the header is present, it does always begin with a \fIshebang\fR, possibly followed by a \fIcomment\fR and \fIemu_args\fR. The \fIshebang\fR defaults to \fI"/usr/bin/env escript"\fR. The \fIcomment\fR defaults to \fI"This is an -*- erlang -*- file"\fR. The created escript can either be returned as a binary or written to file.
+
+.PP
+As an example of how the function can be used, we create an interpreted escript that uses \fIemu_args\fR to set some emulator flag. In this case, it happens to set number of schedulers with \fI+S3\fR. We also extract the different sections from the newly created script:
+
+.IP
+.nf
+> Source = "%% Demo\\nmain(_Args) ->\\n    io:format(\\"~p\\",[erlang:system_info(schedulers)]).\\n".
+"%% Demo\\nmain(_Args) ->\\n    io:format(erlang:system_info(schedulers)).\\n"
+> io:format("~s\\n", [Source]).
+%% Demo
+main(_Args) ->
+    io:format(erlang:system_info(schedulers)).
+
+ok
+> {ok, Bin} = escript:create(binary, [shebang, comment, {emu_args, "+S3"},
+                                      {source, list_to_binary(Source)}]).
+{ok,<<"#!/usr/bin/env escript\\n%% This is an -*- erlang -*- file\\n%%!+S3"...>>}
+> file:write_file("demo.escript", Bin).
+ok
+> os:cmd("escript demo.escript").
+"3"
+> escript:extract("demo.escript", []).
+{ok,[{shebang,default}, {comment,default}, {emu_args,"+S3"},
+     {source,<<"%% Demo\\nmain(_Args) ->\\n    io:format(erlang:system_info(schedu"...>>}]}
+
+.fi
+
+.PP
+An escript without header can be created as follows:
+
+.IP
+.nf
+> file:write_file("demo.erl",
+                  ["%% demo.erl\\n-module(demo).\\n-export([main/1]).\\n\\n", Source]).
+ok
+> {ok, _, BeamCode} = compile:file("demo.erl", [binary, debug_info]).
+{ok,demo,
+    <<70,79,82,49,0,0,2,208,66,69,65,77,65,116,111,109,0,0,0,
+      79,0,0,0,9,4,100,...>>}
+> escript:create("demo.beam", [{beam, BeamCode}]).
+ok
+> escript:extract("demo.beam", []).
+{ok,[{shebang,undefined}, {comment,undefined}, {emu_args,undefined},
+     {beam,<<70,79,82,49,0,0,3,68,66,69,65,77,65,116,
+             111,109,0,0,0,83,0,0,0,9,...>>}]}
+> os:cmd("escript demo.beam").
+"true"
+
+.fi
+
+.PP
+Here we create an archive script containing both Erlang code and Beam code, then we iterate over all files in the archive and collect their contents and some information about them:
+
+.IP
+.nf
+> {ok, SourceCode} = file:read_file("demo.erl").
+{ok,<<"%% demo.erl\\n-module(demo).\\n-export([main/1]).\\n\\n%% Demo\\nmain(_Arg"...>>}
+> escript:create("demo.escript",
+                 [shebang,
+                  {archive, [{"demo.erl", SourceCode},
+                             {"demo.beam", BeamCode}], []}]).
+ok
+> {ok, [{shebang,default}, {comment,undefined}, {emu_args,undefined},
+     {archive, ArchiveBin}]} = escript:extract("demo.escript", []).
+{ok,[{shebang,default}, {comment,undefined}, {emu_args,undefined},
+     {{archive,<<80,75,3,4,20,0,0,0,8,0,118,7,98,60,105,
+                152,61,93,107,0,0,0,118,0,...>>}]}
+> file:write_file("demo.zip", ArchiveBin).
+ok
+> zip:foldl(fun(N, I, B, A) -> [{N, I(), B()} | A] end, [], "demo.zip").
+{ok,[{"demo.beam",
+      {file_info,748,regular,read_write,
+                 {{2010,3,2},{0,59,22}},
+                 {{2010,3,2},{0,59,22}},
+                 {{2010,3,2},{0,59,22}},
+                 54,1,0,0,0,0,0},
+      <<70,79,82,49,0,0,2,228,66,69,65,77,65,116,111,109,0,0,0,
+        83,0,0,...>>},
+     {"demo.erl",
+      {file_info,118,regular,read_write,
+                 {{2010,3,2},{0,59,22}},
+                 {{2010,3,2},{0,59,22}},
+                 {{2010,3,2},{0,59,22}},
+                 54,1,0,0,0,0,0},
+      <<"%% demo.erl\\n-module(demo).\\n-export([main/1]).\\n\\n%% Demo\\nmain(_Arg"...>>}]}
+
+.fi
+
+
+.RE
+.B
+\fBextract(file:filename(), [extract_option()]) ->\fR
+\fB                 {ok, [section()]} | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Parses an escript and extracts its sections. This is the reverse of \fIcreate/2\fR.
+
+.PP
+All sections are returned even if they do not exist in the escript. If a particular section happens to have the same value as the default value, the extracted value is set to the atom \fIdefault\fR. If a section is missing, the extracted value is set to the atom \fIundefined\fR.
+
+.PP
+Option \fIcompile_source\fR only affects the result if the escript contains \fIsource\fR code. In this case the Erlang code is automatically compiled and \fI{source, BeamCode}\fR is returned instead of \fI{source, SourceCode}\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+> escript:create("demo.escript",
+                 [shebang, {archive, [{"demo.erl", SourceCode},
+                                      {"demo.beam", BeamCode}], []}]).
+ok
+> {ok, [{shebang,default}, {comment,undefined}, {emu_args,undefined},
+     {archive, ArchiveBin}]} =
+              escript:extract("demo.escript", []).
+{ok,[{{archive,<<80,75,3,4,20,0,0,0,8,0,118,7,98,60,105,
+                152,61,93,107,0,0,0,118,0,...>>}
+     {emu_args,undefined}]}
+
+.fi
+
+
+.RE
+.B
+\fBscript_name() -> string().\fR
+
+.br
+.RS
+.PP
+Returns the name of the escript that is executed.
+
+.PP
+If the function is invoked outside the context of an escript, the behavior is undefined.
+
+
+.RE

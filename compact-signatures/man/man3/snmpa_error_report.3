@@ -1,0 +1,66 @@
+.TH snmpa_error_report 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpa_error_report \- Behaviour module for reporting SNMP agent errors
+
+.SH DESCRIPTION
+.PP
+This module defines the behaviour of the agent error reporting. A \fIsnmpa_error_report\fR compliant module must export the following functions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+config_err/2
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+user_err/2
+
+.RE
+
+.PP
+The semantics of them and their exact signatures are explained below.
+
+.SH CALLBACKS
+.LP
+.B
+\fBconfig_err(Format, Args)\fR
+
+.br
+.RS
+.PP
+The function is called if an error occurs during the configuration phase, for example if a syntax error is found in a configuration file.
+
+.PP
+\fIFormat\fR and \fIArgs\fR are as in \fIio:format(Format, Args)\fR.
+
+
+.RE
+.B
+\fBuser_err(Format, Args)\fR
+
+.br
+.RS
+.PP
+The function is called if a user related error occurs at run-time, for example if a user defined instrumentation function returns erroneous.
+
+.PP
+\fIFormat\fR and \fIArgs\fR are as in \fIio:format(Format, Args)\fR.
+
+
+.RE

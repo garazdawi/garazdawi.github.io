@@ -1,0 +1,115 @@
+.TH wxFindReplaceData 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxFindReplaceData \- \fIwxFindReplaceData\fR holds the data for \fIwxFindReplaceDialog\fR.
+
+.SH DESCRIPTION
+.PP
+It is used to initialize the dialog with the default values and will keep the last values from the dialog when it is closed. It is also updated each time a \fIwxFindDialogEvent\fR (not implemented in wx) is generated so instead of using the \fIwxFindDialogEvent\fR (not implemented in wx) methods you can also directly query this object.
+
+.PP
+Note that all \fISetXXX()\fR methods may only be called before showing the dialog and calling them has no effect later.
+
+.PP
+wxWidgets docs: wxFindReplaceData
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxFindReplaceData() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxFindReplaceData()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetFindString(This) -> unicode:charlist()\fR
+\fB                       when This :: wxFindReplaceData().\fR
+
+.br
+.RS
+.PP
+Get the string to find.
+
+
+.RE
+.B
+\fBgetFlags(This) -> integer() when This :: wxFindReplaceData().\fR
+
+.br
+.RS
+.PP
+Get the combination of \fIwxFindReplaceFlags\fR values.
+
+
+.RE
+.B
+\fBgetReplaceString(This) -> unicode:charlist()\fR
+\fB                          when This :: wxFindReplaceData().\fR
+
+.br
+.RS
+.PP
+Get the replacement string.
+
+
+.RE
+.B
+\fBnew([Option]) -> wxFindReplaceData()\fR
+\fB             when Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor initializes the flags to default value (0).
+
+
+.RE
+.B
+\fBsetFindString(This, Str) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxFindReplaceData(),\fR
+\fB                           Str :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the string to find (used as initial value by the dialog).
+
+
+.RE
+.B
+\fBsetFlags(This, Flags) -> ok\fR
+\fB                  when This :: wxFindReplaceData(), Flags :: integer().\fR
+
+.br
+.RS
+.PP
+Set the flags to use to initialize the controls of the dialog.
+
+
+.RE
+.B
+\fBsetReplaceString(This, Str) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxFindReplaceData(),\fR
+\fB                              Str :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the replacement string (used as initial value by the dialog).
+
+
+.RE

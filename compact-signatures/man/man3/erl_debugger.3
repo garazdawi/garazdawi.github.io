@@ -1,0 +1,499 @@
+.TH erl_debugger 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_debugger \- Erlang debugger support (EXPERIMENTAL).
+
+.SH DESCRIPTION
+.PP
+This module exposes low-level functionality for the implementation of a debugger for Erlang.
+
+.PP
+Any local process can register itself as the debugger for a node, but there can be at most one such process registered at any given time. Using the BIFs in this module, a debugger can:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set breakpoints;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+inspect internal process state, such registers, stack-frames;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+get notified on debugger events such as a process hitting a breakpoint;
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+resume processes paused on breakpoints
+
+.RE
+
+.PP
+At the moment, the API is highly experimental; so don't depend on it, or otherwise expect frequent incompatible changes.
+
+.SH DATA TYPES
+.LP
+.B
+\fBevent() ::\fR
+\fB          {breakpoint,\fR
+\fB           pid(),\fR
+\fB           mfa(),\fR
+\fB           Line :: pos_integer(),\fR
+\fB           Resume :: fun(() -> ok)}.\fR
+
+.br
+.RS
+.PP
+Debugger events.
+
+.PP
+Here are the possible events:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{breakpoint, Pid, {M,F,A}, Line, Resume}\fR: process Pid hit a breakpoint on module \fIM\fR, at the given \fILine\fR. The debugger can resume the process by executing \fIResume()\fR.
+
+.RE
+
+
+.RE
+.B
+\fBevent_message() :: {debugger_event, session(), event()}.\fR
+
+.br
+.RS
+.PP
+The debugger process will receive debugger-event messages, wrapped in an envelope of this type.
+
+
+.RE
+.B
+\fBinstrumentation() :: line_breakpoint.\fR
+
+.br
+.RS
+.PP
+Debugging instrumentations that can be applied on module loading.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIline_breakpoint\fR: Allows setting breakpoints at the beginning of executable lines
+
+.RE
+
+
+.RE
+.B
+\fBreg_val() :: {value, term()} | {too_large, Size :: pos_integer()}.\fR
+
+.br
+.RS
+.PP
+The value of an X or a Y register, provided it fits within the requested size.
+
+.PP
+If it is too large, then size of the term.
+
+
+.RE
+.B
+\fB-opaque session() \fR
+
+.br
+.RS
+.PP
+Debugger session identifier.
+
+.PP
+It is attached to all debugger events.
+
+
+.RE
+.B
+\fBstack_frame() ::\fR
+\fB          {FrameNo :: non_neg_integer(),\fR
+\fB           stack_frame_fun(),\fR
+\fB           stack_frame_info()}.\fR
+
+.br
+.RS
+.PP
+A stack-frame, including the value of each slot.
+
+
+.RE
+.B
+\fBstack_frame_fun() ::\fR
+\fB          #{function := mfa(), line := pos_integer() | undefined} |\fR
+\fB          '<terminate process>' | '<continue terminate process>' |\fR
+\fB          '<terminate process normally>' | '<breakpoint>' |\fR
+\fB          'unknown function'.\fR
+
+.br
+.RS
+.PP
+What is running in each stack frame, including special VM frames.
+
+
+.RE
+.B
+\fBstack_frame_info() ::\fR
+\fB          #{slots := [stack_frame_slot()], code := pos_integer()}.\fR
+
+.br
+.RS
+.PP
+Extra information about a stack-frame.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIslots\fR: Y-registers (in order \fI[Y0,...Yk])\fR, followed by exception-handlers.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcode\fR: Memory address of the next instruction to execute in this frame.
+
+.RE
+
+
+.RE
+.B
+\fBstack_frame_slot() :: reg_val() | {'catch', stack_frame_fun()}.\fR
+
+.br
+.RS
+.PP
+The contents of a stack frame slot can be a Y register or an exception handler.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbreakpoint(Module, Line, Flag) -> ok | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Module :: module(),\fR
+\fB                        Line :: pos_integer(),\fR
+\fB                        Flag :: boolean(),\fR
+\fB                        Reason ::\fR
+\fB                            {unsupported, Module | Line} |\fR
+\fB                            {badkey, Module | Line}.\fR
+
+.br
+.RS
+.PP
+Sets or clear a breakpoint on the given Module/Line.
+
+.PP
+When a process hits a breakpoint, it will pause and a \fIbreakpoint\fR message is sent to the registered debugger.
+
+.PP
+Returns \fIok\fR on success. It can fail with the following reasons:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{badkey, Module}\fR: The given module is not loaded.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{unsupported, Module}\fR: The module was loaded without support for line breakpoints.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{badkey, Line}\fR: The line is not relevant; it could refer to a comment, not existing in the module source, and so on.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{unsupported, Line}\fR: It is not possible to set a breakpoint in in the given line; for example, if it refers to a function head.
+
+.RE
+
+
+.RE
+.B
+\fBbreakpoints(Module) -> {ok, Result} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Module :: module(),\fR
+\fB                         Result :: #{Fun => #{Line => boolean()}},\fR
+\fB                         Fun :: {atom(), arity()},\fR
+\fB                         Line :: pos_integer(),\fR
+\fB                         Reason :: badkey.\fR
+
+.br
+.RS
+.PP
+Returns information on available breakpoints for a module.
+
+.PP
+For each function in the module, returns a map \fI#{Line => boolean()}\fR, where the keys are lines where breakpoints can be set, and the value represents whether be breakpoint is enabled (\fItrue\fR) or not (\fIfalse\fR).
+
+
+.RE
+.B
+\fBbreakpoints(Module, FunName, Arity) ->\fR
+\fB                     {ok, Result} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Module :: module(),\fR
+\fB                         FunName :: atom(),\fR
+\fB                         Arity :: arity(),\fR
+\fB                         Result :: #{Line => boolean()},\fR
+\fB                         Line :: pos_integer(),\fR
+\fB                         Reason :: {badkey, module() | {FunName, Arity}}.\fR
+
+.br
+.RS
+.PP
+Returns information on available breakpoints for a given function. .
+
+.PP
+The function need not be exported.
+
+.PP
+Returns a map \fI#{Line => boolean()}\fR, where the keys are lines where breakpoints can be set, and the value represents whether be breakpoint is enabled (\fItrue\fR) or not (\fIfalse\fR).
+
+
+.RE
+.B
+\fBinstrumentations() -> #{instrumentation() => boolean()}.\fR
+
+.br
+.RS
+.PP
+Returns the instrumentations that will be applied on module loading.
+
+.PP
+Modules that are already loaded may have had a different set of instrumentations applied.
+
+
+.RE
+.B
+\fBpeek_stack_frame_slot(Pid, FrameNo, Slot, MaxSize) ->\fR
+\fB                               running | undefined | stack_frame_slot()\fR
+\fB                               when\fR
+\fB                                   Pid :: pid(),\fR
+\fB                                   FrameNo :: pos_integer(),\fR
+\fB                                   Slot :: non_neg_integer(),\fR
+\fB                                   MaxSize :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Gets the value of a slot in a suspended process stack-frame.
+
+.PP
+Returns \fIrunning\fR if the process is not suspended, and \fIundefined\fR if the frame or the slot does not exist for that process. Otherwise, returns the slot, that can be a term, if its size is less than \fIMaxTermSize\fR, or an exeption handler.
+
+
+.RE
+.B
+\fBpeek_xreg(Pid, Reg, MaxSize) -> running | undefined | reg_val()\fR
+\fB                   when\fR
+\fB                       Pid :: pid(),\fR
+\fB                       Reg :: non_neg_integer(),\fR
+\fB                       MaxSize :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Get the value of an X register for a suspended process.
+
+
+.RE
+.B
+\fBregister(Pid) -> {ok, session()} | {error, already_exists}\fR
+\fB                  when Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Register the given process as the debugger.
+
+.PP
+If the registration succeeds, it returns \fI{ok, Session}\fR, where \fISession\fR is a token that will be included in every message sent to the process.
+
+.PP
+Returns \fI{error, already_exists}\fR if some process is currently registered as debugger.
+
+
+.RE
+.B
+\fBstack_frames(Pid, MaxTermSize) -> running | [stack_frame()]\fR
+\fB                      when\fR
+\fB                          Pid :: pid(), MaxTermSize :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Get the all the stack-frames for a suspended process.
+
+.PP
+If the given process is not in a suspended state, returns \fIrunning\fR. Otherwise, a list of stack frames including the content of each slot is returned. For slots containing terms, \fIMaxTermSize\fR controls the maximum size of values that are allowed to be returned (to avoid accidentally blowing the heap of the caller).
+
+
+.RE
+.B
+\fBsupported() -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if the emulator supports debugging.
+
+.PP
+The debugger can only be used if the \fI+D\fR argument was passed to the emulator on start-up.
+
+
+.RE
+.B
+\fBtoggle_instrumentations(Toggle) -> ok\fR
+\fB                                 when\fR
+\fB                                     Toggle ::\fR
+\fB                                         #{instrumentation() =>\fR
+\fB                                               boolean()}.\fR
+
+.br
+.RS
+.PP
+Updates the instrumentations that will be applied on module loading.
+
+.PP
+Modules that are already loaded will keep the instrumentation they had at their time of loading.
+
+
+.RE
+.B
+\fBunregister(Pid, Session) -> ok\fR
+\fB                    when Pid :: pid(), Session :: session().\fR
+
+.br
+.RS
+.PP
+Unregisters the given process.
+
+.PP
+The session given on registration needs to be provided.
+
+
+.RE
+.B
+\fBwhereis() -> undefined | pid().\fR
+
+.br
+.RS
+.PP
+Returns the pid of the registered debugger.
+
+
+.RE
+.B
+\fBxregs_count(Pid) -> running | non_neg_integer() when Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Get the number of X registers currently in use by a suspended process.
+
+
+.RE

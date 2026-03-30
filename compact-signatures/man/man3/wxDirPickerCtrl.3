@@ -1,0 +1,293 @@
+.TH wxDirPickerCtrl 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxDirPickerCtrl \- This control allows the user to select a directory.
+
+.SH DESCRIPTION
+.PP
+The generic implementation is a button which brings up a \fIwxDirDialog\fR when clicked. Native implementation may differ but this is usually a (small) widget which give access to the dir-chooser dialog. It is only available if \fIwxUSE_DIRPICKERCTRL\fR is set to 1 (the default).
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDIRP_DEFAULT_STYLE: The default style: includes wxDIRP_DIR_MUST_EXIST and, under wxMSW only, wxDIRP_USE_TEXTCTRL.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDIRP_USE_TEXTCTRL: Creates a text control to the left of the picker button which is completely managed by the \fIwxDirPickerCtrl\fR and which can be used by the user to specify a path (see SetPath). The text control is automatically synchronized with button's value. Use functions defined in \fIwxPickerBase\fR to modify the text control.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDIRP_DIR_MUST_EXIST: Creates a picker which allows selecting only existing directories in the popup \fIwxDirDialog\fR. Notice that, as with \fIwxFLP_FILE_MUST_EXIST\fR, it is still possible to enter a non-existent directory even when this file is specified if \fIwxDIRP_USE_TEXTCTRL\fR style is also used. Also note that if \fIwxDIRP_USE_TEXTCTRL\fR is not used, the native wxGTK implementation always uses this style as it doesn't support selecting non-existent directories.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDIRP_CHANGE_DIR: Change current working directory on each user directory selection change.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDIRP_SMALL: Use smaller version of the control with a small "..." button instead of the normal "Browse" one. This flag is new since wxWidgets 2.9.3.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDirDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFileDirPickerEvent\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPickerBase\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxDirPickerCtrl
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_dirpicker_changed\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxDirPickerCtrl() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxDirPickerCtrl(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {path, unicode:chardata()} |\fR
+\fB                        {message, unicode:chardata()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Creates the widgets with the given parameters.
+
+.PP
+Return: true if the control was successfully created or false if creation failed.
+
+
+.RE
+.B
+\fBdestroy(This :: wxDirPickerCtrl()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetPath(This) -> unicode:charlist() when This :: wxDirPickerCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the absolute path of the currently selected directory.
+
+
+.RE
+.B
+\fBnew() -> wxDirPickerCtrl().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxDirPickerCtrl()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {path, unicode:chardata()} |\fR
+\fB                     {message, unicode:chardata()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Initializes the object and calls \fIcreate/4\fR with all the parameters.
+
+
+.RE
+.B
+\fBsetPath(This, Dirname) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxDirPickerCtrl(),\fR
+\fB                     Dirname :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the absolute path of the currently selected directory.
+
+.PP
+If the control uses \fIwxDIRP_DIR_MUST_EXIST\fR and does not use \fIwxDIRP_USE_TEXTCTRL\fR style, the \fIdirname\fR must be a name of an existing directory and will be simply ignored by the native wxGTK implementation if this is not the case.
+
+
+.RE

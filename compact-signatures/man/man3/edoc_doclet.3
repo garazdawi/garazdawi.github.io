@@ -1,0 +1,111 @@
+.TH edoc_doclet 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc_doclet \- Standard doclet module for EDoc.
+
+.SH DESCRIPTION
+.PP
+\fBSee also: \fR\fIedoc\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcommand() :: doclet_gen() | doclet_toc().\fR
+
+.br
+.RS
+.PP
+Doclet commands.
+
+
+.RE
+.B
+\fBcontext() ::\fR
+\fB          #doclet_context{dir :: string(),\fR
+\fB                          env :: edoc:env(),\fR
+\fB                          opts :: [term()]}.\fR
+
+.br
+.RS
+.PP
+Context for doclets.
+
+
+.RE
+.B
+\fBdoclet_gen() ::\fR
+\fB          #doclet_gen{sources :: [string()],\fR
+\fB                      app :: no_app | atom(),\fR
+\fB                      modules :: [module()]}.\fR
+
+.br
+.RS
+.PP
+Doclet command.
+
+
+.RE
+.B
+\fBdoclet_toc() ::\fR
+\fB          #doclet_toc{paths :: [string()], indir :: string()}.\fR
+
+.br
+.RS
+.PP
+Doclet command.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBrun(edoc_doclet:command(), edoc_doclet:context()) -> ok.\fR
+
+.br
+.RS
+.PP
+Main doclet entry point. See the file \fI\fIedoc_doclet.hrl\fR\fR for the data structures used for passing parameters.
+
+.PP
+Also see \fI\fIedoc:layout/2\fR\fR for layout-related options, and \fI\fIedoc:get_doc/2\fR\fR for options related to reading source files.
+
+.PP
+Options:
+
+.RS 4
+.TP
+\fB\fI{file_suffix, string()}\fR\fR
+Specifies the suffix used for output files. The default value is \fI".html"\fR.
+.TP
+\fB\fI{hidden, boolean()}\fR\fR
+If the value is \fItrue\fR, documentation of hidden modules and functions will also be included. The default value is \fIfalse\fR.
+.TP
+\fB\fI{overview, \fIedoc:filename()\fR}\fR\fR
+Specifies the name of the overview-file. By default, this doclet looks for a file \fI"overview.edoc"\fR in the target directory.
+.TP
+\fB\fI{private, boolean()}\fR\fR
+If the value is \fItrue\fR, documentation of private modules and functions will also be included. The default value is \fIfalse\fR.
+.TP
+\fB\fI{stylesheet, string()}\fR\fR
+Specifies the URI used for referencing the stylesheet. The default value is \fI"stylesheet.css"\fR. If an empty string is specified, no stylesheet reference will be generated.
+.TP
+\fB\fI{stylesheet_file, \fIedoc:filename()\fR}\fR\fR
+Specifies the name of the stylesheet file. By default, this doclet uses the file \fI"stylesheet.css"\fR in the \fIpriv\fR subdirectory of the EDoc installation directory. The named file will be copied to the target directory.
+.TP
+\fB\fI{title, string()}\fR\fR
+Specifies the title of the overview-page.
+.RE
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBrun/2\fR
+
+.br
+.RS
+.PP
+Doclet entrypoint.
+
+
+.RE

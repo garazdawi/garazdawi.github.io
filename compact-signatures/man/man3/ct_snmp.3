@@ -1,0 +1,695 @@
+.TH ct_snmp 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_snmp \- \fICommon Test\fR user interface module for the \fISNMP\fR application.
+
+.SH DESCRIPTION
+.PP
+The purpose of this module is to simplify SNMP configuration for the test case writer. Many test cases can use default values for common operations and then no SNMP configuration files need to be supplied. When it is necessary to change particular configuration parameters, a subset of the relevant SNMP configuration files can be passed to \fIct_snmp\fR by \fICommon Test\fR configuration files. For more specialized configuration parameters, a simple SNMP configuration file can be placed in the test suite data directory. To simplify the test suite, \fICommon Test\fR keeps track of some of the SNMP manager information. This way the test suite does not have to handle as many input parameters as if it had to interface wthe OTP SNMP manager directly.
+
+.PP
+\fIConfigurable SNMP Manager and Agent Parameters:\fR
+
+.PP
+Manager configuration:
+
+[{start_manager, boolean()}
+.RS 2
+Optional. Default is 
+\fItrue\fR.
+
+.RE
+
+{users, [{user_name(), [call_back_module(), user_data()]}]}
+.RS 2
+Optional.
+
+
+.RE
+
+{usm_users, [{usm_user_name(), [usm_config()]}]}
+.RS 2
+Optional. SNMPv3 only.
+
+
+.RE
+
+{managed_agents,[{agent_name(), [user_name(), agent_ip(), agent_port(), [agent_config()]]}]}
+.RS 2
+
+\fImanaged_agents\fR is optional.
+
+.RE
+
+{max_msg_size, integer()}
+.RS 2
+Optional. Default is 
+\fI484\fR.
+
+.RE
+
+{mgr_port, integer()}
+.RS 2
+Optional. Default is 
+\fI5000\fR.
+
+.RE
+
+{engine _id, string()}
+.RS 2
+Optional. Default is 
+\fI"mgrEngine"\fR.
+
+.RE
+
+.PP
+Agent configuration:
+
+{start_agent, boolean()}
+.RS 2
+Optional. Default is 
+\fIfalse\fR.
+
+.RE
+
+{agent_sysname, string()}
+.RS 2
+Optional. Default is 
+\fI"ct_test"\fR.
+
+.RE
+
+{agent_manager_ip, manager_ip()}
+.RS 2
+Optional. Default is 
+\fIlocalhost\fR.
+
+.RE
+
+{agent_vsns, list()}
+.RS 2
+Optional. Default is 
+\fI[v2]\fR.
+
+.RE
+
+{agent_trap_udp, integer()}
+.RS 2
+Optional. Default is 
+\fI5000\fR.
+
+.RE
+
+{agent_udp, integer()}
+.RS 2
+Optional. Default is 
+\fI4000\fR.
+
+.RE
+
+{agent_notify_type, atom()}
+.RS 2
+Optional. Default is 
+\fItrap\fR.
+
+.RE
+
+{agent_sec_type, sec_type()}
+.RS 2
+Optional. Default is 
+\fInone\fR.
+
+.RE
+
+{agent_passwd, string()}
+.RS 2
+Optional. Default is 
+\fI""\fR.
+
+.RE
+
+{agent_engine_id, string()}
+.RS 2
+Optional. Default is 
+\fI"agentEngine"\fR.
+
+.RE
+
+{agent_max_msg_size, string()}
+.RS 2
+Optional. Default is 
+\fI484\fR.
+
+.RE
+
+.PP
+The following parameters represents the SNMP configuration files \fIcontext.conf\fR, \fIstandard.conf\fR, \fIcommunity.conf\fR, \fIvacm.conf\fR, \fIusm.conf\fR, \fInotify.conf\fR, \fItarget_addr.conf\fR, and \fItarget_params.conf\fR. Notice that all values in \fIagent.conf\fR can be modified by the parameters listed above. All these configuration files have default values set by the \fISNMP\fR application. These values can be overridden by suppling a list of valid configuration values or a file located in the test suites data directory, which can produce a list of valid configuration values if you apply function \fIfile:consult/1\fR to the file.
+
+{agent_contexts, [term()] | {data_dir_file, rel_path()}}
+.RS 2
+Optional.
+
+
+.RE
+
+{agent_community, [term()] | {data_dir_file, rel_path()}}
+.RS 2
+Optional.
+
+
+.RE
+
+{agent_sysinfo, [term()] | {data_dir_file, rel_path()}}
+.RS 2
+Optional.
+
+
+.RE
+
+{agent_vacm, [term()] | {data_dir_file, rel_path()}}
+.RS 2
+Optional.
+
+
+.RE
+
+{agent_usm, [term()] | {data_dir_file, rel_path()}}
+.RS 2
+Optional.
+
+
+.RE
+
+{agent_notify_def, [term()] | {data_dir_file, rel_path()}}
+.RS 2
+Optional.
+
+
+.RE
+
+{agent_target_address_def, [term()] | {data_dir_file, rel_path()}}
+.RS 2
+Optional.
+
+
+.RE
+
+{agent_target_param_def, [term()] | {data_dir_file, rel_path()}}
+.RS 2
+Optional.
+
+
+.RE
+
+.PP
+Parameter \fIMgrAgentConfName\fR in the functions is to be a name you allocate in your test suite using a \fIrequire\fR statement. Example (where \fIMgrAgentConfName = snmp_mgr_agent\fR):
+
+.IP
+.nf
+suite() -> [{require, snmp_mgr_agent, snmp}].
+
+.fi
+
+.PP
+or
+
+.IP
+.nf
+ct:require(snmp_mgr_agent, snmp).
+
+.fi
+
+.PP
+Notice that USM users are needed for SNMPv3 configuration and are not to be confused with users.
+
+.PP
+SNMP traps, inform, and report messages are handled by the user callback module. For details, see the \fISNMP\fR application.
+
+.PP
+It is recommended to use the \fI.hrl\fR files created by the Erlang/OTP MIB compiler to define the Object Identifiers (OIDs). For example, to get the Erlang node name from \fIerlNodeTable\fR in the OTP-MIB:
+
+.IP
+.nf
+Oid = ?erlNodeEntry ++ [?erlNodeName, 1]
+
+.fi
+
+.PP
+Furthermore, values can be set for \fISNMP\fR application configuration parameters, \fIconfig\fR, \fIserver\fR, \fInet_if\fR, and so on (for a list of valid parameters and types, see the \fIUser's Guide for the SNMP application\fR). This is done by defining a configuration data variable on the following form:
+
+.IP
+.nf
+{snmp_app, [{manager, [snmp_app_manager_params()]},
+            {agent, [snmp_app_agent_params()]}]}.
+
+.fi
+
+.PP
+A name for the data must be allocated in the suite using \fIrequire\fR (see the example above). Pass this name as argument \fISnmpAppConfName\fR to \fIct_snmp:start/3\fR. \fIct_snmp\fR specifies default values for some \fISNMP\fR application configuration parameters (such as \fI{verbosity,trace}\fR for parameter \fIconfig\fR). This set of defaults is merged with the parameters specified by the user. The user values override \fIct_snmp\fR defaults.
+
+.SH DATA TYPES
+.LP
+.B
+\fBagent_config() :: {Item :: term(), Value :: term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBagent_ip() :: ip().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBagent_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBagent_port() :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcall_back_module() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerror_index() :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerror_status() :: noError | atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBip() :: string() | {integer(), integer(), integer(), integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmanager_ip() :: ip().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoid() :: [byte()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoids() :: [oid()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrel_path() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsec_type() :: none | minimum | semi.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsnmp_app_agent_params() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsnmp_app_manager_params() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsnmpreply() :: {error_status(), error_index(), varbinds()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBuser_data() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBuser_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBusm_config() :: {Item :: term(), Value :: term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBusm_user_name() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBvalue_type() :: o | i | u | g | s.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBvar_and_val() :: {oid(), value_type(), term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBvarbind() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBvarbinds() :: [varbind()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBvarsandvals() :: [var_and_val()].\fR
+
+.br
+.RS
+.PP
+These data types are described in the documentation for the \fISNMP\fR application.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBget_next_values(Agent, Oids, MgrAgentConfName) -> SnmpReply\fR
+\fB                         when\fR
+\fB                             Agent :: agent_name(),\fR
+\fB                             Oids :: oids(),\fR
+\fB                             MgrAgentConfName :: atom(),\fR
+\fB                             SnmpReply :: snmpreply().\fR
+
+.br
+.RS
+.PP
+Issues a synchronous SNMP \fIget next\fR request.
+
+
+.RE
+.B
+\fBget_values(Agent, Oids, MgrAgentConfName) -> SnmpReply\fR
+\fB                    when\fR
+\fB                        Agent :: agent_name(),\fR
+\fB                        Oids :: oids(),\fR
+\fB                        MgrAgentConfName :: atom(),\fR
+\fB                        SnmpReply :: snmpreply().\fR
+
+.br
+.RS
+.PP
+Issues a synchronous SNMP \fIget\fR request.
+
+
+.RE
+.B
+\fBload_mibs(Mibs) -> ok | {error, Reason}\fR
+\fB                   when\fR
+\fB                       Mibs :: [MibName],\fR
+\fB                       MibName :: string(),\fR
+\fB                       Reason ::\fR
+\fB                           {'load aborted at', MibName, InternalReason},\fR
+\fB                       InternalReason :: already_loaded | term().\fR
+
+.br
+.RS
+.PP
+Loads the MIBs into agent \fIsnmp_master_agent\fR.
+
+
+.RE
+.B
+\fBregister_agents(MgrAgentConfName, ManagedAgents) ->\fR
+\fB                         ok | {error, Reason}\fR
+\fB                         when\fR
+\fB                             MgrAgentConfName :: atom(),\fR
+\fB                             ManagedAgents ::\fR
+\fB                                 [{AgentName,\fR
+\fB                                   [Uid | AgentIp | AgentUdpPort |\fR
+\fB                                    AgentConf]}],\fR
+\fB                             AgentName :: agent_name(),\fR
+\fB                             Uid :: snmpm:user_id(),\fR
+\fB                             AgentIp :: agent_ip(),\fR
+\fB                             AgentUdpPort :: inet:port_number(),\fR
+\fB                             AgentConf :: [agent_config()],\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+Explicitly instructs the manager to handle this agent. Corresponds to making an entry in \fIagents.conf\fR.
+
+.PP
+This function tries to register the specified managed agents, without checking if any of them exist. To change a registered managed agent, the agent must first be unregistered.
+
+
+.RE
+.B
+\fBregister_users(MgrAgentConfName, Users) -> ok | {error, Reason}\fR
+\fB                        when\fR
+\fB                            MgrAgentConfName :: atom(),\fR
+\fB                            Users :: [{Id, [Module | Data]}],\fR
+\fB                            Id :: snmpm:user_id(),\fR
+\fB                            Module :: user_name(),\fR
+\fB                            Data :: user_data(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+Registers the manager entity (=user) responsible for specific agent(s). Corresponds to making an entry in \fIusers.conf\fR.
+
+.PP
+This function tries to register the specified users, without checking if any of them exist. To change a registered user, the user must first be unregistered.
+
+
+.RE
+.B
+\fBregister_usm_users(MgrAgentConfName, UsmUsers) ->\fR
+\fB                            ok | {error, Reason}\fR
+\fB                            when\fR
+\fB                                MgrAgentConfName :: atom(),\fR
+\fB                                UsmUsers :: [{UsmUserName, UsmConfig}],\fR
+\fB                                UsmUserName :: usm_user_name(),\fR
+\fB                                UsmConfig :: [usm_config()],\fR
+\fB                                Reason :: term().\fR
+
+.br
+.RS
+.PP
+Explicitly instructs the manager to handle this USM user. Corresponds to making an entry in \fIusm.conf\fR.
+
+.PP
+This function tries to register the specified users, without checking if any of them exist. To change a registered user, the user must first be unregistered.
+
+
+.RE
+.B
+\fBset_info(Config) -> [{Agent, OldVarsAndVals, NewVarsAndVals}]\fR
+\fB                  when\fR
+\fB                      Config :: proplists:proplist(),\fR
+\fB                      Agent :: agent_name(),\fR
+\fB                      OldVarsAndVals :: varsandvals(),\fR
+\fB                      NewVarsAndVals :: varsandvals().\fR
+
+.br
+.RS
+.PP
+Returns a list of all successful \fIset\fR requests performed in the test case in reverse order. The list contains the involved user and agent, the value before \fIset\fR, and the new value. This is intended to simplify the cleanup in function \fIend_per_testcase\fR, that is, the undoing of the \fIset\fR requests and their possible side-effects.
+
+
+.RE
+.B
+\fBset_values(Agent, VarsAndVals, MgrAgentConfName, Config) ->\fR
+\fB                    SnmpReply\fR
+\fB                    when\fR
+\fB                        Agent :: agent_name(),\fR
+\fB                        VarsAndVals :: varsandvals(),\fR
+\fB                        MgrAgentConfName :: atom(),\fR
+\fB                        Config :: proplists:proplist(),\fR
+\fB                        SnmpReply :: snmpreply().\fR
+
+.br
+.RS
+.PP
+Issues a synchronous SNMP \fIset\fR request.
+
+
+.RE
+.B
+\fBstart(Config, MgrAgentConfName, SnmpAppConfName) ->\fR
+\fB               ok | {error, Reason}\fR
+\fB               when\fR
+\fB                   Config :: proplists:proplist(),\fR
+\fB                   MgrAgentConfName :: atom(),\fR
+\fB                   SnmpAppConfName :: atom(),\fR
+\fB                   Reason :: term().\fR
+
+.br
+.RS
+.PP
+Starts an SNMP manager and/or agent. In the manager case, registrations of users and agents, as specified by the configuration \fIMgrAgentConfName\fR, are performed. When using SNMPv3, called USM users are also registered. Users, \fIusm_users\fR, and managed agents can also be registered later using \fIct_snmp:register_users/2\fR, \fIct_snmp:register_agents/2\fR, and \fIct_snmp:register_usm_users/2\fR.
+
+.PP
+The agent started is called \fIsnmp_master_agent\fR. Use \fIct_snmp:load_mibs/1\fR to load MIBs into the agent.
+
+.PP
+With \fISnmpAppConfName\fR SNMP applications can be configured with parameters \fIconfig\fR, \fImibs\fR, \fInet_if\fR, and so on. The values are merged with (and possibly override) default values set by \fIct_snmp\fR.
+
+
+.RE
+.B
+\fBstop(Config) -> ok when Config :: proplists:proplist().\fR
+
+.br
+.RS
+.PP
+Stops the SNMP manager and/or agent, and removes all files created.
+
+
+.RE
+.B
+\fBunload_mibs(Mibs) -> ok | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Mibs :: [MibName],\fR
+\fB                         MibName :: string(),\fR
+\fB                         Reason ::\fR
+\fB                             {'unload aborted at', MibName,\fR
+\fB                              InternalReason},\fR
+\fB                         InternalReason :: not_loaded | term().\fR
+
+.br
+.RS
+.PP
+Unloads the MIBs from agent \fIsnmp_master_agent\fR.
+
+
+.RE
+.B
+\fBunregister_agents(MgrAgentConfName) -> ok\fR
+\fB                           when MgrAgentConfName :: atom().\fR
+
+.br
+.RS
+.PP
+Unregisters all managed agents.
+
+
+.RE
+.B
+\fBunregister_agents(MgrAgentConfName, ManagedAgents) -> ok\fR
+\fB                           when\fR
+\fB                               MgrAgentConfName :: atom(),\fR
+\fB                               ManagedAgents :: [agent_name()].\fR
+
+.br
+.RS
+.PP
+Unregisters the specified managed agents.
+
+
+.RE
+.B
+\fBunregister_users(MgrAgentConfName) -> ok\fR
+\fB                          when MgrAgentConfName :: atom().\fR
+
+.br
+.RS
+.PP
+Unregisters all users.
+
+
+.RE
+.B
+\fBunregister_users(MgrAgentConfName, Users) -> ok\fR
+\fB                          when\fR
+\fB                              MgrAgentConfName :: atom(),\fR
+\fB                              Users :: [snmpm:user_id()].\fR
+
+.br
+.RS
+.PP
+Unregisters the specified users.
+
+
+.RE
+.B
+\fBunregister_usm_users(MgrAgentConfName) -> ok\fR
+\fB                              when MgrAgentConfName :: atom().\fR
+
+.br
+.RS
+.PP
+Unregisters all USM users.
+
+
+.RE
+.B
+\fBunregister_usm_users(MgrAgentConfName, UsmUsers) -> ok\fR
+\fB                              when\fR
+\fB                                  MgrAgentConfName :: atom(),\fR
+\fB                                  UsmUsers :: [usm_user_name()].\fR
+
+.br
+.RS
+.PP
+Unregisters the specified USM users.
+
+
+.RE

@@ -1,0 +1,2000 @@
+.TH wxTreeCtrl 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxTreeCtrl \- A tree control presents information as a hierarchy, with items that may be expanded to show further items.
+
+.SH DESCRIPTION
+.PP
+Items in a tree control are referenced by \fIwxTreeItemId\fR (not implemented in wx) handles, which may be tested for validity by calling \fIwxTreeItemId::IsOk()\fR (not implemented in wx).
+
+.PP
+A similar control with a fully native implementation for GTK+ and macOS as well is \fIwxDataViewTreeCtrl\fR (not implemented in wx).
+
+.PP
+To intercept events from a tree control, use the event table macros described in \fIwxTreeEvent\fR.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_EDIT_LABELS: Use this style if you wish the user to be able to edit labels in the tree control.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_NO_BUTTONS: For convenience to document that no buttons are to be drawn.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_HAS_BUTTONS: Use this style to show + and - buttons to the left of parent items.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_TWIST_BUTTONS: Selects alternative style of +/\fI-\fR buttons and shows rotating ("twisting") arrows instead. Currently this style is only implemented under Microsoft Windows Vista and later Windows versions and is ignored under the other platforms as enabling it is equivalent to using \fIwxSystemThemedControl::EnableSystemTheme()\fR (not implemented in wx).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_NO_LINES: Use this style to hide vertical level connectors.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_FULL_ROW_HIGHLIGHT: Use this style to have the background colour and the selection highlight extend over the entire horizontal row of the tree control window. (This flag is ignored under Windows unless you specify \fIwxTR_NO_LINES\fR as well.)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_LINES_AT_ROOT: Use this style to show lines leading to the root nodes (unless no \fIwxTR_NO_LINES\fR is also used, in which case no lines are shown). Note that in the MSW version, if this style is omitted, not only the lines, but also the button used for expanding the root item is not shown, which can be unexpected, so it is recommended to always use it.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_HIDE_ROOT: Use this style to suppress the display of the root node, effectively causing the first-level nodes to appear as a series of root nodes.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_ROW_LINES: Use this style to draw a contrasting border between displayed rows.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_HAS_VARIABLE_ROW_HEIGHT: Use this style to cause row heights to be just big enough to fit the content. If not set, all rows use the largest row height. The default is that this flag is unset. Generic only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_SINGLE: For convenience to document that only one item may be selected at a time. Selecting another item causes the current selection, if any, to be deselected. This is the default.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_MULTIPLE: Use this style to allow a range of items to be selected. If a second range is selected, the current range, if any, is deselected.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTR_DEFAULT_STYLE: The set of flags that are closest to the defaults for the native control for a particular toolkit.
+
+.RE
+
+.PP
+See also overview_windowstyles.
+
+.PP
+\fIWin32\fR \fInotes:\fR
+
+.PP
+\fIwxTreeCtrl\fR class uses the standard common treeview control under Win32 implemented in the system library comctl32.dll. Some versions of this library are known to have bugs with handling the tree control colours: the usual symptom is that the expanded items leave black (or otherwise incorrectly coloured) background behind them, especially for the controls using non-default background colour. The recommended solution is to upgrade the comctl32.dll to a newer version: see http://www.microsoft.com/downloads/details.aspx?familyid=cb2cf3a2-8025-4e8f-8511-9b476a8d35d2
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTreeEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview treectrl
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListBox\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListCtrl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxTreeCtrl
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_begin_drag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_begin_rdrag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_end_drag\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_begin_label_edit\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_end_label_edit\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_delete_item\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_get_info\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_set_info\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_activated\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_collapsed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_collapsing\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_expanded\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_expanding\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_right_click\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_middle_click\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_sel_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_sel_changing\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_key_down\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_gettooltip\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_item_menu\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_tree_state_image_click\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxTreeCtrl() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddRoot(This, Text, [Option]) -> integer()\fR
+\fB                 when\fR
+\fB                     This :: wxTreeCtrl(),\fR
+\fB                     Text :: unicode:chardata(),\fR
+\fB                     Option ::\fR
+\fB                         {image, integer()} |\fR
+\fB                         {selectedImage, integer()} |\fR
+\fB                         {data, term()}.\fR
+
+.br
+.RS
+.PP
+Adds the root node to the tree, returning the new item.
+
+.PP
+The \fIimage\fR and \fIselImage\fR parameters are an index within the normal image list specifying the image to use for unselected and selected items, respectively. If \fIimage\fR > -1 and \fIselImage\fR is -1, the same image is used for both selected and unselected items.
+
+
+.RE
+.B
+\fBappendItem(This, Parent, Text, [Option]) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxTreeCtrl(),\fR
+\fB                        Parent :: integer(),\fR
+\fB                        Text :: unicode:chardata(),\fR
+\fB                        Option ::\fR
+\fB                            {image, integer()} |\fR
+\fB                            {selectedImage, integer()} |\fR
+\fB                            {data, term()}.\fR
+
+.br
+.RS
+.PP
+Appends an item to the end of the branch identified by \fIparent\fR, return a new item id.
+
+.PP
+The \fIimage\fR and \fIselImage\fR parameters are an index within the normal image list specifying the image to use for unselected and selected items, respectively. If \fIimage\fR > -1 and \fIselImage\fR is -1, the same image is used for both selected and unselected items.
+
+
+.RE
+.B
+\fBassignImageList(This, ImageList) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxTreeCtrl(),\fR
+\fB                             ImageList :: wxImageList:wxImageList().\fR
+
+.br
+.RS
+.PP
+Sets the normal image list.
+
+.PP
+The image list assigned with this method will be automatically deleted by \fIwxTreeCtrl\fR as appropriate (i.e. it takes ownership of the list).
+
+.PP
+See: \fIsetImageList/2\fR
+
+
+.RE
+.B
+\fBassignStateImageList(This, ImageList) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxTreeCtrl(),\fR
+\fB                                  ImageList :: wxImageList:wxImageList().\fR
+
+.br
+.RS
+.PP
+Sets the state image list.
+
+.PP
+Image list assigned with this method will be automatically deleted by \fIwxTreeCtrl\fR as appropriate (i.e. it takes ownership of the list).
+
+.PP
+See: \fIsetStateImageList/2\fR
+
+
+.RE
+.B
+\fBcollapse(This, Item) -> ok\fR
+\fB                  when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Collapses the given item.
+
+
+.RE
+.B
+\fBcollapseAndReset(This, Item) -> ok\fR
+\fB                          when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Collapses the given item and removes all children.
+
+
+.RE
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxTreeCtrl(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option ::\fR
+\fB                        {id, integer()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Creates the tree control.
+
+.PP
+See \fInew/2\fR for further details.
+
+
+.RE
+.B
+\fBdelete(This, Item) -> ok\fR
+\fB                when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Deletes the specified item.
+
+.PP
+A \fIEVT_TREE_DELETE_ITEM\fR event will be generated.
+
+.PP
+This function may cause a subsequent call to \fIgetNextChild/3\fR to fail.
+
+
+.RE
+.B
+\fBdeleteAllItems(This) -> ok when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Deletes all items in the control.
+
+.PP
+This function generates \fIwxEVT_TREE_DELETE_ITEM\fR events for each item being deleted, including the root one if it is shown, i.e. unless wxTR_HIDE_ROOT style is used.
+
+
+.RE
+.B
+\fBdeleteChildren(This, Item) -> ok\fR
+\fB                        when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Deletes all children of the given item (but not the item itself).
+
+.PP
+A \fIwxEVT_TREE_DELETE_ITEM\fR event will be generated for every item being deleted.
+
+.PP
+If you have called \fIsetItemHasChildren/3\fR, you may need to call it again since \fIdeleteChildren/2\fR does not automatically clear the setting.
+
+
+.RE
+.B
+\fBdestroy(This :: wxTreeCtrl()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBeditLabel(This, Item) -> wxTextCtrl:wxTextCtrl()\fR
+\fB                   when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Starts editing the label of the given \fIitem\fR.
+
+.PP
+This function generates a \fIEVT_TREE_BEGIN_LABEL_EDIT\fR event which can be vetoed so that no text control will appear for in-place editing.
+
+.PP
+If the user changed the label (i.e. s/he does not press ESC or leave the text control without changes, a \fIEVT_TREE_END_LABEL_EDIT\fR event will be sent which can be vetoed as well.
+
+.PP
+See: \fIwxTreeEvent\fR
+
+
+.RE
+.B
+\fBensureVisible(This, Item) -> ok\fR
+\fB                       when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Scrolls and/or expands items to ensure that the given item is visible.
+
+.PP
+This method can be used, and will work, even while the window is frozen (see \fIwxWindow:freeze/1\fR).
+
+
+.RE
+.B
+\fBexpand(This, Item) -> ok\fR
+\fB                when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Expands the given item.
+
+
+.RE
+.B
+\fBgetBoundingRect(This, Item, [Option]) -> Result\fR
+\fB                         when\fR
+\fB                             Result ::\fR
+\fB                                 {Res :: boolean(),\fR
+\fB                                  Rect ::\fR
+\fB                                      {X :: integer(),\fR
+\fB                                       Y :: integer(),\fR
+\fB                                       W :: integer(),\fR
+\fB                                       H :: integer()}},\fR
+\fB                             This :: wxTreeCtrl(),\fR
+\fB                             Item :: integer(),\fR
+\fB                             Option :: {textOnly, boolean()}.\fR
+
+.br
+.RS
+.PP
+Retrieves the rectangle bounding the \fIitem\fR.
+
+.PP
+If \fItextOnly\fR is true, only the rectangle around the item's label will be returned, otherwise the item's image is also taken into account.
+
+.PP
+The return value is true if the rectangle was successfully retrieved or false if it was not (in this case \fIrect\fR is not changed) - for example, if the item is currently invisible.
+
+.PP
+Notice that the rectangle coordinates are logical, not physical ones. So, for example, the x coordinate may be negative if the tree has a horizontal scrollbar and its position is not 0.
+
+
+.RE
+.B
+\fBgetChildrenCount(This, Item, [Option]) -> integer()\fR
+\fB                          when\fR
+\fB                              This :: wxTreeCtrl(),\fR
+\fB                              Item :: integer(),\fR
+\fB                              Option :: {recursively, boolean()}.\fR
+
+.br
+.RS
+.PP
+Returns the number of items in the branch.
+
+.PP
+If \fIrecursively\fR is true, returns the total number of descendants, otherwise only one level of children is counted.
+
+
+.RE
+.B
+\fBgetCount(This) -> integer() when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the number of items in the control.
+
+
+.RE
+.B
+\fBgetEditControl(This) -> wxTextCtrl:wxTextCtrl()\fR
+\fB                        when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the edit control being currently used to edit a label.
+
+.PP
+Returns NULL if no label is being edited.
+
+.PP
+Note: This is currently only implemented for wxMSW.
+
+
+.RE
+.B
+\fBgetFirstChild(This, Item) -> Result\fR
+\fB                       when\fR
+\fB                           Result ::\fR
+\fB                               {Res :: integer(), Cookie :: integer()},\fR
+\fB                           This :: wxTreeCtrl(),\fR
+\fB                           Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the first child; call \fIgetNextChild/3\fR for the next child.
+
+.PP
+For this enumeration function you must pass in a 'cookie' parameter which is opaque for the application but is necessary for the library to make these functions reentrant (i.e. allow more than one enumeration on one and the same object simultaneously). The cookie passed to \fIgetFirstChild/2\fR and \fIgetNextChild/3\fR should be the same variable.
+
+.PP
+Returns an invalid tree item (i.e. \fIwxTreeItemId::IsOk()\fR (not implemented in wx) returns false) if there are no further children.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetNextChild/3\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetNextSibling/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetFirstVisibleItem(This) -> integer() when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the first visible item.
+
+
+.RE
+.B
+\fBgetImageList(This) -> wxImageList:wxImageList()\fR
+\fB                      when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the normal image list.
+
+
+.RE
+.B
+\fBgetIndent(This) -> integer() when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the current tree control indentation.
+
+
+.RE
+.B
+\fBgetItemBackgroundColour(This, Item) -> wx:wx_colour4()\fR
+\fB                                 when\fR
+\fB                                     This :: wxTreeCtrl(),\fR
+\fB                                     Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the background colour of the item.
+
+
+.RE
+.B
+\fBgetItemData(This, Item) -> term()\fR
+\fB                     when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the tree item data associated with the item.
+
+
+.RE
+.B
+\fBgetItemFont(This, Item) -> wxFont:wxFont()\fR
+\fB                     when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the font of the item label.
+
+.PP
+If the font hadn't been explicitly set for the specified \fIitem\fR with \fIsetItemFont/3\fR, returns an invalid ?wxNullFont font. \fIwxWindow:getFont/1\fR can be used to retrieve the global tree control font used for the items without any specific font.
+
+
+.RE
+.B
+\fBgetItemImage(This, Item, [Option]) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxTreeCtrl(),\fR
+\fB                          Item :: integer(),\fR
+\fB                          Option :: {which, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Gets the specified item image.
+
+.PP
+The value of \fIwhich\fR may be:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxTreeItemIcon_Normal: to get the normal item image.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxTreeItemIcon_Selected: to get the selected item image (i.e. the image which is shown when the item is currently selected).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxTreeItemIcon_Expanded: to get the expanded image (this only makes sense for items which have children - then this image is shown when the item is expanded and the normal image is shown when it is collapsed).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxTreeItemIcon_SelectedExpanded: to get the selected expanded image (which is shown when an expanded item is currently selected).
+
+.RE
+
+
+.RE
+.B
+\fBgetItemParent(This, Item) -> integer()\fR
+\fB                       when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the item's parent.
+
+
+.RE
+.B
+\fBgetItemText(This, Item) -> unicode:charlist()\fR
+\fB                     when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the item label.
+
+
+.RE
+.B
+\fBgetItemTextColour(This, Item) -> wx:wx_colour4()\fR
+\fB                           when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the colour of the item label.
+
+
+.RE
+.B
+\fBgetLastChild(This, Item) -> integer()\fR
+\fB                      when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the last child of the item (or an invalid tree item if this item has no children).
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetFirstChild/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetNextSibling/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetLastChild/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetNextChild(This, Item, Cookie) -> Result\fR
+\fB                      when\fR
+\fB                          Result ::\fR
+\fB                              {Res :: integer(), Cookie :: integer()},\fR
+\fB                          This :: wxTreeCtrl(),\fR
+\fB                          Item :: integer(),\fR
+\fB                          Cookie :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the next child; call \fIgetFirstChild/2\fR for the first child.
+
+.PP
+For this enumeration function you must pass in a 'cookie' parameter which is opaque for the application but is necessary for the library to make these functions reentrant (i.e. allow more than one enumeration on one and the same object simultaneously). The cookie passed to \fIgetFirstChild/2\fR and \fIgetNextChild/3\fR should be the same.
+
+.PP
+Returns an invalid tree item if there are no further children.
+
+.PP
+See: \fIgetFirstChild/2\fR
+
+
+.RE
+.B
+\fBgetNextSibling(This, Item) -> integer()\fR
+\fB                        when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the next sibling of the specified item; call \fIgetPrevSibling/2\fR for the previous sibling.
+
+.PP
+Returns an invalid tree item if there are no further siblings.
+
+.PP
+See: \fIgetPrevSibling/2\fR
+
+
+.RE
+.B
+\fBgetNextVisible(This, Item) -> integer()\fR
+\fB                        when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the next visible item or an invalid item if this item is the last visible one.
+
+.PP
+Note: The \fIitem\fR itself must be visible.
+
+
+.RE
+.B
+\fBgetPrevSibling(This, Item) -> integer()\fR
+\fB                        when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the previous sibling of the specified item; call \fIgetNextSibling/2\fR for the next sibling.
+
+.PP
+Returns an invalid tree item if there are no further children.
+
+.PP
+See: \fIgetNextSibling/2\fR
+
+
+.RE
+.B
+\fBgetPrevVisible(This, Item) -> integer()\fR
+\fB                        when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the previous visible item or an invalid item if this item is the first visible one.
+
+.PP
+Note: The \fIitem\fR itself must be visible.
+
+
+.RE
+.B
+\fBgetRootItem(This) -> integer() when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the root item for the tree control.
+
+
+.RE
+.B
+\fBgetSelection(This) -> integer() when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the selection, or an invalid item if there is no selection.
+
+.PP
+This function only works with the controls without \fIwxTR_MULTIPLE\fR style, use \fIgetSelections/1\fR for the controls which do have this style or, if a single item is wanted, use \fIGetFocusedItem()\fR (not implemented in wx).
+
+
+.RE
+.B
+\fBgetSelections(This) -> Result\fR
+\fB                       when\fR
+\fB                           Result ::\fR
+\fB                               {Res :: integer(),\fR
+\fB                                Selection :: [integer()]},\fR
+\fB                           This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Fills the array of tree items passed in with the currently selected items.
+
+.PP
+This function can be called only if the control has the \fIwxTR_MULTIPLE\fR style.
+
+.PP
+Returns the number of selected items.
+
+
+.RE
+.B
+\fBgetStateImageList(This) -> wxImageList:wxImageList()\fR
+\fB                           when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Returns the state image list (from which application-defined state images are taken).
+
+
+.RE
+.B
+\fBhitTest(This, Point) -> Result\fR
+\fB                 when\fR
+\fB                     Result :: {Res :: integer(), Flags :: integer()},\fR
+\fB                     This :: wxTreeCtrl(),\fR
+\fB                     Point :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Calculates which (if any) item is under the given \fIpoint\fR, returning the tree item id at this point plus extra information \fIflags\fR.
+
+.PP
+\fIflags\fR is a bitlist of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_ABOVE:\fR Above the client area.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_BELOW:\fR Below the client area.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_NOWHERE:\fR In the client area but below the last item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_ONITEMBUTTON:\fR On the button associated with an item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_ONITEMICON:\fR On the bitmap associated with an item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_ONITEMINDENT:\fR In the indentation associated with an item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_ONITEMLABEL:\fR On the label (string) associated with an item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_ONITEMRIGHT:\fR In the area to the right of an item.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_ONITEMSTATEICON:\fR On the state icon for a tree view item that is in a user-defined state.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_TOLEFT:\fR To the right of the client area.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTREE_HITTEST_TORIGHT:\fR To the left of the client area.
+
+.RE
+
+
+.RE
+.B
+\fBinsertItem(This, Parent, Previous, Text, [Option]) -> integer()\fR
+\fB                    when\fR
+\fB                        This :: wxTreeCtrl(),\fR
+\fB                        Parent :: integer(),\fR
+\fB                        Previous :: integer(),\fR
+\fB                        Text :: unicode:chardata(),\fR
+\fB                        Option ::\fR
+\fB                            {image, integer()} |\fR
+\fB                            {selImage, integer()} |\fR
+\fB                            {data, term()}.\fR
+
+.br
+.RS
+.PP
+Inserts an item after a given one (\fIprevious\fR).
+
+.PP
+The \fIimage\fR and \fIselImage\fR parameters are an index within the normal image list specifying the image to use for unselected and selected items, respectively. If \fIimage\fR > -1 and \fIselImage\fR is -1, the same image is used for both selected and unselected items.
+
+
+.RE
+.B
+\fBisBold(This, Item) -> boolean()\fR
+\fB                when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if the given item is in bold state.
+
+.PP
+See: \fIsetItemBold/3\fR
+
+
+.RE
+.B
+\fBisExpanded(This, Item) -> boolean()\fR
+\fB                    when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is expanded (only makes sense if it has children).
+
+
+.RE
+.B
+\fBisSelected(This, Item) -> boolean()\fR
+\fB                    when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is selected.
+
+
+.RE
+.B
+\fBisTreeItemIdOk(Item) -> boolean() when Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is valid.
+
+
+.RE
+.B
+\fBisVisible(This, Item) -> boolean()\fR
+\fB                   when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if the item is visible on the screen.
+
+
+.RE
+.B
+\fBitemHasChildren(This, Item) -> boolean()\fR
+\fB                         when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if the item has children.
+
+
+.RE
+.B
+\fBnew() -> wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Default Constructor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxTreeCtrl()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {id, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a tree control.
+
+.PP
+See: \fIcreate/3\fR
+
+
+.RE
+.B
+\fBprependItem(This, Parent, Text, [Option]) -> integer()\fR
+\fB                     when\fR
+\fB                         This :: wxTreeCtrl(),\fR
+\fB                         Parent :: integer(),\fR
+\fB                         Text :: unicode:chardata(),\fR
+\fB                         Option ::\fR
+\fB                             {image, integer()} |\fR
+\fB                             {selectedImage, integer()} |\fR
+\fB                             {data, term()}.\fR
+
+.br
+.RS
+.PP
+Appends an item as the first child of \fIparent\fR, return a new item id.
+
+.PP
+The \fIimage\fR and \fIselImage\fR parameters are an index within the normal image list specifying the image to use for unselected and selected items, respectively. If \fIimage\fR > -1 and \fIselImage\fR is -1, the same image is used for both selected and unselected items.
+
+
+.RE
+.B
+\fBscrollTo(This, Item) -> ok\fR
+\fB                  when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Scrolls the specified item into view.
+
+.PP
+Note that this method doesn't work while the window is frozen (See \fIwxWindow:freeze/1\fR), at least under MSW.
+
+.PP
+See: \fIensureVisible/2\fR
+
+
+.RE
+.B
+\fBselectItem(This, Item, [Option]) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxTreeCtrl(),\fR
+\fB                        Item :: integer(),\fR
+\fB                        Option :: {select, boolean()}.\fR
+
+.br
+.RS
+.PP
+Selects the given item.
+
+.PP
+In multiple selection controls, can be also used to deselect a currently selected item if the value of \fIselect\fR is false.
+
+.PP
+Notice that calling this method will generate \fIwxEVT_TREE_SEL_CHANGING\fR and \fIwxEVT_TREE_SEL_CHANGED\fR events and that the change could be vetoed by the former event handler.
+
+
+.RE
+.B
+\fBsetImageList(This, ImageList) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxTreeCtrl(),\fR
+\fB                          ImageList :: wxImageList:wxImageList().\fR
+
+.br
+.RS
+.PP
+Sets the normal image list.
+
+.PP
+The image list assigned with this method will \fInot\fR be deleted by \fIwxTreeCtrl\fR's destructor, you must delete it yourself.
+
+.PP
+See: \fIassignImageList/2\fR
+
+
+.RE
+.B
+\fBsetIndent(This, Indent) -> ok\fR
+\fB                   when This :: wxTreeCtrl(), Indent :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the indentation for the tree control.
+
+
+.RE
+.B
+\fBsetItemBackgroundColour(This, Item, Col) -> ok\fR
+\fB                                 when\fR
+\fB                                     This :: wxTreeCtrl(),\fR
+\fB                                     Item :: integer(),\fR
+\fB                                     Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the colour of the item's background.
+
+
+.RE
+.B
+\fBsetItemBold(This, Item, [Option]) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxTreeCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Option :: {bold, boolean()}.\fR
+
+.br
+.RS
+.PP
+Makes item appear in bold font if \fIbold\fR parameter is true or resets it to the normal state.
+
+.PP
+See: \fIisBold/2\fR
+
+
+.RE
+.B
+\fBsetItemData(This, Item, Data) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxTreeCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Data :: term().\fR
+
+.br
+.RS
+.PP
+Sets the item client data.
+
+.PP
+Notice that the client data previously associated with the \fIitem\fR (if any) is \fInot\fR freed by this function and so calling this function multiple times for the same item will result in memory leaks unless you delete the old item data pointer yourself.
+
+
+.RE
+.B
+\fBsetItemDropHighlight(This, Item, [Option]) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxTreeCtrl(),\fR
+\fB                                  Item :: integer(),\fR
+\fB                                  Option :: {highlight, boolean()}.\fR
+
+.br
+.RS
+.PP
+Gives the item the visual feedback for Drag'n'Drop actions, which is useful if something is dragged from the outside onto the tree control (as opposed to a DnD operation within the tree control, which already is implemented internally).
+
+
+.RE
+.B
+\fBsetItemFont(This, Item, Font) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxTreeCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the item's font.
+
+.PP
+All items in the tree should have the same height to avoid text clipping, so the fonts height should be the same for all of them, although font attributes may vary.
+
+.PP
+See: \fIsetItemBold/3\fR
+
+
+.RE
+.B
+\fBsetItemHasChildren(This, Item, [Option]) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxTreeCtrl(),\fR
+\fB                                Item :: integer(),\fR
+\fB                                Option :: {has, boolean()}.\fR
+
+.br
+.RS
+.PP
+Force appearance of the button next to the item.
+
+.PP
+This is useful to allow the user to expand the items which don't have any children now, but instead adding them only when needed, thus minimizing memory usage and loading time.
+
+
+.RE
+.B
+\fBsetItemImage(This, Item, Image, [Option]) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxTreeCtrl(),\fR
+\fB                          Item :: integer(),\fR
+\fB                          Image :: integer(),\fR
+\fB                          Option :: {which, wx:wx_enum()}.\fR
+
+.br
+.RS
+.PP
+Sets the specified item's image.
+
+.PP
+See \fIgetItemImage/3\fR for the description of the \fIwhich\fR parameter.
+
+
+.RE
+.B
+\fBsetItemText(This, Item, Text) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxTreeCtrl(),\fR
+\fB                         Item :: integer(),\fR
+\fB                         Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the item label.
+
+
+.RE
+.B
+\fBsetItemTextColour(This, Item, Col) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxTreeCtrl(),\fR
+\fB                               Item :: integer(),\fR
+\fB                               Col :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the colour of the item's text.
+
+
+.RE
+.B
+\fBsetStateImageList(This, ImageList) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxTreeCtrl(),\fR
+\fB                               ImageList :: wxImageList:wxImageList().\fR
+
+.br
+.RS
+.PP
+Sets the state image list (from which application-defined state images are taken).
+
+.PP
+Image list assigned with this method will \fInot\fR be deleted by \fIwxTreeCtrl\fR's destructor, you must delete it yourself.
+
+.PP
+See: \fIassignStateImageList/2\fR
+
+
+.RE
+.B
+\fBsetWindowStyle(This, Styles) -> ok\fR
+\fB                        when This :: wxTreeCtrl(), Styles :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the mode flags associated with the display of the tree control.
+
+.PP
+The new mode takes effect immediately.
+
+.PP
+Note: Generic only; MSW ignores changes.
+
+
+.RE
+.B
+\fBsortChildren(This, Item) -> ok\fR
+\fB                      when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Sorts the children of the given item using \fIOnCompareItems()\fR (not implemented in wx).
+
+.PP
+You should override that method to change the sort order (the default is ascending case-sensitive alphabetical order).
+
+
+.RE
+.B
+\fBtoggle(This, Item) -> ok\fR
+\fB                when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Toggles the given item between collapsed and expanded states.
+
+
+.RE
+.B
+\fBtoggleItemSelection(This, Item) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Toggles the given item between selected and unselected states.
+
+.PP
+For multiselection controls only.
+
+
+.RE
+.B
+\fBunselect(This) -> ok when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+Removes the selection from the currently selected item (if any).
+
+
+.RE
+.B
+\fBunselectAll(This) -> ok when This :: wxTreeCtrl().\fR
+
+.br
+.RS
+.PP
+This function either behaves the same as \fIunselect/1\fR if the control doesn't have \fIwxTR\\_MULTIPLE\fR style, or removes the selection from all items if it does have this style.
+
+
+.RE
+.B
+\fBunselectItem(This, Item) -> ok\fR
+\fB                      when This :: wxTreeCtrl(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Unselects the given item.
+
+.PP
+This works in multiselection controls only.
+
+
+.RE

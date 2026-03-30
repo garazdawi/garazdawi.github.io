@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.40.1">
+    <meta name="project" content="kernel v10.6.1">
+
+
+    <title>erl_epmd — kernel v10.6.1</title>
+
+    <link rel="stylesheet" href="dist/html-erlang-EYOUDG57.css" />
+
+    <script defer src="dist/sidebar_items-3699F797.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-Y2MUTVIN.js"></script>
+<style>.dark img { background-color: white; }</style>
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="../../../../doc/index.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="kernel" />
+        </a>
+
+      <div>
+        <a href="../../../../doc/index.html" class="sidebar-projectName" translate="no">
+kernel
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v10.6.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="Pages"></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of kernel</span>
+            <div class="search-input-wrapper">
+              <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+                <i class="ri-close-line ri-lg" title="Cancel search"></i>
+              </button>
+            </div>
+          </label>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <div class="engine-selector" data-multiple="false">
+          <button type="button" class="engine-button" aria-label="Select search engine" aria-haspopup="true" aria-expanded="false">
+            <i class="ri-search-2-line" aria-hidden="true"></i>
+            <span class="engine-name">Search erlang documentation</span>
+            <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+          </button>
+          <div class="engine-dropdown" hidden role="menu">
+
+              <button type="button"
+                      class="engine-option"
+                      data-engine-url="search.html?q="
+                      role="menuitemradio"
+                      aria-checked="true">
+                <span class="name">Search erlang documentation</span>
+                <span class="help">Search erlang documentation</span>
+              </button>
+
+          </div>
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">erl_epmd</span> 
+      <small class="app-vsn" translate="no">(kernel v10.6.1)</small>
+
+    </h1>
+
+<a href="erl_epmd.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
+  <i class="ri-markdown-line" aria-hidden="true"></i>
+  <span class="sr-only">Copy Markdown</span>
+</a>
+
+
+
+      <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L22" title="View Source" class="icon-action" rel="help nofollow">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+  </div>
+
+
+    <section id="moduledoc">
+<p>Erlang interface towards epmd</p><p>This module communicates with the EPMD daemon, see <a href="../../../../lib/../erts/doc/html/epmd_cmd.html">epmd</a>.
+To implement your own epmd module please see
+<a href="../../../../lib/../erts/doc/html/alt_disco.html">ERTS User's Guide: How to Implement an Alternative Node Discovery for Erlang Distribution</a></p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h2 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h2>
+<div class="summary-functions summary">
+  <h3>
+    <a href="#functions">Functions</a>
+  </h3>
+
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#address_please/3" data-no-tooltip="" translate="no">address_please(Name, Host, AddressFamily)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Called by the distribution module to resolves the <code class="inline">Host</code> to an IP address of a
+remote node.</p></div>
+
+    </div>
+
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#listen_port_please/2" data-no-tooltip="" translate="no">listen_port_please(Name, Host)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Called by the distribution module to get which port the local node should listen
+to when accepting new distribution requests.</p></div>
+
+    </div>
+
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#names/1" data-no-tooltip="" translate="no">names(Host)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Called by <a href="net_adm.html"><code class="inline">net_adm:names/0</code></a>. <code class="inline">Host</code> defaults to the localhost.
+Returns the names and associated port numbers of the Erlang nodes that <code class="inline">epmd</code>
+registered at the specified host. Returns <code class="inline">{error, address}</code> if <code class="inline">epmd</code> is not
+operational.</p></div>
+
+    </div>
+
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#port_please/2" data-no-tooltip="" translate="no">port_please(Name, Host)</a>
+        </div>
+      </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#port_please/3" data-no-tooltip="" translate="no">port_please(Name, Host, Timeout)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Requests the distribution port for the given node of an EPMD instance. Together
+with the port it returns a distribution protocol version which has been 5 since
+Erlang/OTP R6.</p></div>
+
+    </div>
+
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#register_node/2" data-no-tooltip="" translate="no">register_node(Name, Port)</a>
+        </div>
+      </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#register_node/3" data-no-tooltip="" translate="no">register_node(Name, Port, Driver)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Registers the node with <code class="inline">epmd</code> and tells epmd what port will be used for the
+current node. It returns a creation number. This number is incremented on each
+register to help differentiate a new node instance connecting to epmd with the
+same name.</p></div>
+
+    </div>
+
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_link/0" data-no-tooltip="" translate="no">start_link()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>This function is invoked as this module is added as a child of the
+<code class="inline">erl_distribution</code> supervisor.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h2 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h2>
+
+    <div class="functions-list">
+<section class="detail" id="address_please/3">
+
+
+  <div class="detail-header">
+    <a href="#address_please/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+
+      <div class="signature-row">
+
+
+
+
+              <h1 class="signature" translate="no">address_please(Name, Host, AddressFamily)<span class="signature-arrow">&nbsp;-&gt;&nbsp;</span><span class="signature-result">Result</span></h1>
+
+
+
+
+          <span class="note">(since OTP 21.0)</span>
+
+
+          <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L270" class="icon-action" rel="help nofollow" aria-label="View Source">
+            <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+          </a>
+
+      </div>
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+        <div class="specs">
+          <h4 class="specs-title">Types</h4>
+
+            <pre translate="no">Name = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+            <pre translate="no">Host = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="inet.html#t:ip_address/0">inet:ip_address</a>()</pre>
+
+            <pre translate="no">AddressFamily = inet | inet6</pre>
+
+            <pre translate="no">Result = Success | {error, <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()}</pre>
+
+            <pre translate="no">Port = Version = <a href="../../../../lib/../erts/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>()</pre>
+
+            <pre translate="no">Success = {ok, <a href="inet.html#t:ip_address/0">inet:ip_address</a>()} | {ok, <a href="inet.html#t:ip_address/0">inet:ip_address</a>(), Port, Version}</pre>
+
+        </div>
+
+
+<p>Called by the distribution module to resolves the <code class="inline">Host</code> to an IP address of a
+remote node.</p><p>As an optimization this function may also return the port and version of the
+remote node. If port and version are returned <a href="#port_please/3"><code class="inline">port_please/3</code></a> will not be
+called.</p>
+  </section>
+</section>
+<section class="detail" id="listen_port_please/2">
+
+
+  <div class="detail-header">
+    <a href="#listen_port_please/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+
+      <div class="signature-row">
+
+
+
+
+              <h1 class="signature" translate="no">listen_port_please(Name, Host)<span class="signature-arrow">&nbsp;-&gt;&nbsp;</span><span class="signature-result">{ok, Port}</span></h1>
+
+
+
+
+          <span class="note">(since OTP 23.0)</span>
+
+
+          <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L170" class="icon-action" rel="help nofollow" aria-label="View Source">
+            <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+          </a>
+
+      </div>
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+        <div class="specs">
+          <h4 class="specs-title">Types</h4>
+
+            <pre translate="no">Name = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+            <pre translate="no">Host = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="inet.html#t:ip_address/0">inet:ip_address</a>()</pre>
+
+            <pre translate="no">Port = <a href="../../../../lib/../erts/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>()</pre>
+
+        </div>
+
+
+<p>Called by the distribution module to get which port the local node should listen
+to when accepting new distribution requests.</p>
+  </section>
+</section>
+<section class="detail" id="names/1">
+
+
+  <div class="detail-header">
+    <a href="#names/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+
+      <div class="signature-row">
+
+
+
+
+              <h1 class="signature" translate="no">names(Host)<span class="signature-arrow">&nbsp;-&gt;&nbsp;</span><span class="signature-result">Result</span></h1>
+
+
+
+
+          <span class="note">(since OTP 21.0)</span>
+
+
+          <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L206" class="icon-action" rel="help nofollow" aria-label="View Source">
+            <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+          </a>
+
+      </div>
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+        <div class="specs">
+          <h4 class="specs-title">Types</h4>
+
+            <pre translate="no">Host = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="inet.html#t:ip_address/0">inet:ip_address</a>()</pre>
+
+            <pre translate="no">Result = {ok, [{Name, Port}]} | {error, Reason}</pre>
+
+            <pre translate="no">Port = <a href="../../../../lib/../erts/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>()</pre>
+
+            <pre translate="no">Reason = address | <a href="file.html#t:posix/0">file:posix</a>()</pre>
+
+            <pre translate="no">Name = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+        </div>
+
+
+<p>Called by <a href="net_adm.html"><code class="inline">net_adm:names/0</code></a>. <code class="inline">Host</code> defaults to the localhost.
+Returns the names and associated port numbers of the Erlang nodes that <code class="inline">epmd</code>
+registered at the specified host. Returns <code class="inline">{error, address}</code> if <code class="inline">epmd</code> is not
+operational.</p><p><em>Example:</em></p><pre><code class="makeup erlang" translate="no"><span class="gp unselectable">(arne@dunn)1&gt; </span><span class="nc">erl_epmd</span><span class="p">:</span><span class="nf">names</span><span class="p" data-group-id="6358208212-1">(</span><span class="ss">localhost</span><span class="p" data-group-id="6358208212-1">)</span><span class="p">.</span><span class="w">
+</span><span class="p" data-group-id="6358208212-2">{</span><span class="ss">ok</span><span class="p">,</span><span class="p" data-group-id="6358208212-3">[</span><span class="p" data-group-id="6358208212-4">{</span><span class="s">&quot;arne&quot;</span><span class="p">,</span><span class="mi">40262</span><span class="p" data-group-id="6358208212-4">}</span><span class="p" data-group-id="6358208212-3">]</span><span class="p" data-group-id="6358208212-2">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="port_please/3">
+
+
+    <span id="port_please/2"></span>
+
+  <div class="detail-header">
+    <a href="#port_please/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+
+        <div class="signature-row">
+          <h1 class="signature" translate="no">port_please(Name, Host)<span class="signature-arrow">&nbsp;≡&nbsp;</span><span class="signature-result">port_please(Name, Host, infinity)</span></h1>
+
+            <span class="note">(since OTP 21.0)</span>
+
+
+            <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L111" class="icon-action" rel="help nofollow" aria-label="View Source">
+              <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+            </a>
+
+        </div>
+
+      <div class="signature-row">
+
+
+
+
+              <h1 class="signature" translate="no">port_please(Name, Host, Timeout)<span class="signature-arrow">&nbsp;-&gt;&nbsp;</span><span class="signature-result">Result</span></h1>
+
+
+
+
+          <span class="note">(since OTP 21.0)</span>
+
+
+          <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L127" class="icon-action" rel="help nofollow" aria-label="View Source">
+            <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+          </a>
+
+      </div>
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+        <div class="specs">
+          <h4 class="specs-title">Types</h4>
+
+            <pre translate="no">Name = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+            <pre translate="no">Host = <a href="../../../../lib/../erts/doc/html/erlang.html#t:atom/0">atom</a>() | <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>() | <a href="inet.html#t:ip_address/0">inet:ip_address</a>()</pre>
+
+            <pre translate="no">Timeout = <a href="../../../../lib/../erts/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>() | infinity</pre>
+
+            <pre translate="no">Result = {port, Port, Version} | noport | closed | {error, <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()}</pre>
+
+            <pre translate="no">Port = Version = <a href="../../../../lib/../erts/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>()</pre>
+
+        </div>
+
+
+<p>Requests the distribution port for the given node of an EPMD instance. Together
+with the port it returns a distribution protocol version which has been 5 since
+Erlang/OTP R6.</p>
+  </section>
+</section>
+<section class="detail" id="register_node/3">
+
+
+    <span id="register_node/2"></span>
+
+  <div class="detail-header">
+    <a href="#register_node/3" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+
+        <div class="signature-row">
+          <h1 class="signature" translate="no">register_node(Name, Port)<span class="signature-arrow">&nbsp;≡&nbsp;</span><span class="signature-result">register_node(Name, Port, inet)</span></h1>
+
+            <span class="note">(since OTP 21.0)</span>
+
+
+            <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L222" class="icon-action" rel="help nofollow" aria-label="View Source">
+              <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+            </a>
+
+        </div>
+
+      <div class="signature-row">
+
+
+
+
+              <h1 class="signature" translate="no">register_node(Name, Port, Driver)<span class="signature-arrow">&nbsp;-&gt;&nbsp;</span><span class="signature-result">Result</span></h1>
+
+
+
+
+          <span class="note">(since OTP 21.0)</span>
+
+
+          <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L242" class="icon-action" rel="help nofollow" aria-label="View Source">
+            <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+          </a>
+
+      </div>
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+        <div class="specs">
+          <h4 class="specs-title">Types</h4>
+
+            <pre translate="no">Name = <a href="../../../../lib/../erts/doc/html/erlang.html#t:string/0">string</a>()</pre>
+
+            <pre translate="no">Port = <a href="../../../../lib/../erts/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>()</pre>
+
+            <pre translate="no">Driver = inet_tcp | inet6_tcp | inet | inet6</pre>
+
+            <pre translate="no">Result = {ok, Creation} | {error, already_registered} | <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()</pre>
+
+            <pre translate="no">Creation = <a href="../../../../lib/../erts/doc/html/erlang.html#t:non_neg_integer/0">non_neg_integer</a>() | -1</pre>
+
+        </div>
+
+
+<p>Registers the node with <code class="inline">epmd</code> and tells epmd what port will be used for the
+current node. It returns a creation number. This number is incremented on each
+register to help differentiate a new node instance connecting to epmd with the
+same name.</p><p>After the node has successfully registered with epmd it will automatically
+attempt reconnect to the daemon if the connection is broken.</p>
+  </section>
+</section>
+<section class="detail" id="start_link/0">
+
+
+  <div class="detail-header">
+    <a href="#start_link/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+
+      <div class="signature-row">
+
+
+            <h1 class="signature" translate="no">start_link()<span class="signature-arrow">&nbsp;-&gt;&nbsp;</span><span class="signature-result">Result</span></h1>
+
+
+
+          <span class="note">(since OTP 21.0)</span>
+
+
+          <a href="https://github.com/erlang/otp/blob/master/lib/kernel/src/erl_epmd.erl#L90" class="icon-action" rel="help nofollow" aria-label="View Source">
+            <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+          </a>
+
+      </div>
+    </div>
+  </div>
+
+  <section class="docstring">
+
+
+        <div class="specs">
+          <h4 class="specs-title">Types</h4>
+
+            <pre translate="no">Result = {ok, <a href="../../../../lib/../erts/doc/html/erlang.html#t:pid/0">pid</a>()} | ignore | {error, <a href="../../../../lib/../erts/doc/html/erlang.html#t:term/0">term</a>()}</pre>
+
+        </div>
+
+
+<p>This function is invoked as this module is added as a child of the
+<code class="inline">erl_distribution</code> supervisor.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Go to package docs">
+              Go to package docs
+            </button>
+
+              <a href="llms.txt" target="_blank">
+                View llms.txt
+              </a>
+
+
+              <a href="kernel.epub">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.1) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+
+<p>Copyright © 1996-2026 <a href="https://www.ericsson.com">Ericsson AB</a></p>
+    </footer>
+  </div>
+</main>
+</div>
+  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+  <script>
+  let initialized = false;
+
+  window.addEventListener("exdoc:loaded", () => {
+      if (!initialized) {
+      mermaid.initialize({
+          startOnLoad: false,
+          theme: document.body.className.includes("dark") ? "dark" : "default"
+      });
+      initialized = true;
+      }
+
+      let id = 0;
+      for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+      const preEl = codeEl.parentElement;
+      const graphDefinition = codeEl.textContent;
+      const graphEl = document.createElement("div");
+      const graphId = "mermaid-graph-" + id++;
+      mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+          graphEl.innerHTML = svg;
+          bindFunctions?.(graphEl);
+          preEl.insertAdjacentElement("afterend", graphEl);
+          preEl.remove();
+      });
+      }
+  });
+  </script>
+
+  </body>
+</html>

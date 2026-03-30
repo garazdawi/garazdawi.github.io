@@ -1,0 +1,212 @@
+.TH wxMultiChoiceDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMultiChoiceDialog \- This class represents a dialog that shows a list of strings, and allows the user to select one or more.
+
+.SH DESCRIPTION
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxOK: Show an OK button.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCANCEL: Show a Cancel button.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCENTRE: Centre the message.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSingleChoiceDialog\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMultiChoiceDialog
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMultiChoiceDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxMultiChoiceDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetSelections(This) -> [integer()]\fR
+\fB                       when This :: wxMultiChoiceDialog().\fR
+
+.br
+.RS
+.PP
+Returns array with indexes of selected items.
+
+
+.RE
+.B
+\fBnew(Parent, Message, Caption, Choices, [Option]) ->\fR
+\fB             wxMultiChoiceDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Message :: unicode:chardata(),\fR
+\fB                 Caption :: unicode:chardata(),\fR
+\fB                 Choices :: [unicode:chardata()],\fR
+\fB                 Option ::\fR
+\fB                     {style, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}}.\fR
+
+.br
+.RS
+.PP
+Constructor taking an array of \fIwxString\fR (not implemented in wx) choices.
+
+.PP
+Remark: Use \fIwxDialog:showModal/1\fR to show the dialog.
+
+
+.RE
+.B
+\fBsetSelections(This, Selections) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxMultiChoiceDialog(),\fR
+\fB                           Selections :: [integer()].\fR
+
+.br
+.RS
+.PP
+Sets selected items from the array of selected items' indexes.
+
+
+.RE

@@ -1,0 +1,327 @@
+.TH wxStdDialogButtonSizer 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxStdDialogButtonSizer \- This class creates button layouts which conform to the standard button spacing and ordering defined by the platform or toolkit's user interface guidelines (if such things exist).
+
+.SH DESCRIPTION
+.PP
+By using this class, you can ensure that all your standard dialogs look correct on all major platforms. Currently it conforms to the Windows, GTK+ and macOS human interface guidelines.
+
+.PP
+When there aren't interface guidelines defined for a particular platform or toolkit, \fIwxStdDialogButtonSizer\fR reverts to the Windows implementation.
+
+.PP
+To use this class, first add buttons to the sizer by calling \fIaddButton/2\fR (or \fIsetAffirmativeButton/2\fR, \fIsetNegativeButton/2\fR or \fIsetCancelButton/2\fR) and then call Realize in order to create the actual button layout used. Other than these special operations, this sizer works like any other sizer.
+
+.PP
+If you add a button with wxID_SAVE, on macOS the button will be renamed to "Save" and the wxID_NO button will be renamed to "Don't Save" in accordance with the macOS Human Interface Guidelines.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview sizer
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog:createButtonSizer/2\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBoxSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxStdDialogButtonSizer
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxStdDialogButtonSizer() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddButton(This, Button) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxStdDialogButtonSizer(),\fR
+\fB                       Button :: wxButton:wxButton().\fR
+
+.br
+.RS
+.PP
+Adds a button to the \fIwxStdDialogButtonSizer\fR.
+
+.PP
+The \fIbutton\fR must have one of the following identifiers:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_OK
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_YES
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_SAVE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_APPLY
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_CLOSE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_NO
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_CANCEL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_HELP
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxID_CONTEXT_HELP
+
+.RE
+
+
+.RE
+.B
+\fBdestroy(This :: wxStdDialogButtonSizer()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew() -> wxStdDialogButtonSizer().\fR
+
+.br
+.RS
+.PP
+Constructor for a \fIwxStdDialogButtonSizer\fR.
+
+
+.RE
+.B
+\fBrealize(This) -> ok when This :: wxStdDialogButtonSizer().\fR
+
+.br
+.RS
+.PP
+Rearranges the buttons and applies proper spacing between buttons to make them match the platform or toolkit's interface guidelines.
+
+
+.RE
+.B
+\fBsetAffirmativeButton(This, Button) -> ok\fR
+\fB                              when\fR
+\fB                                  This :: wxStdDialogButtonSizer(),\fR
+\fB                                  Button :: wxButton:wxButton().\fR
+
+.br
+.RS
+.PP
+Sets the affirmative button for the sizer.
+
+.PP
+This allows you to use identifiers other than the standard identifiers outlined above.
+
+
+.RE
+.B
+\fBsetCancelButton(This, Button) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStdDialogButtonSizer(),\fR
+\fB                             Button :: wxButton:wxButton().\fR
+
+.br
+.RS
+.PP
+Sets the cancel button for the sizer.
+
+.PP
+This allows you to use identifiers other than the standard identifiers outlined above.
+
+
+.RE
+.B
+\fBsetNegativeButton(This, Button) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxStdDialogButtonSizer(),\fR
+\fB                               Button :: wxButton:wxButton().\fR
+
+.br
+.RS
+.PP
+Sets the negative button for the sizer.
+
+.PP
+This allows you to use identifiers other than the standard identifiers outlined above.
+
+
+.RE

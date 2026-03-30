@@ -1,0 +1,283 @@
+.TH instrument 3 "runtime_tools 2.3.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+instrument \- Analysis and Utility Functions for Instrumentation
+
+.SH DESCRIPTION
+.PP
+The module \fIinstrument\fR contains support for studying the resource usage in an Erlang runtime system. Currently, only the allocation of memory can be studied.
+
+.PP
+\fBNOTE: \fRSince this module inspects internal details of the runtime system it may differ greatly from one version to another. We make no compatibility guarantees in this module.
+
+
+.PP
+\fBSee Also\fR
+
+.PP
+erts_alloc(3), erl(1)
+
+.SH DATA TYPES
+.LP
+.B
+\fBallocation_origin() :: atom() | mfa() | pid() | port().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBallocation_summary() ::\fR
+\fB          {HistogramStart :: non_neg_integer(),\fR
+\fB           UnscannedSize :: non_neg_integer(),\fR
+\fB           Allocations ::\fR
+\fB               #{Origin :: allocation_origin() =>\fR
+\fB                     #{Type :: atom() => block_histogram()}}}.\fR
+
+.br
+.RS
+.PP
+A summary of allocated block sizes (including their headers) grouped by their \fIOrigin\fR and \fIType\fR.
+
+.PP
+\fIOrigin\fR is generally which NIF or driver that allocated the blocks, or 'system' if it could not be determined.
+
+.PP
+\fIType\fR is the allocation category that the blocks belong to, e.g. \fIdb_term\fR, \fImessage\fR or \fIbinary\fR. The categories correspond to those in erl_alloc.types.
+
+.PP
+If one or more carriers could not be scanned in full without harming the responsiveness of the system, \fIUnscannedSize\fR is the number of bytes that had to be skipped.
+
+
+.RE
+.B
+\fBblock_histogram() :: tuple().\fR
+
+.br
+.RS
+.PP
+A histogram of block sizes where each interval's upper bound is twice as high as the one before it.
+
+.PP
+The upper bound of the first interval is provided by the function that returned the histogram, and the last interval has no upper bound.
+
+.PP
+For example, the histogram below has 40 (\fImessage\fR) blocks between 128-256 bytes in size, 78 blocks between 256-512 bytes,2 blocks between 512-1024 bytes, and 2 blocks between 1-2KB.
+
+.IP
+.nf
+> instrument:allocations(#{ histogram_start => 128, histogram_width => 15 }).
+{ok, {128, 0, #{ message => {0,40,78,2,2,0,0,0,0,0,0,0,0,0,0}, ... } }}
+
+.fi
+
+
+.RE
+.B
+\fBcarrier_info_list() ::\fR
+\fB          {HistogramStart :: non_neg_integer(),\fR
+\fB           Carriers ::\fR
+\fB               [{AllocatorType :: atom(),\fR
+\fB                 InPool :: boolean(),\fR
+\fB                 TotalSize :: non_neg_integer(),\fR
+\fB                 UnscannedSize :: non_neg_integer(),\fR
+\fB                 Allocations ::\fR
+\fB                     [{Type :: atom(),\fR
+\fB                       Count :: non_neg_integer(),\fR
+\fB                       Size :: non_neg_integer()}],\fR
+\fB                 FreeBlocks :: block_histogram()}]}.\fR
+
+.br
+.RS
+.PP
+\fIAllocatorType\fR is the type of the allocator that employs this carrier.
+
+.PP
+\fIInPool\fR is whether the carrier is in the migration pool.
+
+.PP
+\fITotalSize\fR is the total size of the carrier, including its header.
+
+.PP
+\fIAllocations\fR is a summary of the allocated blocks in the carrier. Note that carriers may contain multiple different block types when carrier pools are shared between different allocator types (see the \fIerts_alloc\fR documentation for more details).
+
+.PP
+\fIFreeBlocks\fR is a histogram of the free block sizes in the carrier.
+
+.PP
+If the carrier could not be scanned in full without harming the responsiveness of the system, \fIUnscannedSize\fR is the number of bytes that had to be skipped.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBallocations(Options) -> {ok, Result} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Result :: allocation_summary(),\fR
+\fB                         Reason :: not_enabled,\fR
+\fB                         Options ::\fR
+\fB                             #{scheduler_ids => [non_neg_integer()],\fR
+\fB                               allocator_types => [atom()],\fR
+\fB                               histogram_start => pos_integer(),\fR
+\fB                               histogram_width => pos_integer(),\fR
+\fB                               flags =>\fR
+\fB                                   [per_process | per_port | per_mfa]}.\fR
+
+.br
+.RS
+.PP
+Returns a summary of all tagged allocations in the system, optionally filtered by allocator type and scheduler id.
+
+.PP
+Only binaries and allocations made by NIFs and drivers are tagged by default, but this can be configured an a per-allocator basis with the \fI+M<S>atags\fR emulator option.
+
+.PP
+If the specified allocator types are not enabled, the call will fail with \fI{error, not_enabled}\fR.
+
+.PP
+The following options can be used:
+
+allocator_types
+.RS 2
+The allocator types that will be searched.
+
+.PP
+Specifying a specific allocator type may lead to strange results when carrier migration between different allocator types has been enabled: you may see unexpected types (e.g. process heaps when searching binary_alloc), or fewer blocks than expected if the carriers the blocks are on have been migrated out to an allocator of a different type.
+
+.PP
+Defaults to all \fIalloc_util\fR allocators.
+
+
+.RE
+
+scheduler_ids
+.RS 2
+The scheduler ids whose allocator instances will be searched. A scheduler id of 0 will refer to the global instance that is not tied to any particular scheduler. Defaults to all schedulers and the global instance.
+
+
+.RE
+
+histogram_start
+.RS 2
+The upper bound of the first interval in the allocated block size histograms. Defaults to 128.
+
+
+.RE
+
+histogram_width
+.RS 2
+The number of intervals in the allocated block size histograms. Defaults to 18.
+
+
+.RE
+
+flags
+.RS 2
+Controls how to group the output, for example showing allocations on a per-process basis (when possible) rather than only a NIF/driver-basis. Defaults to 
+\fI[]\fR.
+
+.RE
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+> instrument:allocations(#{ histogram_start => 128, histogram_width => 15 }).
+{ok,{128,0,
+     #{udp_inet =>
+           #{driver_event_state => {0,0,0,0,0,0,0,0,0,1,0,0,0,0,0}},
+       system =>
+           #{heap => {0,0,0,0,20,4,2,2,2,3,0,1,0,0,1},
+             db_term => {271,3,1,52,80,1,0,0,0,0,0,0,0,0,0},
+             code => {0,0,0,5,3,6,11,22,19,20,10,2,1,0,0},
+             binary => {18,0,0,0,7,0,0,1,0,0,0,0,0,0,0},
+             message => {0,40,78,2,2,0,0,0,0,0,0,0,0,0,0},
+             ... }
+       spawn_forker =>
+           #{driver_select_data_state =>
+                 {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
+       ram_file_drv => #{drv_binary => {0,0,0,0,0,0,1,0,0,0,0,0,0,0,0}},
+       prim_file =>
+           #{process_specific_data => {2,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+             nif_trap_export_entry => {0,4,0,0,0,0,0,0,0,0,0,0,0,0,0},
+             monitor_extended => {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+             drv_binary => {0,0,0,0,0,0,1,0,3,5,0,0,0,1,0},
+             binary => {0,4,0,0,0,0,0,0,0,0,0,0,0,0,0}},
+       prim_buffer =>
+           #{nif_internal => {0,4,0,0,0,0,0,0,0,0,0,0,0,0,0},
+             binary => {0,4,0,0,0,0,0,0,0,0,0,0,0,0,0}}}}}
+
+.fi
+
+
+.RE
+.B
+\fBcarriers(Options) -> {ok, Result} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Result :: carrier_info_list(),\fR
+\fB                      Reason :: not_enabled,\fR
+\fB                      Options ::\fR
+\fB                          #{scheduler_ids => [non_neg_integer()],\fR
+\fB                            allocator_types => [atom()],\fR
+\fB                            histogram_start => pos_integer(),\fR
+\fB                            histogram_width => pos_integer()}.\fR
+
+.br
+.RS
+.PP
+Returns a summary of all carriers in the system, optionally filtered by allocator type and scheduler id.
+
+.PP
+If the specified allocator types are not enabled, the call will fail with \fI{error, not_enabled}\fR.
+
+.PP
+The following options can be used:
+
+allocator_types
+.RS 2
+The allocator types that will be searched. Defaults to all 
+\fIalloc_util\fR allocators.
+
+.RE
+
+scheduler_ids
+.RS 2
+The scheduler ids whose allocator instances will be searched. A scheduler id of 0 will refer to the global instance that is not tied to any particular scheduler. Defaults to all schedulers and the global instance.
+
+
+.RE
+
+histogram_start
+.RS 2
+The upper bound of the first interval in the free block size histograms. Defaults to 512.
+
+
+.RE
+
+histogram_width
+.RS 2
+The number of intervals in the free block size histograms. Defaults to 14.
+
+
+.RE
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+> instrument:carriers(#{ histogram_start => 512, histogram_width => 8 }).
+{ok,{512,
+     [{driver_alloc,false,262144,0,
+                    [{driver_alloc,1,32784}],
+                    {0,0,0,0,0,0,0,1}},
+      {binary_alloc,false,32768,0,
+                    [{binary_alloc,15,4304}],
+                    {3,0,0,0,1,0,0,0}},
+      {...}|...]}}
+
+.fi
+
+
+.RE

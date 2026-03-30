@@ -1,0 +1,144 @@
+.TH xmerl_xs 3 "xmerl 2.1.9" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+xmerl_xs \- XSLT-like XML document transformations.
+
+.SH DESCRIPTION
+.PP
+Erlang has similarities to XSLT since both languages have a functional programming approach. Using \fIxmerl_xpath\fR it is possible to write XSLT like transforms in Erlang.
+
+.PP
+XSLT stylesheets are often used when transforming XML documents, to other XML documents or (X)HTML for presentation. XSLT contains quite many functions and learning them all may take some effort. This document assumes a basic level of understanding of XSLT.
+
+.PP
+Since XSLT is based on a functional programming approach with pattern matching and recursion it is possible to write similar style sheets in Erlang. At least for basic transforms. This document describes how to use the XPath implementation together with Erlangs pattern matching and a couple of functions to write XSLT like transforms.
+
+.PP
+This approach is probably easier for an Erlanger but if you need to use real XSLT stylesheets in order to "comply to the standard" there is an adapter available to the Sablotron XSLT package which is written i C++. See also the XSLT-like Transformations tutorial.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBbuilt_in_rules(Fun, E :: xmerl:element()) -> io_lib:chars()\fR
+\fB                        when\fR
+\fB                            Fun ::\fR
+\fB                                fun((xmerl:element()) -> io_lib:chars()).\fR
+
+.br
+.RS
+.PP
+The default fallback behaviour.
+
+.PP
+Template funs should end with: \fItemplate(E) -> built_in_rules(fun template/1, E)\fR.
+
+
+.RE
+.B
+\fBselect(String, E) -> Result\fR
+\fB                when\fR
+\fB                    String :: term(),\fR
+\fB                    E :: xmerl:element(),\fR
+\fB                    Result ::\fR
+\fB                        [xmerl:xmlElement() |\fR
+\fB                         xmerl:xmlAttribute() |\fR
+\fB                         xmerl:xmlText() |\fR
+\fB                         xmerl:xmlPI() |\fR
+\fB                         xmerl:xmlComment() |\fR
+\fB                         xmerl:xmlNsNode() |\fR
+\fB                         xmerl:xmlDocument()] |\fR
+\fB                        Scalar,\fR
+\fB                    Scalar :: #xmlObj{}.\fR
+
+.br
+.RS
+.PP
+Extract the nodes from the xml tree according to XPath.
+
+.PP
+Equivalent to \fIxmerl_xpath:string(Str, E)\fR.
+
+.PP
+\fISee also:\fR \fIvalue_of/1\fR.
+
+
+.RE
+.B
+\fBvalue_of(E) -> io_lib:chars()\fR
+\fB                  when E :: xmerl:element() | [xmerl:element()].\fR
+
+.br
+.RS
+.PP
+Concatenate all text nodes within the tree.
+
+.PP
+Example:
+
+.IP
+.nf
+  <xsl:template match="title">
+    <div align="center">
+      <h1><xsl:value-of select="." /></h1>
+    </div>
+  </xsl:template>
+
+
+.fi
+
+.PP
+becomes:
+
+.IP
+.nf
+   template(E = #xmlElement{name='title'}) ->
+     ["<div align="center"><h1>",
+       value_of(select(".", E)), "</h1></div>"]
+
+
+.fi
+
+
+.RE
+.B
+\fBxslapply(Fun, ElementList) -> io_lib:chars()\fR
+\fB                  when\fR
+\fB                      Fun :: fun((xmerl:element()) -> io_lib:chars()),\fR
+\fB                      ElementList :: [xmerl:element()] | xmerl:element().\fR
+
+.br
+.RS
+.PP
+Lookalike to xsl:apply-templates.
+
+.PP
+A wrapper to make things look similar to xsl:apply-templates.
+
+.PP
+Example, original XSLT:
+
+.IP
+.nf
+  <xsl:template match="doc/title">
+    <h1>
+      <xsl:apply-templates/>
+    </h1>
+  </xsl:template>
+
+
+.fi
+
+.PP
+becomes in Erlang:
+
+.IP
+.nf
+  template(E = #xmlElement{ parents=[{'doc',_}|_], name='title'}) ->
+    ["<h1>",
+     xslapply(fun template/1, E),
+     "</h1>"];
+
+
+.fi
+
+
+.RE

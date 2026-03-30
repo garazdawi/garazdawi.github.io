@@ -1,0 +1,474 @@
+.TH wxStatusBar 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxStatusBar \- A status bar is a narrow window that can be placed along the bottom of a frame to give small amounts of status information.
+
+.SH DESCRIPTION
+.PP
+It can contain one or more fields, one or more of which can be variable length according to the size of the window.
+
+.PP
+\fIwxStatusBar\fR also maintains an independent stack of status texts for each field (see \fIpushStatusText/3\fR and \fIpopStatusText/2\fR).
+
+.PP
+Note that in \fIwxStatusBar\fR context, the terms \fIpane\fR and \fIfield\fR are synonyms.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTB_SIZEGRIP: Displays a gripper at the right-hand side of the status bar which can be used to resize the parent window.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTB_SHOW_TIPS: Displays tooltips for those panes whose status text has been ellipsized/truncated because the status text doesn't fit the pane width. Note that this style has effect only on wxGTK (with GTK+ >= 2.12) currently.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTB_ELLIPSIZE_START: Replace the beginning of the status texts with an ellipsis when the status text widths exceed the status bar pane's widths (uses \fIwxControl::Ellipsize\fR (not implemented in wx)).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTB_ELLIPSIZE_MIDDLE: Replace the middle of the status texts with an ellipsis when the status text widths exceed the status bar pane's widths (uses \fIwxControl::Ellipsize\fR (not implemented in wx)).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTB_ELLIPSIZE_END: Replace the end of the status texts with an ellipsis when the status text widths exceed the status bar pane's widths (uses \fIwxControl::Ellipsize\fR (not implemented in wx)).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTB_DEFAULT_STYLE: The default style: includes \fIwxSTB_SIZEGRIP|wxSTB_SHOW_TIPS|wxSTB_ELLIPSIZE_END|wxFULL_REPAINT_ON_RESIZE\fR.
+
+.RE
+
+.PP
+Remark: It is possible to create controls and other windows on the status bar. Position these windows from an OnSize() event handler.
+
+.PP
+Remark: Notice that only the first 127 characters of a string will be shown in status bar fields under Windows if a proper manifest indicating that the program uses version 6 of common controls library is not used. This is a limitation of the native control on these platforms.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Examples
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxStatusBar
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxStatusBar() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxStatusBar(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option :: {winid, integer()} | {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Creates the window, for two-step construction.
+
+.PP
+See \fInew/2\fR for details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxStatusBar()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetFieldRect(This, I) -> Result\fR
+\fB                      when\fR
+\fB                          Result ::\fR
+\fB                              {Res :: boolean(),\fR
+\fB                               Rect ::\fR
+\fB                                   {X :: integer(),\fR
+\fB                                    Y :: integer(),\fR
+\fB                                    W :: integer(),\fR
+\fB                                    H :: integer()}},\fR
+\fB                          This :: wxStatusBar(),\fR
+\fB                          I :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the size and position of a field's internal bounding rectangle.
+
+.PP
+Return: true if the field index is valid, false otherwise.
+
+.PP
+See: {X,Y,W,H}
+
+
+.RE
+.B
+\fBgetFieldsCount(This) -> integer() when This :: wxStatusBar().\fR
+
+.br
+.RS
+.PP
+Returns the number of fields in the status bar.
+
+
+.RE
+.B
+\fBgetStatusText(This, [Option]) -> unicode:charlist()\fR
+\fB                       when\fR
+\fB                           This :: wxStatusBar(),\fR
+\fB                           Option :: {number, integer()}.\fR
+
+.br
+.RS
+.PP
+Returns the string associated with a status bar field.
+
+.PP
+Return: The status field string if the field is valid, otherwise the empty string.
+
+.PP
+See: \fIsetStatusText/3\fR
+
+
+.RE
+.B
+\fBnew() -> wxStatusBar().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxStatusBar()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option :: {winid, integer()} | {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating the window.
+
+.PP
+See: \fIcreate/3\fR
+
+
+.RE
+.B
+\fBpopStatusText(This, [Option]) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStatusBar(),\fR
+\fB                           Option :: {number, integer()}.\fR
+
+.br
+.RS
+.PP
+Restores the text to the value it had before the last call to \fIpushStatusText/3\fR.
+
+.PP
+Notice that if \fIsetStatusText/3\fR had been called in the meanwhile, \fIpopStatusText/2\fR will not change the text, i.e. it does not override explicit changes to status text but only restores the saved text if it hadn't been changed since.
+
+.PP
+See: \fIpushStatusText/3\fR
+
+
+.RE
+.B
+\fBpushStatusText(This, String, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStatusBar(),\fR
+\fB                            String :: unicode:chardata(),\fR
+\fB                            Option :: {number, integer()}.\fR
+
+.br
+.RS
+.PP
+Saves the current field text in a per-field stack, and sets the field text to the string passed as argument.
+
+.PP
+See: \fIpopStatusText/2\fR
+
+
+.RE
+.B
+\fBsetFieldsCount(This, Number, [Option]) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxStatusBar(),\fR
+\fB                            Number :: integer(),\fR
+\fB                            Option :: {widths, [integer()]}.\fR
+
+.br
+.RS
+.PP
+Sets the number of fields, and optionally the field widths.
+
+
+.RE
+.B
+\fBsetMinHeight(This, Height) -> ok\fR
+\fB                      when This :: wxStatusBar(), Height :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the minimal possible height for the status bar.
+
+.PP
+The real height may be bigger than the height specified here depending on the size of the font used by the status bar.
+
+
+.RE
+.B
+\fBsetStatusStyles(This, Styles) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStatusBar(),\fR
+\fB                             Styles :: [integer()].\fR
+
+.br
+.RS
+.PP
+Sets the styles of the fields in the status line which can make fields appear flat or raised instead of the standard sunken 3D border.
+
+
+.RE
+.B
+\fBsetStatusText(This, Text, [Option]) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxStatusBar(),\fR
+\fB                           Text :: unicode:chardata(),\fR
+\fB                           Option :: {number, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the status text for the \fIi-th\fR field.
+
+.PP
+The given text will replace the current text. The display of the status bar is updated immediately, so there is no need to call \fIwxWindow:update/1\fR after calling this function.
+
+.PP
+Note that if \fIpushStatusText/3\fR had been called before the new text will also replace the last saved value to make sure that the next call to \fIpopStatusText/2\fR doesn't restore the old value, which was overwritten by the call to this function.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetStatusText/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame:setStatusText/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetStatusWidths(This, Widths_field) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxStatusBar(),\fR
+\fB                             Widths_field :: [integer()].\fR
+
+.br
+.RS
+.PP
+Sets the widths of the fields in the status line.
+
+.PP
+There are two types of fields: \fIfixed\fR widths and \fIvariable\fR width fields. For the fixed width fields you should specify their (constant) width in pixels. For the variable width fields, specify a negative number which indicates how the field should expand: the space left for all variable width fields is divided between them according to the absolute value of this number. A variable width field with width of -2 gets twice as much of it as a field with width -1 and so on.
+
+.PP
+For example, to create one fixed width field of width 100 in the right part of the status bar and two more fields which get 66% and 33% of the remaining space correspondingly, you should use an array containing -2, -1 and 100.
+
+.PP
+Remark: The widths of the variable fields are calculated from the total width of all fields, minus the sum of widths of the non-variable fields, divided by the number of variable fields.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetFieldsCount/3\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame:setStatusWidths/2\fR
+
+.RE
+
+
+.RE

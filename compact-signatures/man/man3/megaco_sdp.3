@@ -1,0 +1,257 @@
+.TH megaco_sdp 3 "megaco 4.8.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+megaco_sdp \- SDP utility module.
+
+.SH DESCRIPTION
+.PP
+This module contains various things related to SDP.
+
+.SS "Version note"
+
+.PP
+This module has existed in the megaco app for long time, but as of 27.0 its also documented.
+
+.SH DATA TYPES
+.LP
+.B
+\fBproperty_group() :: [property_parm()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBproperty_groups() :: [property_group()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBproperty_parm() :: #'PropertyParm'{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp() ::\fR
+\fB          sdp_o() |\fR
+\fB          sdp_s() |\fR
+\fB          sdp_i() |\fR
+\fB          sdp_u() |\fR
+\fB          sdp_e() |\fR
+\fB          sdp_p() |\fR
+\fB          sdp_c() |\fR
+\fB          sdp_b() |\fR
+\fB          sdp_k() |\fR
+\fB          sdp_a() |\fR
+\fB          sdp_a_rtpmap() |\fR
+\fB          sdp_a_ptime() |\fR
+\fB          sdp_z() |\fR
+\fB          sdp_t() |\fR
+\fB          sdp_r() |\fR
+\fB          sdp_m().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_a() :: #megaco_sdp_a{}.\fR
+
+.br
+.RS
+.PP
+Session attribute.
+
+
+.RE
+.B
+\fBsdp_a_fmtp() :: #megaco_sdp_a_fmtp{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_a_ptime() :: #megaco_sdp_a_ptime{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_a_quality() :: #megaco_sdp_a_quality{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_a_rtpmap() :: #megaco_sdp_a_rtpmap{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_b() :: #megaco_sdp_b{}.\fR
+
+.br
+.RS
+.PP
+Bandwidth information.
+
+
+.RE
+.B
+\fBsdp_c() :: #megaco_sdp_c{}.\fR
+
+.br
+.RS
+.PP
+Connection information.
+
+
+.RE
+.B
+\fBsdp_e() :: #megaco_sdp_e{}.\fR
+
+.br
+.RS
+.PP
+Email address.
+
+
+.RE
+.B
+\fBsdp_i() :: #megaco_sdp_i{}.\fR
+
+.br
+.RS
+.PP
+Session information.
+
+
+.RE
+.B
+\fBsdp_k() :: #megaco_sdp_k{}.\fR
+
+.br
+.RS
+.PP
+Encryption key.
+
+
+.RE
+.B
+\fBsdp_m() :: #megaco_sdp_m{}.\fR
+
+.br
+.RS
+.PP
+Media name and transport address.
+
+
+.RE
+.B
+\fBsdp_o() :: #megaco_sdp_o{}.\fR
+
+.br
+.RS
+.PP
+Owner/creator and session identifier.
+
+
+.RE
+.B
+\fBsdp_p() :: #megaco_sdp_p{}.\fR
+
+.br
+.RS
+.PP
+Phone number.
+
+
+.RE
+.B
+\fBsdp_property_group() :: [sdp_property_parm()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_property_groups() :: [sdp_property_group()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_property_parm() :: sdp() | property_parm().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_r() :: #megaco_sdp_r{}.\fR
+
+.br
+.RS
+.PP
+Repeat times.
+
+
+.RE
+.B
+\fBsdp_s() :: #megaco_sdp_s{}.\fR
+
+.br
+.RS
+.PP
+Session name.
+
+
+.RE
+.B
+\fBsdp_t() :: #megaco_sdp_t{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsdp_u() :: #megaco_sdp_u{}.\fR
+
+.br
+.RS
+.PP
+URI of description.
+
+
+.RE
+.B
+\fBsdp_v() :: #megaco_sdp_v{}.\fR
+
+.br
+.RS
+.PP
+Protocol version.
+
+
+.RE
+.B
+\fBsdp_z() :: #megaco_sdp_z{}.\fR
+
+.br
+.RS
+.PP
+Time zone adjustment.
+
+
+.RE
+.SH FUNCTIONS
+.LP

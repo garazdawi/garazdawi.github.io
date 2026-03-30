@@ -1,0 +1,164 @@
+.TH wxPopupWindow 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPopupWindow \- A special kind of top level window used for popup menus, combobox popups and such.
+
+.SH DESCRIPTION
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxPU_CONTAINS_CONTROLS: By default in wxMSW, a popup window will not take focus from its parent window. However many standard controls, including common ones such as \fIwxTextCtrl\fR, need focus to function correctly and will not work when placed on a default popup. This flag can be used to make the popup take focus and let all controls work but at the price of not allowing the parent window to keep focus while the popup is shown, which can also be sometimes desirable. This style is currently only implemented in MSW and simply does nothing under the other platforms (it's new since wxWidgets 3.1.3).
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPopupWindow
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPopupWindow() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxPopupWindow(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Create method for two-step creation.
+
+
+.RE
+.B
+\fBdestroy(This :: wxPopupWindow()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew() -> wxPopupWindow().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxPopupWindow()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBposition(This, PtOrigin, SizePopup) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxPopupWindow(),\fR
+\fB                      PtOrigin :: {X :: integer(), Y :: integer()},\fR
+\fB                      SizePopup :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Move the popup window to the right position, i.e. such that it is entirely visible.
+
+.PP
+The popup is positioned at ptOrigin + size if it opens below and to the right (default), at ptOrigin - sizePopup if it opens above and to the left etc.
+
+
+.RE

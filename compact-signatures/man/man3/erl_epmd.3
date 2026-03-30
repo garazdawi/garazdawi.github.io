@@ -1,0 +1,126 @@
+.TH erl_epmd 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_epmd \- Erlang interface towards epmd
+
+.SH DESCRIPTION
+.PP
+This module communicates with the EPMD daemon, see epmd. To implement your own epmd module please see ERTS User's Guide: How to Implement an Alternative Node Discovery for Erlang Distribution
+
+.SH FUNCTIONS
+.LP
+.B
+\fBaddress_please(Name, Host, AddressFamily) ->\fR
+\fB                        Success | {error, term()}\fR
+\fB                        when\fR
+\fB                            Name :: string(),\fR
+\fB                            Host :: string() | inet:ip_address(),\fR
+\fB                            AddressFamily :: inet | inet6,\fR
+\fB                            Port :: non_neg_integer(),\fR
+\fB                            Version :: non_neg_integer(),\fR
+\fB                            Success ::\fR
+\fB                                {ok, inet:ip_address()} |\fR
+\fB                                {ok, inet:ip_address(), Port, Version}.\fR
+
+.br
+.RS
+.PP
+Called by the distribution module to resolves the \fIHost\fR to an IP address of a remote node.
+
+.PP
+As an optimization this function may also return the port and version of the remote node. If port and version are returned \fIport_please/3\fR will not be called.
+
+
+.RE
+.B
+\fBlisten_port_please(Name, Host) -> {ok, Port}\fR
+\fB                            when\fR
+\fB                                Name :: atom() | string(),\fR
+\fB                                Host ::\fR
+\fB                                    atom() |\fR
+\fB                                    string() |\fR
+\fB                                    inet:ip_address(),\fR
+\fB                                Port :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Called by the distribution module to get which port the local node should listen to when accepting new distribution requests.
+
+
+.RE
+.B
+\fBnames(Host) -> {ok, [{Name, Port}]} | {error, Reason}\fR
+\fB               when\fR
+\fB                   Host :: atom() | string() | inet:ip_address(),\fR
+\fB                   Name :: string(),\fR
+\fB                   Port :: non_neg_integer(),\fR
+\fB                   Reason :: address | file:posix().\fR
+
+.br
+.RS
+.PP
+Called by \fInet_adm:names/0\fR. \fIHost\fR defaults to the localhost. Returns the names and associated port numbers of the Erlang nodes that \fIepmd\fR registered at the specified host. Returns \fI{error, address}\fR if \fIepmd\fR is not operational.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+(arne@dunn)1> erl_epmd:names(localhost).
+{ok,[{"arne",40262}]}
+
+.fi
+
+
+.RE
+.B
+\fBport_please(Name, Host, Timeout) ->\fR
+\fB                     {port, Port, Version} |\fR
+\fB                     noport | closed |\fR
+\fB                     {error, term()}\fR
+\fB                     when\fR
+\fB                         Name :: atom() | string(),\fR
+\fB                         Host :: atom() | string() | inet:ip_address(),\fR
+\fB                         Timeout :: non_neg_integer() | infinity,\fR
+\fB                         Port :: non_neg_integer(),\fR
+\fB                         Version :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Requests the distribution port for the given node of an EPMD instance. Together with the port it returns a distribution protocol version which has been 5 since Erlang/OTP R6.
+
+
+.RE
+.B
+\fBregister_node(Name, Port, Driver) -> Result\fR
+\fB                       when\fR
+\fB                           Name :: string(),\fR
+\fB                           Port :: non_neg_integer(),\fR
+\fB                           Driver :: inet_tcp | inet6_tcp | inet | inet6,\fR
+\fB                           Creation :: non_neg_integer() | -1,\fR
+\fB                           Result ::\fR
+\fB                               {ok, Creation} |\fR
+\fB                               {error, already_registered} |\fR
+\fB                               term().\fR
+
+.br
+.RS
+.PP
+Registers the node with \fIepmd\fR and tells epmd what port will be used for the current node. It returns a creation number. This number is incremented on each register to help differentiate a new node instance connecting to epmd with the same name.
+
+.PP
+After the node has successfully registered with epmd it will automatically attempt reconnect to the daemon if the connection is broken.
+
+
+.RE
+.B
+\fBstart_link() -> {ok, pid()} | ignore | {error, term()}.\fR
+
+.br
+.RS
+.PP
+This function is invoked as this module is added as a child of the \fIerl_distribution\fR supervisor.
+
+
+.RE

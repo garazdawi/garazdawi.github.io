@@ -1,0 +1,248 @@
+.TH ei_global 3 "erl_interface 5.6.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ei_global \- Access globally registered names
+.SH DESCRIPTION
+.PP
+This module provides support for registering, looking up, and unregistering names in the \fIglobal\fR module. For more information, see \fIkernel:global\fR.
+
+.PP
+Notice that the functions below perform an RPC using an open file descriptor provided by the caller. This file descriptor must not be used for other traffic during the global operation, as the function can then receive unexpected data and fail.
+
+.SS "ei_global_names()"
+
+.IP
+.nf
+char **ei_global_names(ei_cnode *ec, int fd, int *count);
+
+.fi
+
+.PP
+Retrieves a list of all known global names.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIec\fR is the \fIei_cnode\fR representing the current cnode.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfd\fR is an open descriptor to an Erlang connection.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcount\fR is the address of an integer, or \fINULL\fR. If \fIcount\fR is not \fINULL\fR, it is set by the function to the number of names found.
+
+.RE
+
+.PP
+On success, the function returns an array of strings, each containing a single registered name, and sets \fIcount\fR to the number of names found. The array is terminated by a single \fINULL\fR pointer. On failure, the function returns \fINULL\fR and \fIcount\fR is not modified.
+
+.PP
+\fBNOTE: \fRIt is the caller's responsibility to free the array afterwards. It has been allocated by the function with a single call to \fImalloc()\fR, so a single \fIfree()\fR is all that is necessary.
+
+
+.PP
+Available since OTP 23.0
+
+.SS "ei_global_register()"
+
+.IP
+.nf
+int ei_global_register(int fd, const char *name, erlang_pid *self);
+
+.fi
+
+.PP
+Registers a name in \fIglobal\fR.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfd\fR is an open descriptor to an Erlang connection.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIname\fR is the name to register in \fIglobal\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpid\fR is the pid that is to be associated with \fIname\fR. This value is returned by \fIglobal\fR when processes request the location of \fIname\fR.
+
+.RE
+
+.PP
+Returns \fI0\fR on success, otherwise \fI-1\fR.
+
+.PP
+Available since OTP 23.0
+
+.SS "ei_global_unregister()"
+
+.IP
+.nf
+int ei_global_unregister(ei_cnode *ec, int fd, const char *name);
+
+.fi
+
+.PP
+Unregisters a name from \fIglobal\fR.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIec\fR is the \fIei_cnode\fR representing the current cnode.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfd\fR is an open descriptor to an Erlang connection.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIname\fR is the name to unregister from \fIglobal\fR.
+
+.RE
+
+.PP
+Returns \fI0\fR on success, otherwise \fI-1\fR.
+
+.PP
+Available since OTP 23.0
+
+.SS "ei_global_whereis()"
+
+.IP
+.nf
+int ei_global_whereis(ei_cnode *ec, int fd, const char *name, erlang_pid* pid, char *node);
+
+.fi
+
+.PP
+Looks up a name in \fIglobal\fR.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIec\fR is the \fIei_cnode\fR representing the current cnode.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfd\fR is an open descriptor to an Erlang connection.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIname\fR is the name that is to be looked up in \fIglobal\fR.
+
+.RE
+
+.PP
+The \fIpid\fR parameter is a pointer to a \fIerlang_pid\fR that the function will update with the pid associated with the global name, if successful.
+
+.PP
+If \fInode\fR is not \fINULL\fR, it is a pointer to a buffer where the function can fill in the name of the node where \fIname\fR is found. \fInode\fR can be passed directly to \fIei_connect()\fR if necessary.
+
+.PP
+On success, the function returns 0, updates the \fIerlang_pid\fR pointed to by the pid parameter, and the \fInode\fR parameter is initialized to the node name where \fIname\fR is found. On failure, a negative number is returned.
+
+.PP
+Available since OTP 23.0
+

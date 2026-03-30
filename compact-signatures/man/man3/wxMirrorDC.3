@@ -1,0 +1,69 @@
+.TH wxMirrorDC 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMirrorDC \- \fIwxMirrorDC\fR is a simple wrapper class which is always associated with a real \fIwxDC\fR object and either forwards all of its operations to it without changes (no mirroring takes place) or exchanges \fIx\fR and \fIy\fR coordinates which makes it possible to reuse the same code to draw a figure and its mirror -- i.e.
+
+.SH DESCRIPTION
+.PP
+reflection related to the diagonal line x == y.
+
+.PP
+Since: 2.5.0
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMirrorDC
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMirrorDC() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxMirrorDC()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew(Dc, Mirror) -> wxMirrorDC()\fR
+\fB             when Dc :: wxDC:wxDC(), Mirror :: boolean().\fR
+
+.br
+.RS
+.PP
+Creates a (maybe) mirrored DC associated with the real \fIdc\fR.
+
+.PP
+Everything drawn on \fIwxMirrorDC\fR will appear (and maybe mirrored) on \fIdc\fR.
+
+.PP
+\fImirror\fR specifies if we do mirror (if it is true) or not (if it is false).
+
+
+.RE

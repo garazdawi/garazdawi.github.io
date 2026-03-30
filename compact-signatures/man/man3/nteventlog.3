@@ -1,0 +1,87 @@
+.TH nteventlog 3 "os_mon 2.11.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+nteventlog \- Interface to Windows Event Log
+
+.SH DESCRIPTION
+.PP
+\fInteventlog\fR provides a generic interface to the Windows event log. It is part of the OS_Mon application, see os_mon.
+
+.PP
+This module is used as the Windows backend for \fIos_sup\fR. See \fIos_sup\fR.
+
+.PP
+To retain backwards compatibility, this module can also be used to start a standalone \fInteventlog\fR process which is not part of the OS_Mon supervision tree. When starting such a process, the user has to supply an identifier as well as a callback function to handle the messages.
+
+.PP
+The identifier, an arbitrary string, should be reused whenever the same application (or node) wants to start the process. \fInteventlog\fR is informed about all events that have arrived to the eventlog since the last accepted message for the current identifier. As long as the same identifier is used, the same eventlog record will not be sent to \fInteventlog\fR more than once (with the exception of when graved system failures arise, in which case the last records written before the failure may be sent to Erlang again after reboot).
+
+.PP
+If the event log is configured to wrap around automatically, records that have arrived to the log and been overwritten when \fInteventlog\fR was not running are lost. However, it detects this state and loses no records that are not overwritten.
+
+.PP
+The callback function works as described in \fIos_sup\fR.
+
+.PP
+\fBSee Also\fR
+
+.PP
+os_mon, \fIos_sup\fR
+
+.PP
+Windows NT documentation
+
+.SH FUNCTIONS
+.LP
+.B
+\fBstart(Identifier, MFA) -> Result\fR
+\fB               when\fR
+\fB                   Identifier :: string() | atom(),\fR
+\fB                   MFA :: {Mod, Func, Args},\fR
+\fB                   Mod :: atom(),\fR
+\fB                   Func :: atom(),\fR
+\fB                   Args :: [term()],\fR
+\fB                   Result :: {ok, Pid} | {error, {already_started, Pid}},\fR
+\fB                   Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIstart_link(Identifier, MFA)\fR except that no link is created between \fInteventlog\fR and the calling process.
+
+
+.RE
+.B
+\fBstart_link(Identifier, MFA) -> Result\fR
+\fB                    when\fR
+\fB                        Identifier :: string() | atom(),\fR
+\fB                        MFA :: {Mod, Func, Args},\fR
+\fB                        Mod :: atom(),\fR
+\fB                        Func :: atom(),\fR
+\fB                        Args :: [term()],\fR
+\fB                        Result ::\fR
+\fB                            {ok, Pid} | {error, {already_started, Pid}},\fR
+\fB                        Pid :: pid().\fR
+
+.br
+.RS
+.PP
+This function starts the standalone \fInteventlog\fR process and, if \fIstart_link/2\fR is used, links to it.
+
+.PP
+\fIIdentifier\fR is an identifier as described above.
+
+.PP
+\fIMFA\fR is the supplied callback function. When \fInteventlog\fR receives information about a new event, this function will be called as \fIapply(Mod, Func, [Event|Args])\fR where \fIEvent\fR is a tuple
+
+
+.RE
+.B
+\fBstop() -> stopped.\fR
+
+.br
+.RS
+.PP
+Stops \fInteventlog\fR. Usually only used during development. The server does not have to be shut down gracefully to maintain its state.
+
+
+.RE

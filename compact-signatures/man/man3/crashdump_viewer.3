@@ -1,0 +1,40 @@
+.TH crashdump_viewer 3 "observer 2.18.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+crashdump_viewer \- A WxWidgets based tool for browsing Erlang crashdumps.
+
+.SH DESCRIPTION
+.PP
+For details about how to get started with the Crashdump Viewer, see the User's Guide.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBstart() -> ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Starts the Crashdump Viewer GUI and opens a file dialog where the crashdump can be selected.
+
+
+.RE
+.B
+\fBstart(File :: string()) -> ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Starts the Crashdump Viewer GUI and loads the specified crashdump.
+
+
+.RE
+.B
+\fBstop() -> ok.\fR
+
+.br
+.RS
+.PP
+Terminates the Crashdump Viewer and closes all GUI windows.
+
+
+.RE

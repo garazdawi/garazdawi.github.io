@@ -1,0 +1,879 @@
+.TH reltool 3 "reltool 1.0.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+reltool \- Main API of the Reltool application
+
+.SH DESCRIPTION
+.PP
+This is an interface module for the Reltool application.
+
+.PP
+\fIReltool\fR is a release management tool. It analyses a given Erlang/OTP installation and determines various dependencies between applications. The \fIgraphical\fR frontend depicts the dependencies and enables interactive customization of a target system. The backend provides a \fIbatch\fR interface for generation of customized target systems.
+
+.PP
+The tool uses an installed Erlang/OTP system as input. \fIroot_dir\fR is the root directory of the analysed system and it defaults to the system executing Reltool. Applications may also be located outside \fIroot_dir\fR. \fIlib_dirs\fR defines library directories where additional applications may reside and it defaults to the directories listed by the operating system environment variable \fIERL_LIBS\fR. See the module \fIcode\fR for more info.
+
+.PP
+An application directory \fIAppDir\fR under a library directory is recognized by the existence of an \fIAppDir/ebin\fR directory. If this does not exist, Reltool will not consider \fIAppDir\fR at all when looking for applications.
+
+.PP
+It is recommended that application directories are named as the application, possibly followed by a dash and the version number. For example \fImyapp\fR or \fImyapp-1.1\fR.
+
+.PP
+Finally single modules and entire applications may be read from Escripts.
+
+.PP
+Some configuration parameters control the behavior of Reltool on system (\fIsys\fR) level. Others provide control on application (\fIapp\fR) level and yet others are on module (\fImod\fR) level. Module level parameters override application level parameters and application level parameters override system level parameters. Escript \fIescript\fR level parameters override system level parameters.
+
+.PP
+The following top level \fIoptions\fR are supported:
+
+config
+.RS 2
+This is the main option and it controls the configuration of Reltool. It can either be a 
+\fIsys\fR tuple or a name of a \fIfile\fR containing a sys tuple.
+
+.RE
+
+trap_exit
+.RS 2
+This option controls the error handling behavior of Reltool. By default the window processes traps exit, but this behavior can altered by setting 
+\fItrap_exit\fR to \fIfalse\fR.
+
+.RE
+
+wx_debug
+.RS 2
+This option controls the debug level of 
+\fIwx\fR. As its name indicates it is only useful for debugging. See \fIwx:debug/1\fR for more info.
+
+.RE
+
+.PP
+Besides the already mentioned source parameters \fIroot_dir\fR and \fIlib_dirs\fR, the following system (\fIsys\fR) level options are supported:
+
+erts
+.RS 2
+Erts specific configuration. See application level options below.
+
+
+.RE
+
+escript
+.RS 2
+Escript specific configuration. An escript has a mandatory file name and escript level options that are described below.
+
+
+.RE
+
+app
+.RS 2
+Application specific configuration. An application has a mandatory name and application level options that are described below.
+
+
+.RE
+
+mod_cond
+.RS 2
+This parameter controls the module inclusion policy. It defaults to 
+\fIall\fR which means that if an application is included (either explicitly or implicitly) all modules in that application will be included. This implies that both modules that exist in the \fIebin\fR directory of the application, as well as modules that are named in the \fIapp\fR file will be included. If the parameter is set to \fIebin\fR, both modules in the \fIebin\fR directory and derived modules are included. If the parameter is set to \fIapp\fR, both modules in the \fIapp\fR file and derived modules are included. \fIderived\fR means that only modules that are used by other included modules are included. The \fImod_cond\fR setting on system level is used as default for all applications.
+
+.RE
+
+incl_cond
+.RS 2
+This parameter controls the application and escript inclusion policy. It defaults to 
+\fIderived\fR which means that the applications that do not have any explicit \fIincl_cond\fR setting, will only be included if any other (explicitly or implicitly included) application uses it. The value \fIinclude\fR implies that all applications and escripts that do not have any explicit \fIincl_cond\fR setting will be included. \fIexclude\fR implies that all applications and escripts that do not have any explicit \fIincl_cond\fR setting will be excluded.
+
+.RE
+
+boot_rel
+.RS 2
+A target system may have several releases but the one given as 
+\fIboot_rel\fR will be used as default when the system is booting up.
+
+.RE
+
+rel
+.RS 2
+Release specific configuration. Each release maps to a 
+\fIrel\fR, \fIscript\fR and \fIboot\fR file. See the module \fIsystools\fR for more info about the details. Each release has a name, a version and a set of applications with a few release specific parameters such as type and included applications.
+
+.RE
+
+relocatable
+.RS 2
+This parameter controls whether the 
+\fIerl\fR executable in the target system should automatically determine where it is installed or if it should use a hardcoded path to the installation. In the latter case the target system must be installed with \fIreltool:install/2\fR before it can be used. If the system is relocatable, the file tree containing the target system can be moved to another location without re-installation. The default is \fItrue\fR.
+
+.RE
+
+profile
+.RS 2
+The creation of the specification for a target system is performed in two steps. In the first step a complete specification is generated. It will likely contain much more files than you are interested in in your customized target system. In the second step the specification will be filtered according to your filters. There you have the ability to specify filters per application as well as system wide filters. You can also select a 
+\fIprofile\fR for your system. Depending on the \fIprofile\fR, different default filters will be used. There are three different profiles to choose from: \fIdevelopment\fR, \fIembedded\fR and \fIstandalone\fR. \fIdevelopment\fR is default. The parameters that are affected by the \fIprofile\fR are: \fIincl_sys_filters\fR, \fIexcl_sys_filters\fR, \fIincl_app_filters\fR and \fIexcl_app_filters\fR.
+
+.RE
+
+app_file
+.RS 2
+This parameter controls the default handling of the 
+\fIapp\fR files when a target system is generated. It defaults to \fIkeep\fR which means that \fIapp\fR files are copied to the target system and their contents are kept as they are. \fIstrip\fR means that a new \fIapp\fR file is generated from the contents of the original \fIapp\fR file where the non included modules are removed from the file. \fIall\fR does also imply that a new \fIapp\fR file is generated from the contents of the original \fIapp\fR file, with the difference that all included modules are added to the file. If the application does not have any \fIapp\fR file a file will be created for \fIall\fR but not for \fIkeep\fR and \fIstrip\fR.
+
+.RE
+
+debug_info
+.RS 2
+The 
+\fIdebug_info\fR parameter controls what debug information in the beam file should be kept or stripped. \fIkeep\fR keeps all debug info, \fIstrip\fR strips all debug info, and a list of chunkids keeps only those chunks.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIexcl_lib\fR\fR
+
+.PP
+\fBWARNING: \fRThis option is experimental.
+
+
+.PP
+If the \fIexcl_lib\fR option is set to \fIotp_root\fR then reltool will not copy anything from the Erlang/OTP installation ($OTPROOT) into the target structure. The goal is to create a "slim" release which can be used together with an existing Erlang/OTP installation. The target structure will therefore only contain a \fIlib\fR directory with the applications that were found outside of $OTPROOT (typically your own applications), and a \fIreleases\fR directory with the generated \fI.rel,\fR \fI.script\fR and \fI.boot\fR files.
+
+.PP
+When starting this release, three things must be specified:
+
+Which releases directory to use
+.RS 2
+Tell the release handler to use the 
+\fIreleases\fR directory in our target structure instead of \fI$OTPROOT/releases\fR. This is done by setting the SASL environment variable \fIreleases_dir\fR, either from the command line (\fI-sasl releases_dir <target-dir>/releases\fR) or in \fIsys.config\fR.
+
+.RE
+
+Which boot file to use
+.RS 2
+The default boot file is 
+\fI$OTPROOT/bin/start\fR, but in this case we need to specify a boot file from our target structure, typically \fI<target-dir>/releases/<vsn>/<RelName>\fR. This is done with the \fI-boot\fR command line option to \fIerl\fR
+
+.RE
+
+The location of our applications
+.RS 2
+The generated .script (and .boot) file uses the environment variable 
+\fI$RELTOOL_EXT_LIB\fR as prefix for the paths to all applications. The \fI-boot_var\fR option to \fIerl\fR can be used for specifying the value of this variable, typically \fI-boot_var RELTOOL_EXT_LIB <target-dir>/lib\fR.
+
+.RE
+
+.PP
+Example:
+
+.IP
+.nf
+erl -sasl releases_dir \\"mytarget/releases\\" -boot mytarget/releases/1.0/myrel\\
+ -boot_var RELTOOL_EXT_LIB mytarget/lib
+
+.fi
+
+.RE
+
+incl_sys_filters
+.RS 2
+This parameter normally contains a list of regular expressions that controls which files in the system should be included. Each file in the target system must match at least one of the listed regular expressions in order to be included. Further the files may not match any filter in 
+\fIexcl_sys_filters\fR in order to be included. Which application files should be included is controlled with the parameters \fIincl_app_filters\fR and \fIexcl_app_filters\fR. This parameter defaults to \fI[".*"]\fR.
+
+.RE
+
+excl_sys_filters
+.RS 2
+This parameter normally contains a list of regular expressions that controls which files in the system should not be included in the target system. In order to be included, a file must match some filter in 
+\fIincl_sys_filters\fR but not any filter in \fIexcl_sys_filters\fR. This parameter defaults to \fI[]\fR.
+
+.RE
+
+incl_app_filters
+.RS 2
+This parameter normally contains a list of regular expressions that controls which application specific files that should be included. Each file in the application must match at least one of the listed regular expressions in order to be included. Further the files may not match any filter in 
+\fIexcl_app_filters\fR in order to be included. This parameter defaults to \fI[".*"]\fR.
+
+.RE
+
+excl_app_filters
+.RS 2
+This parameter normally contains a list of regular expressions that controls which application specific files should not be included in the target system. In order to be included, a file must match some filter in 
+\fIincl_app_filters\fR but not any filter in \fIexcl_app_filters\fR. This parameter defaults to \fI[]\fR.
+
+.RE
+
+.PP
+On application (\fIescript\fR) level, the following options are supported:
+
+incl_cond
+.RS 2
+The value of this parameter overrides the parameter with the same name on system level.
+
+
+.RE
+
+.PP
+On application (\fIapp\fR) level, the following options are supported:
+
+vsn
+.RS 2
+The version of the application. In an installed system there may exist several versions of an application. The 
+\fIvsn\fR parameter controls which version of the application will be chosen.
+.PP
+This parameter is mutual exclusive with \fIlib_dir\fR. If \fIvsn\fR and \fIlib_dir\fR are both omitted, the latest version will be chosen.
+
+.PP
+Note that in order for reltool to sort application versions and thereby be able to select the latest, it is required that the version id for the application consists of integers and dots only, for example \fI1\fR, \fI2.0\fR or \fI3.17.1\fR.
+
+
+.RE
+
+lib_dir
+.RS 2
+The directory to read the application from. This parameter can be used to point out a specific location to fetch the application from. This is useful for instance if the parent directory for some reason is no good as a library directory on system level.
+
+.PP
+This parameter is mutual exclusive with \fIvsn\fR. If \fIvsn\fR and \fIlib_dir\fR are both omitted, the latest version will be chosen.
+
+.PP
+Note that in order for reltool to sort application versions and thereby be able to select the latest, it is required that the version id for the application consists of integers and dots only, for example \fI1\fR, \fI2.0\fR or \fI3.17.1\fR.
+
+
+.RE
+
+mod
+.RS 2
+Module specific configuration. A module has a mandatory name and module level options that are described below.
+
+
+.RE
+
+mod_cond
+.RS 2
+The value of this parameter overrides the parameter with the same name on system level.
+
+
+.RE
+
+incl_cond
+.RS 2
+The value of this parameter overrides the parameter with the same name on system level.
+
+
+.RE
+
+app_file
+.RS 2
+The value of this parameter overrides the parameter with the same name on system level.
+
+
+.RE
+
+debug_info
+.RS 2
+The value of this parameter overrides the parameter with the same name on system level.
+
+
+.RE
+
+incl_app_filters
+.RS 2
+The value of this parameter overrides the parameter with the same name on system level.
+
+
+.RE
+
+excl_app_filters
+.RS 2
+The value of this parameter overrides the parameter with the same name on system level.
+
+
+.RE
+
+.PP
+On module (\fImod\fR) level, the following options are supported:
+
+incl_cond
+.RS 2
+This parameter controls whether the module is included or not. By default the 
+\fImod_cond\fR parameter on application and system level will be used to control whether the module is included or not. The value of \fIincl_cond\fR overrides the module inclusion policy. \fIinclude\fR implies that the module is included, while \fIexclude\fR implies that the module is not included. \fIderived\fR implies that the module is included if it is used by any other included module.
+
+.RE
+
+debug_info
+.RS 2
+The value of this parameter overrides the parameter with the same name on application level.
+
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBapp() ::\fR
+\fB          {vsn, app_vsn()} |\fR
+\fB          {lib_dir, lib_dir()} |\fR
+\fB          {mod, mod_name(), [mod()]} |\fR
+\fB          {mod_cond, mod_cond()} |\fR
+\fB          {incl_cond, incl_cond()} |\fR
+\fB          {app_file, app_file()} |\fR
+\fB          {debug_info, debug_info()} |\fR
+\fB          {incl_app_filters, incl_app_filters()} |\fR
+\fB          {excl_app_filters, excl_app_filters()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBapp_file() :: keep | strip | all.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBapp_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBapp_type() :: permanent | transient | temporary | load | none.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBapp_vsn() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbase_dir() :: dir().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbase_file() :: file().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBboot_rel() :: rel_name().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBconfig() :: {sys, [sys()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_info() :: keep | strip | [beam_lib:chunkid()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdir() :: file:filename().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBescript() :: {incl_cond, incl_cond()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBescript_file() :: file().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexcl_app_filters() :: regexps().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexcl_lib() :: otp_root.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexcl_sys_filters() :: regexps().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfile() :: file:filename().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBincl_app() :: app_name().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBincl_app_filters() :: regexps().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBincl_cond() :: include | exclude | derived.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBincl_defaults() :: boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBincl_derived() :: boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBincl_sys_filters() :: regexps().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlib_dir() :: dir().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmod() :: {incl_cond, incl_cond()} | {debug_info, debug_info()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmod_cond() :: all | app | ebin | derived | none.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmod_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {wx_debug, term()} |\fR
+\fB          {trap_exit, boolean()} |\fR
+\fB          config() |\fR
+\fB          {config, config() | file()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoptions() :: [option()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBprofile() :: development | embedded | standalone.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBre_regexp() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBreason() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBregexps() ::\fR
+\fB          [re_regexp()] | {add, [re_regexp()]} | {del, [re_regexp()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrel_app() ::\fR
+\fB          app_name() |\fR
+\fB          {app_name(), app_type()} |\fR
+\fB          {app_name(), [incl_app()]} |\fR
+\fB          {app_name(), app_type(), [incl_app()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrel_file() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrel_name() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrel_opt() :: {load_dot_erlang, boolean()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrel_vsn() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrelocatable() :: boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBroot_dir() :: dir().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBscript_file() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBserver() :: server_pid() | options().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBserver_pid() :: pid().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsys() ::\fR
+\fB          {mod_cond, mod_cond()} |\fR
+\fB          {incl_cond, incl_cond()} |\fR
+\fB          {debug_info, debug_info()} |\fR
+\fB          {app_file, app_file()} |\fR
+\fB          {profile, profile()} |\fR
+\fB          {excl_lib, excl_lib()} |\fR
+\fB          {incl_sys_filters, incl_sys_filters()} |\fR
+\fB          {excl_sys_filters, excl_sys_filters()} |\fR
+\fB          {incl_app_filters, incl_app_filters()} |\fR
+\fB          {excl_app_filters, excl_app_filters()} |\fR
+\fB          {root_dir, root_dir()} |\fR
+\fB          {lib_dirs, [lib_dir()]} |\fR
+\fB          {boot_rel, boot_rel()} |\fR
+\fB          {rel, rel_name(), rel_vsn(), [rel_app()]} |\fR
+\fB          {rel, rel_name(), rel_vsn(), [rel_app()], [rel_opt()]} |\fR
+\fB          {relocatable, relocatable()} |\fR
+\fB          {erts, app()} |\fR
+\fB          {escript, escript_file(), [escript()]} |\fR
+\fB          {app, app_name(), [app()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtarget_dir() :: dir().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtarget_spec() ::\fR
+\fB          [target_spec()] |\fR
+\fB          {create_dir, base_dir(), [target_spec()]} |\fR
+\fB          {create_dir, base_dir(), top_dir(), [target_spec()]} |\fR
+\fB          {copy_file, base_file()} |\fR
+\fB          {copy_file, base_file(), top_file()} |\fR
+\fB          {write_file, base_file(), binary()} |\fR
+\fB          {strip_beam_file, base_file()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtop_dir() :: file().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtop_file() :: file().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwarning() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwindow_pid() :: pid().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate_target(server(), target_dir()) -> ok | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Create a target system.
+
+.PP
+Gives the same result as \fI{ok,TargetSpec}=reltool:get_target_spec(Server)\fR and \fIreltool:eval_target_spec(TargetSpec,RootDir,TargetDir)\fR.
+
+
+.RE
+.B
+\fBeval_target_spec(target_spec(), root_dir(), target_dir()) ->\fR
+\fB                          ok | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Create the actual target system from a specification generated by \fIreltool:get_target_spec/1\fR.
+
+.PP
+The creation of the specification for a target system is performed in two steps. In the first step a complete specification will be generated. It will likely contain much more files than you are interested in your target system. In the second step the specification will be filtered according to your filters. There you have the ability to specify filters per application as well as system wide filters. You can also select a \fIprofile\fR for your system. Depending on the \fIprofile\fR, different default filters will be used.
+
+.PP
+The top directories \fIbin\fR, \fIreleases\fR and \fIlib\fR are treated differently from other files. All other files are by default copied to the target system. The \fIreleases\fR directory contains generated \fIrel\fR, \fIscript\fR, and \fIboot\fR files. The \fIlib\fR directory contains the applications. Which applications are included and if they should be customized (stripped from debug info etc.) is specified with various configuration parameters. The files in the \fIbin\fR directory are copied from the \fIerts-vsn/bin\fR directory, but only those files that were originally included in the \fIbin\fR directory of the source system.
+
+.PP
+If the configuration parameter \fIrelocatable\fR was set to \fItrue\fR there is no need to install the target system with \fIreltool:install/2\fR before it can be started. In that case the file tree containing the target system can be moved without re-installation.
+
+.PP
+In most cases, the \fIRootDir\fR parameter should be set to the same as the \fIroot_dir\fR configuration parameter used in the call to \fIreltool:get_target_spec/1\fR (or \fIcode:root_dir/0\fR if the configuration parameter is not set). In some cases it might be useful to evaluate the same target specification towards different root directories. This should, however, be used with great care as it requires equivalent file structures under all roots.
+
+
+.RE
+.B
+\fBget_config(server(), incl_defaults(), incl_derived()) ->\fR
+\fB                    {ok, config()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Get reltool configuration.
+
+.PP
+Normally, only the explicit configuration parameters with values that differ from their defaults are interesting. But the builtin default values can be returned by setting \fIInclDefaults\fR to \fItrue\fR. The derived configuration can be returned by setting \fIInclDerived\fR to \fItrue\fR.
+
+
+.RE
+.B
+\fBget_rel(server(), rel_name()) ->\fR
+\fB                 {ok, rel_file()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Get contents of a release file. See \fIrel\fR for more details.
+
+
+.RE
+.B
+\fBget_script(server(), rel_name()) ->\fR
+\fB                    {ok, script_file()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Get contents of a boot script file. See \fIscript\fR for more details.
+
+
+.RE
+.B
+\fBget_server(window_pid()) -> {ok, server_pid()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Return the process identifier of the server process.
+
+
+.RE
+.B
+\fBget_status(server()) -> {ok, [warning()]} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Get status about the configuration
+
+
+.RE
+.B
+\fBget_target_spec(server()) ->\fR
+\fB                         {ok, target_spec()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Return a specification of the target system. The actual target system can be created with \fIreltool:eval_target_spec/3\fR.
+
+
+.RE
+.B
+\fBinstall(rel_name(), dir()) -> ok | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Install a created target system
+
+
+.RE
+.B
+\fBstart() -> {ok, window_pid()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Start a main window process with default options
+
+
+.RE
+.B
+\fBstart(options()) -> {ok, window_pid()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Start a main window process with options
+
+
+.RE
+.B
+\fBstart_link(options()) -> {ok, window_pid()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Start a main window process with options. The process is linked.
+
+
+.RE
+.B
+\fBstart_server(options()) -> {ok, server_pid()} | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Start a server process with options. The server process identity can be given as an argument to several other functions in the API.
+
+
+.RE
+.B
+\fBstop(server_pid() | window_pid()) -> ok | {error, reason()}.\fR
+
+.br
+.RS
+.PP
+Stop a server or window process
+
+
+.RE

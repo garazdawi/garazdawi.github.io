@@ -1,0 +1,824 @@
+.TH unicode 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+unicode \- Functions for converting and classifying Unicode characters.
+
+.SH DESCRIPTION
+.PP
+This module contains functions for converting between different character representations. It converts between ISO Latin-1 characters and Unicode characters, but it can also convert between different Unicode encodings (like UTF-8, UTF-16, and UTF-32).
+
+.PP
+The default Unicode encoding in Erlang binaries is UTF-8, which is also the format in which built-in functions and libraries in OTP expect to find binary Unicode data. In lists, Unicode data is encoded as integers, each integer representing one character and encoded simply as the Unicode code point for the character.
+
+.PP
+Other Unicode encodings than integers representing code points or UTF-8 in binaries are referred to as "external encodings". The ISO Latin-1 encoding is in binaries and lists referred to as latin1-encoding.
+
+.PP
+It is recommended to only use external encodings for communication with external entities where this is required. When working inside the Erlang/OTP environment, it is recommended to keep binaries in UTF-8 when representing Unicode characters. ISO Latin-1 encoding is supported both for backward compatibility and for communication with external entities not supporting Unicode character sets.
+
+.PP
+Programs should always operate on a normalized form and compare canonical-equivalent Unicode characters as equal. All characters should thus be normalized to one form once on the system borders. One of the following functions can convert characters to their normalized forms \fIcharacters_to_nfc_list/1\fR, \fIcharacters_to_nfc_binary/1\fR, \fIcharacters_to_nfd_list/1\fR or \fIcharacters_to_nfd_binary/1\fR. For general text \fIcharacters_to_nfc_list/1\fR or \fIcharacters_to_nfc_binary/1\fR is preferred, and for identifiers one of the compatibility normalization functions, such as \fIcharacters_to_nfkc_list/1\fR, is preferred for security reasons. The normalization functions where introduced in OTP 20. Additional information on normalization can be found in the Unicode FAQ.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcategory() ::\fR
+\fB          {letter, uppercase | lowercase | titlecase | modifier | other} |\fR
+\fB          {mark, non_spacing | spacing_combining | enclosing} |\fR
+\fB          {number, decimal | letter | other} |\fR
+\fB          {separator, space | line | paragraph} |\fR
+\fB          {other, control | format | surrogate | private | not_assigned} |\fR
+\fB          {punctuation,\fR
+\fB           connector | dash | open | close | initial | final | other} |\fR
+\fB          {symbol, math | currency | modifier | other}.\fR
+
+.br
+.RS
+.PP
+Character category
+
+
+.RE
+.B
+\fBchardata() :: charlist() | unicode_binary().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcharlist() ::\fR
+\fB          maybe_improper_list(char() | unicode_binary() | charlist(),\fR
+\fB                              unicode_binary() | []).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBencoding() ::\fR
+\fB          latin1 | unicode | utf8 | utf16 |\fR
+\fB          {utf16, endian()} |\fR
+\fB          utf32 |\fR
+\fB          {utf32, endian()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBendian() :: big | little.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexternal_chardata() ::\fR
+\fB          external_charlist() | external_unicode_binary().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexternal_charlist() ::\fR
+\fB          maybe_improper_list(char() |\fR
+\fB                              external_unicode_binary() |\fR
+\fB                              external_charlist(),\fR
+\fB                              external_unicode_binary() | []).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexternal_unicode_binary() :: binary().\fR
+
+.br
+.RS
+.PP
+A \fIbinary/0\fR with characters coded in a user-specified Unicode encoding other than UTF-8 (that is, UTF-16 or UTF-32).
+
+
+.RE
+.B
+\fBlatin1_binary() :: binary().\fR
+
+.br
+.RS
+.PP
+A \fIbinary/0\fR with characters coded in ISO Latin-1.
+
+
+.RE
+.B
+\fBlatin1_char() :: byte().\fR
+
+.br
+.RS
+.PP
+An \fIinteger/0\fR representing a valid ISO Latin-1 character (0-255).
+
+
+.RE
+.B
+\fBlatin1_chardata() :: latin1_charlist() | latin1_binary().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIiodata/0\fR.
+
+
+.RE
+.B
+\fBlatin1_charlist() ::\fR
+\fB          maybe_improper_list(latin1_char() |\fR
+\fB                              latin1_binary() |\fR
+\fB                              latin1_charlist(),\fR
+\fB                              latin1_binary() | []).\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIiolist/0\fR.
+
+
+.RE
+.B
+\fBunicode_binary() :: binary().\fR
+
+.br
+.RS
+.PP
+A \fIbinary/0\fR with characters encoded in the UTF-8 coding standard.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbom_to_encoding(Bin) -> {Encoding, Length}\fR
+\fB                         when\fR
+\fB                             Bin :: binary(),\fR
+\fB                             Encoding ::\fR
+\fB                                 latin1 | utf8 |\fR
+\fB                                 {utf16, endian()} |\fR
+\fB                                 {utf32, endian()},\fR
+\fB                             Length :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Checks for a UTF Byte Order Mark (BOM) in the beginning of a binary.
+
+.PP
+If the supplied binary \fIBin\fR begins with a valid BOM for either UTF-8, UTF-16, or UTF-32, the function returns the encoding identified along with the BOM length in bytes.
+
+.PP
+If no BOM is found, the function returns \fI{latin1,0}\fR.
+
+
+.RE
+.B
+\fBcategory(char()) -> category().\fR
+
+.br
+.RS
+.PP
+Returns the \fIChar\fR category.
+
+.IP
+.nf
+1> unicode:category($a).
+{letter,lowercase}
+2> unicode:category($Ä).
+{letter,uppercase}
+3> unicode:category($😊).
+{symbol,other}
+4> unicode:category($€).
+{symbol,currency}
+5> unicode:category($[).
+{punctuation,open}
+
+.fi
+
+
+.RE
+.B
+\fBcharacters_to_binary(Data, InEncoding, OutEncoding) -> Result\fR
+\fB                              when\fR
+\fB                                  Data ::\fR
+\fB                                      latin1_chardata() |\fR
+\fB                                      chardata() |\fR
+\fB                                      external_chardata(),\fR
+\fB                                  InEncoding :: encoding(),\fR
+\fB                                  OutEncoding :: encoding(),\fR
+\fB                                  Result ::\fR
+\fB                                      binary() |\fR
+\fB                                      {error, binary(), RestData} |\fR
+\fB                                      {incomplete, binary(), binary()},\fR
+\fB                                  RestData ::\fR
+\fB                                      latin1_chardata() |\fR
+\fB                                      chardata() |\fR
+\fB                                      external_chardata().\fR
+
+.br
+.RS
+.PP
+Behaves as \fIcharacters_to_list/2\fR, but produces a binary instead of a Unicode list.
+
+.PP
+\fIInEncoding\fR defines how input is to be interpreted if binaries are present in \fIData\fR
+
+.PP
+\fIOutEncoding\fR defines in what format output is to be generated.
+
+.PP
+Options:
+
+unicode
+.RS 2
+An alias for 
+\fIutf8\fR, as this is the preferred encoding for Unicode characters in binaries.
+
+.RE
+
+utf16
+.RS 2
+An alias for 
+\fI{utf16,big}\fR.
+
+.RE
+
+utf32
+.RS 2
+An alias for 
+\fI{utf32,big}\fR.
+
+.RE
+
+.PP
+The atoms \fIbig\fR and \fIlittle\fR denote big- or little-endian encoding.
+
+.PP
+Errors and exceptions occur as in \fIcharacters_to_list/2\fR, but the second element in tuple \fIerror\fR or \fIincomplete\fR is a \fIbinary/0\fR and not a \fIlist/0\fR.
+
+
+.RE
+.B
+\fBcharacters_to_list(Data, InEncoding) -> Result\fR
+\fB                            when\fR
+\fB                                Data ::\fR
+\fB                                    latin1_chardata() |\fR
+\fB                                    chardata() |\fR
+\fB                                    external_chardata(),\fR
+\fB                                InEncoding :: encoding(),\fR
+\fB                                Result ::\fR
+\fB                                    string() |\fR
+\fB                                    {error, string(), RestData} |\fR
+\fB                                    {incomplete, string(), binary()},\fR
+\fB                                RestData ::\fR
+\fB                                    latin1_chardata() |\fR
+\fB                                    chardata() |\fR
+\fB                                    external_chardata().\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of integers and binaries into a list of integers representing Unicode characters. The binaries in the input can have characters encoded as one of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+ISO Latin-1 (0-255, one character per byte). Here, case parameter \fIInEncoding\fR is to be specified as \fIlatin1\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+One of the UTF-encodings, which is specified as parameter \fIInEncoding\fR.
+
+.RE
+
+.PP
+Note that integers in the list always represent code points regardless of \fIInEncoding\fR passed. If \fIInEncoding latin1\fR is passed, only code points < 256 are allowed; otherwise, all valid unicode code points are allowed.
+
+.PP
+If \fIInEncoding\fR is \fIlatin1\fR, parameter \fIData\fR corresponds to the \fIiodata/0\fR type, but for \fIunicode\fR, parameter \fIData\fR can contain integers > 255 (Unicode characters beyond the ISO Latin-1 range), which makes it invalid as \fIiodata/0\fR.
+
+.PP
+The purpose of the function is mainly to convert combinations of Unicode characters into a pure Unicode string in list representation for further processing. For writing the data to an external entity, the reverse function \fIcharacters_to_binary/3\fR comes in handy.
+
+.PP
+Option \fIunicode\fR is an alias for \fIutf8\fR, as this is the preferred encoding for Unicode characters in binaries. \fIutf16\fR is an alias for \fI{utf16,big}\fR and \fIutf32\fR is an alias for \fI{utf32,big}\fR. The atoms \fIbig\fR and \fIlittle\fR denote big- or little-endian encoding.
+
+.PP
+If the data cannot be converted, either because of illegal Unicode/ISO Latin-1 characters in the list, or because of invalid UTF encoding in any binaries, an error tuple is returned. The error tuple contains the tag \fIerror\fR, a list representing the characters that could be converted before the error occurred and a representation of the characters including and after the offending integer/bytes. The last part is mostly for debugging, as it still constitutes a possibly deep or mixed list, or both, not necessarily of the same depth as the original data. The error occurs when traversing the list and whatever is left to decode is returned "as is".
+
+.PP
+However, if the input \fIData\fR is a pure binary, the third part of the error tuple is guaranteed to be a binary as well.
+
+.PP
+Errors occur for the following reasons:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Integers out of range.
+
+.PP
+If \fIInEncoding\fR is \fIlatin1\fR, an error occurs whenever an integer > 255 is found in the lists.
+
+.PP
+If \fIInEncoding\fR is of a Unicode type, an error occurs whenever either of the following is found:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An integer > 16#10FFFF (the maximum Unicode character)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An integer in the range 16#D800 to 16#DFFF (invalid range reserved for UTF-16 surrogate pairs)
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Incorrect UTF encoding.
+
+.PP
+If \fIInEncoding\fR is one of the UTF types, the bytes in any binaries must be valid in that encoding.
+
+.PP
+Errors can occur for various reasons, including the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+"Pure" decoding errors (like the upper bits of the bytes being wrong).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The bytes are decoded to a too large number.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The bytes are decoded to a code point in the invalid Unicode range.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Encoding is "overlong", meaning that a number should have been encoded in fewer bytes.
+
+.RE
+
+.PP
+The case of a truncated UTF is handled specially, see the paragraph about incomplete binaries below.
+
+.PP
+If \fIInEncoding\fR is \fIlatin1\fR, binaries are always valid as long as they contain whole bytes, as each byte falls into the valid ISO Latin-1 range.
+
+.RE
+
+.PP
+A special type of error is when no actual invalid integers or bytes are found, but a trailing \fIbinary/0\fR consists of too few bytes to decode the last character. This error can occur if bytes are read from a file in chunks or if binaries in other ways are split on non-UTF character boundaries. An \fIincomplete\fR tuple is then returned instead of the \fIerror\fR tuple. It consists of the same parts as the \fIerror\fR tuple, but the tag is \fIincomplete\fR instead of \fIerror\fR and the last element is always guaranteed to be a binary consisting of the first part of a (so far) valid UTF character.
+
+.PP
+If one UTF character is split over two consecutive binaries in the \fIData\fR, the conversion succeeds. This means that a character can be decoded from a range of binaries as long as the whole range is specified as input without errors occurring.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+decode_data(Data) ->
+   case unicode:characters_to_list(Data,unicode) of
+      {incomplete,Encoded, Rest} ->
+            More = get_some_more_data(),
+            Encoded ++ decode_data([Rest, More]);
+      {error,Encoded,Rest} ->
+            handle_error(Encoded,Rest);
+      List ->
+            List
+   end.
+
+.fi
+
+.PP
+However, bit strings that are not whole bytes are not allowed, so a UTF character must be split along 8-bit boundaries to ever be decoded.
+
+.PP
+A \fIbadarg\fR exception is thrown for the following cases:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Any parameters are of the wrong type.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The list structure is invalid (a number as tail).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The binaries do not contain whole bytes (bit strings).
+
+.RE
+
+
+.RE
+.B
+\fBcharacters_to_nfc_binary(chardata()) ->\fR
+\fB                                  unicode_binary() |\fR
+\fB                                  {error, unicode_binary(), chardata()}.\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of characters and binaries into a Normalized Form of canonical equivalent Composed characters according to the Unicode standard.
+
+.PP
+Any binaries in the input must be encoded with utf8 encoding.
+
+.PP
+The result is an utf8 encoded binary.
+
+.IP
+.nf
+4> unicode:characters_to_nfc_binary([<<"abc..a">>,[778],$a,[776],$o,[776]]).
+<<"abc..åäö"/utf8>>
+
+.fi
+
+
+.RE
+.B
+\fBcharacters_to_nfc_list(chardata()) ->\fR
+\fB                                [char()] | {error, [char()], chardata()}.\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of characters and binaries into a Normalized Form of canonical equivalent Composed characters according to the Unicode standard.
+
+.PP
+Any binaries in the input must be encoded with utf8 encoding.
+
+.PP
+The result is a list of characters.
+
+.IP
+.nf
+3> unicode:characters_to_nfc_list([<<"abc..a">>,[778],$a,[776],$o,[776]]).
+"abc..åäö"
+
+.fi
+
+
+.RE
+.B
+\fBcharacters_to_nfd_binary(chardata()) ->\fR
+\fB                                  unicode_binary() |\fR
+\fB                                  {error, unicode_binary(), chardata()}.\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of characters and binaries into a Normalized Form of canonical equivalent Decomposed characters according to the Unicode standard.
+
+.PP
+Any binaries in the input must be encoded with utf8 encoding.
+
+.PP
+The result is an utf8 encoded binary.
+
+.IP
+.nf
+2> unicode:characters_to_nfd_binary("abc..åäö").
+<<97,98,99,46,46,97,204,138,97,204,136,111,204,136>>
+
+.fi
+
+
+.RE
+.B
+\fBcharacters_to_nfd_list(chardata()) ->\fR
+\fB                                [char()] | {error, [char()], chardata()}.\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of characters and binaries into a Normalized Form of canonical equivalent Decomposed characters according to the Unicode standard.
+
+.PP
+Any binaries in the input must be encoded with utf8 encoding.
+
+.PP
+The result is a list of characters.
+
+.IP
+.nf
+1> unicode:characters_to_nfd_list("abc..åäö").
+[97,98,99,46,46,97,778,97,776,111,776]
+
+.fi
+
+
+.RE
+.B
+\fBcharacters_to_nfkc_binary(chardata()) ->\fR
+\fB                                   unicode_binary() |\fR
+\fB                                   {error, unicode_binary(), chardata()}.\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of characters and binaries into a Normalized Form of compatibly equivalent Composed characters according to the Unicode standard.
+
+.PP
+Any binaries in the input must be encoded with utf8 encoding.
+
+.PP
+The result is an utf8 encoded binary.
+
+.IP
+.nf
+4> unicode:characters_to_nfkc_binary([<<"abc..a">>,[778],$a,[776],$o,[776],[65299,65298]]).
+<<"abc..åäö32"/utf8>>
+
+.fi
+
+
+.RE
+.B
+\fBcharacters_to_nfkc_list(chardata()) ->\fR
+\fB                                 [char()] |\fR
+\fB                                 {error, [char()], chardata()}.\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of characters and binaries into a Normalized Form of compatibly equivalent Composed characters according to the Unicode standard.
+
+.PP
+Any binaries in the input must be encoded with utf8 encoding.
+
+.PP
+The result is a list of characters.
+
+.IP
+.nf
+3> unicode:characters_to_nfkc_list([<<"abc..a">>,[778],$a,[776],$o,[776],[65299,65298]]).
+"abc..åäö32"
+
+.fi
+
+
+.RE
+.B
+\fBcharacters_to_nfkd_binary(chardata()) ->\fR
+\fB                                   unicode_binary() |\fR
+\fB                                   {error, unicode_binary(), chardata()}.\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of characters and binaries into a Normalized Form of compatibly equivalent Decomposed characters according to the Unicode standard.
+
+.PP
+Any binaries in the input must be encoded with utf8 encoding.
+
+.PP
+The result is an utf8 encoded binary.
+
+.IP
+.nf
+2> unicode:characters_to_nfkd_binary(["abc..åäö",[65299,65298]]).
+<<97,98,99,46,46,97,204,138,97,204,136,111,204,136,51,50>>
+
+.fi
+
+
+.RE
+.B
+\fBcharacters_to_nfkd_list(chardata()) ->\fR
+\fB                                 [char()] |\fR
+\fB                                 {error, [char()], chardata()}.\fR
+
+.br
+.RS
+.PP
+Converts a possibly deep list of characters and binaries into a Normalized Form of compatibly equivalent Decomposed characters according to the Unicode standard.
+
+.PP
+Any binaries in the input must be encoded with utf8 encoding.
+
+.PP
+The result is a list of characters.
+
+.IP
+.nf
+1> unicode:characters_to_nfkd_list(["abc..åäö",[65299,65298]]).
+[97,98,99,46,46,97,778,97,776,111,776,51,50]
+
+.fi
+
+
+.RE
+.B
+\fBencoding_to_bom(InEncoding) -> Bin\fR
+\fB                         when Bin :: binary(), InEncoding :: encoding().\fR
+
+.br
+.RS
+.PP
+Creates a UTF Byte Order Mark (BOM) as a binary from the supplied \fIInEncoding\fR.
+
+.PP
+The BOM is, if supported at all, expected to be placed first in UTF encoded files or messages.
+
+.PP
+The function returns \fI<<>>\fR for \fIlatin1\fR encoding, as there is no BOM for ISO Latin-1.
+
+.PP
+Notice that the BOM for UTF-8 is seldom used, and it is really not a \fIbyte order\fR mark. There are obviously no byte order issues with UTF-8, so the BOM is only there to differentiate UTF-8 encoding from other UTF formats.
+
+
+.RE
+.B
+\fBis_id_continue(char()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if \fIChar\fR is an identifier continuation.
+
+.PP
+Identifier continuation is defined by the ID_Continue property in Unicode Standard Annex #31.
+
+.IP
+.nf
+1> unicode:is_id_continue($a).
+true
+2> unicode:is_id_continue($_).
+true
+3> unicode:is_id_continue($-).
+false
+
+.fi
+
+
+.RE
+.B
+\fBis_id_start(char()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if \fIChar\fR is an identifier start.
+
+.PP
+Identifier start is defined by the ID_Start property in Unicode Standard Annex #31.
+
+.IP
+.nf
+1> unicode:is_id_start($a).
+true
+2> unicode:is_id_start($_).
+false
+3> unicode:is_id_start($-).
+false
+
+.fi
+
+
+.RE
+.B
+\fBis_whitespace(char()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if \fIChar\fR is a whitespace.
+
+.PP
+Whitespace is defined in Unicode Standard Annex #44.
+
+.IP
+.nf
+1> unicode:is_whitespace($\\s).
+true
+2> unicode:is_whitespace($😊).
+false
+
+.fi
+
+
+.RE

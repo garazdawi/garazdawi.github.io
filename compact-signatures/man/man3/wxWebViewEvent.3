@@ -1,0 +1,136 @@
+.TH wxWebViewEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxWebViewEvent \- A navigation event holds information about events associated with \fIwxWebView\fR objects.
+
+.SH DESCRIPTION
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxNotifyEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxWebViewEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxWebViewEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxWebView() :: #wxWebView{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxWebViewEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxWebViewEventType() ::\fR
+\fB          webview_navigating | webview_navigated | webview_loaded |\fR
+\fB          webview_error | webview_newwindow | webview_title_changed.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetInt(This) -> integer() when This :: wxWebViewEvent().\fR
+
+.br
+.RS
+.PP
+Returns the integer identifier corresponding to a listbox, choice or radiobox selection (only if the event was a selection, not a deselection), or a boolean value representing the value of a checkbox.
+
+.PP
+For a menu item, this method returns -1 if the item is not checkable or a boolean value (true or false) for checkable items indicating the new state of the item.
+
+
+.RE
+.B
+\fBgetString(This) -> unicode:charlist()\fR
+\fB                   when This :: wxWebViewEvent().\fR
+
+.br
+.RS
+.PP
+Returns item string for a listbox or choice selection event.
+
+.PP
+If one or several items have been deselected, returns the index of the first deselected item. If some items have been selected and others deselected at the same time, it will return the index of the first selected item.
+
+
+.RE
+.B
+\fBgetTarget(This) -> unicode:charlist()\fR
+\fB                   when This :: wxWebViewEvent().\fR
+
+.br
+.RS
+.PP
+Get the name of the target frame which the url of this event has been or will be loaded into.
+
+.PP
+This may return an empty string if the frame is not available.
+
+
+.RE
+.B
+\fBgetURL(This) -> unicode:charlist() when This :: wxWebViewEvent().\fR
+
+.br
+.RS
+.PP
+Get the URL being visited.
+
+
+.RE

@@ -1,0 +1,244 @@
+.TH cerl_clauses 3 "compiler 9.0.5" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+cerl_clauses \- Utility functions for Core Erlang case/receive clauses.
+
+.SH DESCRIPTION
+.PP
+\fBNOTE: \fRThe documentation of the public interface for the Erlang compiler can be found in module \fIcompile\fR. This module is an internal part of the compiler. Its API is not guaranteed to remain compatible between releases.
+
+
+.PP
+Syntax trees are defined in the module \fIcerl\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBbindings() :: [{cerl(), cerl()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcerl() :: cerl:cerl().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBexpr() :: any | cerl().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmatch_ret() :: none | {true, bindings()} | {false, bindings()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBany_catchall(Clauses :: [cerl()]) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if any of the abstract clauses in the list is a catch-all, otherwise \fIfalse\fR.
+
+.PP
+See \fIis_catchall/1\fR for details.
+
+.PP
+Note: each node in \fIClauses\fR must have type \fIclause\fR.
+
+.PP
+\fISee also: \fR\fIis_catchall/1\fR.
+
+
+.RE
+.B
+\fBeval_guard(Expr :: cerl()) -> none | {value, term()}.\fR
+
+.br
+.RS
+.PP
+Tries to reduce a guard expression to a single constant value, if possible.
+
+.PP
+The returned value is \fI{value, Term}\fR if the guard expression \fIExpr\fR always yields the constant value \fITerm\fR, and is otherwise \fInone\fR.
+
+.PP
+Note that although guard expressions should only yield boolean values, this function does not guarantee that \fITerm\fR is either \fItrue\fR or \fIfalse\fR. Also note that only simple constructs like let-expressions are examined recursively; general constant folding is not performed.
+
+.PP
+\fISee also: \fR\fIis_catchall/1\fR.
+
+
+.RE
+.B
+\fBis_catchall(Clause :: cerl:c_clause()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if an abstract clause is a catch-all, otherwise \fIfalse\fR.
+
+.PP
+A clause is a catch-all if all its patterns are variables, and its guard expression always evaluates to \fItrue\fR; cf. \fIeval_guard/1\fR.
+
+.PP
+Note: \fIClause\fR must have type \fIclause\fR.
+
+.PP
+\fISee also: \fR\fIany_catchall/1\fR, \fIeval_guard/1\fR.
+
+
+.RE
+.B
+\fBmatch(Pattern :: cerl(), Expr :: expr()) -> match_ret().\fR
+
+.br
+.RS
+.PP
+Matches a pattern against an expression.
+
+.PP
+The returned value is \fInone\fR if a match is impossible, \fI{true, Bindings}\fR if \fIPattern\fR definitely matches \fIExpr\fR, and \fI{false, Bindings}\fR if a match is not definite, but cannot be excluded. \fIBindings\fR is then a list of pairs \fI{Var, SubExpr}\fR, associating each variable in the pattern with either the corresponding subexpression of \fIExpr\fR, or with the atom \fIany\fR if no matching subexpression exists. (Recall that variables may not be repeated in a Core Erlang pattern.) The list of bindings is given in innermost-first order; this should only be of interest if \fIPattern\fR contains one or more alias patterns. If the returned value is \fI{true, []}\fR, it implies that the pattern and the expression are syntactically identical.
+
+.PP
+Instead of a syntax tree, the atom \fIany\fR can be passed for \fIExpr\fR (or, more generally, be used for any subtree of \fIExpr\fR, in as much the abstract syntax tree implementation allows it); this means that it cannot be decided whether the pattern will match or not, and the corresponding variable bindings will all map to \fIany\fR. The typical use is for producing bindings for \fIreceive\fR clauses.
+
+.PP
+Note: Binary-syntax patterns are never structurally matched against binary-syntax expressions by this function.
+
+.PP
+Examples:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Matching a pattern "\fI{X, Y}\fR" against the expression "\fI{foo, f(Z)}\fR" yields \fI{true, Bindings}\fR where \fIBindings\fR associates "\fIX\fR" with the subtree "\fIfoo\fR" and "\fIY\fR" with the subtree "\fIf(Z)\fR".
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Matching pattern "\fI{X, {bar, Y}}\fR" against expression "\fI{foo, f(Z)}\fR" yields \fI{false, Bindings}\fR where \fIBindings\fR associates "\fIX\fR" with the subtree "\fIfoo\fR" and "\fIY\fR" with \fIany\fR (because it is not known if "\fI{foo, Y}\fR" might match the run-time value of "\fIf(Z)\fR" or not).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Matching pattern "\fI{foo, bar}\fR" against expression "\fI{foo, f()}\fR" yields \fI{false, []}\fR, telling us that there might be a match, but we cannot deduce any bindings.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Matching \fI{foo, X = {bar, Y}}\fR against expression "\fI{foo, {bar, baz}}\fR" yields \fI{true, Bindings}\fR where \fIBindings\fR associates "\fIY\fR" with "\fIbaz\fR", and "\fIX\fR" with "\fI{bar, baz}\fR".
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Matching a pattern "\fI{X, Y}\fR" against \fIany\fR yields \fI{false, Bindings}\fR where \fIBindings\fR associates both "\fIX\fR" and "\fIY\fR" with \fIany\fR.
+
+.RE
+
+
+.RE
+.B
+\fBmatch_list(Patterns :: [cerl()], Exprs :: [expr()]) -> match_ret().\fR
+
+.br
+.RS
+.PP
+Like \fImatch/2\fR, but matching a sequence of patterns against a sequence of expressions.
+
+.PP
+Passing an empty list for \fIExprs\fR is equivalent to passing a list of \fIany\fR atoms of the same length as \fIPatterns\fR.
+
+.PP
+\fISee also: \fR\fImatch/2\fR.
+
+
+.RE
+.B
+\fBreduce([cerl:c_clause()]) ->\fR
+\fB                {true, {cerl:c_clause(), bindings()}} |\fR
+\fB                {false, [cerl:c_clause()]}.\fR
+
+.br
+.RS
+.PP
+Equivalent to reduce(Cs, []).
+
+
+.RE
+.B
+\fBreduce(Clauses :: [cerl:c_clause()], Exprs :: [expr()]) ->\fR
+\fB                {true, {cerl:c_clause(), bindings()}} |\fR
+\fB                {false, [cerl:c_clause()]}.\fR
+
+.br
+.RS
+.PP
+Selects a single clause, if possible, or otherwise reduces the list of selectable clauses.
+
+.PP
+The input is a list \fIClauses\fR of abstract clauses (i.e., syntax trees of type \fIclause\fR), and a list of switch expressions \fIExprs\fR. The function tries to uniquely select a single clause or discard unselectable clauses, with respect to the switch expressions. All abstract clauses in the list must have the same number of patterns. If \fIExprs\fR is not the empty list, it must have the same length as the number of patterns in each clause; see \fImatch_list/2\fR for details.
+
+.PP
+A clause can only be selected if its guard expression always yields the atom \fItrue\fR, and a clause whose guard expression always yields the atom \fIfalse\fR can never be selected. Other guard expressions are considered to have unknown value; cf. \fIeval_guard/1\fR.
+
+.PP
+If a particular clause can be selected, the function returns \fI{true, {Clause, Bindings}}\fR, where \fIClause\fR is the selected clause and \fIBindings\fR is a list of pairs \fI{Var, SubExpr}\fR associating the variables occurring in the patterns of \fIClause\fR with the corresponding subexpressions in \fIExprs\fR. The list of bindings is given in innermost-first order; see the \fImatch/2\fR function for details.
+
+.PP
+If no clause could be definitely selected, the function returns \fI{false, NewClauses}\fR, where \fINewClauses\fR is the list of entries in \fIClauses\fR that remain after eliminating unselectable clauses, preserving the relative order.
+
+.PP
+\fISee also: \fR\fIeval_guard/1\fR, \fImatch/2\fR, \fImatch_list/2\fR.
+
+
+.RE

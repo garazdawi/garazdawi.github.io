@@ -1,0 +1,436 @@
+.TH filelib 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+filelib \- File utilities, such as wildcard matching of filenames.
+
+.SH DESCRIPTION
+.PP
+This module contains utilities on a higher level than the \fIfile\fR module.
+
+.PP
+This module does not support "raw" filenames (that is, files whose names do not comply with the expected encoding). Such files are ignored by the functions in this module.
+
+.PP
+For more information about raw filenames, see the \fIfile\fR module.
+
+.PP
+\fBNOTE: \fRFunctionality in this module generally assumes valid input and does not necessarily fail on input that does not use a valid encoding, but may instead very likely produce invalid output. File operations used to accept filenames containing null characters (integer value zero). This caused the name to be truncated and in some cases arguments to primitive operations to be mixed up. Filenames containing null characters inside the filename are now \fIrejected\fR and will cause primitive file operations to fail.
+
+
+.PP
+\fBWARNING: \fRCurrently null characters at the end of the filename will be accepted by primitive file operations. Such filenames are however still documented as invalid. The implementation will also change in the future and reject such filenames.
+
+
+.SH DATA TYPES
+.LP
+.B
+\fBdirname() :: filename().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdirname_all() :: filename_all().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfilename() :: file:name().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfilename_all() :: file:name_all().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfind_file_rule() ::\fR
+\fB          {ObjDirSuffix :: string(), SrcDirSuffix :: string()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfind_source_rule() ::\fR
+\fB          {ObjExtension :: string(),\fR
+\fB           SrcExtension :: string(),\fR
+\fB           [find_file_rule()]}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBensure_dir(Name) -> ok | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Name :: filename_all() | dirname_all(),\fR
+\fB                        Reason :: file:posix().\fR
+
+.br
+.RS
+.PP
+Ensures that all parent directories for the specified file or directory name \fIName\fR exist, trying to create them if necessary.
+
+.PP
+Returns \fIok\fR if all parent directories already exist or can be created. Returns \fI{error, Reason}\fR if some parent directory does not exist and cannot be created.
+
+
+.RE
+.B
+\fBensure_path(Path) -> ok | {error, Reason}\fR
+\fB                     when Path :: dirname_all(), Reason :: file:posix().\fR
+
+.br
+.RS
+.PP
+Ensures that all parent directories for the specified path \fIPath\fR exist, trying to create them if necessary.
+
+.PP
+Unlike \fIensure_dir/1\fR, this function will attempt to create all path segments as a directory, including the last segment.
+
+.PP
+Returns \fIok\fR if all parent directories already exist or can be created. Returns \fI{error, Reason}\fR if some parent directory does not exist and cannot be created.
+
+
+.RE
+.B
+\fBfile_size(Filename) -> non_neg_integer()\fR
+\fB                   when Filename :: filename_all().\fR
+
+.br
+.RS
+.PP
+Returns the size of the specified file.
+
+
+.RE
+.B
+\fBfind_file(filename(), filename(), [find_file_rule()]) ->\fR
+\fB                   {ok, filename()} | {error, not_found}.\fR
+
+.br
+.RS
+.PP
+Looks for a file of the given name by applying suffix rules to the given directory path.
+
+.PP
+For example, a rule \fI{"ebin", "src"}\fR means that if the directory path ends with \fI"ebin"\fR, the corresponding path ending in \fI"src"\fR should be searched.
+
+.PP
+If \fIRules\fR is left out or is an empty list, the default system rules are used. See also the Kernel application parameter \fIsource_search_rules\fR.
+
+
+.RE
+.B
+\fBfind_source(filename()) -> {ok, filename()} | {error, not_found}.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIfind_source(Base, Dir)\fR, where \fIDir\fR is \fIfilename:dirname(FilePath)\fR and \fIBase\fR is \fIfilename:basename(FilePath)\fR.
+
+
+.RE
+.B
+\fBfind_source(filename(), filename(), [find_source_rule()]) ->\fR
+\fB                     {ok, filename()} | {error, not_found}.\fR
+
+.br
+.RS
+.PP
+Applies file extension specific rules to find the source file for a given object file relative to the object directory.
+
+.PP
+For example, for a file with the extension \fI.beam\fR, the default rule is to look for a file with a corresponding extension \fI.erl\fR by replacing the suffix \fI"ebin"\fR of the object directory path with \fI"src"\fR or \fI"src/*"\fR. The file search is done through \fIfind_file/3\fR. The directory of the object file is always tried before any other directory specified by the rules.
+
+.PP
+If \fIRules\fR is left out or is an empty list, the default system rules are used. See also the Kernel application parameter \fIsource_search_rules\fR.
+
+
+.RE
+.B
+\fBfold_files(Dir, RegExp, Recursive, Fun, AccIn) -> AccOut\fR
+\fB                    when\fR
+\fB                        Dir :: dirname(),\fR
+\fB                        RegExp :: string(),\fR
+\fB                        Recursive :: boolean(),\fR
+\fB                        Fun ::\fR
+\fB                            fun((F :: file:filename(), AccIn) -> AccOut),\fR
+\fB                        AccIn :: term(),\fR
+\fB                        AccOut :: term().\fR
+
+.br
+.RS
+.PP
+Folds function \fIFun\fR over all (regular) files \fIF\fR in directory \fIDir\fR whose basename (for example, just \fI"baz.erl"\fR in \fI"foo/bar/baz.erl"\fR) matches the regular expression \fIRegExp\fR (for a description of the allowed regular expressions, see the \fIre\fR module).
+
+.PP
+If \fIRecursive\fR is \fItrue\fR, all subdirectories to \fIDir\fR are processed. The regular expression matching is only done on the filename without the directory part.
+
+.PP
+If Unicode filename translation is in effect and the file system is transparent, filenames that cannot be interpreted as Unicode can be encountered, in which case the \fIfun()\fR must be prepared to handle raw filenames (that is, binaries). If the regular expression contains codepoints > 255, it does not match filenames that do not conform to the expected character encoding (that is, are not encoded in valid UTF-8).
+
+.PP
+For more information about raw filenames, see the \fIfile\fR module.
+
+
+.RE
+.B
+\fBis_dir(Name) -> boolean()\fR
+\fB                when Name :: filename_all() | dirname_all().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIName\fR refers to a directory, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBis_file(Name) -> boolean()\fR
+\fB                 when Name :: filename_all() | dirname_all().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIName\fR refers to a file or a directory, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBis_regular(Name) -> boolean() when Name :: filename_all().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if \fIName\fR refers to a (regular) file, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBlast_modified(Name) -> file:date_time() | 0\fR
+\fB                       when Name :: filename_all() | dirname_all().\fR
+
+.br
+.RS
+.PP
+Returns the date and time the specified file or directory was last modified, or \fI0\fR if the file does not exist.
+
+
+.RE
+.B
+\fBsafe_relative_path(Filename, Cwd) -> unsafe | SafeFilename\fR
+\fB                            when\fR
+\fB                                Filename :: filename_all(),\fR
+\fB                                Cwd :: filename_all(),\fR
+\fB                                SafeFilename :: filename_all().\fR
+
+.br
+.RS
+.PP
+Sanitizes the relative path by eliminating ".." and "." components to protect against directory traversal attacks.
+
+.PP
+Either returns the sanitized path name, or the atom \fIunsafe\fR if the path is unsafe. The path is considered unsafe in the following circumstances:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The path is not relative.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+." component would climb up above the root of the relative path.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+symbolic link in the path points above the root of the relative path.
+
+.RE
+
+.PP
+\fIExamples:\fR
+
+.IP
+.nf
+1> {ok, Cwd} = file:get_cwd().
+...
+2> filelib:safe_relative_path("dir/sub_dir/..", Cwd).
+"dir"
+3> filelib:safe_relative_path("dir/..", Cwd).
+[]
+4> filelib:safe_relative_path("dir/../..", Cwd).
+unsafe
+5> filelib:safe_relative_path("/abs/path", Cwd).
+unsafe
+
+.fi
+
+
+.RE
+.B
+\fBwildcard(Wildcard) -> [file:filename()]\fR
+\fB                  when Wildcard :: filename() | dirname().\fR
+
+.br
+.RS
+.PP
+Returns a list of all files that match Unix-style wildcard string \fIWildcard\fR.
+
+.PP
+The wildcard string looks like an ordinary filename, except that the following "wildcard characters" are interpreted in a special way:
+
+?
+.RS 2
+Matches one character.
+
+
+.RE
+
+*
+.RS 2
+Matches any number of characters up to the end of the filename, the next dot, or the next slash.
+
+
+.RE
+
+**
+.RS 2
+Two adjacent 
+\fI*\fR used as a single pattern match all files and zero or more directories and subdirectories.
+
+.RE
+
+[Character1,Character2,...]
+.RS 2
+Matches any of the characters listed. Two characters separated by a hyphen match a range of characters. Example: 
+\fI[A-Z]\fR matches any uppercase letter.
+
+.RE
+
+{Item,...}
+.RS 2
+Alternation. Matches one of the alternatives.
+
+
+.RE
+
+.PP
+Other characters represent themselves. Only filenames that have exactly the same character in the same position match. Matching is case-sensitive, for example, "a" does not match "A".
+
+.PP
+Directory separators must always be written as \fI/\fR, even on Windows.
+
+.PP
+A character preceded by \fI` loses its special meaning. Note that \fR` must be written as \fI\\` in a string literal. For example, "\\\\\\\\?\\*" will match any filename starting with \fR?.
+
+.PP
+Notice that multiple "*" characters are allowed (as in Unix wildcards, but opposed to Windows/DOS wildcards).
+
+.PP
+\fIExamples:\fR
+
+.PP
+The following examples assume that the current directory is the top of an Erlang/OTP installation.
+
+.PP
+To find all \fI.beam\fR files in all applications, use the following line:
+
+.IP
+.nf
+filelib:wildcard("lib/*/ebin/*.beam").
+
+.fi
+
+.PP
+To find \fI.erl\fR or \fI.hrl\fR in all applications \fIsrc\fR directories, use either of the following lines:
+
+.IP
+.nf
+filelib:wildcard("lib/*/src/*.?rl")
+
+.fi
+
+.IP
+.nf
+filelib:wildcard("lib/*/src/*.{erl,hrl}")
+
+.fi
+
+.PP
+To find all \fI.hrl\fR files in \fIsrc\fR or \fIinclude\fR directories:
+
+.IP
+.nf
+filelib:wildcard("lib/*/{src,include}/*.hrl").
+
+.fi
+
+.PP
+To find all \fI.erl\fR or \fI.hrl\fR files in either \fIsrc\fR or \fIinclude\fR directories:
+
+.IP
+.nf
+filelib:wildcard("lib/*/{src,include}/*.{erl,hrl}")
+
+.fi
+
+.PP
+To find all \fI.erl\fR or \fI.hrl\fR files in any subdirectory:
+
+.IP
+.nf
+filelib:wildcard("lib/**/*.{erl,hrl}")
+
+.fi
+
+
+.RE
+.B
+\fBwildcard(Wildcard, Cwd) -> [file:filename()]\fR
+\fB                  when\fR
+\fB                      Wildcard :: filename() | dirname(),\fR
+\fB                      Cwd :: dirname().\fR
+
+.br
+.RS
+.PP
+Same as \fIwildcard/1\fR, except that \fICwd\fR is used instead of the working directory.
+
+
+.RE

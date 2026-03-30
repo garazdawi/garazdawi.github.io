@@ -1,0 +1,640 @@
+.TH wxComboBox 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxComboBox \- A combobox is like a combination of an edit control and a listbox.
+
+.SH DESCRIPTION
+.PP
+It can be displayed as static list with editable or read-only text field; or a drop-down list with text field; or a drop-down list without a text field depending on the platform and presence of wxCB_READONLY style.
+
+.PP
+A combobox permits a single selection only. Combobox items are numbered from zero.
+
+.PP
+If you need a customized combobox, have a look at \fIwxComboCtrl\fR (not implemented in wx), \fIwxOwnerDrawnComboBox\fR (not implemented in wx), \fIwxComboPopup\fR (not implemented in wx) and the ready-to-use \fIwxBitmapComboBox\fR (not implemented in wx).
+
+.PP
+Please refer to \fIwxTextEntry\fR (not implemented in wx) documentation for the description of methods operating with the text entry part of the combobox and to \fIwxItemContainer\fR (not implemented in wx) for the methods operating with the list of strings. Notice that at least under MSW \fIwxComboBox\fR doesn't behave correctly if it contains strings differing in case only so portable programs should avoid adding such strings to this control.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCB_SIMPLE: Creates a combobox with a permanently displayed list. Windows only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCB_DROPDOWN: Creates a combobox with a drop-down list. MSW and Motif only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCB_READONLY: A combobox with this style behaves like a \fIwxChoice\fR (and may look in the same way as well, although this is platform-dependent), i.e. it allows the user to choose from the list of options but doesn't allow to enter a value not present in the list.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCB_SORT: Sorts the entries in the list alphabetically.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTE_PROCESS_ENTER: The control will generate the event \fIwxEVT_TEXT_ENTER\fR that can be handled by the program. Otherwise, i.e. either if this style not specified at all, or it is used, but there is no event handler for this event or the event handler called \fIwxEvent:skip/2\fR to avoid overriding the default handling, pressing Enter key is either processed internally by the control or used to activate the default button of the dialog, if any.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxListBox\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTextCtrl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxChoice\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControlWithItems\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxComboBox
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_combobox_selected\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_text_updated\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_text_enter\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcombobox_dropdown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcombobox_closeup\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxComboBox() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcanCopy(This) -> boolean() when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Returns true if the selection can be copied to the clipboard.
+
+
+.RE
+.B
+\fBcanCut(This) -> boolean() when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Returns true if the selection can be cut to the clipboard.
+
+
+.RE
+.B
+\fBcanPaste(This) -> boolean() when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Returns true if the contents of the clipboard can be pasted into the text control.
+
+.PP
+On some platforms (Motif, GTK) this is an approximation and returns true if the control is editable, false otherwise.
+
+
+.RE
+.B
+\fBcanRedo(This) -> boolean() when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Returns true if there is a redo facility available and the last operation can be redone.
+
+
+.RE
+.B
+\fBcanUndo(This) -> boolean() when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Returns true if there is an undo facility available and the last operation can be undone.
+
+
+.RE
+.B
+\fBcopy(This) -> ok when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Copies the selected text to the clipboard.
+
+
+.RE
+.B
+\fBcreate(This, Parent, Id, Value, Pos, Size, Choices, [Option]) ->\fR
+\fB                boolean()\fR
+\fB                when\fR
+\fB                    This :: wxComboBox(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Value :: unicode:chardata(),\fR
+\fB                    Pos :: {X :: integer(), Y :: integer()},\fR
+\fB                    Size :: {W :: integer(), H :: integer()},\fR
+\fB                    Choices :: [unicode:chardata()],\fR
+\fB                    Option ::\fR
+\fB                        {style, integer()} | {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcut(This) -> ok when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Copies the selected text to the clipboard and removes it from the control.
+
+
+.RE
+.B
+\fBdestroy(This :: wxComboBox()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetInsertionPoint(This) -> integer() when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Same as \fIwxTextCtrl:getInsertionPoint/1\fR.
+
+.PP
+Note: Under wxMSW, this function always returns 0 if the combobox doesn't have the focus.
+
+
+.RE
+.B
+\fBgetLastPosition(This) -> integer() when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Returns the zero based index of the last position in the text control, which is equal to the number of characters in the control.
+
+
+.RE
+.B
+\fBgetValue(This) -> unicode:charlist() when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Gets the contents of the control.
+
+.PP
+Notice that for a multiline text control, the lines will be separated by (Unix-style) \fI\\n\fR characters, even under Windows where they are separated by a \fI\\r\\n\fR sequence in the native control.
+
+
+.RE
+.B
+\fBnew() -> wxComboBox().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxComboBox()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {value, unicode:chardata()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {choices, [unicode:chardata()]} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a combobox.
+
+.PP
+See: \fIcreate/8\fR
+
+
+.RE
+.B
+\fBpaste(This) -> ok when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Pastes text from the clipboard to the text item.
+
+
+.RE
+.B
+\fBredo(This) -> ok when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+If there is a redo facility and the last operation can be redone, redoes the last operation.
+
+.PP
+Does nothing if there is no redo facility.
+
+
+.RE
+.B
+\fBremove(This, From, To) -> ok\fR
+\fB                when\fR
+\fB                    This :: wxComboBox(),\fR
+\fB                    From :: integer(),\fR
+\fB                    To :: integer().\fR
+
+.br
+.RS
+.PP
+Removes the text starting at the first given position up to (but not including) the character at the last position.
+
+.PP
+This function puts the current insertion point position at \fIto\fR as a side effect.
+
+
+.RE
+.B
+\fBreplace(This, From, To, Value) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxComboBox(),\fR
+\fB                     From :: integer(),\fR
+\fB                     To :: integer(),\fR
+\fB                     Value :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Replaces the text starting at the first position up to (but not including) the character at the last position with the given text.
+
+.PP
+This function puts the current insertion point position at \fIto\fR as a side effect.
+
+
+.RE
+.B
+\fBsetInsertionPoint(This, Pos) -> ok\fR
+\fB                           when This :: wxComboBox(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the insertion point at the given position.
+
+
+.RE
+.B
+\fBsetInsertionPointEnd(This) -> ok when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+Sets the insertion point at the end of the text control.
+
+.PP
+This is equivalent to calling \fIsetInsertionPoint/2\fR with \fIgetLastPosition/1\fR argument.
+
+
+.RE
+.B
+\fBsetSelection(This, N) -> ok\fR
+\fB                      when This :: wxComboBox(), N :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the selection to the given item \fIn\fR or removes the selection entirely if \fIn\fR == \fIwxNOT\\_FOUND\fR.
+
+.PP
+Note that this does not cause any command events to be emitted nor does it deselect any other items in the controls which support multiple selections.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControlWithItems:setString/3\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControlWithItems:setStringSelection/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetSelection(This, From, To) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxComboBox(),\fR
+\fB                          From :: integer(),\fR
+\fB                          To :: integer().\fR
+
+.br
+.RS
+.PP
+Same as \fIwxTextCtrl:setSelection/3\fR.
+
+
+.RE
+.B
+\fBsetValue(This, Text) -> ok\fR
+\fB                  when This :: wxComboBox(), Text :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the text for the combobox text field.
+
+.PP
+For normal, editable comboboxes with a text entry field calling this method will generate a \fIwxEVT_TEXT\fR event, consistently with \fIwxTextCtrl:setValue/2\fR behaviour, use \fIwxTextCtrl:changeValue/2\fR if this is undesirable.
+
+.PP
+For controls with \fIwxCB_READONLY\fR style the method behaves somewhat differently: the string must be in the combobox choices list (the check for this is case-insensitive) and \fIwxEVT_TEXT\fR is \fInot\fR generated in this case.
+
+
+.RE
+.B
+\fBundo(This) -> ok when This :: wxComboBox().\fR
+
+.br
+.RS
+.PP
+If there is an undo facility and the last operation can be undone, undoes the last operation.
+
+.PP
+Does nothing if there is no undo facility.
+
+
+.RE

@@ -1,0 +1,3029 @@
+.TH gen_statem 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+gen_statem \- Generic state machine behavior.
+
+.SH DESCRIPTION
+.PP
+\fIgen_statem\fR provides a generic state machine behaviour that since Erlang/OTP 20.0 replaces its predecessor \fIgen_fsm\fR, and should be used for new code.  The \fIgen_fsm\fR behaviour remains in OTP "as is" to not break old code using it.
+
+.PP
+A generic state machine server process (\fIgen_statem\fR) implemented using this module has a standard set of interface functions and includes functionality for tracing and error reporting. It also fits into an OTP supervision tree.  For more information, see gen_statem section in OTP Design Principles.
+
+.PP
+\fBNOTE: \fRIf you are new to \fIgen_statem\fR and want an overview of concepts and operation the section \fIgen_statem\fR Behaviour located in the User's Guide OTP Design Principles is recommended to read.  This reference manual focuses on being correct and complete, which might make it hard to see the forest for all the trees.
+
+
+.PP
+\fBFeatures\fR
+
+.PP
+\fIgen_statem\fR has got the same features that \fIgen_fsm\fR had and adds some really useful:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Co-located state code
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Arbitrary term state
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Event postponing
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Self-generated events
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+State time-out
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Multiple generic named time-outs
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Absolute time-out time
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Automatic state enter calls
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Reply from other state than the request, traceable with \fIsys\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Multiple replies, traceable with \fIsys\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Changing the callback module
+
+.RE
+
+.PP
+Two \fIcallback modes\fR are supported:
+
+state_functions
+.RS 2
+for finite-state machines (
+\fIgen_fsm\fR like), which requires the state to be an atom and uses that state as the name of the current callback function, arity 3.
+
+.RE
+handle_event_function
+.RS 2
+that allows the state to be any term and that uses 
+\fIhandle_event/4\fR as callback function for all states.
+
+.RE
+
+.PP
+The callback modes for \fIgen_statem\fR differs from the one for \fIgen_fsm\fR, but it is still fairly easy to rewrite from \fIgen_fsm\fR to \fIgen_statem\fR.  See the rewrite guide at the start of the \fIgen_fsm\fR documentation.
+
+.PP
+\fBCallback module\fR
+
+.PP
+A \fIgen_statem\fR assumes all specific parts to be located in a callback module exporting a predefined set of functions. The relationship between the behavior functions and the callback functions is as follows:
+
+.IP
+.nf
+gen_statem module            Callback module
+-----------------            ---------------
+gen_statem:start
+gen_statem:start_monitor
+gen_statem:start_link -----> Module:init/1
+
+Server start or code change
+                      -----> Module:callback_mode/0
+                      selects callback mode
+
+gen_statem:stop
+Supervisor exit
+Callback failure      -----> Module:terminate/3
+
+gen_statem:call
+gen_statem:cast
+gen_statem:send_request
+erlang:send
+erlang:'!'            -----> Module:StateName/3
+                   or -----> Module:handle_event/4
+                   depending on callback mode
+
+Release upgrade/downgrade
+(code change)
+                      -----> Module:code_change/4
+
+.fi
+
+.PP
+\fBState callback \fR
+
+.PP
+The \fIstate callback\fR for a specific state in a \fIgen_statem\fR is the callback function that is called for all events in this state. It is selected depending on which \fIcallback mode\fR that the callback module defines with the callback function \fIModule:callback_mode/0\fR.
+
+.PP
+When the \fIcallback mode\fR is \fIstate_functions\fR, the state must be an atom and is used as the \fIstate callback\fR name; see \fIModule:StateName/3\fR.  This co-locates all code for a specific state in one function as the \fIgen_statem\fR engine branches depending on state name.  Note the fact that the callback function \fIModule:terminate/3\fR makes the state name \fIterminate\fR unusable in this mode.
+
+.PP
+When the \fIcallback mode\fR is \fIhandle_event_function\fR, the state can be any term and the \fIstate callback\fR name is \fIModule:handle_event/4\fR. This makes it easy to branch depending on state or event as you desire. Be careful about which events you handle in which states so that you do not accidentally postpone an event forever creating an infinite busy loop.
+
+.PP
+\fBEvent types\fR
+
+.PP
+Events are of different types, therefore the callback functions can know the origin of an event when handling it.  External events are \fIcall\fR,  \fIcast\fR, and  \fIinfo\fR. Internal events are \fItimeout\fR and \fIinternal\fR.
+
+.PP
+\fBEvent handling\fR
+
+.PP
+When \fIgen_statem\fR receives a process message it is transformed into an event and the \fIstate callback\fR is called with the event as two arguments: type and content. When the \fIstate callback\fR has processed the event it returns to \fIgen_statem\fR which does a \fIstate transition\fR. If this \fIstate transition\fR is to a different state, that is: \fINextState =/= State\fR, it is a \fIstate change\fR.
+
+.PP
+\fBTransition actions\fR
+
+.PP
+The \fIstate callback\fR may return \fItransition actions\fR for \fIgen_statem\fR to execute during the \fIstate transition\fR, for example to set a time-out or reply to a call.
+
+.PP
+\fBReply to a call \fR
+
+.PP
+See \fIgen_statem:call/2,3\fR about how to reply to a call.  A reply can be sent from any \fIstate callback\fR, not just the one that got the request event.
+
+.PP
+\fBEvent postponing \fR
+
+.PP
+One of the possible \fItransition actions\fR is to postpone the current event. Then it will not be handled in the current state.  The \fIgen_statem\fR engine keeps a queue of events divided into postponed events and events still to process (not presented yet).  After a \fIstate change\fR the queue restarts with the postponed events.
+
+.PP
+The \fIgen_statem\fR event queue model is sufficient to emulate the normal process message queue with selective receive. Postponing an event corresponds to not matching it in a receive statement, and changing states corresponds to entering a new receive statement.
+
+.PP
+\fBEvent insertion \fR
+
+.PP
+The \fIstate callback\fR can insert events using the \fItransition action\fR \fInext_event\fR, and such an event is inserted in the event queue as the next to call the \fIstate callback\fR with. That is, as if it is the oldest incoming event. A dedicated \fIevent_type/0\fR \fIinternal\fR can be used for such events making it possible to safely distinguish them from external events.
+
+.PP
+Inserting an event replaces the trick of calling your own state handling functions that you often would have to resort to in, for example, \fIgen_fsm\fR to force processing an inserted event before others.
+
+.PP
+\fBNOTE: \fRIf you postpone an event and (against good practice) directly call a different \fIstate callback\fR, the postponed event is not retried, since there was no \fIstate change\fR. Instead of directly calling a \fIstate callback\fR, do a \fIstate change\fR. This makes the \fIgen_statem\fR engine retry postponed events. Inserting an event in a \fIstate change\fR also triggers the new  \fIstate callback\fR to be called with that event before receiving any external events.
+
+
+.PP
+\fBState enter calls \fR
+
+.PP
+The \fIgen_statem\fR engine can automatically make a special call to the \fIstate callback\fR whenever a new state is entered; see \fIstate_enter/0\fR. This is for writing code common to all state entries.  Another way to do it is to explicitly insert an event at the \fIstate transition\fR, and/or to use a dedicated \fIstate transition\fR function, but that is something you will have to remember at every \fIstate transition\fR to the state(s) that need it.
+
+.PP
+For the details of a \fIstate transition\fR, see type \fItransition_option/0\fR.
+
+.PP
+\fBHibernation\fR
+
+.PP
+The \fIgen_statem\fR process can go into hibernation; see \fIproc_lib:hibernate/3\fR. It is done when a \fIstate callback\fR or \fIModule:init/1\fR specifies \fIhibernate\fR in the returned \fIActions\fR list. This feature can be useful to reclaim process heap memory while the server is expected to be idle for a long time. However, use it with care, as hibernation can be too costly to use after every event; see \fIerlang:hibernate/3\fR.
+
+.PP
+There is also a server start option \fI{hibernate_after, Timeout}\fR for \fIstart/3,4\fR, \fIstart_link/3,4\fR, \fIstart_monitor/3,4\fR, or \fIenter_loop/4,5,6\fR, that may be used to automatically hibernate the server.
+
+.PP
+\fBCallback failure\fR
+
+.PP
+If a callback function fails or returns a bad value, the \fIgen_statem\fR terminates.  However, an exception of class \fIthrow\fR is not regarded as an error but as a valid return, from all callback functions.
+
+.PP
+\fBSystem messages and the \fR\fB\fIsys\fR\fR\fB module\fR
+
+.PP
+A \fIgen_statem\fR handles system messages as described in \fIsys\fR. The \fIsys\fR module can be used for debugging a \fIgen_statem\fR. Replies sent through \fItransition actions\fR gets logged, but not replies sent through \fIreply/1,2\fR.
+
+.PP
+\fBTrapping exit\fR
+
+.PP
+A \fIgen_statem\fR process, like all \fIgen_\fR* behaviours, does not trap exit signals automatically; this must be explicitly initiated in the callback module (by calling \fIprocess_flag(trap_exit, true)\fR preferably from \fIinit/1\fR.
+
+.PP
+\fBServer termination\fR
+
+.PP
+If the \fIgen_statem\fR process terminates, e.g. as a result of a callback function returning \fI{stop, Reason}\fR, an exit signal with this \fIReason\fR is sent to linked processes and ports. See Processes in the Reference Manual for details regarding error handling using exit signals.
+
+.PP
+\fBNOTE: \fRFor some important information about distributed signals, see the \fIBlocking Signaling Over Distribution\fR  section in the \fIProcesses\fR chapter of the \fIErlang Reference Manual\fR. Blocking signaling can, for example, cause call time-outs in \fIgen_statem\fR to be significantly delayed.
+
+
+.PP
+\fBBad argument\fR
+
+.PP
+Unless otherwise stated, all functions in this module fail if the specified \fIgen_statem\fR does not exist or if bad arguments are specified.
+
+.SS "Example"
+
+.PP
+The following example shows a simple pushbutton model for a toggling pushbutton implemented with \fIcallback mode\fR \fIstate_functions\fR. You can push the button and it replies if it went on or off, and you can ask for a count of how many times it has been pushed to switch on.
+
+.PP
+\fBPushbutton State Diagram\fR
+
+.IP
+.nf
+---
+title: Pushbutton State Diagram
+---
+stateDiagram-v2
+    [*]  --> off
+    off  --> on  : push\\n* Increment count\\n* Reply 'on'
+    on   --> off : push\\n* Reply 'off'
+
+.fi
+
+.PP
+Not shown in the state diagram:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The API function \fIpush()\fR generates an event \fIpush\fR of type \fIcall\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The API function \fIget_count()\fR generates an event \fIget_count\fR of type \fIcall\fR that is handled in all states by replying with the current count value.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Unknown events are ignored and discarded.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There is boilerplate code for start, stop, terminate, code change, init, to set the callback mode to \fIstate_functions\fR, etc...
+
+.RE
+
+.PP
+\fBPushbutton Code\fR
+
+.PP
+The following is the complete callback module file \fIpushbutton.erl\fR:
+
+.IP
+.nf
+-module(pushbutton).
+-behaviour(gen_statem).
+
+-export([start/0,push/0,get_count/0,stop/0]).
+-export([terminate/3,code_change/4,init/1,callback_mode/0]).
+-export([on/3,off/3]).
+
+name() -> pushbutton_statem. % The registered server name
+
+%% API.  This example uses a registered name name()
+%% and does not link to the caller.
+start() ->
+    gen_statem:start({local,name()}, ?MODULE, [], []).
+push() ->
+    gen_statem:call(name(), push).
+get_count() ->
+    gen_statem:call(name(), get_count).
+stop() ->
+    gen_statem:stop(name()).
+
+%% Mandatory callback functions
+terminate(_Reason, _State, _Data) ->
+    void.
+code_change(_Vsn, State, Data, _Extra) ->
+    {ok,State,Data}.
+init([]) ->
+    %% Set the initial state + data.  Data is used only as a counter.
+    State = off, Data = 0,
+    {ok,State,Data}.
+callback_mode() -> state_functions.
+
+%%% state callback(s)
+
+off({call,From}, push, Data) ->
+    %% Go to 'on', increment count and reply
+    %% that the resulting status is 'on'
+    {next_state,on,Data+1,[{reply,From,on}]};
+off(EventType, EventContent, Data) ->
+    handle_event(EventType, EventContent, Data).
+
+on({call,From}, push, Data) ->
+    %% Go to 'off' and reply that the resulting status is 'off'
+    {next_state,off,Data,[{reply,From,off}]};
+on(EventType, EventContent, Data) ->
+    handle_event(EventType, EventContent, Data).
+
+%% Handle events common to all states
+handle_event({call,From}, get_count, Data) ->
+    %% Reply with the current count
+    {keep_state,Data,[{reply,From,Data}]};
+handle_event(_, _, Data) ->
+    %% Ignore all other events
+    {keep_state,Data}.
+
+.fi
+
+.PP
+The following is a shell session when running it:
+
+.IP
+.nf
+1> pushbutton:start().
+{ok,<0.36.0>}
+2> pushbutton:get_count().
+0
+3> pushbutton:push().
+on
+4> pushbutton:get_count().
+1
+5> pushbutton:push().
+off
+6> pushbutton:get_count().
+1
+7> pushbutton:stop().
+ok
+8> pushbutton:push().
+** exception exit: {noproc,{gen_statem,call,[pushbutton_statem,push,infinity]}}
+     in function  gen:do_for_proc/2 (gen.erl, line 261)
+     in call from gen_statem:call/3 (gen_statem.erl, line 386)
+
+.fi
+
+.PP
+To compare styles, here follows the same example using \fIcallback mode\fR \fIhandle_event_function\fR, or rather, the code to replace after function \fIinit/1\fR of the \fIpushbutton.erl\fR example file above:
+
+.IP
+.nf
+callback_mode() -> handle_event_function.
+
+%%% state callback(s)
+
+handle_event({call,From}, push, off, Data) ->
+    %% Go to 'on', increment count and reply
+    %% that the resulting status is 'on'
+    {next_state,on,Data+1,[{reply,From,on}]};
+handle_event({call,From}, push, on, Data) ->
+    %% Go to 'off' and reply that the resulting status is 'off'
+    {next_state,off,Data,[{reply,From,off}]};
+%%
+%% Event handling common to all states
+handle_event({call,From}, get_count, State, Data) ->
+    %% Reply with the current count
+    {next_state,State,Data,[{reply,From,Data}]};
+handle_event(_, _, State, Data) ->
+    %% Ignore all other events
+    {next_state,State,Data}.
+
+.fi
+
+.RS 4
+.PP
+\fBNote \fR
+
+.SS "API changes"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+This behavior appeared in Erlang/OTP 19.0 as experimental.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 19.1 a backwards incompatible change of the return tuple from \fIModule:init/1\fR was made, the mandatory callback function \fIModule:callback_mode/0\fR was introduced, and \fIenter_loop/4\fR was added.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 19.2 \fIstate enter calls\fR were added.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 19.3 state time-outs were added.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 20.0 generic time-outs were added and \fIgen_statem\fR was stated to be no longer experimental and preferred over \fIgen_fsm\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 22.1 time-out content \fIupdate\fR and explicit time-out \fIcancel\fR were added.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 22.3 the possibility to change the callback module with actions \fIchange_callback_module\fR, \fIpush_callback_module\fR and \fIpop_callback_module\fR, was added.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 23.0 \fIstart_monitor/3,4\fR were added, as well as functions for asynchronous calls: \fIsend_request/2\fR, \fIwait_response/1,2\fR, and \fIcheck_response/2\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 24.0 \fIreceive_response/1,2\fR were added.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 25.0 \fIModule:format_status/1\fR was added to replace \fIModule:format_status/2\fR, as well as functions for collections of asynchronous calls: \fIsend_request/4\fR, \fIwait_response/3\fR, \fIreceive_response/3\fR, \fIcheck_response/3\fR, \fIreqids_new/0\fR, \fIreqids_size/1\fR, \fIreqids_add/3\fR, \fIreqids_to_list/1\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 26.0 the possibility to return \fI{error, Reason}\fR from \fIModule:init/1\fR was added.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+In OTP 27.0 \fIModule:format_status/2\fR was deprecated.
+
+.RE
+
+.RE
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIgen_event\fR, \fIgen_fsm\fR, \fIgen_server\fR, \fIproc_lib\fR, \fIsupervisor\fR, \fIsys\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBaction() ::\fR
+\fB          postpone |\fR
+\fB          {postpone, Postpone :: postpone()} |\fR
+\fB          {next_event,\fR
+\fB           EventType :: event_type(),\fR
+\fB           EventContent :: event_content()} |\fR
+\fB          {change_callback_module, NewModule :: module()} |\fR
+\fB          {push_callback_module, NewModule :: module()} |\fR
+\fB          pop_callback_module |\fR
+\fB          enter_action().\fR
+
+.br
+.RS
+.PP
+Actions for a \fIstate transition\fR, or when starting the server.
+
+.PP
+These \fItransition actions\fR can be invoked by returning them from the \fIstate callback\fR when it is called with an event, from \fIModule:init/1\fR or by passing them to \fIenter_loop/4,5,6\fR. They are \fBnot allowed\fR from \fIstate enter calls\fR.
+
+.PP
+Actions are executed in the containing list order.
+
+.PP
+Actions that set transition options override any previous of the same type, so the last in the containing list wins.  For example, the last \fIpostpone/0\fR overrides any previous \fIpostpone/0\fR in the list.
+
+{postpone, Value}
+.RS 2
+Sets the 
+\fItransition_option()\fR \fIpostpone/0\fR for this \fIstate transition\fR.  This action is ignored when returned from \fIModule:init/1\fR or passed to \fIenter_loop/4,5,6\fR, as there is no event to postpone in those cases.
+.PP
+\fIpostpone\fR is equivalent to \fI{postpone, true}\fR.
+
+
+.RE
+
+{next_event, EventType, EventContent}
+.RS 2
+This action does not set any 
+\fItransition_option()\fR but instead stores the specified \fIEventType\fR and \fIEventContent\fR for insertion after all actions have been executed.
+.PP
+The stored events are inserted in the queue as the next to process before any already queued events. The order of these stored events is preserved, so the first \fInext_event\fR in the containing list becomes the first to process.
+
+.PP
+An event of type \fIinternal\fR should be used when you want to reliably distinguish an event inserted this way from any external event.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{change_callback_module, NewModule}\fR\fR  - Changes the callback module to \fINewModule\fR which will be used when calling all subsequent state callbacks.\\ \fBSince OTP 22.3.\fR
+
+.PP
+The \fIgen_statem\fR engine will find out the \fIcallback mode\fR of \fINewModule\fR by calling \fINewModule:callback_mode/0\fR before the next state callback.
+
+.PP
+Changing the callback module does not affect the \fIstate transition\fR in any way, it only changes which module that handles the events. Be aware that all relevant callback functions in \fINewModule\fR such as the state callback, \fINewModule:code_change/4\fR, \fINewModule:format_status/1\fR and \fINewModule:terminate/3\fR must be able to handle the state and data from the old module.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{push_callback_module, NewModule}\fR\fR  - Pushes the current callback module to the top of an internal stack of callback modules, and changes the callback module to \fINewModule\fR. Otherwise like \fI{change_callback_module, NewModule}\fR above.\\ \fBSince OTP 22.3.\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIpop_callback_module\fR\fR  - Pops the top module from the internal stack of callback modules and changes the callback module to be the popped module. If the stack is empty the server fails. Otherwise like \fI{change_callback_module, NewModule}\fR above.\\ \fBSince OTP 22.3.\fR
+
+.RE
+
+
+.RE
+.B
+\fBcallback_mode() :: state_functions | handle_event_function.\fR
+
+.br
+.RS
+.PP
+One function per state or one common event handler.
+
+.PP
+The \fIcallback mode\fR is selected with the return value from \fIModule:callback_mode/0\fR:
+
+state_functions
+.RS 2
+The state must be of type 
+\fIstate_name/0\fR and one callback function per state, that is, \fIModule:StateName/3\fR, is used.
+
+.RE
+
+handle_event_function
+.RS 2
+The state can be any term and the callback function 
+\fIModule:handle_event/4\fR is used for all states.
+
+.RE
+
+.PP
+The function \fIModule:callback_mode/0\fR is called when starting the \fIgen_statem\fR, after code change and after changing the callback module with any of the actions \fIchange_callback_module\fR, \fIpush_callback_module\fR, or \fIpop_callback_module\fR. The result is cached for subsequent calls to \fIstate callbacks\fR.
+
+
+.RE
+.B
+\fBcallback_mode_result() ::\fR
+\fB          callback_mode() | [callback_mode() | state_enter()].\fR
+
+.br
+.RS
+.PP
+Return value from \fIModule:callback_mode/0\fR.
+
+.PP
+This is the return type from \fIModule:callback_mode/0\fR which selects \fIcallback mode\fR and whether to do \fIstate enter calls\fR, or not.
+
+
+.RE
+.B
+\fBdata() :: term().\fR
+
+.br
+.RS
+.PP
+Generic state data for the server.
+
+.PP
+A term in which the state machine implementation is to store any server data it needs. The difference between this and the \fIstate/0\fR itself is that a change in this data does not cause postponed events to be retried. Hence, if a change in this data would change the set of events that are handled, then that data item should be part of the \fIstate/0\fR instead.
+
+
+.RE
+.B
+\fBenter_action() ::\fR
+\fB          hibernate |\fR
+\fB          {hibernate, Hibernate :: hibernate()} |\fR
+\fB          timeout_action() |\fR
+\fB          reply_action().\fR
+
+.br
+.RS
+.PP
+Actions for any callback: hibernate, time-outs or replies.
+
+.PP
+These \fItransition actions\fR are allowed when a \fIaction/0\fR is allowed, and also from a \fIstate enter call\fR, and can be invoked by returning them from the \fIstate callback\fR, from \fIModule:init/1\fR or by passing them to \fIenter_loop/4,5,6\fR.
+
+.PP
+Actions are executed in the containing list order.
+
+.PP
+Actions that set transition options override any previous of the same type, so the last in the containing list wins. For example, the last \fIevent_timeout/0\fR overrides any previous \fIevent_timeout/0\fR in the list.
+
+{hibernate, Value}
+.RS 2
+Sets the 
+\fItransition_option/0\fR \fIhibernate/0\fR for this \fIstate transition\fR.
+.PP
+\fIhibernate\fR is equivalent to \fI{hibernate, true}\fR.
+
+
+.RE
+
+
+.RE
+.B
+\fBenter_loop_opt() ::\fR
+\fB          {hibernate_after, HibernateAfterTimeout :: timeout()} |\fR
+\fB          {debug, Dbgs :: [sys:debug_option()]}.\fR
+
+.br
+.RS
+.PP
+Server start options for the \fIenter_loop/4,5,6\fR, \fIstart/3,4\fR, \fIstart_link/3,4\fR, and \fIstart_monitor/3,4\fR, functions.
+
+.PP
+See \fIstart_link/4\fR.
+
+
+.RE
+.B
+\fBevent_content() :: term().\fR
+
+.br
+.RS
+.PP
+Event payload from the event's origin, delivered to the \fIstate callback\fR.
+
+.PP
+See \fIevent_type\fR that describes the origins of the different event types, which is also where the event's content comes from.
+
+
+.RE
+.B
+\fBevent_handler_result(StateType) ::\fR
+\fB          event_handler_result(StateType, term()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBevent_handler_result(StateType, DataType) ::\fR
+\fB          {next_state, NextState :: StateType, NewData :: DataType} |\fR
+\fB          {next_state,\fR
+\fB           NextState :: StateType,\fR
+\fB           NewData :: DataType,\fR
+\fB           Actions :: [action()] | action()} |\fR
+\fB          state_callback_result(action(), DataType).\fR
+
+.br
+.RS
+.PP
+Return value from a \fIstate callback\fR after handling an event.
+
+.PP
+\fIStateType\fR is \fIstate_name/0\fR if \fIcallback mode\fR is \fIstate_functions\fR, or \fIstate/0\fR if \fIcallback mode\fR is \fIhandle_event_function\fR.
+
+{next_state, NextState, NewData [, Actions]}
+.RS 2
+The 
+\fIgen_statem\fR does a \fIstate transition\fR to \fINextState\fR (which may be the same as the current state), sets \fINewData\fR as the current server \fIdata/0\fR, and executes all \fIActions\fR. If \fINextState =/= CurrentState\fR the \fIstate transition\fR is a \fIstate change\fR.
+
+.RE
+
+
+.RE
+.B
+\fBevent_timeout() :: Time :: timeout() | integer().\fR
+
+.br
+.RS
+.PP
+How long to wait for an event.
+
+.PP
+Starts a timer set by \fItimeout_action/0\fR \fITime\fR, or \fI{timeout, Time, EventContent [, Options]}\fR.
+
+.PP
+When the timer expires an event of \fIevent_type/0\fR \fItimeout\fR will be generated. See \fIerlang:start_timer/4\fR for how \fITime\fR and \fIOptions\fR are interpreted.  Future \fIerlang:start_timer/4\fR \fIOptions\fR will not necessarily be supported.
+
+.PP
+Any event that arrives cancels this time-out. Note that a retried or inserted event counts as arrived. So does a state time-out zero event, if it was generated before this time-out is requested.
+
+.PP
+If \fITime\fR is \fIinfinity\fR, no timer is started, as it never would expire anyway.
+
+.PP
+If \fITime\fR is relative and \fI0\fR no timer is actually started, instead the the time-out event is enqueued to ensure that it gets processed before any not yet received external event, but after already queued events.
+
+.PP
+Note that it is not possible nor needed to cancel this time-out, as it is cancelled automatically by any other event, meaning that whenever a callback is invoked that may want to cancel this time-out, the timer is already cancelled or expired.
+
+.PP
+The timer \fIEventContent\fR can be updated with the \fI{timeout, update, NewEventContent}\fR action without affecting the time of expiry.
+
+
+.RE
+.B
+\fBevent_type() ::\fR
+\fB          external_event_type() | timeout_event_type() | internal.\fR
+
+.br
+.RS
+.PP
+All event types: external, time-out, or \fIinternal\fR.
+
+.PP
+\fIinternal\fR events can only be generated by the state machine itself through the \fItransition action\fR \fInext_event\fR.
+
+
+.RE
+.B
+\fBexternal_event_type() :: {call, From :: from()} | cast | info.\fR
+
+.br
+.RS
+.PP
+Event from a call, cast, or regular process message; "info".
+
+.PP
+Type \fI{call, From}\fR originates from the API functions \fIcall/2,3\fR or \fIsend_request/2\fR.  The event contains \fIFrom\fR, which is whom to reply to by a \fIreply_action/0\fR or \fIreply/2,3\fR call.
+
+.PP
+Type \fIcast\fR originates from the API function \fIcast/2\fR.
+
+.PP
+Type \fIinfo\fR originates from regular process messages sent to the \fIgen_statem\fR process.
+
+
+.RE
+.B
+\fBformat_status() ::\fR
+\fB          #{state => state(),\fR
+\fB            data => data(),\fR
+\fB            reason => term(),\fR
+\fB            queue => [{event_type(), event_content()}],\fR
+\fB            postponed => [{event_type(), event_content()}],\fR
+\fB            timeouts => [{timeout_event_type(), event_content()}],\fR
+\fB            log => [sys:system_event()]}.\fR
+
+.br
+.RS
+.PP
+A map that describes the server's status.
+
+.PP
+The keys are:
+
+state
+.RS 2
+The current state.
+
+
+.RE
+data
+.RS 2
+The state data.
+
+
+.RE
+reason
+.RS 2
+The reason that caused the process to terminate.
+
+
+.RE
+queue
+.RS 2
+The event queue.
+
+
+.RE
+postponed
+.RS 2
+The queue of postponed events.
+
+
+.RE
+timeouts
+.RS 2
+The active time-outs.
+
+
+.RE
+log
+.RS 2
+The sys log of the server.
+
+
+.RE
+
+.PP
+New associations may be added to the status map without prior notice.
+
+
+.RE
+.B
+\fBfrom() :: {To :: pid(), Tag :: reply_tag()}.\fR
+
+.br
+.RS
+.PP
+A \fIcall\fR event's reply destination.
+
+.PP
+Destination to use when replying through, for example, the action \fI{reply, From, Reply}\fR to a process that has called the \fIgen_statem\fR server using \fIcall/2,3\fR.
+
+
+.RE
+.B
+\fBgeneric_timeout() :: Time :: timeout() | integer().\fR
+
+.br
+.RS
+.PP
+How long to wait for a named time-out event.
+
+.PP
+Starts a timer set by \fItimeout_action/0\fR \fI{{timeout, Name}, Time, EventContent [, Options]}\fR.
+
+.PP
+When the timer expires an event of \fIevent_type/0\fR \fI{timeout, Name}\fR will be generated. See \fIerlang:start_timer/4\fR for how \fITime\fR and \fIOptions\fR are interpreted. Future \fIerlang:start_timer/4\fR \fIOptions\fR will not necessarily be supported.
+
+.PP
+If \fITime\fR is \fIinfinity\fR, no timer is started, as it never would expire anyway.
+
+.PP
+If \fITime\fR is relative and \fI0\fR no timer is actually started, instead the time-out event is enqueued to ensure that it gets processed before any not yet received external event.
+
+.PP
+Setting a timer with the same \fIName\fR while it is running will restart it with the new time-out value.  Therefore it is possible to cancel a specific time-out by setting it to \fIinfinity\fR. It can also be cancelled more explicitly with the \fI{{timeout, Name}, cancel}\fR action.
+
+.PP
+The timer \fIEventContent\fR can be updated with the \fI{{timeout, Name}, update, NewEventContent}\fR action without affecting the time of expiry.
+
+
+.RE
+.B
+\fBhibernate() :: boolean().\fR
+
+.br
+.RS
+.PP
+Hibernate the server process.
+
+.PP
+If \fItrue\fR, hibernates the \fIgen_statem\fR by calling \fIproc_lib:hibernate/3\fR before going into \fIreceive\fR to wait for a new external event.
+
+.PP
+There is also a server start option \fI{hibernate_after, Timeout}\fR for automatic hibernation.
+
+.PP
+\fBNOTE: \fRIf there are enqueued events to process when hibernation is requested, this is optimized by not hibernating but instead calling \fIerlang:garbage_collect/0\fR to simulate, in a more efficient way, that the \fIgen_statem\fR entered hibernation and immediately got awakened by an enqueued event.
+
+
+
+.RE
+.B
+\fBinit_result(StateType) :: init_result(StateType, term()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBinit_result(StateType, DataType) ::\fR
+\fB          {ok, State :: StateType, Data :: DataType} |\fR
+\fB          {ok,\fR
+\fB           State :: StateType,\fR
+\fB           Data :: DataType,\fR
+\fB           Actions :: [action()] | action()} |\fR
+\fB          ignore |\fR
+\fB          {stop, Reason :: term()} |\fR
+\fB          {error, Reason :: term()}.\fR
+
+.br
+.RS
+.PP
+The return value from \fIModule:init/1\fR.
+
+.PP
+For a succesful initialization, \fIState\fR is the initial \fIstate/0\fR, and \fIData\fR the initial server \fIdata/0\fR of the \fIgen_statem\fR.
+
+.PP
+The \fIActions\fR are executed when entering the first state just as for a \fIstate callback\fR, except that the action \fIpostpone\fR is forced to \fIfalse\fR since there is no event to postpone.
+
+.PP
+For an unsuccesful initialization, \fI{stop, Reason}\fR, \fI{error, Reason}\fR, or \fIignore\fR should be used; see \fIstart_link/3,4\fR.
+
+.PP
+\fI{error, Reason}\fR has been allowed \fBsince OTP 26.0\fR.
+
+.PP
+The \fI{ok, ...}\fR tuples have existed \fBsince OTP 19.1\fR, before that they were not \fIok\fR tagged.  This was before \fIgen_statem\fR replaced \fIgen_fsm\fR in OTP 20.0.
+
+
+.RE
+.B
+\fBpostpone() :: boolean().\fR
+
+.br
+.RS
+.PP
+Postpone an event to handle it later.
+
+.PP
+If \fItrue\fR, postpones the current event. After a \fIstate change\fR (\fINextState =/= State\fR), it is retried.
+
+
+.RE
+.B
+\fBreply_action() :: {reply, From :: from(), Reply :: term()}.\fR
+
+.br
+.RS
+.PP
+Reply to a \fIcall/2,3\fR.
+
+.PP
+This \fItransition action\fR can be invoked by returning it from the \fIstate callback\fR, from \fIModule:init/1\fR or by passing it to \fIenter_loop/4,5,6\fR.
+
+.PP
+It does not set any \fItransition_option()\fR but instead replies to a caller waiting for a reply in \fIcall/3\fR. \fIFrom\fR must be the term from argument \fI{call, From}\fR in a call to a \fIstate callback\fR.
+
+.PP
+Note that using this action from \fIModule:init/1\fR or \fIenter_loop/4,5,6\fR would be weird on the border of witchcraft since there has been no earlier call to a \fIstate callback\fR in this server.
+
+
+.RE
+.B
+\fB-opaque reply_tag() \fR
+
+.br
+.RS
+.PP
+A handle that associates a reply to the corresponding request.
+
+
+.RE
+.B
+\fB-opaque request_id() \fR
+
+.br
+.RS
+.PP
+An opaque request identifier. See \fIsend_request/2\fR for details.
+
+
+.RE
+.B
+\fB-opaque request_id_collection() \fR
+
+.br
+.RS
+.PP
+An opaque collection of request identifiers (\fIrequest_id/0\fR).
+
+.PP
+Each request identifier can be associated with a label chosen by the user.  For more information see \fIreqids_new/0\fR.
+
+
+.RE
+.B
+\fBresponse_timeout() :: timeout() | {abs, integer()}.\fR
+
+.br
+.RS
+.PP
+Response time-out for an asynchronous call.
+
+.PP
+Used to set a time limit on how long to wait for a response using either \fIreceive_response/2\fR, \fIreceive_response/3\fR, \fIwait_response/2\fR, or \fIwait_response/3\fR.  The time unit used is \fImillisecond\fR.
+
+.PP
+Currently valid values:
+
+0..4294967295
+.RS 2
+Time-out relative to current time in milliseconds.
+
+
+.RE
+
+infinity
+.RS 2
+Infinite time-out. That is, the operation will never time out.
+
+
+.RE
+
+{abs, Timeout}
+.RS 2
+An absolute Erlang monotonic time time-out in milliseconds.  That is, the operation will time out when 
+\fIerlang:monotonic_time(millisecond)\fR returns a value larger than or equal to \fITimeout\fR. \fITimeout\fR is not allowed to identify a time further into the future than \fI4294967295\fR milliseconds.  Specifying the time-out using an absolute value is especially handy when you have a deadline for responses corresponding to a complete collection of requests (\fIrequest_id_collection/0\fR), since you do not have to recalculate the relative time until the deadline over and over again.
+
+.RE
+
+
+.RE
+.B
+\fBserver_name() ::\fR
+\fB          {local, atom()} |\fR
+\fB          {global, GlobalName :: term()} |\fR
+\fB          {via, RegMod :: module(), Name :: term()}.\fR
+
+.br
+.RS
+.PP
+Server name specification: \fIlocal\fR, \fIglobal\fR, or \fIvia\fR registered.
+
+.PP
+Name specification to use when starting a \fIgen_statem\fR server. See \fIstart_link/3\fR and \fIserver_ref/0\fR below.
+
+
+.RE
+.B
+\fBserver_ref() ::\fR
+\fB          pid() |\fR
+\fB          (LocalName :: atom()) |\fR
+\fB          {Name :: atom(), Node :: atom()} |\fR
+\fB          {global, GlobalName :: term()} |\fR
+\fB          {via, RegMod :: module(), ViaName :: term()}.\fR
+
+.br
+.RS
+.PP
+Server specification: \fIpid/0\fR or registered \fIserver_name/0\fR.
+
+.PP
+To be used in \fIcall/2,3\fR to specify the server.
+
+.PP
+It can be:
+
+pid() | LocalName
+.RS 2
+The 
+\fIgen_statem\fR is locally registered.
+
+.RE
+
+{Name, Node}
+.RS 2
+The 
+\fIgen_statem\fR is locally registered on another node.
+
+.RE
+
+{global, GlobalName}
+.RS 2
+The 
+\fIgen_statem\fR is globally registered in \fIglobal\fR.
+
+.RE
+
+{via, RegMod, ViaName}
+.RS 2
+The 
+\fIgen_statem\fR is registered in an alternative process registry.  The registry callback module \fIRegMod\fR is to export functions \fIregister_name/2\fR, \fIunregister_name/1\fR, \fIwhereis_name/1\fR, and \fIsend/2\fR, which are to behave like the corresponding functions in \fIglobal\fR. Thus, \fI{via, global, GlobalName}\fR is the same as \fI{global, GlobalName}\fR.
+
+.RE
+
+
+.RE
+.B
+\fBstart_mon_ret() ::\fR
+\fB          {ok, {pid(), reference()}} | ignore | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Return value from the \fIstart_monitor/3,4\fR functions.
+
+.PP
+As for \fIstart_link/4\fR but a succesful return wraps the process ID and the monitor reference in a \fI{ok, {\fR\fIpid()\fR\fI, \fR\fIreference()\fR\fI}}\fR tuple.
+
+
+.RE
+.B
+\fBstart_opt() ::\fR
+\fB          {timeout, Time :: timeout()} |\fR
+\fB          {spawn_opt, [proc_lib:start_spawn_option()]} |\fR
+\fB          enter_loop_opt().\fR
+
+.br
+.RS
+.PP
+Server start options for the \fIstart/3,4\fR, \fIstart_link/3,4\fR, and \fIstart_monitor/3,4\fR functions.
+
+.PP
+See \fIstart_link/4\fR.
+
+
+.RE
+.B
+\fBstart_ret() :: {ok, pid()} | ignore | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Return value from the \fIstart/3,4\fR and \fIstart_link/3,4\fR functions.
+
+.PP
+See \fIstart_link/4\fR.
+
+
+.RE
+.B
+\fBstate() :: state_name() | term().\fR
+
+.br
+.RS
+.PP
+State name or state term.
+
+.PP
+If the \fIcallback mode\fR is \fIhandle_event_function\fR, the state can be any term. After a \fIstate change\fR (\fINextState =/= State\fR), all postponed events are retried.
+
+.PP
+Comparing two states for strict equality is assumed to be a fast operation, since for every \fIstate transition\fR the \fIgen_statem\fR engine has to deduce if it is a  \fIstate change\fR.
+
+.PP
+\fBNOTE: \fRThe smaller the state term, in general, the faster the comparison. Note that if the "same" state term is returned for a state transition (or a return action without a \fINextState\fR field is used), the comparison for equality is always fast because that can be seen from the term handle. But if a newly constructed state term is returned, both the old and the new state terms will have to be traversed until an inequality is found, or until both terms have been fully traversed. So it is possible to use large state terms that are fast to compare, but very easy to accidentally mess up.  Using small state terms is the safe choice.
+
+
+
+.RE
+.B
+\fBstate_callback_result(ActionType, DataType) ::\fR
+\fB          {keep_state, NewData :: DataType} |\fR
+\fB          {keep_state,\fR
+\fB           NewData :: DataType,\fR
+\fB           Actions :: [ActionType] | ActionType} |\fR
+\fB          keep_state_and_data |\fR
+\fB          {keep_state_and_data, Actions :: [ActionType] | ActionType} |\fR
+\fB          {repeat_state, NewData :: DataType} |\fR
+\fB          {repeat_state,\fR
+\fB           NewData :: DataType,\fR
+\fB           Actions :: [ActionType] | ActionType} |\fR
+\fB          repeat_state_and_data |\fR
+\fB          {repeat_state_and_data, Actions :: [ActionType] | ActionType} |\fR
+\fB          stop |\fR
+\fB          {stop, Reason :: term()} |\fR
+\fB          {stop, Reason :: term(), NewData :: DataType} |\fR
+\fB          {stop_and_reply,\fR
+\fB           Reason :: term(),\fR
+\fB           Replies :: [reply_action()] | reply_action()} |\fR
+\fB          {stop_and_reply,\fR
+\fB           Reason :: term(),\fR
+\fB           Replies :: [reply_action()] | reply_action(),\fR
+\fB           NewData :: DataType}.\fR
+
+.br
+.RS
+.PP
+Return value from any \fIstate callback\fR.
+
+.PP
+\fIActionType\fR is \fIenter_action/0\fR if the state callback was called with a \fIstate enter call\fR, and \fIaction/0\fR if the state callback was called with an event.
+
+{keep_state, NewData [, Actions]}
+.RS 2
+The same as 
+\fI{next_state, CurrentState, NewData [, Actions]}\fR.
+
+.RE
+
+keep_state_and_data | {keep_state_and_data, Actions}
+.RS 2
+The same as 
+\fI{keep_state, CurrentData [, Actions]}\fR.
+
+.RE
+
+{repeat_state, NewData [, Actions]}
+.RS 2
+If the 
+\fIgen_statem\fR runs with \fIstate enter calls\fR, the \fIstate enter call\fR is repeated, see type \fItransition_option/0\fR. Other than that \fI{repeat_state, NewData [, Actions]}\fR is the same as \fI{keep_state, NewData [, Actions]}\fR.
+
+.RE
+
+repeat_state_and_data | {repeat_state_and_data, Actions}
+.RS 2
+The same as 
+\fI{repeat_state, CurrentData [, Actions]}\fR.
+
+.RE
+
+{stop, Reason [, NewData]}
+.RS 2
+Terminates the 
+\fIgen_statem\fR by calling \fIModule:terminate/3\fR with \fIReason\fR and \fINewData\fR, if specified. An exit signal with this reason is sent to linked processes and ports.
+
+.RE
+
+stop
+.RS 2
+The same as 
+\fI{stop, normal}\fR.
+
+.RE
+
+{stop_and_reply, Reason, Replies [, NewData]}
+.RS 2
+Sends all 
+\fIReplies\fR, then terminates the \fIgen_statem\fR like with \fI{stop, Reason [, NewData]}\fR.
+
+.RE
+
+.PP
+All these terms are tuples or atoms and will be so in all future versions of \fIgen_statem\fR.
+
+
+.RE
+.B
+\fBstate_enter() :: state_enter.\fR
+
+.br
+.RS
+.PP
+\fICallback mode\fR modifier for \fIstate enter calls\fR: the atom \fIstate_enter\fR.
+
+.PP
+Both \fIcallback modes\fR can use \fIstate enter calls\fR, and this is selected by adding this \fIstate_enter\fR flag to the \fIcallback mode\fR return value from \fIModule:callback_mode/0\fR.
+
+.PP
+If \fIModule:callback_mode/0\fR returns a list containing \fIstate_enter\fR, the \fIgen_statem\fR engine will, at every \fIstate change\fR, that is; \fINextState =/= CurrentState\fR, call the \fIstate callback\fR with arguments \fI(enter, OldState, Data)\fR or \fI(enter, OldState, State, Data)\fR, depending on the \fIcallback mode\fR.
+
+.PP
+This may look like an event but is really a call performed after the previous \fIstate callback\fR returned, and before any event is delivered to the new \fIstate callback\fR. See \fIModule:StateName/3\fR and \fIModule:handle_event/4\fR.  A \fIstate enter call\fR may be repeated without doing a \fIstate change\fR by returning a \fIrepeat_state\fR or \fIrepeat_state_and_data\fR action from the \fIstate callback\fR.
+
+.PP
+If \fIModule:callback_mode/0\fR does not return a list containing \fIstate_enter\fR, no \fIstate enter calls\fR are done.
+
+.PP
+If \fIModule:code_change/4\fR should transform the state, it is regarded as a state rename and not a \fIstate change\fR, which will not cause a \fIstate enter call\fR.
+
+.PP
+Note that a \fIstate enter call\fR \fBwill\fR be done right before entering the initial state, which may be seen as a state change from no state to the initial state. In this case \fIOldState =:= State\fR, which cannot happen for a subsequent state change, but will happen when repeating the \fIstate enter call\fR.
+
+
+.RE
+.B
+\fBstate_enter_result(State) :: state_enter_result(State, term()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstate_enter_result(State, DataType) ::\fR
+\fB          {next_state, State, NewData :: DataType} |\fR
+\fB          {next_state, State,\fR
+\fB           NewData :: DataType,\fR
+\fB           Actions :: [enter_action()] | enter_action()} |\fR
+\fB          state_callback_result(enter_action(), DataType).\fR
+
+.br
+.RS
+.PP
+Return value from a \fIstate callback\fR after a \fIstate enter call\fR.
+
+.PP
+\fIState\fR is the current state and it cannot be changed since the state callback  was called with a \fIstate enter call\fR.
+
+{next_state, State, NewData [, Actions]}
+.RS 2
+The 
+\fIgen_statem\fR does a state transition to \fIState\fR, which has to be equal to the current state, sets \fINewData\fR, and executes all \fIActions\fR.
+
+.RE
+
+
+.RE
+.B
+\fBstate_name() :: atom().\fR
+
+.br
+.RS
+.PP
+State name in \fIcallback mode\fR \fIstate_functions\fR.
+
+.PP
+If the \fIcallback mode\fR is \fIstate_functions\fR, the state must be an atom. After a \fIstate change\fR (\fINextState =/= State\fR), all postponed events are retried.  Note that the state \fIterminate\fR is not possible to use since it would collide with the optional callback function \fIModule:terminate/3\fR.
+
+
+.RE
+.B
+\fBstate_timeout() :: Time :: timeout() | integer().\fR
+
+.br
+.RS
+.PP
+How long to wait in the current state.
+
+.PP
+Starts a timer set by \fItimeout_action/0\fR, or \fI{state_timeout, Time, EventContent [, Options]}\fR.
+
+.PP
+When the timer expires an event of \fIevent_type/0\fR \fIstate_timeout\fR will be generated. See \fIerlang:start_timer/4\fR for how \fITime\fR and \fIOptions\fR are interpreted. Future \fIerlang:start_timer/4\fR \fIOptions\fR will not necessarily be supported.
+
+.PP
+A \fIstate change\fR cancels this timer, if it is running. That is, if the \fItimeout_action/0\fR that starts this timer is part of a list of \fIaction/0\fRs for a \fIstate change\fR, \fINextState =/= CurrentState\fR, the timer runs in the \fB\fINextState\fR\fR.
+
+.PP
+If the state machine stays in that new state, now the current state, the timer will run until it expires, which creates the time-out event. If the state machine changes states from the now current state, the timer is cancelled.  During the \fIstate change\fR from the now current state, a new \fIstate time-out\fR may be started for the next \fB\fINextState\fR\fR.
+
+.PP
+If the \fItimeout_action/0\fR that starts this timer is part of a list of \fIaction/0\fRs for a \fIstate transition\fR that is not a \fIstate change\fR, the timer runs in the current state.
+
+.PP
+If \fITime\fR is \fIinfinity\fR, no timer is started, as it never would expire anyway.
+
+.PP
+If \fITime\fR is relative and \fI0\fR no timer is actually started, instead the the time-out event is enqueued to ensure that it gets processed before any not yet received external event.
+
+.PP
+Setting this timer while it is running will restart it with the new time-out value.  Therefore it is possible to cancel this time-out by setting it to \fIinfinity\fR. It can also be cancelled more explicitly with \fI{state_timeout, cancel}\fR.
+
+.PP
+The timer \fIEventContent\fR can be updated with the \fI{state_timeout, update, NewEventContent}\fR action without affecting the time of expiry.
+
+
+.RE
+.B
+\fBtimeout_action() ::\fR
+\fB          (Time :: event_timeout()) |\fR
+\fB          {timeout,\fR
+\fB           Time :: event_timeout(),\fR
+\fB           EventContent :: event_content()} |\fR
+\fB          {timeout,\fR
+\fB           Time :: event_timeout(),\fR
+\fB           EventContent :: event_content(),\fR
+\fB           Options :: timeout_option() | [timeout_option()]} |\fR
+\fB          {{timeout, Name :: term()},\fR
+\fB           Time :: generic_timeout(),\fR
+\fB           EventContent :: event_content()} |\fR
+\fB          {{timeout, Name :: term()},\fR
+\fB           Time :: generic_timeout(),\fR
+\fB           EventContent :: event_content(),\fR
+\fB           Options :: timeout_option() | [timeout_option()]} |\fR
+\fB          {state_timeout,\fR
+\fB           Time :: state_timeout(),\fR
+\fB           EventContent :: event_content()} |\fR
+\fB          {state_timeout,\fR
+\fB           Time :: state_timeout(),\fR
+\fB           EventContent :: event_content(),\fR
+\fB           Options :: timeout_option() | [timeout_option()]} |\fR
+\fB          timeout_cancel_action() |\fR
+\fB          timeout_update_action().\fR
+
+.br
+.RS
+.PP
+Event time-out, generic time-outs or state time-out.
+
+.PP
+These \fItransition actions\fR can be invoked by returning them from the \fIstate callback\fR, from \fIModule:init/1\fR or by passing them to \fIenter_loop/4,5,6\fR.
+
+.PP
+These time-out actions sets time-out transition options.
+
+Time
+.RS 2
+Short for 
+\fI{timeout, Time, Time}\fR, that is, the time-out message is the time-out time. This form exists to allow the \fIstate callback\fR return value \fI{next_state, NextState, NewData, Time}\fR like in \fIgen_fsm\fR.
+
+.RE
+
+{timeout, Time, EventContent [, Options]}
+.RS 2
+Sets the 
+\fItransition_option/0\fR \fIevent_timeout/0\fR to \fITime\fR with \fIEventContent\fR, and time-out options \fIOptions\fR.
+
+.RE
+
+{{timeout,Name}, Time, EventContent [, Options]}
+.RS 2
+Sets the 
+\fItransition_option/0\fR \fIgeneric_timeout/0\fR to \fITime\fR for time-out \fIName\fR with \fIEventContent\fR, and time-out options \fIOptions\fR.\\ \fBSince OTP 20.0\fR.
+
+.RE
+
+{state_timeout, Time, EventContent [, Options]}
+.RS 2
+Sets the 
+\fItransition_option/0\fR \fIstate_timeout/0\fR to \fITime\fR with \fIEventContent\fR, and time-out options \fIOptions\fR.\\ \fBSince OTP 19.3\fR.
+
+.RE
+
+
+.RE
+.B
+\fBtimeout_cancel_action() ::\fR
+\fB          {timeout, cancel} |\fR
+\fB          {{timeout, Name :: term()}, cancel} |\fR
+\fB          {state_timeout, cancel}.\fR
+
+.br
+.RS
+.PP
+Clearer way to cancel a time-out than the original setting it to 'infinity'.
+
+.PP
+It has always been possible to cancel a time-out using \fItimeout_action/0\fR with \fITime = infinity\fR, since setting a new time-out time overrides a running timer, and since setting the time to \fIinfinity\fR is optimized to not setting a timer (that never will expire).  Using this action shows the intention more clearly.
+
+
+.RE
+.B
+\fBtimeout_event_type() ::\fR
+\fB          timeout | {timeout, Name :: term()} | state_timeout.\fR
+
+.br
+.RS
+.PP
+Event time-out, generic time-out, or state time-out.
+
+.PP
+The time-out event types that the state machine can generate for itself with the corresponding \fItimeout_action/0\fRs:
+
+.IP
+.nf
+.TS
+allbox;
+c c c
+l l l.
+Time-out type	Action	Event type
+Event time-out	\fI{timeout, Time, ...}\fR	\fItimeout\fR
+Generic time-out	\fI{{timeout, Name}, Time, ...}\fR	\fI{timeout, Name}\fR
+State time-out	\fI{state_timeout, Time, ...}\fR	\fIstate_timeout\fR
+.TE
+.fi
+
+.PP
+In short; the action to set a time-out with \fIEventType\fR is \fI{EventType, Time, ...}\fR.
+
+
+.RE
+.B
+\fBtimeout_option() :: {abs, Abs :: boolean()}.\fR
+
+.br
+.RS
+.PP
+Time-out timer start option, to select absolute time of expiry.
+
+.PP
+If \fIAbs\fR is \fItrue\fR an absolute timer is started, and if it is \fIfalse\fR a relative, which is the default. See \fIerlang:start_timer/4\fR for details.
+
+
+.RE
+.B
+\fBtimeout_update_action() ::\fR
+\fB          {timeout, update, EventContent :: event_content()} |\fR
+\fB          {{timeout, Name :: term()},\fR
+\fB           update,\fR
+\fB           EventContent :: event_content()} |\fR
+\fB          {state_timeout, update, EventContent :: event_content()}.\fR
+
+.br
+.RS
+.PP
+Update the \fIEventContent\fR without affecting the time of expiry.
+
+.PP
+Sets a new \fIEventContent\fR for a running time-out timer. See timeout_action() for how to start a time-out.
+
+.PP
+If no time-out of this type is active, instead inserts the time-out event just like when starting a time-out with relative \fITime = 0\fR.  This is a time-out autostart with immediate expiry, so there will be noise for example if a generic time-out name was misspelled.
+
+
+.RE
+.B
+\fBtransition_option() ::\fR
+\fB          postpone() |\fR
+\fB          hibernate() |\fR
+\fB          event_timeout() |\fR
+\fB          generic_timeout() |\fR
+\fB          state_timeout().\fR
+
+.br
+.RS
+.PP
+\fIState transition\fR options set by actions.
+
+.PP
+These determine what happens during the \fIstate transition\fR. The \fIstate transition\fR takes place when the \fIstate callback\fR has processed an event and returns. Here are the sequence of steps for a \fIstate transition\fR:
+
+.nr li 0 1
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+All returned actions are processed in order of appearance.  In this step all replies generated by any \fIreply_action/0\fR are sent.  Other actions set \fItransition_option/0\fRs that come into play in subsequent steps.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+If \fIstate enter calls\fR are used, it is either the initial state or one of the callback results \fIrepeat_state\fR or \fIrepeat_state_and_data\fR is used the \fIgen_statem\fR engine calls the current \fIstate callback\fR with arguments \fI(enter, State, Data)\fR or \fI(enter, State, State, Data)\fR (depending on \fIcallback mode\fR) and when it returns starts again from the top of this sequence.
+
+.PP
+If \fIstate enter calls\fR are used, and the state changes, the \fIgen_statem\fR engine calls the new \fIstate callback\fR with arguments \fI(enter, OldState, Data)\fR or \fI(enter, OldState, State, Data)\fR (depending on \fIcallback mode\fR) and when it returns starts again from the top of this sequence.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+If \fIpostpone/0\fR is \fItrue\fR, the current event is postponed.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+If this is a \fIstate change\fR, the queue of incoming events is reset to start with the oldest postponed.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+All events stored with \fIaction/0\fR \fInext_event\fR are inserted to be processed before previously queued events.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+Time-out timers \fIevent_timeout/0\fR, \fIgeneric_timeout/0\fR and \fIstate_timeout/0\fR are handled.  Time-outs with zero time are guaranteed to be delivered to the state machine before any external not yet received event so if there is such a time-out requested, the corresponding time-out zero event is enqueued as the newest received event; that is after already queued events such as inserted and postponed events.
+
+.PP
+Any event cancels an \fIevent_timeout/0\fR so a zero time event time-out is only generated if the event queue is empty.
+
+.PP
+A \fIstate change\fR cancels a \fIstate_timeout/0\fR and any new transition option of this type belongs to the new state, that is; a \fIstate_timeout/0\fR applies to the state the state machine enters.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+If there are enqueued events the \fIstate callback\fR for the possibly new state is called with the oldest enqueued event, and we start again from the top of this sequence.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+Otherwise the \fIgen_statem\fR goes into \fIreceive\fR or hibernation (if \fIhibernate/0\fR is \fItrue\fR) to wait for the next message. In hibernation the next non-system event awakens the \fIgen_statem\fR, or rather the next incoming message awakens the \fIgen_statem\fR, but if it is a system event it goes right back into hibernation. When a new message arrives the \fIstate callback\fR is called with the corresponding event, and we start again from the top of this sequence.
+
+.RE
+
+.PP
+\fBNOTE: \fRThe behaviour of a time-out zero (a time-out with time \fI0\fR) differs subtly from Erlang's \fIreceive ... after 0 ... end\fR. The latter receives one message if there is one, while using the \fItimeout_action/0\fR \fI{timeout, 0}\fR does not receive any external event. \fIgen_server\fR's time-out works like Erlang's \fIreceive ... after 0 ... end\fR, in contrast to \fIgen_statem\fR.
+
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcall(ServerRef :: server_ref(),\fR
+\fB           Request :: term(),\fR
+\fB           Timeout ::\fR
+\fB               timeout() |\fR
+\fB               {clean_timeout, T :: timeout()} |\fR
+\fB               {dirty_timeout, T :: timeout()}) ->\fR
+\fB              Reply :: term().\fR
+
+.br
+.RS
+.PP
+Call a server: send request and wait for response.
+
+.PP
+Makes a synchronous call to the \fIgen_statem\fR \fIServerRef\fR by sending a request and waiting until the response arrives.
+
+.PP
+The \fIgen_statem\fR calls the \fIstate callback\fR with \fIevent_type/0\fR \fI{call, From}\fR and event content \fIRequest\fR.
+
+.PP
+The server's reply is sent from a \fIstate callback\fR, by returning a \fItransition action\fR \fI{reply, From, Reply}\fR, calling \fIreply(Replies)\fR with such a reply action in the \fIReplies\fR list, or calling \fIreply(From, Reply)\fR.
+
+.PP
+\fITimeout\fR is an integer > 0, which specifies how many milliseconds to wait for a reply, or the atom \fIinfinity\fR to wait indefinitely, which is the default. If no reply is received within the specified time, the function call fails.
+
+.PP
+Previous issue with late replies that could occur when having network issues or using \fIdirty_timeout\fR is now prevented by use of \fIprocess aliases\fR. \fI{clean_timeout, T}\fR and \fI{dirty_timeout, T}\fR therefore no longer serves any purpose and will work the same as \fITimeout\fR while all of them also being equally efficient.
+
+.PP
+The call can also fail, for example, if the \fIgen_statem\fR dies before or during this function call.
+
+.PP
+When this call fails it exits the calling process.  The exit term is on the form \fI{Reason, Location}\fR where \fILocation = {gen_statem, call, ArgList}\fR. See \fIgen_server:call/3\fR that has a description of relevant values for the \fIReason\fR in the exit term.
+
+
+.RE
+.B
+\fBcast(ServerRef :: server_ref(), Msg :: term()) -> ok.\fR
+
+.br
+.RS
+.PP
+Cast an event to a server.
+
+.PP
+Sends an asynchronous \fIcast\fR event to the \fIgen_statem\fR \fIServerRef\fR and returns \fIok\fR immediately, ignoring if the destination node or \fIgen_statem\fR does not exist.
+
+.PP
+The \fIgen_statem\fR calls the \fIstate callback\fR with \fIevent_type/0\fR \fIcast\fR and event content \fIMsg\fR.
+
+
+.RE
+.B
+\fBcheck_response(Msg, ReqId) -> Result\fR
+\fB                        when\fR
+\fB                            Msg :: term(),\fR
+\fB                            ReqId :: request_id(),\fR
+\fB                            Response ::\fR
+\fB                                {reply, Reply :: term()} |\fR
+\fB                                {error,\fR
+\fB                                 {Reason :: term(), server_ref()}},\fR
+\fB                            Result :: Response | no_reply.\fR
+
+.br
+.RS
+.PP
+Check if a received message is a request response.
+
+.PP
+Checks if \fIMsg\fR is a response corresponding to the request identifier \fIReqId\fR.  The request must have been made by \fIsend_request/2\fR and by the same process calling this function.
+
+.PP
+If \fIMsg\fR is a reply to the handle \fIReqId\fR the result of the request is returned in \fIReply\fR.  Otherwise this function returns \fIno_reply\fR and no cleanup is done, and thus the function shall be invoked repeatedly until the response is returned.
+
+.PP
+See \fIcall/3\fR about how the request is handled and the \fIReply\fR is sent by the \fIgen_statem\fR server.
+
+.PP
+If the \fIgen_statem\fR server process has died when this function is called, that is; \fIMsg\fR reports the server's death, this function returns an \fIerror\fR return with the exit \fIReason\fR.
+
+
+.RE
+.B
+\fBcheck_response(Msg, ReqIdCollection, Delete) -> Result\fR
+\fB                        when\fR
+\fB                            Msg :: term(),\fR
+\fB                            ReqIdCollection :: request_id_collection(),\fR
+\fB                            Delete :: boolean(),\fR
+\fB                            Response ::\fR
+\fB                                {reply, Reply :: term()} |\fR
+\fB                                {error,\fR
+\fB                                 {Reason :: term(), server_ref()}},\fR
+\fB                            Result ::\fR
+\fB                                {Response,\fR
+\fB                                 Label :: term(),\fR
+\fB                                 NewReqIdCollection ::\fR
+\fB                                     request_id_collection()} |\fR
+\fB                                no_request | no_reply.\fR
+
+.br
+.RS
+.PP
+Check if a received message is a request response in a collection.
+
+.PP
+Check if \fIMsg\fR is a response corresponding to a request identifier stored in \fIReqIdCollection\fR.  All request identifiers of \fIReqIdCollection\fR must correspond to requests that have been made using \fIsend_request/2\fR or \fIsend_request/4\fR, by the process calling this function.
+
+.PP
+The \fILabel\fR in the response equals the \fILabel\fR associated with the request identifier that the response corresponds to. The \fILabel\fR of a request identifier is associated when storing the request id in a collection, or when sending the request using \fIsend_request/4\fR.
+
+.PP
+Compared to \fIcheck_response/2\fR, the returned result or exception associated with a specific request identifier will be wrapped in a 3-tuple \fI{Response, Label, NewReqIdCollection}\fR. \fIResponse\fR is the value that would have been produced by \fIcheck_response/2\fR, \fILabel\fR is the value associated with the specific request identifier and \fINewReqIdCollection\fR is a possibly modified request identifier collection.
+
+.PP
+If \fIReqIdCollection\fR is empty, \fIno_request\fR is returned.
+
+.PP
+If \fIMsg\fR does not correspond to any of the request identifiers in \fIReqIdCollection\fR, \fIno_reply\fR is returned.
+
+.PP
+If \fIDelete\fR equals \fItrue\fR, the association with \fILabel\fR has been deleted from \fIReqIdCollection\fR in the resulting \fINewReqIdCollection\fR. If \fIDelete\fR is \fIfalse\fR, \fINewReqIdCollection\fR will equal \fIReqIdCollection\fR. Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIwait_response/3\fR, \fIcheck_response/3\fR, and \fIreceive_response/3\fR.
+
+.PP
+However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return. Note that if you pass a collection only containing associations of already handled or abandoned requests to this function, it will always return \fIno_reply\fR.
+
+
+.RE
+.B
+\fBenter_loop(Module :: term(),\fR
+\fB                 Opts :: term(),\fR
+\fB                 State :: term(),\fR
+\fB                 Data :: term(),\fR
+\fB                 Actions) ->\fR
+\fB                    no_return()\fR
+\fB                    when Actions :: list();\fR
+\fB                (Module :: term(),\fR
+\fB                 Opts :: term(),\fR
+\fB                 State :: term(),\fR
+\fB                 Data :: term(),\fR
+\fB                 Server) ->\fR
+\fB                    no_return()\fR
+\fB                    when Server :: server_name() | pid().\fR
+
+.br
+.RS
+.PP
+Make the calling process become a \fIgen_statem\fR server.
+
+.PP
+With argument \fIActions\fR, equivalent to \fIenter_loop(Module, Opts, State, Data, self(), Actions)\fR.
+
+.PP
+Otherwise equivalent to \fIenter_loop(Module, Opts, State, Data, Server, [])\fR.
+
+
+.RE
+.B
+\fBenter_loop(Module :: module(),\fR
+\fB                 Opts :: [enter_loop_opt()],\fR
+\fB                 State :: state(),\fR
+\fB                 Data :: data(),\fR
+\fB                 Server :: server_name() | pid(),\fR
+\fB                 Actions :: [action()] | action()) ->\fR
+\fB                    no_return().\fR
+
+.br
+.RS
+.PP
+Make the calling process become a \fIgen_statem\fR server.
+
+.PP
+Does not return, instead the calling process enters the \fIgen_statem\fR receive loop and becomes a \fIgen_statem\fR server.  The process \fImust\fR have been started using one of the start functions in \fIproc_lib\fR.  The user is responsible for any initialization of the process, including registering a name for it.
+
+.PP
+This function is useful when a more complex initialization procedure is needed than the \fIgen_statem\fR \fIModule:init/1\fR callback offers.
+
+.PP
+\fIModule\fR and \fIOpts\fR have the same meanings as when calling \fIstart[link | monitor]/3,4\fR.
+
+.PP
+If \fIServer\fR is \fIself/0\fR an anonymous server is created just as when using \fIstart[link |_monitor]/3\fR](\fIstart_link/3\fR).  If \fIServer\fR is a \fIserver_name/0\fR a named server is created just as when using [\fIstart[link |_monitor]/4\fR.  However, the \fIserver_name/0\fR name must have been registered accordingly \fIbefore\fR this function is called.
+
+.PP
+\fIState\fR, \fIData\fR, and \fIActions\fR have the same meanings as in the return value of \fIModule:init/1\fR. Also, the callback module does not need to export a \fIModule:init/1\fR function.
+
+.PP
+The function fails if the calling process was not started by a \fIproc_lib\fR start function, or if it is not registered according to \fIserver_name/0\fR.
+
+
+.RE
+.B
+\fBreceive_response(ReqId, Timeout) -> Result\fR
+\fB                          when\fR
+\fB                              ReqId :: request_id(),\fR
+\fB                              Timeout :: response_timeout(),\fR
+\fB                              Response ::\fR
+\fB                                  {reply, Reply :: term()} |\fR
+\fB                                  {error,\fR
+\fB                                   {Reason :: term(), server_ref()}},\fR
+\fB                              Result :: Response | timeout.\fR
+
+.br
+.RS
+.PP
+Receive a request response.
+
+.PP
+Receive a response corresponding to the request identifier \fIReqId\fR. The request must have been made by \fIsend_request/2\fR to the \fIgen_statem\fR process.  This function must be called from the same process from which \fIsend_request/2\fR was made.
+
+.PP
+\fITimeout\fR specifies how long to wait for a response. If no response is received within the specified time, this function returns \fItimeout\fR.  Assuming that the server executes on a node supporting aliases (introduced in OTP 24) the request will also be abandoned.  That is, no response will be received after a time-out. Otherwise, a stray response might be received at a later time.
+
+.PP
+See \fIcall/3\fR about how the request is handled and the \fIReply\fR is sent by the \fIgen_statem\fR server.
+
+.PP
+If the \fIgen_statem\fR server process is dead or dies while this function waits for the reply, it returns an \fIerror\fR return with the exit \fIReason\fR.
+
+.PP
+The difference between \fIwait_response/2\fR and \fIreceive_response/2\fR is that \fIreceive_response/2\fR abandons the request at time-out so that a potential future response is ignored, while \fIwait_response/2\fR does not.
+
+
+.RE
+.B
+\fBreceive_response(ReqIdCollection, Timeout, Delete) -> Result\fR
+\fB                          when\fR
+\fB                              ReqIdCollection :: request_id_collection(),\fR
+\fB                              Timeout :: response_timeout(),\fR
+\fB                              Delete :: boolean(),\fR
+\fB                              Response ::\fR
+\fB                                  {reply, Reply :: term()} |\fR
+\fB                                  {error,\fR
+\fB                                   {Reason :: term(), server_ref()}},\fR
+\fB                              Result ::\fR
+\fB                                  {Response,\fR
+\fB                                   Label :: term(),\fR
+\fB                                   NewReqIdCollection ::\fR
+\fB                                       request_id_collection()} |\fR
+\fB                                  no_request | timeout.\fR
+
+.br
+.RS
+.PP
+Receive a request response in a collection.
+
+.PP
+Receive a response in \fIReqIdCollection\fR.  All request identifiers of \fIReqIdCollection\fR must correspond to requests that have been made using \fIsend_request/2\fR or \fIsend_request/4\fR, and all requests must have been made by the process calling this function.
+
+.PP
+The \fILabel\fR in the response is the \fILabel\fR associated with the request identifier that the response corresponds to. The \fILabel\fR of a request identifier is associated when adding the request id to a collection, or when sending the request using \fIsend_request/4\fR.
+
+.PP
+Compared to \fIreceive_response/2\fR, the returned result or exception associated with a specific request identifier will be wrapped in a 3-tuple \fI{Response, Label, NewReqIdCollection}\fR. \fIResponse\fR is the value that would have been produced by \fIreceive_response/2\fR, \fILabel\fR is the value associated with the specific request identifier and \fINewReqIdCollection\fR is a possibly modified request identifier collection.
+
+.PP
+If \fIReqIdCollection\fR is empty, \fIno_request\fR will be returned.
+
+.PP
+\fITimeout\fR specifies how long to wait for a response.  If no response is received within the specified time, the function returns \fItimeout\fR. Assuming that the server executes on a node supporting aliases (introduced in OTP 24) all requests identified by \fIReqIdCollection\fR will also be abandoned. That is, no responses will be received after a time-out.  Otherwise, stray responses might be received at a later time.
+
+.PP
+The difference between \fIreceive_response/3\fR and \fIwait_response/3\fR is that \fIreceive_response/3\fR abandons requests at time-out so that potential future responses are ignored, while \fIwait_response/3\fR does not.
+
+.PP
+If \fIDelete\fR is \fItrue\fR, the association with \fILabel\fR is deleted from \fIReqIdCollection\fR in the resulting \fINewReqIdCollection\fR.  If \fIDelete\fR is \fIfalse\fR, \fINewReqIdCollection\fR will equal\fIReqIdCollection\fR.  Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIwait_response/3\fR, \fIcheck_response/3\fR, and \fIreceive_response/3\fR.
+
+.PP
+However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return. Note that if you pass a collection only containing associations of already handled or abandoned requests to this function, it will always block until \fITimeout\fR expires and then return \fItimeout\fR.
+
+
+.RE
+.B
+\fBreply(Replies :: [reply_action()] | reply_action()) -> ok.\fR
+
+.br
+.RS
+.PP
+Send one or multiple \fIcall\fR replies.
+
+.PP
+This funcion can be used by a \fIgen_statem\fR callback to explicitly send one or multiple replies to processes waiting for \fIcall\fR requests' replies, when it is impractical or impossible to return \fIreply_action/0\fRs from a \fIstate callback\fR.
+
+.PP
+\fBNOTE: \fRA reply sent with this function is not visible in \fIsys\fR debug output.
+
+
+
+.RE
+.B
+\fBreply(From :: from(), Reply :: term()) -> ok.\fR
+
+.br
+.RS
+.PP
+Send a \fIcall\fR \fIReply\fR to \fIFrom\fR.
+
+.PP
+This funcion can be used by a \fIgen_statem\fR callback to explicitly send a reply to a process waiting for a \fIcall\fR requests' reply, when it is impractical or impossible to return a \fIreply_action/0\fR from a \fIstate callback\fR.
+
+.PP
+\fBNOTE: \fRA reply sent with this function is not visible in \fIsys\fR debug output.
+
+
+
+.RE
+.B
+\fBreqids_add(ReqId :: request_id(),\fR
+\fB                 Label :: term(),\fR
+\fB                 ReqIdCollection :: request_id_collection()) ->\fR
+\fB                    NewReqIdCollection :: request_id_collection().\fR
+
+.br
+.RS
+.PP
+Store a request identifier in a colletion.
+
+.PP
+Stores \fIReqId\fR and associates a \fILabel\fR with the request identifier by adding this information to \fIReqIdCollection\fR and returning the resulting request identifier collection.
+
+
+.RE
+.B
+\fBreqids_new() -> NewReqIdCollection :: request_id_collection().\fR
+
+.br
+.RS
+.PP
+Create an empty request identifier collection.
+
+.PP
+Returns a new empty request identifier collection. A request identifier collection can be used to handle multiple outstanding requests.
+
+.PP
+Request identifiers of requests made by \fIsend_request/2\fR can be stored in a collection using \fIreqids_add/3\fR. Such a collection of request identifiers can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIreceive_response/3\fR, \fIwait_response/3\fR, or, \fIcheck_response/3\fR.
+
+.PP
+\fIreqids_size/1\fR can be used to determine the number of request identifiers in a collection.
+
+
+.RE
+.B
+\fBreqids_size(ReqIdCollection :: request_id_collection()) ->\fR
+\fB                     non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Return the number of request identifiers in \fIReqIdCollection\fR.
+
+
+.RE
+.B
+\fBreqids_to_list(ReqIdCollection :: request_id_collection()) ->\fR
+\fB                        [{ReqId :: request_id(), Label :: term()}].\fR
+
+.br
+.RS
+.PP
+Convert a request identifier collection to a list.
+
+.PP
+Returns a list of \fI{ReqId, Label}\fR tuples which corresponds to all request identifiers with their associated labels in \fIReqIdCollection\fR.
+
+
+.RE
+.B
+\fBsend_request(ServerRef :: server_ref(), Request :: term()) ->\fR
+\fB                      ReqId :: request_id().\fR
+
+.br
+.RS
+.PP
+Send an asynchronous \fIcall\fR request.
+
+.PP
+Sends \fIRequest\fR to the \fIgen_statem\fR process identified by \fIServerRef\fR and returns a request identifier \fIReqId\fR.
+
+.PP
+The return value \fIReqId\fR shall later be used with \fIreceive_response/2\fR, \fIwait_response/2\fR, or \fIcheck_response/2\fR to fetch the actual result of the request.  Besides passing the request identifier directly to these functions, it can also be stored in a request identifier collection using \fIreqids_add/3\fR. Such a collection of request identifiers can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIreceive_response/3\fR, \fIwait_response/3\fR, or \fIcheck_response/3\fR.  If you are about to store the request identifier in a collection, you may want to consider using \fIsend_request/4\fR instead.
+
+.PP
+The call \fIgen_statem:wait_response(gen_statem:send_request(ServerRef, Request), Timeout)\fR can be seen as equivalent to \fIgen_statem:call(Server, Request, Timeout)\fR, ignoring the error handling.
+
+.PP
+See \fIcall/3\fR about how the request is handled and the \fIReply\fR is sent by the \fIgen_statem\fR server.
+
+.PP
+The server's \fIReply\fR is returned by one of the \fIreceive_response/1,2\fR, \fIwait_response/1,2\fR, or \fIcheck_response/2\fR functions.
+
+
+.RE
+.B
+\fBsend_request(ServerRef :: server_ref(),\fR
+\fB                   Request :: term(),\fR
+\fB                   Label :: term(),\fR
+\fB                   ReqIdCollection :: request_id_collection()) ->\fR
+\fB                      NewReqIdCollection :: request_id_collection().\fR
+
+.br
+.RS
+.PP
+Send an asynchronous \fIcall\fR request and add it to a request identifier collection.
+
+.PP
+Sends \fIRequest\fR to the \fIgen_statem\fR process identified by \fIServerRef\fR. The \fILabel\fR will be associated with the request identifier of the operation and added to the returned request identifier collection \fINewReqIdCollection\fR.  The collection can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIreceive_response/3\fR, \fIwait_response/3\fR, or \fIcheck_response/3\fR.
+
+.PP
+The same as calling \fIreqids_add(​\fR\fIsend_request(ServerRef, Request), \fR\fILabel, ReqIdCollection)\fR, but slightly more efficient.
+
+
+.RE
+.B
+\fBstart(Module :: module(), Args :: term(), Opts :: [start_opt()]) ->\fR
+\fB               start_ret().\fR
+
+.br
+.RS
+.PP
+Start a server, neither linked nor registered.
+
+.PP
+Equivalent to \fIstart/4\fR except that the \fIgen_statem\fR process is not registered with any name service.
+
+
+.RE
+.B
+\fBstart(ServerName :: server_name(),\fR
+\fB            Module :: module(),\fR
+\fB            Args :: term(),\fR
+\fB            Opts :: [start_opt()]) ->\fR
+\fB               start_ret().\fR
+
+.br
+.RS
+.PP
+Start a server, registered but not linked.
+
+.PP
+Creates a standalone \fIgen_statem\fR process according to OTP design principles (using \fIproc_lib\fR primitives). As it does not get linked to the calling process, this start function cannot be used by a supervisor to start a child.
+
+.PP
+For a description of arguments and return values, see \fIstart_link/4\fR.
+
+
+.RE
+.B
+\fBstart_link(Module :: module(),\fR
+\fB                 Args :: term(),\fR
+\fB                 Opts :: [start_opt()]) ->\fR
+\fB                    start_ret().\fR
+
+.br
+.RS
+.PP
+Start a server, linked but not registered.
+
+.PP
+Equivalent to \fIstart_link/4\fR except that the \fIgen_statem\fR process is not registered with any name service.
+
+
+.RE
+.B
+\fBstart_link(ServerName :: server_name(),\fR
+\fB                 Module :: module(),\fR
+\fB                 Args :: term(),\fR
+\fB                 Opts :: [start_opt()]) ->\fR
+\fB                    start_ret().\fR
+
+.br
+.RS
+.PP
+Start a server, linked and registered.
+
+.PP
+Creates a \fIgen_statem\fR process according to OTP design principles (using \fIproc_lib\fR primitives) that is spawned linked to the calling process.  This is essential when the \fIgen_statem\fR must be part of a supervision tree so it gets linked to its supervisor.
+
+.PP
+The spawned \fIgen_statem\fR process calls \fIModule:init/1\fR to initialize the server.  To ensure a synchronized startup procedure, \fIstart_link/3,4\fR does not return until \fIModule:init/1\fR has returned or failed.
+
+.PP
+\fIServerName\fR specifies the \fIserver_name/0\fR to register for the \fIgen_statem\fR process.  If the \fIgen_statem\fR process is started with \fIstart_link/3\fR, no \fIServerName\fR is provided and the \fIgen_statem\fR process is not registered.
+
+.PP
+\fIModule\fR is the name of the callback module.
+
+.PP
+\fIArgs\fR is an arbitrary term that is passed as the argument to \fIModule:init/1\fR.
+
+.PP
+\fBStart options in \fR\fB\fIOpts\fR\fR\fB \fR
+
+{timeout, Time}
+.RS 2
+The 
+\fIgen_statem\fR process is allowed to spend \fITime\fR milliseconds before returning from \fIModule:init/1\fR, or it is terminated and this start function returns \fI{error, timeout}\fR.
+
+.RE
+
+{spawn_opt, SpawnOpts}
+.RS 2
+
+\fISpawnOpts\fR is passed as option list to \fIerlang:spawn_opt/2\fR, which is used to spawn the \fIgen_statem\fR process. See \fIproc_lib:start_spawn_option/0\fR.
+.PP
+\fBNOTE: \fRUsing spawn option \fImonitor\fR is not allowed, it causes a \fIbadarg\fR failure.
+
+
+
+.RE
+
+{hibernate_after, HibernateAfterTimeout}
+.RS 2
+When the 
+\fIgen_statem\fR process waits for a message, if no message is received within \fIHibernateAfterTimeout\fR milliseconds, the process goes into hibernation automatically (by calling \fIproc_lib:hibernate/3\fR).  This option is also allowed for the \fIenter_loop\fR functions.
+.PP
+Note that there is also a \fItransition_option/0\fR to explicitly hibernate the server from a \fIstate callback\fR.
+
+
+.RE
+
+{debug, Dbgs}
+.RS 2
+Activates debugging through 
+\fIsys\fR.  For every entry in \fIDbgs\fR, the corresponding function in \fIsys\fR is called. This option is also allowed for the \fIenter_loop\fR functions.
+
+.RE
+
+.PP
+\fBReturn values \fR
+
+{ok, Pid}
+.RS 2
+The 
+\fIgen_statem\fR server process was successfully created and initialized.  \fIPid\fR is the \fIpid/0\fR of the process.
+
+.RE
+
+ignore
+.RS 2
+
+\fIModule:init/1\fR returned \fIignore\fR. The \fIgen_statem\fR process has exited with reason \fInormal\fR.
+
+.RE
+
+{error, {already_started, OtherPid}}
+.RS 2
+A process with the specified 
+\fIServerName\fR already exists.  \fIOtherPid\fR is the \fIpid/0\fR of that process. The \fIgen_statem\fR process exited with reason \fInormal\fR before calling \fIModule:init/1\fR.
+
+.RE
+
+{error, timeout}
+.RS 2
+
+\fIModule:init/1\fR did not return within the start time-out.  The \fIgen_statem\fR process has been killed with \fIexit(_, kill)\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{error, Reason}\fR\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Either \fIModule:init/1\fR returned \fI{stop, Reason}\fR or failed with reason \fIReason\fR, The \fIgen_statem\fR process exited with reason \fIReason\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Or \fIModule:init/1\fR returned \fI{error, Reason}\fR. The \fIgen_statem\fR process did a graceful exit with reason \fInormal\fR.
+
+.RE
+
+.RE
+
+.PP
+If the return value is \fIignore\fR or \fI{error, _}\fR, the started \fIgen_statem\fR process has terminated.  If an \fI'EXIT'\fR message was delivered to the calling process (due to the process link), that message has been consumed.
+
+.PP
+\fBWARNING: \fRBefore OTP 26.0, if the started \fIgen_statem\fR process returned e.g. \fI{stop, Reason}\fR from \fIModule:init/1\fR, this function could return \fI{error, Reason}\fR \fIbefore\fR the started \fIgen_statem\fR process had terminated, so starting again might fail because VM resources such as the registered name was not yet unregistered, and an \fI'EXIT'\fR message could arrive later to the process calling this function. But if the started \fIgen_statem\fR process instead failed during \fIModule:init/1\fR, a process link \fI{'EXIT', Pid, Reason}\fR message caused this function to return \fI{error, Reason}\fR, so the \fI'EXIT'\fR message had been consumed and the started \fIgen_statem\fR process had terminated. Since it was impossible to tell the difference between these two cases from \fIstart_link/3,4\fR's return value, this inconsistency was cleaned up in OTP 26.0.
+
+
+
+.RE
+.B
+\fBstart_monitor(Module :: module(),\fR
+\fB                    Args :: term(),\fR
+\fB                    Opts :: [start_opt()]) ->\fR
+\fB                       start_mon_ret().\fR
+
+.br
+.RS
+.PP
+Start a server, monitored but neither linked nor registered.
+
+.PP
+Equivalent to \fIstart_monitor/4\fR except that the \fIgen_statem\fR process is not registered with any name service.
+
+
+.RE
+.B
+\fBstart_monitor(ServerName :: server_name(),\fR
+\fB                    Module :: module(),\fR
+\fB                    Args :: term(),\fR
+\fB                    Opts :: [start_opt()]) ->\fR
+\fB                       start_mon_ret().\fR
+
+.br
+.RS
+.PP
+Start a server, monitored and registered, but not linked.
+
+.PP
+Creates a standalone \fIgen_statem\fR process according to OTP design principles (using \fIproc_lib\fR primitives), and atomically sets up a monitor to the newly created process.
+
+.PP
+As the started process does not get linked to the calling process, this start function cannot be used by a supervisor to start a child.
+
+.PP
+For a description of arguments and return values, see \fIstart_link/4\fR, but note that for a succesful start the return value differs since this function returns \fI{ok, {Pid, Mon}}\fR, where \fIPid\fR is the process identifier of the process, and \fIMon\fR is the monitor reference for the process. If the start is not successful, the caller will be blocked until the \fIDOWN\fR message has been received and removed from the caller's message queue.
+
+
+.RE
+.B
+\fBstop(ServerRef :: server_ref(),\fR
+\fB           Reason :: term(),\fR
+\fB           Timeout :: timeout()) ->\fR
+\fB              ok.\fR
+
+.br
+.RS
+.PP
+Stop a server.
+
+.PP
+Orders the \fIgen_statem\fR \fIServerRef\fR to exit with the specified \fIReason\fR and waits for it to terminate. The \fIgen_statem\fR calls \fIModule:terminate/3\fR before exiting.
+
+.PP
+This function returns \fIok\fR if the server terminates with the expected reason.  Any other reason than \fInormal\fR, \fIshutdown\fR, or \fI{shutdown, Term}\fR causes an error report to be issued through \fIlogger\fR.  An exit signal with the same reason is sent to linked processes and ports. The default \fIReason\fR is \fInormal\fR.
+
+.PP
+\fITimeout\fR is an integer > 0, which specifies how many milliseconds to wait for the server to terminate, or the atom \fIinfinity\fR to wait indefinitely.  Defaults to \fIinfinity\fR. If the server does not terminate within the specified time, the call exits the calling process with reason \fItimeout\fR.
+
+.PP
+If the process does not exist, the call exits the calling process with reason \fInoproc\fR, or with reason \fI{nodedown, Node}\fR if the connection fails to the remote \fINode\fR where the server runs.
+
+
+.RE
+.B
+\fBwait_response(ReqId, WaitTime) -> Result\fR
+\fB                       when\fR
+\fB                           ReqId :: request_id(),\fR
+\fB                           WaitTime :: response_timeout(),\fR
+\fB                           Response ::\fR
+\fB                               {reply, Reply :: term()} |\fR
+\fB                               {error, {Reason :: term(), server_ref()}},\fR
+\fB                           Result :: Response | timeout.\fR
+
+.br
+.RS
+.PP
+Wait for a request response.
+
+.PP
+Waits for the response to the request identifier \fIReqId\fR.  The request must have been made by \fIsend_request/2\fR to the \fIgen_statem\fR process. This function must be called from the same process from which \fIsend_request/2\fR was called.
+
+.PP
+\fIWaitTime\fR specifies how long to wait for a reply. If no reply is received within the specified time, the function returns \fItimeout\fR and no cleanup is done, Thus the function can be invoked repeatedly until a reply is returned.
+
+.PP
+See \fIcall/3\fR about how the request is handled and the \fIReply\fR is sent by the \fIgen_statem\fR server.
+
+.PP
+If the \fIgen_statem\fR server process is dead or dies while this function waits for the reply, it returns an \fIerror\fR return with the exit \fIReason\fR.
+
+.PP
+The difference between \fIreceive_response/2\fR and \fIwait_response/2\fR is that \fIreceive_response/2\fR abandons the request at time-out so that a potential future response is ignored, while \fIwait_response/2\fR does not.
+
+
+.RE
+.B
+\fBwait_response(ReqIdCollection, WaitTime, Delete) -> Result\fR
+\fB                       when\fR
+\fB                           ReqIdCollection :: request_id_collection(),\fR
+\fB                           WaitTime :: response_timeout(),\fR
+\fB                           Delete :: boolean(),\fR
+\fB                           Response ::\fR
+\fB                               {reply, Reply :: term()} |\fR
+\fB                               {error, {Reason :: term(), server_ref()}},\fR
+\fB                           Result ::\fR
+\fB                               {Response,\fR
+\fB                                Label :: term(),\fR
+\fB                                NewReqIdCollection ::\fR
+\fB                                    request_id_collection()} |\fR
+\fB                               no_request | timeout.\fR
+
+.br
+.RS
+.PP
+Wait for any request response in a collection.
+
+.PP
+Waits for a response in \fIReqIdCollection\fR.  All request identifiers of \fIReqIdCollection\fR must correspond to requests that have been made using \fIsend_request/2\fR or \fIsend_request/4\fR, and all requests must have been made by the process calling this function.
+
+.PP
+The \fILabel\fR in the response is the \fILabel\fR associated with the request identifier that the response corresponds to. The \fILabel\fR of a request identifier is associated when adding the request id to a collection, or when sending the request using \fIsend_request/4\fR.
+
+.PP
+Compared to \fIwait_response/2\fR, the returned result or exception associated with a specific request identifier will be wrapped in a 3-tuple \fI{Response, Label, NewReqIdCollection}\fR. \fIResponse\fR is the value that would have been produced by \fIwait_response/2\fR, \fILabel\fR is the value associated with the specific request identifier and \fINewReqIdCollection\fR is a possibly modified request identifier collection.
+
+.PP
+If \fIReqIdCollection\fR is empty, \fIno_request\fR is returned.
+
+.PP
+If no response is received before \fIWaitTime\fR has expired, \fItimeout\fR is returned.  It is valid to continue waiting for a response as many times as needed up until a response has been received and completed by \fIcheck_response()\fR, \fIreceive_response()\fR, or \fIwait_response()\fR.
+
+.PP
+The difference between \fIreceive_response/3\fR and \fIwait_response/3\fR is that \fIreceive_response/3\fR abandons requests at time-out so that potential future responses are ignored, while \fIwait_response/3\fR does not.
+
+.PP
+If \fIDelete\fR is \fItrue\fR, the association with \fILabel\fR has been deleted from \fIReqIdCollection\fR in the resulting \fINewReqIdCollection\fR.  If \fIDelete\fR is \fIfalse\fR, \fINewReqIdCollection\fR will equal\fIReqIdCollection\fR.  Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIwait_response/3\fR, \fIcheck_response/3\fR, and \fIreceive_response/3\fR.
+
+.PP
+However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return. Note that if you pass a collection only containing associations of already handled or abandoned requests to this function, it will always block until \fIWaitTime\fR expires and then return \fItimeout\fR.
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fB'StateName'/3\fR
+
+.br
+.RS
+.PP
+\fIState callback\fR in \fIcallback mode\fR \fIstate_functions\fR.
+
+.PP
+State callback that handles all events in state \fIStateName\fR, where \fIStateName :: state_name()\fR has to be an \fIatom/0\fR.
+
+.PP
+\fIStateName\fR cannot be \fIterminate\fR since that would collide with the callback function \fIModule:terminate/3\fR.
+
+.PP
+Besides that when doing a \fIstate change\fR the next state always has to be an \fIatom/0\fR, this function is equivalent to \fIModule:handle_event(​EventType, EventContent, ?FUNCTION_NAME, Data)\fR, which is the \fIstate callback\fR in \fIcallback mode\fR \fIhandle_event_function\fR.
+
+
+.RE
+.B
+\fBcallback_mode()\fR
+
+.br
+.RS
+.PP
+Select the \fIcallback mode\fR and possibly \fIstate enter calls\fR.
+
+.PP
+This function is called by a \fIgen_statem\fR when it needs to find out the \fIcallback mode\fR of the callback module.
+
+.PP
+The value is cached by \fIgen_statem\fR for efficiency reasons, so this function is only called once after server start, after code change, and after changing the callback module, but before the first \fIstate callback\fR in the current callback module's code is called.  More occasions may be added in future versions of \fIgen_statem\fR.
+
+.PP
+Server start happens either when \fIModule:init/1\fR returns or when \fIenter_loop/4,5,6\fR is called. Code change happens when \fIModule:code_change/4\fR returns.  A change of the callback module happens when a \fIstate callback\fR returns any of the actions \fIchange_callback_module\fR, \fIpush_callback_module\fR or \fIpop_callback_module\fR.
+
+.PP
+The \fICallbackMode\fR is either just \fIcallback_mode/0\fR or a list containing \fIcallback_mode/0\fR and possibly the atom \fIstate_enter\fR.
+
+.PP
+\fBNOTE: \fRIf this function's body does not return an inline constant value the callback module is doing something strange.
+
+
+
+.RE
+.B
+\fBcode_change(OldVsn, OldState, OldData, Extra)\fR
+
+.br
+.RS
+.PP
+Update the state and data after code change.
+
+.PP
+This function is called by a \fIgen_statem\fR when it is to update its internal state during a release upgrade/downgrade, that is, when the instruction \fI{update, Module, Change, ...}\fR, where \fIChange = {advanced, Extra}\fR, is specified in the \fIappup\fR file.  For more information, see Release Handling Instructions in OTP Design Principles.
+
+.PP
+For an upgrade, \fIOldVsn\fR is \fIVsn\fR, and for a downgrade, \fIOldVsn\fR is \fI{down, Vsn}\fR. \fIVsn\fR is defined by the \fIvsn\fR attribute(s) of the old version of the callback module \fIModule\fR. If no such attribute is defined, the version is the checksum of the Beam file.
+
+.PP
+\fIOldState\fR and \fIOldData\fR is the internal state of the \fIgen_statem\fR.
+
+.PP
+\fIExtra\fR is passed "as is" from the \fI{advanced, Extra}\fR part of the update instruction.
+
+.PP
+If successful, the function must return the updated internal state in an \fI{ok, NewState, NewData}\fR tuple.
+
+.PP
+If the function returns a failure \fIReason\fR, the ongoing upgrade fails and rolls back to the old release. Note that \fIReason\fR cannot be an \fI{ok, _, _}\fR tuple since that will be regarded as a \fI{ok, NewState, NewData}\fR tuple, and that a tuple matching \fI{ok, _}\fR is an also invalid failure \fIReason\fR.  It is recommended to use an atom as \fIReason\fR since it will be wrapped in an \fI{error, Reason}\fR tuple.
+
+.PP
+Also note when upgrading a \fIgen_statem\fR, this function and hence the \fIChange = {advanced, Extra}\fR parameter in the \fIappup\fR file is not only needed to update the internal state or to act on the \fIExtra\fR argument.  It is also needed if an upgrade or downgrade should change \fIcallback mode\fR, or else the \fIcallback mode\fR after the code change will not be honoured, most probably causing a server crash.
+
+.PP
+If the server changes callback module using any of the actions \fIchange_callback_module\fR, \fIpush_callback_module\fR, or \fIpop_callback_module\fR, be aware that it is always the current callback module that will get this callback call. That the current callback module handles the current state and data update should be no surprise, but it must be able to handle even parts of the state and data that it is not familiar with, somehow.
+
+.PP
+In the supervisor child specification there is a list of modules which is recommended to contain only the callback module.  For a \fIgen_statem\fR with multiple callback modules there is no real need to list all of them, it may not even be possible since the list could change after code upgrade.  If this list would contain only the start callback module, as recommended, what is important is to upgrade \fIthat\fR module whenever a \fIsynchronized code replacement\fR is done. Then the release handler concludes that an upgrade that upgrades \fIthat\fR module needs to suspend, code change, and resume any server whose child specification declares that it is using \fIthat\fR module. And again; the \fIcurrent\fR callback module will get the \fIModule:code_change/4\fR call.
+
+.PP
+\fBNOTE: \fRIf a release upgrade/downgrade with \fIChange = {advanced, Extra}\fR specified in the \fI.appup\fR file is made when \fIModule:code_change/4\fR is not implemented the process will crash with exit reason \fIundef\fR.
+
+
+
+.RE
+.B
+\fBformat_status(Status)\fR
+
+.br
+.RS
+.PP
+Format/limit the status value.
+
+.PP
+This function is called by a \fIgen_statem\fR process in order to format/limit the server status for debugging and logging purposes.
+
+.PP
+It is called in the following situations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsys:get_status/1,2\fR is invoked to get the \fIgen_statem\fR status.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIgen_statem\fR process terminates abnormally and logs an error.
+
+.RE
+
+.PP
+This function is useful for changing the form and appearance of the \fIgen_statem\fR status for these cases.  A callback module wishing to change the \fIsys:get_status/1,2\fR return value and how its status appears in termination error logs, exports an instance of \fIModule:format_status/1\fR, which will get a map \fIStatus\fR that describes the current state of the \fIgen_statem\fR, and shall return a map \fINewStatus\fR containing the same keys as the input map, but it may transform some values.
+
+.PP
+One use case for this function is to return compact alternative state representations to avoid having large state terms printed in log files. Another is to hide sensitive data from being written to the error log.
+
+.PP
+Example:
+
+.IP
+.nf
+format_status(Status) ->
+  maps:map(
+    fun(state,State) ->
+            maps:remove(private_key, State);
+       (message,{password, _Pass}) ->
+            {password, removed};
+       (_,Value) ->
+            Value
+    end, Status).
+
+.fi
+
+.PP
+\fBNOTE: \fRThis callback is optional, so a callback module does not need to export it.  The \fIgen_statem\fR module provides a default implementation of this function that returns \fI{State, Data}\fR. If this callback is exported but fails, to hide possibly sensitive data, the default function will instead return \fI{State, Info}\fR, where \fIInfo\fR says nothing but the fact that \fIModule:format_status/2\fR has crashed.
+
+
+
+.RE
+.B
+\fBformat_status/2\fR
+
+.RS
+.LP
+Deprecated: the callback gen_statem:format_status(_,_) is deprecated; use format_status/1 instead
+.RE
+
+.br
+.RS
+.PP
+Format/limit the status value.
+
+.PP
+This function is called by a \fIgen_statem\fR process in in order to format/limit the server state for debugging and logging purposes.
+
+.PP
+It is called in the following situations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+One of \fIsys:get_status/1,2\fR is invoked to get the \fIgen_statem\fR status. \fIOpt\fR is set to the atom \fInormal\fR for this case.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIgen_statem\fR terminates abnormally and logs an error. \fIOpt\fR is set to the atom \fIterminate\fR for this case.
+
+.RE
+
+.PP
+This function is useful for changing the form and appearance of the \fIgen_statem\fR status for these cases.  A callback module wishing to change the \fIsys:get_status/1,2\fR return value and how its status appears in termination error logs, should export an instance of \fIModule:format_status/2\fR, that returns a term describing the current status of the \fIgen_statem\fR.
+
+.PP
+\fIPDict\fR is the current value of the process dictionary of the \fIgen_statem\fR.
+
+.PP
+\fIState\fR is the internal state of the \fIgen_statem\fR.
+
+.PP
+\fIData\fR is the internal server data of the \fIgen_statem\fR.
+
+.PP
+The function is to return \fIStatus\fR, a term that contains the appropriate details of the current state and status of the \fIgen_statem\fR.  There are no restrictions of the form \fIStatus\fR can take, but for the \fIsys:get_status/1,2\fR case (when \fIOpt\fR is \fInormal\fR), the recommended form for the \fIStatus\fR value is \fI[{data, [{"State", Term}]}]\fR, where \fITerm\fR provides relevant details of the \fIgen_statem\fR state.  Following this recommendation is not required, but it makes the callback module status consistent with the rest of the \fIsys:get_status/1,2\fR return value.
+
+.PP
+One use for this function is to return compact alternative state representations to avoid having large state terms printed in log files. Another use is to hide sensitive data from being written to the error log.
+
+.PP
+\fBNOTE: \fRThis callback is optional, so a callback module does not need to export it.  The \fIgen_statem\fR module provides a default implementation of this function that returns \fI{State, Data}\fR. If this callback is exported but fails, to hide possibly sensitive data, the default function will instead return \fI{State, Info}\fR, where \fIInfo\fR says nothing but the fact that \fIModule:format_status/2\fR has crashed.
+
+
+
+.RE
+.B
+\fBhandle_event/4\fR
+
+.br
+.RS
+.PP
+\fIState callback\fR in \fIcallback mode\fR \fIhandle_event_function\fR.
+
+.PP
+Whenever a \fIgen_statem\fR receives an event from \fIcall/2,3\fR, \fIcast/2\fR, or as a normal process message, this function is called.
+
+.PP
+If \fIEventType\fR is \fI{call, From}\fR, the caller waits for a reply.  The reply can be sent from this or from any other \fIstate callback\fR by returning with \fI{reply, From, Reply}\fR in \fIActions\fR, in \fIReplies\fR, or by calling \fIreply(From, Reply)\fR.
+
+.PP
+If this function returns with a next state that does not match equal (\fI=/=\fR) to the current state, all postponed events are retried in the next state.
+
+.PP
+For options that can be set and actions that can be done by \fIgen_statem\fR after returning from this function, see \fIaction/0\fR.
+
+.PP
+When the \fIgen_statem\fR runs with \fIstate enter calls\fR, this function is also called with arguments \fI(enter, OldState, ...)\fR during every \fIstate change\fR.  In this case there are some restrictions on the actions that may be returned:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpostpone/0\fR is not allowed since a \fIstate enter call\fR is not an event so there is no event to postpone.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{next_event, _, _}\fR is not allowed since using \fIstate enter calls\fR should not affect how events are consumed and produced.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+It is not allowed to change states from this call. Should you return \fI{next_state, NextState, ...}\fR with \fINextState =/= State\fR the \fIgen_statem\fR crashes.
+
+.PP
+Note that it is actually allowed to use \fI{repeat_state, NewData, ...}\fR although it makes little sense since you immediately will be called again with a new \fIstate enter call\fR making this just a weird way of looping, and there are better ways to loop in Erlang.
+
+.PP
+If you do not update \fINewData\fR and have some loop termination condition, or if you use \fI{repeat_state_and_data, _}\fR or \fIrepeat_state_and_data\fR you have an infinite loop!
+
+.PP
+You are advised to use \fI{keep_state, ...}\fR, \fI{keep_state_and_data, _}\fR or \fIkeep_state_and_data\fR since changing states from a \fIstate enter call\fR is not possible anyway.
+
+.RE
+
+.PP
+Note the fact that you can use \fIthrow\fR to return the result, which can be useful.  For example to bail out with \fIthrow(keep_state_and_data)\fR from deep within complex code that cannot return \fI{next_state, State, Data}\fR because \fIState\fR or \fIData\fR is no longer in scope.
+
+
+.RE
+.B
+\fBinit(Args)\fR
+
+.br
+.RS
+.PP
+Initialize the state machine.
+
+.PP
+Whenever a \fIgen_statem\fR is started using \fIstart_link/3,4\fR, \fIstart_monitor/3,4\fR, or \fIstart/3,4\fR, this function is called by the new process to initialize the implementation state and server data.
+
+.PP
+\fIArgs\fR is the \fIArgs\fR argument provided to that start function.
+
+.PP
+\fBNOTE: \fRNote that if the \fIgen_statem\fR is started through \fIproc_lib\fR and \fIenter_loop/4,5,6\fR, this callback will never be called.  Since this callback is not optional it can in that case be implemented as:
+
+.IP
+.nf
+-spec init(_) -> no_return().
+init(Args) -> erlang:error(not_implemented, [Args]).
+
+.fi
+
+
+
+.RE
+.B
+\fBterminate/3\fR
+
+.br
+.RS
+.PP
+Handle state machine termination.
+
+.PP
+This function is called by a \fIgen_statem\fR when it is about to terminate. It is to be the opposite of \fIModule:init/1\fR and do any necessary cleaning up.  When it returns, the \fIgen_statem\fR terminates with \fIReason\fR.  The return value is ignored.
+
+.PP
+\fIReason\fR is a term denoting the stop reason and \fIState\fR is the internal state of the \fIgen_statem\fR.
+
+.PP
+\fIReason\fR depends on why the \fIgen_statem\fR is terminating.  If it is because another callback function has returned, a stop tuple \fI{stop, Reason}\fR in \fIActions\fR, \fIReason\fR has the value specified in that tuple. If it is because of a failure, \fIReason\fR is the error reason.
+
+.PP
+If the \fIgen_statem\fR is part of a supervision tree and is ordered by its supervisor to terminate, this function is called with \fIReason = shutdown\fR if both the following conditions apply:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIgen_statem\fR process has been set to trap exit signals.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The shutdown strategy as defined in the supervisor's child specification is an integer time-out value, not \fIbrutal_kill\fR.
+
+.RE
+
+.PP
+Even if the \fIgen_statem\fR is \fInot\fR part of a supervision tree, this function is called if it receives an \fI'EXIT'\fR message from its parent. \fIReason\fR is the same as in the \fI'EXIT'\fR message.
+
+.PP
+If the \fIgen_statem\fR process is not set up to trap exit signals it is immediately terminated, just like any process, and this function is not called.
+
+.PP
+Notice that for any other reason than \fInormal\fR, \fIshutdown\fR, or \fI{shutdown, Term}\fR, the \fIgen_statem\fR is assumed to terminate because of an error and an error report is issued using \fIlogger\fR.
+
+.PP
+When the \fIgen_statem\fR process exits, an exit signal with the same reason is sent to linked processes and ports, just as for any process.
+
+
+.RE

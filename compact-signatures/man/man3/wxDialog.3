@@ -1,0 +1,759 @@
+.TH wxDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxDialog \- A dialog box is a window with a title bar and sometimes a system menu, which can be moved around the screen.
+
+.SH DESCRIPTION
+.PP
+It can contain controls and other windows and is often used to allow the user to make some choice or to answer a question.
+
+.PP
+Dialogs can be made scrollable, automatically, for computers with low resolution screens: please see overview_dialog_autoscrolling for further details.
+
+.PP
+Dialogs usually contain either a single button allowing to close the dialog or two buttons, one accepting the changes and the other one discarding them (such button, if present, is automatically activated if the user presses the "Esc" key). By default, buttons with the standard wxID_OK and wxID_CANCEL identifiers behave as expected. Starting with wxWidgets 2.7 it is also possible to use a button with a different identifier instead, see \fIsetAffirmativeId/2\fR and \fISetEscapeId()\fR (not implemented in wx).
+
+.PP
+Also notice that the \fIcreateButtonSizer/2\fR should be used to create the buttons appropriate for the current platform and positioned correctly (including their order which is platform-dependent).
+
+.PP
+Modal and Modeless
+
+.PP
+There are two kinds of dialog, modal and modeless. A modal dialog blocks program flow and user input on other windows until it is dismissed, whereas a modeless dialog behaves more like a frame in that program flow continues, and input in other windows is still possible. To show a modal dialog you should use the \fIshowModal/1\fR method while to show a dialog modelessly you simply use \fIshow/2\fR, just as with frames.
+
+.PP
+Note that the modal dialog is one of the very few examples of wxWindow-derived objects which may be created on the stack and not on the heap. In other words, while most windows would be created like this:
+
+.PP
+You can achieve the same result with dialogs by using simpler code:
+
+.PP
+An application can define a \fIwxCloseEvent\fR handler for the dialog to respond to system close events.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCAPTION: Puts a caption on the dialog box.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDEFAULT_DIALOG_STYLE: Equivalent to a combination of wxCAPTION, wxCLOSE_BOX and wxSYSTEM_MENU (the last one is not used under Unix).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxRESIZE_BORDER: Display a resizable frame around the window.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSYSTEM_MENU: Display a system menu.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxCLOSE_BOX: Displays a close box on the frame.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMAXIMIZE_BOX: Displays a maximize box on the dialog.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxMINIMIZE_BOX: Displays a minimize box on the dialog.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxTHICK_FRAME: Display a thick frame around the window.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSTAY_ON_TOP: The dialog stays on top of all other windows.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNO_3D: This style is obsolete and doesn't do anything any more, don't use it in any new code.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDIALOG_NO_PARENT: By default, a dialog created with a NULL parent window will be given the \fIapplication's top level window\fR (not implemented in wx) as parent. Use this style to prevent this from happening and create an orphan dialog. This is not recommended for modal dialogs.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDIALOG_EX_CONTEXTHELP: Under Windows, puts a query button on the caption. When pressed, Windows will go into a context-sensitive help mode and wxWidgets will send a \fIwxEVT_HELP\fR event if the user clicked on an application window. Note that this is an extended style and must be set by calling \fIwxWindow:setExtraStyle/2\fR before Create is called (two-step construction).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxDIALOG_EX_METAL: On macOS, frames with this style will be shown with a metallic look. This is an extra style. Under Unix or Linux, MWM (the Motif Window Manager) or other window managers recognizing the MHM hints should be running for any of these styles to have an effect.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview dialog
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFrame\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview validator
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxDialog
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIclose_window\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinit_dialog\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Title, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxDialog(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Title :: unicode:chardata(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Used for two-step dialog box construction.
+
+.PP
+See: \fInew/4\fR
+
+
+.RE
+.B
+\fBcreateButtonSizer(This, Flags) -> wxSizer:wxSizer()\fR
+\fB                           when This :: wxDialog(), Flags :: integer().\fR
+
+.br
+.RS
+.PP
+Creates a sizer with standard buttons.
+
+.PP
+\fIflags\fR is a bit list of the following flags: wxOK, wxCANCEL, wxYES, wxNO, wxAPPLY, wxCLOSE, wxHELP, wxNO_DEFAULT.
+
+.PP
+The sizer lays out the buttons in a manner appropriate to the platform.
+
+.PP
+This function uses \fIcreateStdDialogButtonSizer/2\fR internally for most platforms but doesn't create the sizer at all for the platforms with hardware buttons (such as smartphones) for which it sets up the hardware buttons appropriately and returns NULL, so don't forget to test that the return value is valid before using it.
+
+
+.RE
+.B
+\fBcreateStdDialogButtonSizer(This, Flags) ->\fR
+\fB                                    wxStdDialogButtonSizer:wxStdDialogButtonSizer()\fR
+\fB                                    when\fR
+\fB                                        This :: wxDialog(),\fR
+\fB                                        Flags :: integer().\fR
+
+.br
+.RS
+.PP
+Creates a \fIwxStdDialogButtonSizer\fR with standard buttons.
+
+.PP
+\fIflags\fR is a bit list of the following flags: wxOK, wxCANCEL, wxYES, wxNO, wxAPPLY, wxCLOSE, wxHELP, wxNO_DEFAULT.
+
+.PP
+The sizer lays out the buttons in a manner appropriate to the platform.
+
+
+.RE
+.B
+\fBdestroy(This :: wxDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBendModal(This, RetCode) -> ok\fR
+\fB                  when This :: wxDialog(), RetCode :: integer().\fR
+
+.br
+.RS
+.PP
+Ends a modal dialog, passing a value to be returned from the \fIshowModal/1\fR invocation.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshowModal/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetReturnCode/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetReturnCode/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetAffirmativeId(This) -> integer() when This :: wxDialog().\fR
+
+.br
+.RS
+.PP
+Gets the identifier of the button which works like standard OK button in this dialog.
+
+.PP
+See: \fIsetAffirmativeId/2\fR
+
+
+.RE
+.B
+\fBgetReturnCode(This) -> integer() when This :: wxDialog().\fR
+
+.br
+.RS
+.PP
+Gets the return code for this window.
+
+.PP
+Remark: A return code is normally associated with a modal dialog, where \fIshowModal/1\fR returns a code to the application.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetReturnCode/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshowModal/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIendModal/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBisModal(This) -> boolean() when This :: wxDialog().\fR
+
+.br
+.RS
+.PP
+Returns true if the dialog box is modal, false otherwise.
+
+
+.RE
+.B
+\fBnew() -> wxDialog().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Title, [Option]) -> wxDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Title :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+See: \fIcreate/5\fR
+
+
+.RE
+.B
+\fBsetAffirmativeId(This, Id) -> ok\fR
+\fB                          when This :: wxDialog(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the identifier to be used as OK button.
+
+.PP
+When the button with this identifier is pressed, the dialog calls \fIwxWindow:validate/1\fR and \fIwxWindow:transferDataFromWindow/1\fR and, if they both return true, closes the dialog with the affirmative id return code.
+
+.PP
+Also, when the user presses a hardware OK button on the devices having one or the special OK button in the PocketPC title bar, an event with this id is generated.
+
+.PP
+By default, the affirmative id is wxID_OK.
+
+.PP
+See: \fIgetAffirmativeId/1\fR
+
+
+.RE
+.B
+\fBsetReturnCode(This, RetCode) -> ok\fR
+\fB                       when This :: wxDialog(), RetCode :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the return code for this window.
+
+.PP
+A return code is normally associated with a modal dialog, where \fIshowModal/1\fR returns a code to the application. The function \fIendModal/2\fR calls \fIsetReturnCode/2\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetReturnCode/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshowModal/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIendModal/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBshow(This, [Option]) -> boolean()\fR
+\fB              when This :: wxDialog(), Option :: {show, boolean()}.\fR
+
+.br
+.RS
+.PP
+Hides or shows the dialog.
+
+.PP
+The preferred way of dismissing a modal dialog is to use \fIendModal/2\fR.
+
+
+.RE
+.B
+\fBshowModal(This) -> integer() when This :: wxDialog().\fR
+
+.br
+.RS
+.PP
+Shows an application-modal dialog.
+
+.PP
+Program flow does not return until the dialog has been dismissed with \fIendModal/2\fR.
+
+.PP
+Notice that it is possible to call \fIshowModal/1\fR for a dialog which had been previously shown with \fIshow/2\fR, this allows making an existing modeless dialog modal. However \fIshowModal/1\fR can't be called twice without intervening \fIendModal/2\fR calls.
+
+.PP
+Note that this function creates a temporary event loop which takes precedence over the application's main event loop (see \fIwxEventLoopBase\fR (not implemented in wx)) and which is destroyed when the dialog is dismissed. This also results in a call to \fIwxApp::ProcessPendingEvents()\fR (not implemented in wx).
+
+.PP
+Return: The value set with \fIsetReturnCode/2\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIendModal/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetReturnCode/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetReturnCode/2\fR
+
+.RE
+
+
+.RE

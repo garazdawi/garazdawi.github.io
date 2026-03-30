@@ -1,0 +1,253 @@
+.TH mod_auth 3 "inets 9.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+mod_auth \- User authentication using text files, Dets, or Mnesia database.
+
+.SH DESCRIPTION
+.PP
+This module provides for basic user authentication using textual files, Dets databases, or Mnesia databases.
+
+.PP
+\fBSee also\fR
+
+.PP
+\fIhttpd\fR, \fImod_alias\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBhttpd_group() :: #httpd_group{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhttpd_user() :: #httpd_user{}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_group_member(GroupName, UserName, Address, Port, Directory) ->\fR
+\fB                          true | {error, Reason}\fR
+\fB                          when\fR
+\fB                              GroupName :: string(),\fR
+\fB                              UserName :: string(),\fR
+\fB                              Port :: inet:port_number(),\fR
+\fB                              Address ::\fR
+\fB                                  inet:ip4_address() |\fR
+\fB                                  inet:ip6_address() |\fR
+\fB                                  string() |\fR
+\fB                                  undefined,\fR
+\fB                              Directory :: string(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+\fIadd_group_member/3\fR, \fIadd_group_member/4\fR, and \fIadd_group_member/5\fR each adds a user to a group. If the group does not exist, it is created and the user is added to the group. Upon successful operation, this function returns \fItrue\fR. When \fIadd_group_members/3\fR is called, options \fIPort\fR and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBadd_user(UserName, Password, UserData, Address, Port, Directory) ->\fR
+\fB                  true | {error, Reason}\fR
+\fB                  when\fR
+\fB                      UserName :: string(),\fR
+\fB                      Password :: string(),\fR
+\fB                      UserData :: term(),\fR
+\fB                      Port :: inet:port_number(),\fR
+\fB                      Address ::\fR
+\fB                          inet:ip4_address() |\fR
+\fB                          inet:ip6_address() |\fR
+\fB                          string() |\fR
+\fB                          undefined,\fR
+\fB                      Directory :: string(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+add_user(UserName, Password, UserData, Address, Port, Dir) -> true | {error, Reason}
+
+.PP
+\fIadd_user/2, add_user/5\fR, and \fIadd_user/6\fR each adds a user to the user database. If the operation is successful, this function returns \fItrue\fR. If an error occurs, \fI{error, Reason}\fR is returned. When \fIadd_user/2\fR is called, options \fIPassword\fR, \fIUserData\fR, \fIPort\fR, and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBdelete_group(GroupName, Address, Port, Directory) ->\fR
+\fB                      true | {error, Reason}\fR
+\fB                      when\fR
+\fB                          GroupName :: string(),\fR
+\fB                          Port :: inet:port_number(),\fR
+\fB                          Address ::\fR
+\fB                              inet:ip4_address() |\fR
+\fB                              inet:ip6_address() |\fR
+\fB                              string() |\fR
+\fB                              undefined,\fR
+\fB                          Directory :: string(),\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+\fIdelete_group/2\fR, \fIdelete_group/3\fR, and \fIdelete_group/4\fR each deletes the group specified and returns \fItrue\fR. If there is an error, \fI{error, Reason}\fR is returned. When \fIdelete_group/2\fR is called, option \fIPort\fR and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBdelete_group_member(GroupName, UserName, Address, Port, Directory) ->\fR
+\fB                             true | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 GroupName :: string(),\fR
+\fB                                 UserName :: string(),\fR
+\fB                                 Port :: inet:port_number(),\fR
+\fB                                 Address ::\fR
+\fB                                     inet:ip4_address() |\fR
+\fB                                     inet:ip6_address() |\fR
+\fB                                     string() |\fR
+\fB                                     undefined,\fR
+\fB                                 Directory :: string(),\fR
+\fB                                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+\fIdelete_group_member/3\fR, \fIdelete_group_member/4\fR, and \fIdelete_group_member/5\fR each deletes a user from a group. If the group or the user does not exist, this function returns an error, otherwise \fItrue\fR. When \fIdelete_group_member/3\fR is called, the options \fIPort\fR and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBdelete_user(UserName, Address, Port, Directory) ->\fR
+\fB                     true | {error, Reason}\fR
+\fB                     when\fR
+\fB                         UserName :: string(),\fR
+\fB                         Port :: inet:port_number(),\fR
+\fB                         Address ::\fR
+\fB                             inet:ip4_address() |\fR
+\fB                             inet:ip6_address() |\fR
+\fB                             string() |\fR
+\fB                             undefined,\fR
+\fB                         Directory :: string(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+\fIdelete_user/2\fR, \fIdelete_user/3\fR, and \fIdelete_user/4\fR each deletes a user from the user database. If the operation is successful, this function returns \fItrue\fR. If an error occurs, \fI{error, Reason}\fR is returned. When \fIdelete_user/2\fR is called, options \fIPort\fR and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBget_user(UserName, Address, Port, Directory) ->\fR
+\fB                  {ok, User} | {error, Reason}\fR
+\fB                  when\fR
+\fB                      UserName :: string(),\fR
+\fB                      User :: httpd_user(),\fR
+\fB                      Port :: inet:port_number(),\fR
+\fB                      Address ::\fR
+\fB                          inet:ip4_address() |\fR
+\fB                          inet:ip6_address() |\fR
+\fB                          string() |\fR
+\fB                          undefined,\fR
+\fB                      Directory :: string(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+\fIget_user/2\fR, \fIget_user/3\fR, and \fIget_user/4\fR each returns an \fIhttpd_user/0\fR record containing the userdata for a specific user. If the user cannot be found, \fI{error, Reason}\fR is returned. When \fIget_user/2\fR is called, options \fIPort\fR and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBlist_group_members(GroupName, Address, Port, Directory) ->\fR
+\fB                            {ok, Users} | {error, Reason}\fR
+\fB                            when\fR
+\fB                                GroupName :: string(),\fR
+\fB                                Port :: inet:port_number(),\fR
+\fB                                Address ::\fR
+\fB                                    inet:ip4_address() |\fR
+\fB                                    inet:ip6_address() |\fR
+\fB                                    string() |\fR
+\fB                                    undefined,\fR
+\fB                                Directory :: string(),\fR
+\fB                                Users :: [httpd_user()],\fR
+\fB                                Reason :: term().\fR
+
+.br
+.RS
+.PP
+\fIlist_group_members/2\fR, \fIlist_group_members/3\fR, and \fIlist_group_members/4\fR each lists the members of a specified group. If the group does not exist or there is an error, \fI{error, Reason}\fR is returned. When \fIlist_group_members/2\fR is called, options \fIPort\fR and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBlist_groups(Address, Port, Directory) ->\fR
+\fB                     {ok, Groups} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Port :: inet:port_number(),\fR
+\fB                         Address ::\fR
+\fB                             inet:ip4_address() |\fR
+\fB                             inet:ip6_address() |\fR
+\fB                             string() |\fR
+\fB                             undefined,\fR
+\fB                         Directory :: string(),\fR
+\fB                         Groups :: [httpd_group()],\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+\fIlist_groups/1\fR, \fIlist_groups/2\fR, and \fIlist_groups/3\fR each lists all the groups available. If there is an error, \fI{error, Reason}\fR is returned. When \fIlist_groups/1\fR is called, options \fIPort\fR and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBlist_users(Address, Port, Directory) ->\fR
+\fB                    {ok, Users} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Port :: inet:port_number(),\fR
+\fB                        Address ::\fR
+\fB                            inet:ip4_address() |\fR
+\fB                            inet:ip6_address() |\fR
+\fB                            string() |\fR
+\fB                            undefined,\fR
+\fB                        Directory :: string(),\fR
+\fB                        Users :: [httpd_user()],\fR
+\fB                        Reason :: atom().\fR
+
+.br
+.RS
+.PP
+\fIlist_users/1\fR, \fIlist_users/2\fR, and \fIlist_users/3\fR each returns a list of users in the user database for a specific \fIPort/Dir\fR. When \fIlist_users/1\fR is called, options \fIPort\fR and \fIDir\fR are mandatory.
+
+
+.RE
+.B
+\fBupdate_password(Address, Port, Dir, OldPassword, NewPassword,\fR
+\fB                      NewPassword) ->\fR
+\fB                         ok | {error, Reason}\fR
+\fB                         when\fR
+\fB                             Address ::\fR
+\fB                                 inet:ip4_address() |\fR
+\fB                                 inet:ip6_address() |\fR
+\fB                                 string() |\fR
+\fB                                 undefined,\fR
+\fB                             Port :: inet:port_number(),\fR
+\fB                             Dir :: string(),\fR
+\fB                             OldPassword :: string(),\fR
+\fB                             NewPassword :: string(),\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+\fIupdate_password/5\fR and \fIupdate_password/6\fR each updates \fIAuthAccessPassword\fR for the specified directory. If \fINewPassword\fR is equal to "NoPassword", no password is required to change authorisation data. If \fINewPassword\fR is equal to "DummyPassword", no changes can be done without changing the password first.
+
+
+.RE

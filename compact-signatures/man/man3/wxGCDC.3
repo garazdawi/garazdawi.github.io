@@ -1,0 +1,203 @@
+.TH wxGCDC 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGCDC \- \fIwxGCDC\fR is a device context that draws on a \fIwxGraphicsContext\fR.
+
+.SH DESCRIPTION
+.PP
+\fIwxGCDC\fR does its best to implement \fIwxDC\fR API, but the following features are not (fully) implemented because \fIwxGraphicsContext\fR doesn't support them:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC:getPixel/2\fR method is not implemented and always returns false because modern graphics layers don't support retrieving the contents of the drawn pixels.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC:floodFill/4\fR method is not, and can't be, implemented, as its functionality relies on reading the pixels from \fIwxGraphicsContext\fR too.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC:setLogicalFunction/2\fR method only works with \fIwxCOPY\fR, \fIwxOR\fR, \fIwxNO_OP\fR, \fIwxCLEAR\fR and \fIwxXOR\fR functions, attempts to use any other function (including \fIwxINVERT\fR) don't do anything.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Similarly, ?wxRasterOperationMode parameter of \fIwxDC:blit/6\fR and \fIStretchBlit()\fR (not implemented in wx) can only be one of the supported logical functions listed above, using any other function will result in an assertion failure and not drawing anything.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For Direct2D-based \fIwxGraphicsContext\fR, only true-type fonts can be used in the font-related functions.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsContext\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGCDC
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGCDC() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxGCDC()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetGraphicsContext(This) -> wxGraphicsContext:wxGraphicsContext()\fR
+\fB                            when This :: wxGCDC().\fR
+
+.br
+.RS
+.PP
+Retrieves associated \fIwxGraphicsContext\fR.
+
+
+.RE
+.B
+\fBnew() -> wxGCDC().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(WindowDC) -> wxGCDC()\fR
+\fB             when\fR
+\fB                 WindowDC ::\fR
+\fB                     wxWindowDC:wxWindowDC() |\fR
+\fB                     wxMemoryDC:wxMemoryDC() |\fR
+\fB                     wxGraphicsContext:wxGraphicsContext().\fR
+
+.br
+.RS
+.PP
+Constructs a \fIwxGCDC\fR from a \fIwxWindowDC\fR.
+
+
+.RE
+.B
+\fBsetGraphicsContext(This, Context) -> ok\fR
+\fB                            when\fR
+\fB                                This :: wxGCDC(),\fR
+\fB                                Context ::\fR
+\fB                                    wxGraphicsContext:wxGraphicsContext().\fR
+
+.br
+.RS
+.PP
+Set the graphics context to be used for this \fIwxGCDC\fR.
+
+.PP
+Note that this object takes ownership of \fIcontext\fR and will delete it when it is destroyed or when \fIsetGraphicsContext/2\fR is called again.
+
+.PP
+Also, unlike the constructor taking \fIwxGraphicsContext\fR, this method will reapply the current font, pen and brush, so that this object continues to use them, if they had been changed before (which is never the case when constructing \fIwxGCDC\fR directly from \fIwxGraphicsContext\fR).
+
+
+.RE

@@ -1,0 +1,326 @@
+.TH base64 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+base64 \- Provides base64 encode and decode, see RFC 2045.
+
+.SH DESCRIPTION
+.SH DATA TYPES
+.LP
+.B
+\fBbase64_alphabet() ::\fR
+\fB          $A..$Z | $a..$z | $0..$9 | $+ | $/ | $- | $_ | $=.\fR
+
+.br
+.RS
+.PP
+Base 64 Encoding alphabet, see RFC 4648.
+
+
+.RE
+.B
+\fBbase64_binary() :: binary().\fR
+
+.br
+.RS
+.PP
+Base 64 encoded binary.
+
+
+.RE
+.B
+\fBbase64_mode() :: standard | urlsafe.\fR
+
+.br
+.RS
+.PP
+Selector for the Base 64 Encoding alphabet used for encoding and decoding. See RFC 4648 Sections 4 and 5.
+
+
+.RE
+.B
+\fBbase64_string() :: [base64_alphabet()].\fR
+
+.br
+.RS
+.PP
+Base 64 encoded string.
+
+
+.RE
+.B
+\fBbyte_string() :: [byte()].\fR
+
+.br
+.RS
+.PP
+Arbitrary sequences of octets.
+
+
+.RE
+.B
+\fBdecode_options() :: #{padding => boolean(), mode => base64_mode()}.\fR
+
+.br
+.RS
+.PP
+Customizes the behaviour of the decode functions.
+
+.PP
+Default value if omitted entirely or partially is \fI#{mode => standard, padding => true}\fR.
+
+.PP
+The \fImode\fR option can be one of the following:
+
+standard
+.RS 2
+Default. Decode the given string using the standard base64 alphabet according to RFC 4648 Section 4, that is 
+\fI"+"\fR and \fI"/"\fR are representing bytes \fI62\fR and \fI63\fR respectively, while \fI"-"\fR and \fI"_"\fR are illegal characters.
+
+.RE
+
+urlsafe
+.RS 2
+Decode the given string using the alternative "URL and Filename safe" base64 alphabet according to RFC 4648 Section 5, that is 
+\fI"-"\fR and \fI"_"\fR are representing bytes \fI62\fR and \fI63\fR respectively, while \fI"+"\fR and \fI"/"\fR are illegal characters.
+
+.RE
+
+.PP
+The \fIpadding\fR option can be one of the following:
+
+true
+.RS 2
+Default. Checks the correct number of 
+\fI=\fR padding characters at the end of the encoded string.
+
+.RE
+
+false
+.RS 2
+Accepts an encoded string with missing 
+\fI=\fR padding characters at the end.
+
+.RE
+
+
+.RE
+.B
+\fBencode_options() :: #{padding => boolean(), mode => base64_mode()}.\fR
+
+.br
+.RS
+.PP
+Customizes the behaviour of the encode functions.
+
+.PP
+Default value if omitted entirely or partially is \fI#{mode => standard, padding => true}\fR.
+
+.PP
+The \fImode\fR option can be one of the following:
+
+standard
+.RS 2
+Default. Encode the given string using the standard base64 alphabet according to RFC 4648 Section 4.
+
+
+.RE
+
+urlsafe
+.RS 2
+Encode the given string using the alternative "URL and Filename safe" base64 alphabet according to RFC 4648 Section 5.
+
+
+.RE
+
+.PP
+The \fIpadding\fR option can be one of the following:
+
+true
+.RS 2
+Default. Appends correct number of 
+\fI=\fR padding characters to the encoded string.
+
+.RE
+
+false
+.RS 2
+Skips appending 
+\fI=\fR padding characters to the encoded string.
+
+.RE
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdecode(Base64, Options) -> Data\fR
+\fB                when\fR
+\fB                    Base64 :: base64_string() | base64_binary(),\fR
+\fB                    Options :: decode_options(),\fR
+\fB                    Data :: binary().\fR
+
+.br
+.RS
+.PP
+Decodes a base64 string encoded using the standard alphabet according to RFC 4648 Section 4 to plain ASCII.
+
+.PP
+The function will strip away any whitespace characters and check for the the correct number of \fI=\fR padding characters at the end of the encoded string.
+
+.PP
+See \fIdecode_options/0\fR for details on which options can be passed.
+
+.PP
+\fIExample\fR:
+
+.IP
+.nf
+1> base64:decode("AQIDBA==").
+<<1,2,3,4>>
+2> base64:decode("AQ ID BA==").
+<<1,2,3,4>>
+3> base64:decode("AQIDBA=").
+** exception error: missing_padding
+     in function  base64:decode_list/7 (base64.erl, line 734)
+        *** data to decode is missing final = padding characters, if this is intended, use the `padding => false` option
+4> base64:decode("AQIDBA=", #{ padding => false }).
+<<1,2,3,4>>
+
+.fi
+
+
+.RE
+.B
+\fBdecode_to_string(Base64) -> DataString\fR
+\fB                          when\fR
+\fB                              Base64 ::\fR
+\fB                                  base64_string() | base64_binary(),\fR
+\fB                              DataString :: byte_string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIdecode(Base64)\fR, but returns a \fIbyte_string/0\fR.
+
+
+.RE
+.B
+\fBdecode_to_string(Base64, Options) -> DataString\fR
+\fB                          when\fR
+\fB                              Base64 ::\fR
+\fB                                  base64_string() | base64_binary(),\fR
+\fB                              Options :: decode_options(),\fR
+\fB                              DataString :: byte_string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIdecode(Base64, Options)\fR, but returns a \fIbyte_string/0\fR.
+
+
+.RE
+.B
+\fBencode(Data, Options) -> Base64\fR
+\fB                when\fR
+\fB                    Data :: byte_string() | binary(),\fR
+\fB                    Options :: encode_options(),\fR
+\fB                    Base64 :: base64_binary().\fR
+
+.br
+.RS
+.PP
+Encodes a plain ASCII string into base64 using the alphabet indicated by the \fImode\fR option. The result is 33% larger than the data.
+
+.PP
+See \fIencode_options/0\fR for details on which options can be passed.
+
+
+.RE
+.B
+\fBencode_to_string(Data) -> Base64String\fR
+\fB                          when\fR
+\fB                              Data :: byte_string() | binary(),\fR
+\fB                              Base64String :: base64_string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIencode(Data)\fR, but returns a \fIbyte_string/0\fR.
+
+
+.RE
+.B
+\fBencode_to_string(Data, Options) -> Base64String\fR
+\fB                          when\fR
+\fB                              Data :: byte_string() | binary(),\fR
+\fB                              Options :: encode_options(),\fR
+\fB                              Base64String :: base64_string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIencode(Data, Options)\fR, but returns a \fIbyte_string/0\fR.
+
+
+.RE
+.B
+\fBmime_decode(Base64, Options) -> Data\fR
+\fB                     when\fR
+\fB                         Base64 :: base64_string() | base64_binary(),\fR
+\fB                         Options :: decode_options(),\fR
+\fB                         Data :: binary().\fR
+
+.br
+.RS
+.PP
+Decodes a base64 "mime" string encoded using the standard alphabet according to RFC 4648 Section 4 to plain ASCII.
+
+.PP
+The function will strip away any illegal characters. It does \fInot\fR check for the the correct number of \fI=\fR padding characters at the end of the encoded string.
+
+.PP
+See \fIdecode_options/0\fR for details on which options can be passed.
+
+.PP
+\fIExample\fR:
+
+.IP
+.nf
+1> base64:mime_decode("AQIDBA==").
+<<1,2,3,4>>
+2> base64:mime_decode("AQIDB=A=").
+<<1,2,3,4>>
+
+.fi
+
+
+.RE
+.B
+\fBmime_decode_to_string(Base64) -> DataString\fR
+\fB                               when\fR
+\fB                                   Base64 ::\fR
+\fB                                       base64_string() | base64_binary(),\fR
+\fB                                   DataString :: byte_string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fImime_decode(Base64)\fR, but returns a \fIbyte_string/0\fR.
+
+
+.RE
+.B
+\fBmime_decode_to_string(Base64, Options) -> DataString\fR
+\fB                               when\fR
+\fB                                   Base64 ::\fR
+\fB                                       base64_string() | base64_binary(),\fR
+\fB                                   Options :: decode_options(),\fR
+\fB                                   DataString :: byte_string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fImime_decode(Base64, Options)\fR, but returns a \fIbyte_string/0\fR.
+
+
+.RE

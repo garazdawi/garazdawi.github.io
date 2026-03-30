@@ -1,0 +1,459 @@
+.TH wxXmlResource 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxXmlResource \- This is the main class for interacting with the XML-based resource system.
+
+.SH DESCRIPTION
+.PP
+The class holds XML resources from one or more .xml files, binary files or zip archive files.
+
+.PP
+Note that this is a singleton class and you'll never allocate/deallocate it. Just use the static \fIget/0\fR getter.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview xrc
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview xrcformat
+
+.RE
+
+.PP
+wxWidgets docs: wxXmlResource
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxXmlResource() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBattachUnknownControl(This, Name, Control, [Option]) -> boolean()\fR
+\fB                              when\fR
+\fB                                  This :: wxXmlResource(),\fR
+\fB                                  Name :: unicode:chardata(),\fR
+\fB                                  Control :: wxWindow:wxWindow(),\fR
+\fB                                  Option ::\fR
+\fB                                      {parent, wxWindow:wxWindow()}.\fR
+
+.br
+.RS
+.PP
+Attaches an unknown control to the given panel/window/dialog.
+
+.PP
+Unknown controls are used in conjunction with <object class="unknown">.
+
+
+.RE
+.B
+\fBclearHandlers(This) -> ok when This :: wxXmlResource().\fR
+
+.br
+.RS
+.PP
+Removes all handlers and deletes them (this means that any handlers added using \fIAddHandler()\fR (not implemented in wx) must be allocated on the heap).
+
+
+.RE
+.B
+\fBcompareVersion(This, Major, Minor, Release, Revision) -> integer()\fR
+\fB                        when\fR
+\fB                            This :: wxXmlResource(),\fR
+\fB                            Major :: integer(),\fR
+\fB                            Minor :: integer(),\fR
+\fB                            Release :: integer(),\fR
+\fB                            Revision :: integer().\fR
+
+.br
+.RS
+.PP
+Compares the XRC version to the argument.
+
+.PP
+Returns -1 if the XRC version is less than the argument, +1 if greater, and 0 if they are equal.
+
+
+.RE
+.B
+\fBdestroy(This :: wxXmlResource()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBget() -> wxXmlResource().\fR
+
+.br
+.RS
+.PP
+Gets the global resources object or creates one if none exists.
+
+
+.RE
+.B
+\fBgetFlags(This) -> integer() when This :: wxXmlResource().\fR
+
+.br
+.RS
+.PP
+Returns flags, which may be a bitlist of ?wxXmlResourceFlags enumeration values.
+
+
+.RE
+.B
+\fBgetVersion(This) -> integer() when This :: wxXmlResource().\fR
+
+.br
+.RS
+.PP
+Returns version information (a.b.c.d = d + 256*c + 2562*b + 2563*a).
+
+
+.RE
+.B
+\fBgetXRCID(Str_id, [Option]) -> integer()\fR
+\fB                  when\fR
+\fB                      Str_id :: unicode:chardata(),\fR
+\fB                      Option :: {value_if_not_found, integer()}.\fR
+
+.br
+.RS
+.PP
+Returns a numeric ID that is equivalent to the string ID used in an XML resource.
+
+.PP
+If an unknown \fIstr_id\fR is requested (i.e. other than wxID_XXX or integer), a new record is created which associates the given string with a number.
+
+.PP
+If \fIvalue_if_not_found\fR is \fIwxID_NONE\fR, the number is obtained via \fIwx_misc:newId/0\fR. Otherwise \fIvalue_if_not_found\fR is used.
+
+.PP
+Macro \fIXRCID(name)\fR is provided for convenient use in event tables.
+
+.PP
+Note: IDs returned by XRCID() cannot be used with the \fIEVT_*_RANGE\fR macros, because the order in which they are assigned to symbolic \fIname\fR values is not guaranteed.
+
+
+.RE
+.B
+\fBinitAllHandlers(This) -> ok when This :: wxXmlResource().\fR
+
+.br
+.RS
+.PP
+Initializes handlers for all supported controls/windows.
+
+.PP
+This will make the executable quite big because it forces linking against most of the wxWidgets library.
+
+
+.RE
+.B
+\fBload(This, Filemask) -> boolean()\fR
+\fB              when\fR
+\fB                  This :: wxXmlResource(),\fR
+\fB                  Filemask :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads resources from XML files that match given filemask.
+
+.PP
+Example:
+
+.PP
+Note: If wxUSE_FILESYS is enabled, this method understands \fIwxFileSystem\fR (not implemented in wx) URLs (see \fIwxFileSystem::FindFirst()\fR (not implemented in wx)).
+
+.PP
+Note: If you are sure that the argument is name of single XRC file (rather than an URL or a wildcard), use \fILoadFile()\fR (not implemented in wx) instead.
+
+
+.RE
+.B
+\fBloadBitmap(This, Name) -> wxBitmap:wxBitmap()\fR
+\fB                    when\fR
+\fB                        This :: wxXmlResource(),\fR
+\fB                        Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads a bitmap resource from a file.
+
+
+.RE
+.B
+\fBloadDialog(This, Parent, Name) -> wxDialog:wxDialog()\fR
+\fB                    when\fR
+\fB                        This :: wxXmlResource(),\fR
+\fB                        Parent :: wxWindow:wxWindow(),\fR
+\fB                        Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads a dialog.
+
+.PP
+\fIparent\fR points to parent window (if any).
+
+
+.RE
+.B
+\fBloadDialog(This, Dlg, Parent, Name) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxXmlResource(),\fR
+\fB                        Dlg :: wxDialog:wxDialog(),\fR
+\fB                        Parent :: wxWindow:wxWindow(),\fR
+\fB                        Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads a dialog.
+
+.PP
+\fIparent\fR points to parent window (if any).
+
+.PP
+This form is used to finish creation of an already existing instance (the main reason for this is that you may want to use derived class with a new event table). Example:
+
+
+.RE
+.B
+\fBloadFrame(This, Parent, Name) -> wxFrame:wxFrame()\fR
+\fB                   when\fR
+\fB                       This :: wxXmlResource(),\fR
+\fB                       Parent :: wxWindow:wxWindow(),\fR
+\fB                       Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads a frame from the resource.
+
+.PP
+\fIparent\fR points to parent window (if any).
+
+
+.RE
+.B
+\fBloadFrame(This, Frame, Parent, Name) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxXmlResource(),\fR
+\fB                       Frame :: wxFrame:wxFrame(),\fR
+\fB                       Parent :: wxWindow:wxWindow(),\fR
+\fB                       Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads the contents of a frame onto an existing \fIwxFrame\fR.
+
+.PP
+This form is used to finish creation of an already existing instance (the main reason for this is that you may want to use derived class with a new event table).
+
+
+.RE
+.B
+\fBloadIcon(This, Name) -> wxIcon:wxIcon()\fR
+\fB                  when\fR
+\fB                      This :: wxXmlResource(),\fR
+\fB                      Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads an icon resource from a file.
+
+
+.RE
+.B
+\fBloadMenu(This, Name) -> wxMenu:wxMenu()\fR
+\fB                  when\fR
+\fB                      This :: wxXmlResource(),\fR
+\fB                      Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads menu from resource.
+
+.PP
+Returns NULL on failure.
+
+
+.RE
+.B
+\fBloadMenuBar(This, Name) -> wxMenuBar:wxMenuBar()\fR
+\fB                     when\fR
+\fB                         This :: wxXmlResource(),\fR
+\fB                         Name :: unicode:chardata().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBloadMenuBar(This, Parent, Name) -> wxMenuBar:wxMenuBar()\fR
+\fB                     when\fR
+\fB                         This :: wxXmlResource(),\fR
+\fB                         Parent :: wxWindow:wxWindow(),\fR
+\fB                         Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads a menubar from resource.
+
+.PP
+Returns NULL on failure.
+
+
+.RE
+.B
+\fBloadPanel(This, Parent, Name) -> wxPanel:wxPanel()\fR
+\fB                   when\fR
+\fB                       This :: wxXmlResource(),\fR
+\fB                       Parent :: wxWindow:wxWindow(),\fR
+\fB                       Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads a panel.
+
+.PP
+\fIparent\fR points to the parent window.
+
+
+.RE
+.B
+\fBloadPanel(This, Panel, Parent, Name) -> boolean()\fR
+\fB                   when\fR
+\fB                       This :: wxXmlResource(),\fR
+\fB                       Panel :: wxPanel:wxPanel(),\fR
+\fB                       Parent :: wxWindow:wxWindow(),\fR
+\fB                       Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads a panel.
+
+.PP
+\fIparent\fR points to the parent window. This form is used to finish creation of an already existing instance.
+
+
+.RE
+.B
+\fBloadToolBar(This, Parent, Name) -> wxToolBar:wxToolBar()\fR
+\fB                     when\fR
+\fB                         This :: wxXmlResource(),\fR
+\fB                         Parent :: wxWindow:wxWindow(),\fR
+\fB                         Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Loads a toolbar.
+
+
+.RE
+.B
+\fBnew([Option]) -> wxXmlResource()\fR
+\fB             when\fR
+\fB                 Option ::\fR
+\fB                     {flags, integer()} | {domain, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBnew(Filemask, [Option]) -> wxXmlResource()\fR
+\fB             when\fR
+\fB                 Filemask :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {flags, integer()} | {domain, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBset(Res) -> wxXmlResource() when Res :: wxXmlResource().\fR
+
+.br
+.RS
+.PP
+Sets the global resources object and returns a pointer to the previous one (may be NULL).
+
+
+.RE
+.B
+\fBsetFlags(This, Flags) -> ok\fR
+\fB                  when This :: wxXmlResource(), Flags :: integer().\fR
+
+.br
+.RS
+.PP
+Sets flags (bitlist of ?wxXmlResourceFlags enumeration values).
+
+
+.RE
+.B
+\fBunload(This, Filename) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxXmlResource(),\fR
+\fB                    Filename :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+This function unloads a resource previously loaded by \fIload/2\fR.
+
+.PP
+Returns true if the resource was successfully unloaded and false if it hasn't been found in the list of loaded resources.
+
+
+.RE

@@ -1,0 +1,252 @@
+.TH logger_handler 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+logger_handler \- logger_handler behavior module.
+
+.SH DESCRIPTION
+.PP
+The behaviour module for logger handlers. A logger handler is a callback module that is called when a log event has passed all filters and is ready to be logged somewhere. For more information see Handlers in the Users Guide.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIlogger_filters\fR, \fIlogger_formatter\fR, \fIlogger\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBconfig() ::\fR
+\fB          #{id => id(),\fR
+\fB            config => term(),\fR
+\fB            level => logger:level() | all | none,\fR
+\fB            module => module(),\fR
+\fB            filter_default => log | stop,\fR
+\fB            filters => [{logger:filter_id(), logger:filter()}],\fR
+\fB            formatter => {module(), logger:formatter_config()}}.\fR
+
+.br
+.RS
+.PP
+Handler configuration data for Logger. The following default values apply:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlevel => all\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfilter_default => log\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfilters => []\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIformatter => {logger_formatter, DefaultFormatterConfig\fR}
+
+.RE
+
+.PP
+In addition to these, the following fields are automatically inserted by Logger, values taken from the two first parameters to \fIlogger:add_handler/3\fR:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIid => HandlerId\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImodule => Module\fR
+
+.RE
+
+.PP
+These are read-only and cannot be changed in runtime.
+
+.PP
+Handler specific configuration data is inserted by the handler callback itself, in a sub structure associated with the field named \fIconfig\fR. See the \fIlogger_std_h\fR and \fIlogger_disk_log_h\fR manual pages for information about the specific configuration for these handlers.
+
+.PP
+See the \fIlogger_formatter\fR manual page for information about the default configuration for this formatter.
+
+
+.RE
+.B
+\fBid() :: atom().\fR
+
+.br
+.RS
+.PP
+A unique identifier for a handler instance.
+
+
+.RE
+.B
+\fBolp_config() ::\fR
+\fB          #{sync_mode_qlen => non_neg_integer(),\fR
+\fB            drop_mode_qlen => pos_integer(),\fR
+\fB            flush_qlen => pos_integer(),\fR
+\fB            burst_limit_enable => boolean(),\fR
+\fB            burst_limit_max_count => pos_integer(),\fR
+\fB            burst_limit_window_time => pos_integer(),\fR
+\fB            overload_kill_enable => boolean(),\fR
+\fB            overload_kill_qlen => pos_integer(),\fR
+\fB            overload_kill_mem_size => pos_integer(),\fR
+\fB            overload_kill_restart_after => non_neg_integer() | infinity}.\fR
+
+.br
+.RS
+.PP
+Overload protection configuration.
+
+.PP
+See Protecting the Handler from Overload for more details.
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBadding_handler(Config1)\fR
+
+.br
+.RS
+.PP
+The function is called on a temporary process when a new handler is about to be added. The purpose is to verify the configuration and initiate all resources needed by the handler.
+
+.PP
+The handler identity is associated with the \fIid\fR key in \fIConfig1\fR.
+
+.PP
+If everything succeeds, the callback function can add possible default values or internal state values to the configuration, and return the adjusted map in \fI{ok,Config2}\fR.
+
+.PP
+If the configuration is faulty, or if the initiation fails, the callback function must return \fI{error,Reason}\fR.
+
+
+.RE
+.B
+\fBchanging_config(SetOrUpdate, OldConfig, NewConfig)\fR
+
+.br
+.RS
+.PP
+The function is called on a temporary process when the configuration for a handler is about to change. The purpose is to verify and act on the new configuration.
+
+.PP
+\fIOldConfig\fR is the existing configuration and \fINewConfig\fR is the new configuration.
+
+.PP
+The handler identity is associated with the \fIid\fR key in \fIOldConfig\fR.
+
+.PP
+\fISetOrUpdate\fR has the value \fIset\fR if the configuration change originates from a call to \fIlogger:set_handler_config/2,3\fR, and \fIupdate\fR if it originates from \fIlogger:update_handler_config/2,3\fR. The handler can use this parameter to decide how to update the value of the \fIconfig\fR field, that is, the handler specific configuration data. Typically, if \fISetOrUpdate\fR equals \fIset\fR, values that are not specified must be given their default values. If \fISetOrUpdate\fR equals \fIupdate\fR, the values found in \fIOldConfig\fR must be used instead.
+
+.PP
+If everything succeeds, the callback function must return a possibly adjusted configuration in \fI{ok,Config}\fR.
+
+.PP
+If the configuration is faulty, the callback function must return \fI{error,Reason}\fR.
+
+
+.RE
+.B
+\fBfilter_config(Config)\fR
+
+.br
+.RS
+.PP
+The function is called when one of the Logger API functions for fetching the handler configuration is called, for example \fIlogger:get_handler_config/1\fR.
+
+.PP
+It allows the handler to remove internal data fields from its configuration data before it is returned to the caller.
+
+
+.RE
+.B
+\fBlog(LogEvent, Config)\fR
+
+.br
+.RS
+.PP
+The function is called when all primary filters and all handler filters for the handler in question have passed for the given log event. It is called on the client process, that is, the process that issued the log event.
+
+.PP
+The handler identity is associated with the \fIid\fR key in \fIConfig\fR.
+
+.PP
+The handler must log the event.
+
+.PP
+The return value from this function is ignored by Logger.
+
+
+.RE
+.B
+\fBremoving_handler(Config)\fR
+
+.br
+.RS
+.PP
+The function is called on a temporary process when a handler is about to be removed. The purpose is to release all resources used by the handler.
+
+.PP
+The handler identity is associated with the \fIid\fR key in \fIConfig\fR.
+
+.PP
+The return value is ignored by Logger.
+
+
+.RE

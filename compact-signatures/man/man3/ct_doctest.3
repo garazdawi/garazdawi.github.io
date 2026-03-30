@@ -1,0 +1,552 @@
+.TH ct_doctest 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_doctest \- \fIct_doctest\fR runs doctests on documentation examples. Using \fIct_doctest\fR ensures that the examples in the documentation are correct, up to date, and stylistically consistent.
+
+.SH DESCRIPTION
+.PP
+The tested examples can be either in a module (normally written using documentation attributes) or in files. By default \fIct_doctest\fR looks for markdown code blocks and runs any Erlang code block found that looks like a shell session.
+
+.PP
+The doctest parser looks for examples that are formatted as if they were run in the Erlang shell, using prompts of the form \fIN>\fR, where \fIN\fR starts at \fI1\fR for each block. The expected output is written on the lines following the prompt. For example:
+
+.IP
+.nf
+-doc """
+This is an example of a doctest:
+
+```
+1> 1+2.
+3
+```
+""".
+
+.fi
+
+.PP
+\fIct_doctest\fR can be used in Common Test suites to validate documentation examples as part of your test runs. Normal usage is to call \fImodule/1\fR with a module name. For example:
+
+.IP
+.nf
+all() ->
+    [doctests].
+doctests(_Config) ->
+    ct_doctest:module(my_module).
+
+.fi
+
+.SS "Prompt format rules"
+
+.PP
+For a code block to run as a doctest:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+prompts must start at \fI1>\fR for each block
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+each subsequent prompt must increment (\fI2>\fR, \fI3>\fR, ...)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+continuation lines must be indented
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI%\fR style comment lines are allowed in prompt blocks
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+mismatched prompt numbering causes a doctest parse error
+
+.RE
+
+.SS "Troubleshooting"
+
+.PP
+If a doctest fails unexpectedly:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+use \fIverbose\fR to print per-block execution details
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+verify that expected output matches the shell output exactly
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+verify prompt numbering and continuation-line indentation
+
+.RE
+
+.SS "Examples"
+
+.PP
+Below are examples of supported formats for the code blocks in the documentation. The parser is quite flexible and supports various styles, including multi-line expressions, comments, and even prebound variables.
+
+.PP
+\fBBasic example\fR
+
+.IP
+.nf
+1> 1+2.
+3
+
+.fi
+
+.PP
+\fBBasic example using Erlang code\fR
+
+.PP
+This example uses an explicit Erlang code block. That is,
+
+.IP
+.nf
+```erlang
+1> 1+2.
+3
+```
+
+.fi
+
+.PP
+instead of the previous one which is a generic code block. Both formats are supported.
+
+.IP
+.nf
+1> 1+2.
+3
+
+.fi
+
+.PP
+\fBMulti-line prompt\fR
+
+.PP
+Use multiline prompts for expressions that span multiple lines by starting the prompt with \fI>\fR and indenting the continuation lines. For example:
+
+.IP
+.nf
+1> 1
+  +
+  2
+  .
+3
+
+.fi
+
+.PP
+\fBMulti-line with comma\fR
+
+.PP
+It is possible to have multiple expressions in the same prompt, separated by commas. For example:
+
+.IP
+.nf
+1> A = 1,
+  A + 2.
+3
+
+.fi
+
+.PP
+\fBMulti-line match\fR
+
+.PP
+The expected output can span multiple lines. For example:
+
+.IP
+.nf
+1> [1, 2].
+[
+ 1
+ ,
+ 2
+ ]
+
+.fi
+
+.PP
+\fBMultiple prompts\fR
+
+.PP
+Examples can have multiple prompts. For example:
+
+.IP
+.nf
+1> 1 + 2.
+3
+2> 3 + 4.
+7
+
+.fi
+
+.PP
+\fBDefining variables\fR
+
+.PP
+Any variable defined in the examples will be available in the following prompts. For example:
+
+.IP
+.nf
+1> A = 1 + 2.
+3
+2> A + 3.
+6
+
+.fi
+
+.PP
+\fBPrebound variables\fR
+
+.PP
+If the documentation examples rely on certain variables being prebound, you can provide these bindings when calling \fImodule/3\fR. For example, if you have a module doc that uses a variable \fIPrebound\fR, you can set it up like this:
+
+.IP
+.nf
+1> Prebound.
+hello
+
+.fi
+
+.PP
+and then in your test suite:
+
+.IP
+.nf
+binding_test(_Config) ->
+    Bindings = [{moduledoc, #{'Prebound' => hello}}],
+    ct_doctest:module(my_module, Bindings, []).
+
+.fi
+
+.PP
+\fBIgnore result\fR
+
+.PP
+To ignore the results of a prompt, just skip writing the expected output. For example:
+
+.IP
+.nf
+1> 1 + 2.
+2> 3 + 4.
+7
+
+.fi
+
+.PP
+\fBMatching exceptions\fR
+
+.PP
+Examples of failures can be tested by writing the expected exception after the prompt. For example:
+
+.IP
+.nf
+1> hello + 1.
+** exception error: an error occurred when evaluating an arithmetic expression
+     in operator  +/2
+        called as hello + 1
+2> lists:last([]).
+** exception error: no function clause matching lists:last([])
+
+.fi
+
+.PP
+The simplest way to know what output to write is to run the example in the shell and copy the output, including the \fI** exception\fR line.
+
+.PP
+If you don't want to include the entire exception message, use only the start of the message.
+
+.IP
+.nf
+1> hello + 1.
+** exception error
+
+.fi
+
+.PP
+\fBComments\fR
+
+.PP
+Comments can be inserted anywhere in the code block. For example:
+
+.IP
+.nf
+%% A comment before the first prompt
+1> [1,
+%% A comment between prompts
+  2].
+[1,
+%% A comment in a match
+ 2]
+2> [1,
+  %% Indented comment between prompts
+  2].
+[1,
+ %% Indented comment in a match
+ 2]
+3> """
+  %% A comment in a string is not a comment
+  
+  """.
+"""
+%% A comment in a string is not a comment
+
+"""
+4> 1 + a.
+** exception error: an error occurred when evaluating an arithmetic expression
+%% Comments
+     in operator  +/2
+     %% in exceptions
+        called as 1 + a
+%% are ignored
+
+.fi
+
+.PP
+\fBMatching of maps\fR
+
+.PP
+When matching on maps, it is possible to use shell syntax, that is, \fI=>\fR and not \fI:=\fR, as in normal Erlang code. For example:
+
+.IP
+.nf
+1> #{ a => b }.
+#{ a => b }
+
+.fi
+
+.PP
+\fBMatching of ...\fR
+
+.PP
+It is possible to use \fI...\fR in the expected output to indicate that the rest of the output should be ignored. This is useful for outputs that are large or contain non-deterministic elements.
+
+.IP
+.nf
+1> lists:seq(1,100).
+[1, 2, 3, ...]
+2> #{ a => b }.
+#{ a => ... }
+3> <<1, 0:1024>>.
+<<1, 0, 0, 0, ...>>
+
+.fi
+
+.PP
+\fBCompiling modules\fR
+
+.PP
+ct_doctest can also compile full module code examples. It then looks for a \fI-module\fR declaration to determine the module name and compiles the code as if it were in a file. For example:
+
+.IP
+.nf
+-module(my_module).
+-export([foo/0]).
+foo() ->
+    ok.
+
+.fi
+
+.PP
+The module is then available for use in following prompts. For example:
+
+.IP
+.nf
+1> my_module:foo().
+
+.fi
+
+.PP
+\fBEdge cases\fR
+
+.PP
+The following are examples that are not supported by the parser and will be ignored.
+
+.IP
+.nf
+a> should not be tested
+
+.fi
+
+.IP
+.nf
+ 1> should not be tested
+
+.fi
+
+.IP
+.nf
+> should not be tested
+
+.fi
+
+.IP
+.nf
+should not be tested
+1> 
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBoptions() ::\fR
+\fB          [{parser,\fR
+\fB            fun((unicode:unicode_binary()) ->\fR
+\fB                    [unicode:unicode_binary()] | {error, term()})} |\fR
+\fB           {skipped_blocks, non_neg_integer() | false} |\fR
+\fB           {verbose, boolean()}].\fR
+
+.br
+.RS
+.PP
+Options for doctest execution.
+
+parser
+.RS 2
+Use this option to plug in an external documentation parser. The parser callback must be a 
+\fIfun/1\fR and return a list of Erlang code block binaries. The code blocks are then checked to determine whether they should be run as doctests. If no parser is provided, a built-in markdown parser will be used.
+
+.RE
+skipped_blocks
+.RS 2
+Sets the exact number of Erlang code blocks that are allowed to be skipped because no runnable shell prompts were found. It defaults to 
+\fIfalse\fR.
+
+.RE
+verbose
+.RS 2
+Print detailed information while running doctests, including each block run and skipped block details.
+
+
+.RE
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBfile(file:filename(), Bindings :: [{atom(), term()}], options()) ->\fR
+\fB              ok | {comment, string()} | {error, term()} | no_return().\fR
+
+.br
+.RS
+.PP
+Run doctests for a markdown file.
+
+.PP
+The function returns \fIok\fR if all tests pass. If any test fails, an exception in the form of \fIerror({N, errors})\fR is raised, where \fIN\fR is the number of failed tests. The details of each failure are printed to the console.
+
+.PP
+Use \fIBindings\fR to provide prebound variables. Bindings are global for all files, so take care to avoid any naming conflicts.
+
+.PP
+You can run doctests on non-markdown files by providing a custom parser that extracts the code blocks to be tested.
+
+.PP
+See \fIoptions/0\fR for available options.
+
+
+.RE
+.B
+\fBmodule(module(), Bindings, options()) ->\fR
+\fB                ok | {comment, string()} | {error, term()} | no_return()\fR
+\fB                when\fR
+\fB                    KFA ::\fR
+\fB                        {Kind :: function | type | callback,\fR
+\fB                         atom(),\fR
+\fB                         arity()},\fR
+\fB                    Bindings ::\fR
+\fB                        [{KFA | moduledoc, erl_eval:binding_struct()}].\fR
+
+.br
+.RS
+.PP
+Run tests for the documentation in a module with EEP-48 docs.
+
+.PP
+When calling \fImodule/3\fR, \fIct_doctest\fR looks for documentation in the specified module and runs any examples found there. The module, function, type, and callback documentation are all checked for examples.
+
+.PP
+The function returns \fIok\fR if all tests pass, or \fI{comment, Comment}\fR if all tests pass but one or more functions lack tests. If any test fails, an exception in the form of \fIerror({N, errors})\fR is raised, where \fIN\fR is the number of failed tests. The details of each failure are printed to the console.
+
+.PP
+Use \fIBindings\fR to provide prebound variables for a specific doc entry. Use \fImoduledoc\fR for module docs and \fI{function, Name, Arity}\fR (or corresponding \fItype\fR/\fIcallback\fR keys) for entry-specific bindings.
+
+.PP
+See \fIoptions/0\fR for available options.
+
+
+.RE

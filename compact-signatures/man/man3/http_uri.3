@@ -1,0 +1,70 @@
+.TH http_uri 3 "inets 9.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+http_uri \- Old URI utility module, use uri_string instead
+
+.SH DESCRIPTION
+.PP
+This module is deprecated since OTP 23. Use the module \fIuri_string\fR to properly handle URIs, this is the recommended module since OTP 21.
+
+.PP
+\fBData types\fR
+
+.PP
+Type definitions that are related to URI:
+
+uri_part() = [byte()] | binary()
+.RS 2
+Syntax according to the URI definition in RFC 3986, for example, "http://www.erlang.org/"
+
+
+.RE
+
+.PP
+For more information about URI, see RFC 3986.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBdecode(QuotedData) -> Data\fR
+\fB                when\fR
+\fB                    QuotedData :: unicode:chardata(),\fR
+\fB                    Data :: unicode:chardata().\fR
+
+.RS
+.LP
+Deprecated: http_uri:decode/1 is deprecated; use uri_string:unquote function instead
+.RE
+
+.br
+.RS
+.PP
+Decodes a possibly percent encoded URI part
+
+.PP
+\fBWARNING: \fRUse \fIuri_string:unquote/1\fR instead
+
+
+
+.RE
+.B
+\fBencode(Data) -> QuotedData\fR
+\fB                when\fR
+\fB                    Data :: unicode:chardata(),\fR
+\fB                    QuotedData :: unicode:chardata().\fR
+
+.RS
+.LP
+Deprecated: http_uri:encode/1 is deprecated; use uri_string:quote function instead
+.RE
+
+.br
+.RS
+.PP
+Performs percent encoding.
+
+.PP
+\fBWARNING: \fRUse \fIuri_string:quote/1\fR instead
+
+
+
+.RE

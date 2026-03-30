@@ -1,0 +1,763 @@
+.TH Erlang mode for Emacs 4 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+Erlang mode for Emacs
+.SH DESCRIPTION
+.PP
+Possibly the most important feature of an editor designed for programmers is the ability to indent a line of code in accordance with the structure of the programming language. The Erlang mode does, of course, provide this feature. The layout used is based on the common use of the language. The mode also provides things as syntax highlighting, electric commands, module name verification, comment support including paragraph filling, skeletons, tags support etc.
+
+.PP
+In the following descriptions the use of the word \fIPoint\fR means: "Point can be seen as the position of the cursor. More precisely, the point is the position between two characters while the cursor is drawn over the character following the point".
+
+.SS "Indent"
+
+.PP
+The following command are directly available for indentation.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fITAB\fR\fR (\fIerlang-indent-command\fR) - Indents the current line of code.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+_\fIM-C-`_ (\fRindent-region) - Indents all lines in the region.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIM-l\fR\fR (\fIindent-for-comment\fR) - Insert a comment character to the right of the code on the line (if any).
+
+.RE
+
+.PP
+Lines containing comment are indented differently depending on the number of %-characters used:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Lines with one %-character is indented to the right of the code. The column is specified by the variable \fIcomment-column\fR, by default column 48 is used.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Lines with two %-characters will be indented to the same depth as code would have been in the same situation.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Lines with three of more %-characters are indented to the left margin.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c C-q\fR\fR (\fIerlang-indent-function\fR) - Indents the current Erlang function.
+
+.RE
+M-x erlang-indent-clause RET
+.RS 2
+Indent the current Erlang clause.
+
+
+.RE
+M-x erlang-indent-current-buffer RET
+.RS 2
+Indent the entire buffer.
+
+
+.RE
+
+.SS "Edit - Fill Comment"
+
+.PP
+When editing normal text in text mode you can let Emacs reformat the text by the \fIfill-paragraph\fR command. This command will not work for comments since it will treat the comment characters as words. The Erlang editing mode provides a command that knows about the Erlang comment structure and can be used to fill text paragraphs in comments. Ex:
+
+.IP
+.nf
+%% This is   just a very simple test to show
+%% how the Erlang fill
+%% paragraph   command works.
+
+.fi
+
+.PP
+Clearly, the text is badly formatted. Instead of formatting this paragraph line by line, let's try \fIerlang-fill-paragraph\fR by pressing \fI\fIM-q\fR\fR. The result is:
+
+.IP
+.nf
+%% This is just a very simple test to show how the Erlang fill
+%% paragraph command works.
+
+.fi
+
+.SS "Edit - Comment/Uncomment Region"
+
+.PP
+\fI\fIC-c C-c\fR\fR will put comment characters at the beginning of all lines in a marked region. If you want to have two comment characters instead of one you can do \fI\fIC-u 2 C-c C-c\fR\fR
+
+.PP
+\fI\fIC-c C-u\fR\fR will undo a comment-region command.
+
+.SS "Edit - Moving the point"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIM-C-a\fR\fR (\fIerlang-beginning-of-function\fR) - Move the point to the beginning of the current or preceding Erlang function. With an numeric argument (ex \fI\fIC-u 2 M-C-a\fR\fR) the function skips backwards over this many Erlang functions. Should the argument be negative the point is moved to the beginning of a function below the current function.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c M-a\fR\fR (\fIerlang-beginning-of-clause\fR) - As above but move point to the beginning of the current or preceding Erlang clause.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIM-C-e\fR\fR (\fIerlang-end-of-function\fR) - Move to the end of the current or following Erlang function. With an numeric argument (ex \fI\fIC-u 2 M-C-e\fR\fR) the function skips backwards over this many Erlang functions. Should the argument be negative the point is moved to the end of a function below the current function.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c M-e\fR\fR (\fIerlang-end-of-clause\fR) - As above but move point to the end of the current or following Erlang clause.
+
+.RE
+
+.SS "Edit - Marking"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIM-C-h\fR\fR (\fIerlang-mark-function\fR) - Put the region around the current Erlang function. The point is placed in the beginning and the mark at the end of the function.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c M-h\fR\fR (\fIerlang-mark-clause\fR) Put the region around the current Erlang clause. The point is placed in the beginning and the mark at the end of the function.
+
+.RE
+
+.SS "Edit - Function Header Commands"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c C-j\fR\fR (\fIerlang-generate-new-clause\fR) - Create a new clause in the current Erlang function. The point is placed between the parentheses of the argument list.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c C-y\fR\fR (\fIerlang-clone-arguments\fR) - Copy the function arguments of the preceding Erlang clause. This command is useful when defining a new clause with almost the same argument as the preceding.
+
+.RE
+
+.SS "Edit - Alignment"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c C-a\fR\fR (\fIalign-current\fR) - aligns comments, arrows, assignments, and type annotations around the cursor.
+
+.RE
+
+.IP
+.nf
+Example:
+
+sum(L) -> sum(L, 0).
+sum([H|T], Sum) -> sum(T, Sum + H);  % recurse
+sum([], Sum) -> Sum.   % base case
+
+-record { two :: int(), % hello
+          three = hello :: string(),    % there
+          four = 42 :: int() }.
+
+becomes:
+
+sum(L) -> sum(L, 0).
+sum([H|T], Sum) -> sum(T, Sum + H); % recurse
+sum([], Sum)    -> Sum.             % base case
+
+-record { two           :: int(),    % hello
+          three = hello :: string(), % there
+          four  = 42    :: int() }.
+
+.fi
+
+.SS "Syntax highlighting"
+
+.PP
+The syntax highlighting can be activated from the Erlang menu. There are four different alternatives:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Off: Normal black and white display.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Level 1: Function headers, reserved words, comments, strings, quoted atoms, and character constants will be colored.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Level 2: The above, attributes, Erlang bif:s, guards, and words in comments enclosed in single quotes will be colored.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Level 3: The above, variables, records, and macros will be colored. (This level is also known as the Christmas tree level.)
+
+.RE
+
+.SS "Tags"
+
+.PP
+For the tag commands to work it requires that you have generated a tag file. See Erlang mode users guide
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIM-.\fR\fR (\fIfind-tag\fR) - Find a function definition. The default value is the function name under the point.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Find Tag (\fIerlang-find-tag\fR) - Like the Elisp-function \fIfind-tag'. Capable of retrieving Erlang modules. Tags can be given of the forms \fRtag', \fImodule:', \fRmodule:tag'.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIM-+\fR\fR (\fIerlang-find-next-tag\fR) - Find the next occurrence of tag.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIM-TAB\fR\fR (\fIerlang-complete-tag\fR) - Perform completion on the tag entered in a tag search. Completes to the set of names listed in the current tags table.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Tags aprops (\fItags-apropos\fR) - Display list of all tags in tags table REGEXP matches.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-x t s\fR\fR (\fItags-search\fR) - Search through all files listed in tags table for match for REGEXP. Stops when a match is found.
+
+.RE
+
+.SS "Skeletons"
+
+.PP
+A skeleton is a piece of pre-written code that can be inserted into the buffer. Erlang mode comes with a set of predefined skeletons. The skeletons can be accessed either from the Erlang menu of from commands named \fItempo-template-erlang-*\fR, as the skeletons is defined using the standard Emacs package "tempo". Here follows a brief description of the available skeletons:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Simple skeletons: If, Case, Receive, Receive After, Receive Loop - Basic code constructs.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Header elements: Module, Author - These commands insert lines on the form \fI-module('xxx').\fR and \fI-author('my@home').\fR. They can be used directly, but are also used as part of the full headers described below.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Full Headers: Small (minimum requirement), Medium (with fields for basic information about the module), and Large Header (medium header with some extra layout structure).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Small Server - skeleton for a simple server not using OTP.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Application - skeletons for the OTP application behavior
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supervisor - skeleton for the OTP supervisor behavior
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Supervisor Bridge - skeleton for the OTP supervisor bridge behavior
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+gen_server - skeleton for the OTP gen_server behavior
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+gen_event - skeleton for the OTP gen_event behavior
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+gen_fsm - skeleton for the OTP gen_fsm behavior
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+gen_statem (StateName/3) - skeleton for the OTP gen_statem behavior using state name functions
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+gen_statem (handle_event/4) - skeleton for the OTP gen_statem behavior using one state function
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Library module - skeleton for a module that does not implement a process.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Corba callback - skeleton for a Corba callback module.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Erlang test suite - skeleton for a callback module for the erlang test server.
+
+.RE
+
+.SS "Shell"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+New shell (\fIerlang-shell\fR) - Starts a new Erlang shell.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c C-z,\fR\fR (\fIerlang-shell-display \fR) - Displays an Erlang shell, or starts a new one if there is no shell started.
+
+.RE
+
+.SS "Compile"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c C-k,\fR\fR (\fIerlang-compile\fR) - Compiles the Erlang module in the current buffer. You can also use \fI\fIC-u C-c C-k\fR\fR to debug compile the module with the debug options \fIdebug_info\fR and \fIexport_all\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fIC-c C-l,\fR\fR (\fIerlang-compile-display\fR) - Display compilation output.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+_\fI\fRC-u C-x\fI \fR_ Start parsing the compiler output from the beginning. This command will place the point on the line where the first error was found.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+_\fI\fR C-x\fI \fR\fI_ (\fRerlang-next-error) - Move the point on to the next error. The buffer displaying the compilation errors will be updated so that the current error will be visible.
+
+.RE
+
+.SS "Man"
+
+.PP
+On unix you can view the manual pages in emacs. In order to find the manual pages, the variable \fIerlang-root-dir\fR should be bound to the name of the directory containing the Erlang installation. The name should not include the final slash. Practically, you should add a line on the following form to your ~/.emacs,
+
+.IP
+.nf
+(setq erlang-root-dir "/the/erlang/root/dir/goes/here")
+
+.fi
+
+.SS "Starting IMenu"
+
+M-x imenu-add-to-menubar RET
+.RS 2
+This command will create the IMenu menu containing all the functions in the current buffer.The command will ask you for a suitable name for the menu. Not supported by Xemacs.
+
+
+.RE
+
+.SS "Version"
+
+M-x erlang-version RET
+.RS 2
+This command displays the version number of the Erlang editing mode. Remember to always supply the version number when asking questions about the Erlang mode.
+
+
+.RE
+

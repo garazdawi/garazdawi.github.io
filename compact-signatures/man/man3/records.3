@@ -1,0 +1,394 @@
+.TH records 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+records \- Native records processing functions.
+
+.SH DESCRIPTION
+.PP
+This module contains functions for creating and inspecting native records.
+
+.PP
+\fBWARNING: \fRThe main purpose of the functions in this module is for debugging, implementing library functions (such as printing of native records), and implementing tools (such as the Debugger). Use with care in applications.
+
+
+.SH DATA TYPES
+.LP
+.B
+\fBcreate_options() :: #{is_exported := boolean()}.\fR
+
+.br
+.RS
+.PP
+Options that can be used when creating a native record.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The value for the \fIis_exported\fR key should be a boolean indicating whether this record value is exported.
+
+.RE
+
+.PP
+Consumed by:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrecords:create/4\fR
+
+.RE
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(Module :: module(),\fR
+\fB             RecordName :: atom(),\fR
+\fB             Fields :: [{atom(), term()}],\fR
+\fB             Options :: create_options()) ->\fR
+\fB                record().\fR
+
+.br
+.RS
+.PP
+Takes \fIFields\fR and creates a native record \fIRecord\fR with module \fIModule\fR and name \fIRecordName\fR.
+
+.PP
+The native record definition does not have to exist in the given module, and if it exists, it will not be used in any way.
+
+.PP
+\fBWARNING: \fRBecause this function can create records that are inconsistent with the record definition in module \fIModule\fR, it can cause very subtle bugs; therefore, its use in applications is strongly discouraged.
+
+
+.PP
+The call can fail in the following ways:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+With a \fI{badrecord,Record}\fR exception if \fIModule\fR or \fIRecordName\fR are not atoms.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+With a \fI{badmap, OptionsMap}\fR exception if \fIOptionsMap\fR is not a map.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+With a \fI{badfield, Field}\fR exception if a field name in \fIFields\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+With a \fIbadarg\fR exception if \fIOptions\fR does not have the \fIis_exported\fR key.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+With a \fIbadarg\fR exception for other invalid arguments, such as a field name being repeated in \fIFields\fR.
+
+.RE
+
+.SS "Examples"
+
+.IP
+.nf
+1> R = records:create(test, a, [{z,3}, {x,1}, {y,2}], #{is_exported => true}).
+#test:a{z = 3,x = 1,y = 2}
+2> records:is_exported(R).
+true
+3> records:create(test, a, [{42,1}], #{is_exported => true}).
+** exception error: bad field name: 42 in #test:a{}
+     in function  records:create/4
+        called as records:create(test,a,[{42,1}],#{is_exported => true})
+4> records:create(test, a, [{x,1}, {x,2}], #{is_exported => true}).
+** exception error: bad argument
+     in function  records:create/4
+        called as records:create(test,a,[{x,1},{x,2}],#{is_exported => true})
+
+.fi
+
+
+.RE
+.B
+\fBget(Key, Record) -> dynamic()\fR
+\fB             when Key :: atom(), Record :: record().\fR
+
+.br
+.RS
+.PP
+Returns value \fIValue\fR associated with \fIKey\fR if native record \fIRecord\fR contains \fIKey\fR.
+
+.PP
+This call fails with a \fIbadarg\fR exception if \fIRecord\fR is not a native record or if \fIKey\fR does not exist in \fIRecord\fR.
+
+.SS "Examples"
+
+.IP
+.nf
+1> R = records:create(test, a, [{x,1}], #{is_exported=>false}).
+#test:a{x = 1}
+2> records:get(x, R).
+1
+3> records:get(y, R).
+** exception error: bad argument
+     in function  records:get/2
+        called as records:get(y,#test:a{x = 1})
+
+.fi
+
+
+.RE
+.B
+\fBget_definition(Module :: module(), RecordName :: atom()) ->\fR
+\fB                        {create_options(),\fR
+\fB                         [{FieldName :: atom(), Default :: dynamic()} |\fR
+\fB                          (FieldName :: atom())]}.\fR
+
+.br
+.RS
+.PP
+Retrieves the definition for native record \fIName\fR in module \fIModule\fR.
+
+
+.RE
+.B
+\fBget_field_names(Record) -> [Name]\fR
+\fB                         when Record :: record(), Name :: atom().\fR
+
+.br
+.RS
+.PP
+Returns a complete list of field names (keys) in native record \fIRecord\fR, in the order of declaration.
+
+.PP
+This call fails with a \fI{badrecord,Record}\fR exception if \fIRecord\fR is not a native record.
+
+.SS "Examples"
+
+.IP
+.nf
+1> R = records:create(test, a, [{x,1}], #{is_exported=>false}).
+#test:a{x = 1}
+2> records:get_field_names(R).
+[x]
+3> records:get_field_names({x,y}).
+** exception error: {badrecord,{x,y}}
+     in function  records:get_field_names/1
+        called as records:get_field_names({x,y})
+
+.fi
+
+
+.RE
+.B
+\fBget_module(Record) -> Module\fR
+\fB                    when Record :: record(), Module :: module().\fR
+
+.br
+.RS
+.PP
+Returns the module \fIModule\fR in which the native record \fIRecord\fR is defined.
+
+.PP
+This call fails with a \fIbadarg\fR exception if \fIRecord\fR is not a native record.
+
+.SS "Examples"
+
+.IP
+.nf
+1> R = records:create(test, a, [{x,1}], #{is_exported=>false}).
+#test:a{x = 1}
+2> records:get_module(R).
+test
+3> records:get_module(#{}).
+** exception error: bad argument
+     in function  records:get_module/1
+        called as records:get_module(#{})
+
+.fi
+
+
+.RE
+.B
+\fBget_name(Record) -> Name when Record :: record(), Name :: atom().\fR
+
+.br
+.RS
+.PP
+Returns the name \fIName\fR of the native record \fIRecord\fR.
+
+.PP
+This call fails with a \fIbadarg\fR exception if \fIRecord\fR is not a native record.
+
+.SS "Examples"
+
+.IP
+.nf
+1> R = records:create(test, a, [{x,1}], #{is_exported=>false}).
+#test:a{x = 1}
+2> records:get_name(R).
+a
+3> records:get_name(#{}).
+** exception error: bad argument
+     in function  records:get_name/1
+        called as records:get_name(#{})
+
+.fi
+
+
+.RE
+.B
+\fBis_exported(record()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if native record \fIRecord\fR is exported; otherwise, returns \fIfalse\fR.
+
+.PP
+This call fails with a \fI{badrecord,Record}\fR exception if \fIRecord\fR is not a native record.
+
+.SS "Examples"
+
+.IP
+.nf
+1> R = records:create(test, a, [{x,1}], #{is_exported=>false}).
+#test:a{x = 1}
+2> records:is_exported(R).
+false
+3> records:is_exported({x,y}).
+** exception error: {badrecord,{x,y}}
+     in function  records:is_exported/1
+        called as records:is_exported({x,y})
+
+.fi
+
+
+.RE
+.B
+\fBupdate(Src :: record(),\fR
+\fB             Module :: module(),\fR
+\fB             RecordName :: atom(),\fR
+\fB             FieldsMap :: #{atom() => term()}) ->\fR
+\fB                record().\fR
+
+.br
+.RS
+.PP
+Takes a map \fIFieldsMap\fR and updates the values in native record \fISrc\fR as defined in module \fIModule\fR with name \fIRecordName\fR.
+
+.PP
+The call can fail in the following ways:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+With a \fI{badrecord,Record}\fR exception if \fISrc\fR is not a native record defined in module \fIModule\fR with name \fIRecordName\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+With a \fI{badmap, FieldsMap}\fR if \fIFieldsMap\fR is not a map.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+With a \fI{badfield, Field}\fR if \fIField\fR in \fIFieldsMap\fR does not exist in \fIRecord\fR.
+
+.RE
+
+.SS "Examples"
+
+.IP
+.nf
+1> R = records:create(test, a, [{x,1}, {y,2}, {z,3}], #{is_exported => false}).
+#test:a{x = 1,y = 2,z = 3}
+2> Updated = records:update(R, test, a, #{x => 10, y => 20}).
+#test:a{x = 10,y = 20,z = 3}
+3> records:update(R, test, a, #{w => 42}).
+** exception error: bad field name: w in #test:a{}
+     in function  records:update/4
+        called as records:update(#test:a{x = 1,y = 2,z = 3},test,a,#{w => 42})
+
+.fi
+
+
+.RE

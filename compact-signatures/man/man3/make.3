@@ -1,0 +1,255 @@
+.TH make 3 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+make \- A Make Utility for Erlang
+
+.SH DESCRIPTION
+.PP
+The module \fImake\fR provides a set of functions similar to the UNIX type \fIMake\fR functions.
+
+.SS "Emakefile"
+
+.PP
+\fImake:all/0,1\fR and \fImake:files/1,2\fR first looks for \fI{emake, Emake}\fR in options, then in the current working directory for a file named \fIEmakefile\fR. If present \fIEmake\fR should contain elements like this:
+
+.IP
+.nf
+Modules.
+{Modules,Options}.
+
+.fi
+
+.PP
+\fIModules\fR is an atom or a list of atoms. It can be
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+module name, for exmaple,  \fIfile1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+module name in another directory, for exmaple, \fI'../foo/file3'\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+set of modules specified with a wildcards, for exmaple, \fI'file*'\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wildcard indicating all modules in current directory, that is: \fI'*'\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+list of any of the above, for exmaple, \fI['file*','../foo/file3','File4']\fR
+
+.RE
+
+.PP
+\fIOptions\fR is a list of compiler options.
+
+.PP
+\fIEmakefile\fR is read from top to bottom. If a module matches more than one entry, the first match is used. For example, the following \fIEmakefile\fR means that \fIfile1\fR should be compiled with the options \fI[debug_info,{i,"../foo"}]\fR, while all other files in the current directory should be compiled with only the \fIdebug_info\fR flag.
+
+.IP
+.nf
+{'file1',[debug_info,{i,"../foo"}]}.
+{'*',[debug_info]}.
+
+.fi
+
+.PP
+\fBSee Also\fR
+
+.PP
+The Compiler Application
+
+.SH FUNCTIONS
+.LP
+.B
+\fBall(Options) -> up_to_date | error\fR
+\fB             when\fR
+\fB                 Options :: [Option],\fR
+\fB                 Option ::\fR
+\fB                     noexec | load | netload |\fR
+\fB                     {emake, Emake} |\fR
+\fB                     compile:option(),\fR
+\fB                 Emake :: [EmakeElement],\fR
+\fB                 EmakeElement :: Modules | {Modules, [compile:option()]},\fR
+\fB                 Modules :: atom() | [atom()].\fR
+
+.br
+.RS
+.PP
+This function determines the set of modules to compile and the compile options to use, by first looking for the \fIemake\fR make option, if not present reads the configuration from a file named \fIEmakefile\fR (see below). If no such file is found, the set of modules to compile defaults to all modules in the current working directory.
+
+.PP
+Traversing the set of modules, it then recompiles every module for which at least one of the following conditions apply:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+there is no object file, or
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+the source file has been modified since it was last compiled, or,
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+an include file has been modified since the source file was last compiled.
+
+.RE
+
+.PP
+As a side effect, the function prints the name of each module it tries to compile. If compilation fails for a module, the make procedure stops and \fIerror\fR is returned.
+
+.PP
+\fIOptions\fR is a list of options for \fImake\fR and the Erlang compiler. The following \fImake\fR options exist:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInoexec\fR No execution mode. Just prints the name of each module that needs to be compiled.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIload\fR Load mode. Loads all recompiled modules.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInetload\fR Net load mode. Loads all recompiled modules on all known nodes.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{emake, Emake}\fR Rather than reading the \fIEmakefile\fR specify configuration explicitly.
+
+.RE
+
+.PP
+All items in \fIOptions\fR that are not make options are assumed to be compiler options and are passed as-is to \fIcompile:file/2\fR.
+
+
+.RE
+.B
+\fBfiles(ModFiles, Options) -> up_to_date | error\fR
+\fB               when\fR
+\fB                   ModFiles ::\fR
+\fB                       [(Module :: module()) | (File :: file:filename())],\fR
+\fB                   Options :: [Option],\fR
+\fB                   Option :: noexec | load | netload | compile:option().\fR
+
+.br
+.RS
+.PP
+This function does exactly the same thing as \fIall/0,1\fR, but for the specified \fIModFiles\fR, which is a list of module or file names.
+
+.PP
+The file extension \fI.erl\fR can be omitted.
+
+.PP
+The \fIEmakefile\fR (if it exists) in the current directory is searched for compiler options for each module. If a given module does not exist in \fIEmakefile\fR or if \fIEmakefile\fR does not exist, the module is still compiled.
+
+
+.RE

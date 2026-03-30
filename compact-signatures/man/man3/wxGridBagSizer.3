@@ -1,0 +1,370 @@
+.TH wxGridBagSizer 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGridBagSizer \- A \fIwxSizer\fR that can lay out items in a virtual grid like a \fIwxFlexGridSizer\fR but in this case explicit positioning of the items is allowed using \fIwxGBPosition\fR (not implemented in wx), and items can optionally span more than one row and/or column using \fIwxGBSpan\fR (not implemented in wx).
+
+.SH DESCRIPTION
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFlexGridSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGridBagSizer
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGridBagSizer() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd(This, Item) -> wxSizerItem:wxSizerItem()\fR
+\fB             when\fR
+\fB                 This :: wxGridBagSizer(),\fR
+\fB                 Item :: wxGBSizerItem:wxGBSizerItem().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBadd(This, Width, Height, Pos) -> wxSizerItem:wxSizerItem()\fR
+\fB             when\fR
+\fB                 This :: wxGridBagSizer(),\fR
+\fB                 Width :: integer(),\fR
+\fB                 Height :: integer(),\fR
+\fB                 Pos :: {R :: integer(), C :: integer()};\fR
+\fB         (This, Window, Pos, [Option]) -> wxSizerItem:wxSizerItem()\fR
+\fB             when\fR
+\fB                 This :: wxGridBagSizer(),\fR
+\fB                 Window :: wxWindow:wxWindow() | wxSizer:wxSizer(),\fR
+\fB                 Pos :: {R :: integer(), C :: integer()},\fR
+\fB                 Option ::\fR
+\fB                     {span, {RS :: integer(), CS :: integer()}} |\fR
+\fB                     {flag, integer()} |\fR
+\fB                     {border, integer()} |\fR
+\fB                     {userData, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Adds the given item to the given position.
+
+.PP
+Return: A valid pointer if the item was successfully placed at the given position, or NULL if something was already there.
+
+
+.RE
+.B
+\fBadd(This, Width, Height, Pos, [Option]) ->\fR
+\fB             wxSizerItem:wxSizerItem()\fR
+\fB             when\fR
+\fB                 This :: wxGridBagSizer(),\fR
+\fB                 Width :: integer(),\fR
+\fB                 Height :: integer(),\fR
+\fB                 Pos :: {R :: integer(), C :: integer()},\fR
+\fB                 Option ::\fR
+\fB                     {span, {RS :: integer(), CS :: integer()}} |\fR
+\fB                     {flag, integer()} |\fR
+\fB                     {border, integer()} |\fR
+\fB                     {userData, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Adds a spacer to the given position.
+
+.PP
+\fIwidth\fR and \fIheight\fR specify the dimension of the spacer to be added.
+
+.PP
+Return: A valid pointer if the spacer was successfully placed at the given position, or NULL if something was already there.
+
+
+.RE
+.B
+\fBcalcMin(This) -> {W :: integer(), H :: integer()}\fR
+\fB                 when This :: wxGridBagSizer().\fR
+
+.br
+.RS
+.PP
+Called when the managed size of the sizer is needed or when layout needs done.
+
+
+.RE
+.B
+\fBcheckForIntersection(This, Pos, Span) -> boolean()\fR
+\fB                              when\fR
+\fB                                  This :: wxGridBagSizer(),\fR
+\fB                                  Pos ::\fR
+\fB                                      {R :: integer(), C :: integer()},\fR
+\fB                                  Span ::\fR
+\fB                                      {RS :: integer(), CS :: integer()};\fR
+\fB                          (This, Item, [Option]) -> boolean()\fR
+\fB                              when\fR
+\fB                                  This :: wxGridBagSizer(),\fR
+\fB                                  Item :: wxGBSizerItem:wxGBSizerItem(),\fR
+\fB                                  Option ::\fR
+\fB                                      {excludeItem,\fR
+\fB                                       wxGBSizerItem:wxGBSizerItem()}.\fR
+
+.br
+.RS
+.PP
+Look at all items and see if any intersect (or would overlap) the given item.
+
+.PP
+Returns true if so, false if there would be no overlap. If an \fIexcludeItem\fR is given then it will not be checked for intersection, for example it may be the item we are checking the position of.
+
+
+.RE
+.B
+\fBcheckForIntersection(This, Pos, Span, [Option]) -> boolean()\fR
+\fB                              when\fR
+\fB                                  This :: wxGridBagSizer(),\fR
+\fB                                  Pos ::\fR
+\fB                                      {R :: integer(), C :: integer()},\fR
+\fB                                  Span ::\fR
+\fB                                      {RS :: integer(), CS :: integer()},\fR
+\fB                                  Option ::\fR
+\fB                                      {excludeItem,\fR
+\fB                                       wxGBSizerItem:wxGBSizerItem()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdestroy(This :: wxGridBagSizer()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBfindItem(This, Window) -> wxGBSizerItem:wxGBSizerItem()\fR
+\fB                  when\fR
+\fB                      This :: wxGridBagSizer(),\fR
+\fB                      Window :: wxWindow:wxWindow() | wxSizer:wxSizer().\fR
+
+.br
+.RS
+.PP
+Find the sizer item for the given window or subsizer, returns NULL if not found.
+
+.PP
+(non-recursive)
+
+
+.RE
+.B
+\fBfindItemAtPoint(This, Pt) -> wxGBSizerItem:wxGBSizerItem()\fR
+\fB                         when\fR
+\fB                             This :: wxGridBagSizer(),\fR
+\fB                             Pt :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+.PP
+Return the sizer item located at the point given in pt, or NULL if there is no item at that point.
+
+.PP
+The (x,y) coordinates in \fIpt\fR correspond to the client coordinates of the window using the sizer for layout. (non-recursive)
+
+
+.RE
+.B
+\fBfindItemAtPosition(This, Pos) -> wxGBSizerItem:wxGBSizerItem()\fR
+\fB                            when\fR
+\fB                                This :: wxGridBagSizer(),\fR
+\fB                                Pos :: {R :: integer(), C :: integer()}.\fR
+
+.br
+.RS
+.PP
+Return the sizer item for the given grid cell, or NULL if there is no item at that position.
+
+.PP
+(non-recursive)
+
+
+.RE
+.B
+\fBfindItemWithData(This, UserData) -> wxGBSizerItem:wxGBSizerItem()\fR
+\fB                          when\fR
+\fB                              This :: wxGridBagSizer(),\fR
+\fB                              UserData :: wx:wx_object().\fR
+
+.br
+.RS
+.PP
+Return the sizer item that has a matching user data (it only compares pointer values) or NULL if not found.
+
+.PP
+(non-recursive)
+
+
+.RE
+.B
+\fBgetCellSize(This, Row, Col) -> {W :: integer(), H :: integer()}\fR
+\fB                     when\fR
+\fB                         This :: wxGridBagSizer(),\fR
+\fB                         Row :: integer(),\fR
+\fB                         Col :: integer().\fR
+
+.br
+.RS
+.PP
+Get the size of the specified cell, including hgap and vgap.
+
+.PP
+Only valid after window layout has been performed.
+
+
+.RE
+.B
+\fBgetEmptyCellSize(This) -> {W :: integer(), H :: integer()}\fR
+\fB                          when This :: wxGridBagSizer().\fR
+
+.br
+.RS
+.PP
+Get the size used for cells in the grid with no item.
+
+
+.RE
+.B
+\fBgetItemPosition(This, Window) -> {R :: integer(), C :: integer()}\fR
+\fB                         when\fR
+\fB                             This :: wxGridBagSizer(),\fR
+\fB                             Window ::\fR
+\fB                                 wxWindow:wxWindow() | wxSizer:wxSizer();\fR
+\fB                     (This, Index) -> {R :: integer(), C :: integer()}\fR
+\fB                         when\fR
+\fB                             This :: wxGridBagSizer(),\fR
+\fB                             Index :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetItemSpan(This, Window) -> {RS :: integer(), CS :: integer()}\fR
+\fB                     when\fR
+\fB                         This :: wxGridBagSizer(),\fR
+\fB                         Window ::\fR
+\fB                             wxWindow:wxWindow() | wxSizer:wxSizer();\fR
+\fB                 (This, Index) -> {RS :: integer(), CS :: integer()}\fR
+\fB                     when This :: wxGridBagSizer(), Index :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew([Option]) -> wxGridBagSizer()\fR
+\fB             when Option :: {vgap, integer()} | {hgap, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, with optional parameters to specify the gap between the rows and columns.
+
+
+.RE
+.B
+\fBsetEmptyCellSize(This, Sz) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxGridBagSizer(),\fR
+\fB                              Sz :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Set the size used for cells in the grid with no item.
+
+
+.RE
+.B
+\fBsetItemPosition(This, Window, Pos) -> boolean()\fR
+\fB                         when\fR
+\fB                             This :: wxGridBagSizer(),\fR
+\fB                             Window ::\fR
+\fB                                 wxWindow:wxWindow() | wxSizer:wxSizer(),\fR
+\fB                             Pos :: {R :: integer(), C :: integer()};\fR
+\fB                     (This, Index, Pos) -> boolean()\fR
+\fB                         when\fR
+\fB                             This :: wxGridBagSizer(),\fR
+\fB                             Index :: integer(),\fR
+\fB                             Pos :: {R :: integer(), C :: integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetItemSpan(This, Window, Span) -> boolean()\fR
+\fB                     when\fR
+\fB                         This :: wxGridBagSizer(),\fR
+\fB                         Window ::\fR
+\fB                             wxWindow:wxWindow() | wxSizer:wxSizer(),\fR
+\fB                         Span :: {RS :: integer(), CS :: integer()};\fR
+\fB                 (This, Index, Span) -> boolean()\fR
+\fB                     when\fR
+\fB                         This :: wxGridBagSizer(),\fR
+\fB                         Index :: integer(),\fR
+\fB                         Span :: {RS :: integer(), CS :: integer()}.\fR
+
+.br
+.RS
+
+.RE

@@ -1,0 +1,190 @@
+.TH wxFontDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxFontDialog \- This class represents the font chooser dialog.
+
+.SH DESCRIPTION
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxFontData\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxGetFontFromUser()
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTopLevelWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxFontDialog
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxFontDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Data) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxFontDialog(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Data :: wxFontData:wxFontData().\fR
+
+.br
+.RS
+.PP
+Creates the dialog if the \fIwxFontDialog\fR object had been initialized using the default constructor.
+
+.PP
+Return: true on success and false if an error occurred.
+
+
+.RE
+.B
+\fBdestroy(This :: wxFontDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetFontData(This) -> wxFontData:wxFontData()\fR
+\fB                     when This :: wxFontDialog().\fR
+
+.br
+.RS
+.PP
+Returns the \fIwxFontData\fR associated with the font dialog.
+
+
+.RE
+.B
+\fBnew() -> wxFontDialog().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+.PP
+\fIcreate/3\fR must be called before the dialog can be shown.
+
+
+.RE
+.B
+\fBnew(Parent, Data) -> wxFontDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Data :: wxFontData:wxFontData().\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Pass a parent window, and the \fIwxFontData\fR object to be used to initialize the dialog controls.
+
+
+.RE

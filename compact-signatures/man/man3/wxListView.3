@@ -1,0 +1,245 @@
+.TH wxListView 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxListView \- This class currently simply presents a simpler to use interface for the \fIwxListCtrl\fR -- it can be thought of as a \fIfaçade\fR for that complicated class.
+
+.SH DESCRIPTION
+.PP
+Using it is preferable to using \fIwxListCtrl\fR directly whenever possible because in the future some ports might implement \fIwxListView\fR but not the full set of \fIwxListCtrl\fR features.
+
+.PP
+Other than different interface, this class is identical to \fIwxListCtrl\fR. In particular, it uses the same events, same window styles and so on.
+
+.PP
+See: \fIsetColumnImage/3\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxListView
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxListView() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBclearColumnImage(This, Col) -> ok\fR
+\fB                          when This :: wxListView(), Col :: integer().\fR
+
+.br
+.RS
+.PP
+Resets the column image -- after calling this function, no image will be shown.
+
+.PP
+See: \fIsetColumnImage/3\fR
+
+
+.RE
+.B
+\fBfocus(This, Index) -> ok\fR
+\fB               when This :: wxListView(), Index :: integer().\fR
+
+.br
+.RS
+.PP
+Sets focus to the item with the given \fIindex\fR.
+
+
+.RE
+.B
+\fBgetFirstSelected(This) -> integer() when This :: wxListView().\fR
+
+.br
+.RS
+.PP
+Returns the first selected item in a (presumably) multiple selection control.
+
+.PP
+Together with \fIgetNextSelected/2\fR it can be used to iterate over all selected items in the control.
+
+.PP
+Return: The first selected item, if any, -1 otherwise.
+
+
+.RE
+.B
+\fBgetFocusedItem(This) -> integer() when This :: wxListView().\fR
+
+.br
+.RS
+.PP
+Returns the currently focused item or -1 if none.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIisSelected/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfocus/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetNextSelected(This, Item) -> integer()\fR
+\fB                         when This :: wxListView(), Item :: integer().\fR
+
+.br
+.RS
+.PP
+Used together with \fIgetFirstSelected/1\fR to iterate over all selected items in the control.
+
+.PP
+Return: Returns the next selected item or -1 if there are no more of them.
+
+
+.RE
+.B
+\fBisSelected(This, Index) -> boolean()\fR
+\fB                    when This :: wxListView(), Index :: integer().\fR
+
+.br
+.RS
+.PP
+Returns true if the item with the given \fIindex\fR is selected, false otherwise.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetFirstSelected/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetNextSelected/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBselect(This, N, [Option]) -> ok\fR
+\fB                when\fR
+\fB                    This :: wxListView(),\fR
+\fB                    N :: integer(),\fR
+\fB                    Option :: {on, boolean()}.\fR
+
+.br
+.RS
+.PP
+Selects or unselects the given item.
+
+.PP
+Notice that this method inherits the unusual behaviour of \fIwxListCtrl:setItemState/4\fR which sends a wxEVT_LIST_ITEM_SELECTED event when it is used to select an item, contrary to the usual rule that only the user actions result in selection.
+
+
+.RE
+.B
+\fBsetColumnImage(This, Col, Image) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxListView(),\fR
+\fB                            Col :: integer(),\fR
+\fB                            Image :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the column image for the specified column.
+
+.PP
+To use the column images, the control must have a valid image list with at least one image.
+
+
+.RE

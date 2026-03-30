@@ -1,0 +1,1395 @@
+.TH ct 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct \- Main user interface for the \fICommon Test\fR framework.
+
+.SH DESCRIPTION
+.PP
+This module implements the command-line interface for running tests and basic functions for \fICommon Test\fR case issues, such as configuration and logging.
+
+.PP
+The framework stores configuration values in a property list usually named \fIConfig\fR. The list contains information about the test run added by the framework itself and may also contain user-provided values. The configuration is passed into individual test cases as well as support functions if defined.
+
+.PP
+Possible configuration variables include:
+
+data_dir
+.RS 2
+Data file directory
+
+
+.RE
+priv_dir
+.RS 2
+Scratch file directory
+
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Whatever added by \fIinit_per_suite/1\fR or \fIinit_per_testcase/2\fR in the test suite.
+
+.RE
+
+.PP
+\fBWARNING: \fRThe \fI?config\fR macro, used to receive individual config values from the \fIConfig\fR property list, is deprecated. Please use \fIproplists:get_value/2-3\fR instead.
+
+
+.SH DATA TYPES
+.LP
+.B
+\fBconfig_key() :: atom().\fR
+
+.br
+.RS
+.PP
+A configuration key which exists in a configuration file
+
+
+.RE
+.B
+\fBconn_log_mod() :: ct_netconfc | ct_telnet.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBconn_log_option() ::\fR
+\fB          {log_type, conn_log_type()} | {hosts, [key_or_name()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBconn_log_options() :: [conn_log_option()].\fR
+
+.br
+.RS
+.PP
+Options that can be given to the \fIcth_conn_log\fR hook, which is used for logging of NETCONF and Telnet connections. See ct_netconfc or ct_telnet for description and examples of how to use this hook.
+
+
+.RE
+.B
+\fBconn_log_type() :: raw | pretty | html | silent.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhandle() :: pid().\fR
+
+.br
+.RS
+.PP
+The identity (handle) of a connection.
+
+
+.RE
+.B
+\fBkey_or_name() :: config_key() | target_name().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtarget_name() :: atom().\fR
+
+.br
+.RS
+.PP
+A name and association to configuration data introduced through a require statement, or a call to \fIct:require/2\fR, for example, \fIct:require(mynodename,{node,[telnet]})\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBabort_current_testcase(Reason) -> ok | {error, ErrorReason}\fR
+\fB                                when\fR
+\fB                                    Reason :: term(),\fR
+\fB                                    ErrorReason ::\fR
+\fB                                        no_testcase_running |\fR
+\fB                                        parallel_group.\fR
+
+.br
+.RS
+.PP
+Aborts the currently executing test case. The user must know with certainty which test case is currently executing. The function is therefore only safe to call from a function that has been called (or synchronously invoked) by the test case.
+
+.PP
+\fIReason\fR, the reason for aborting the test case, is printed in the test case log.
+
+
+.RE
+.B
+\fBadd_config(Callback, Config) -> ok | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Callback :: atom(),\fR
+\fB                        Config :: string(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Loads configuration variables using the specified callback module and configuration string. The callback module is to be either loaded or present in the code path. Loaded configuration variables can later be removed using function \fIct:remove_config/2\fR.
+
+
+.RE
+.B
+\fBbreak(Comment) -> ok | {error, Reason}\fR
+\fB               when\fR
+\fB                   Comment :: string(),\fR
+\fB                   Reason ::\fR
+\fB                       {multiple_cases_running, TestCases} |\fR
+\fB                       'enable break with release_shell option',\fR
+\fB                   TestCases :: [atom()].\fR
+
+.br
+.RS
+.PP
+Cancels any active timetrap and pauses the execution of the current test case until the user calls function \fIcontinue/0\fR. The user can then interact with the Erlang node running the tests, for example, for debugging purposes or for manually executing a part of the test case. If a parallel group is executing, \fIct:break/2\fR is to be called instead.
+
+.PP
+A cancelled timetrap is not automatically reactivated after the break, but must be started explicitly with \fIct:timetrap/1\fR.
+
+.PP
+In order for the break/continue functionality to work, \fICommon Test\fR must release the shell process controlling \fIstdin\fR. This is done by setting start option \fIrelease_shell\fR to \fItrue\fR. For details, see section Running Tests from the Erlang Shell or from an Erlang Program in the User's Guide.
+
+
+.RE
+.B
+\fBbreak(TestCase, Comment) -> ok | {error, Reason}\fR
+\fB               when\fR
+\fB                   TestCase :: atom(),\fR
+\fB                   Comment :: string(),\fR
+\fB                   Reason ::\fR
+\fB                       'test case not running' |\fR
+\fB                       'enable break with release_shell option'.\fR
+
+.br
+.RS
+.PP
+Works the same way as \fIct:break/1\fR, only argument \fITestCase\fR makes it possible to pause a test case executing in a parallel group. Function \fIct:continue/1\fR is to be used to resume execution of \fITestCase\fR.
+
+.PP
+For details, see \fIct:break/1\fR.
+
+
+.RE
+.B
+\fBcapture_get(ExclCategories) -> ListOfStrings\fR
+\fB                     when\fR
+\fB                         ExclCategories :: [atom()],\fR
+\fB                         ListOfStrings :: [string()].\fR
+
+.br
+.RS
+.PP
+Returns and purges the list of text strings buffered during the latest session of capturing printouts to \fIstdout\fR. Log categories that are to be ignored in \fIListOfStrings\fR can be specified with \fIExclCategories\fR. If \fIExclCategories = []\fR, no filtering takes place.
+
+.PP
+See also \fIct:capture_start/0\fR, \fIct:capture_stop/0\fR, \fIct:log/3\fR.
+
+
+.RE
+.B
+\fBcapture_start() -> ok.\fR
+
+.br
+.RS
+.PP
+Starts capturing all text strings printed to \fIstdout\fR during execution of the test case.
+
+.PP
+See also \fIct:capture_get/1\fR, \fIct:capture_stop/0\fR.
+
+
+.RE
+.B
+\fBcapture_stop() -> ok.\fR
+
+.br
+.RS
+.PP
+Stops capturing text strings (a session started with \fIcapture_start/0\fR).
+
+.PP
+See also \fIct:capture_get/1\fR, \fIct:capture_start/0\fR.
+
+
+.RE
+.B
+\fBcomment(Comment) -> ok when Comment :: term().\fR
+
+.br
+.RS
+.PP
+Prints the specified \fIComment\fR in the comment field in the table on the test suite result page.
+
+.PP
+If called several times, only the last comment is printed. The test case return value \fI{comment,Comment}\fR overwrites the string set by this function.
+
+.PP
+\fBWARNING: \fRThis function (and \fIct:comment/2\fR) should only be called from the process running the common_test functions, typically the test case process or its descendant. Be aware that if you spawn a new process in one common_test function (e.g. \fIinit_per_suite\fR) and then execute \fIct:comment/1-2\fR in that new process while the test execution has moved to another common_test function (e.g. \fIinit_per_testcase\fR or test case function) the comment might not be printed in the correct place in HTML logs or at all. Calling this function from a process that is neither a common_test process, nor its descendant does not result in the comment being printed anywhere.
+
+
+
+.RE
+.B
+\fBcomment(Format, Args) -> ok\fR
+\fB                 when Format :: string(), Args :: list().\fR
+
+.br
+.RS
+.PP
+Prints the formatted string in the comment field in the table on the test suite result page.
+
+.PP
+Arguments \fIFormat\fR and \fIArgs\fR are used in a call to \fIio_lib:format/2\fR to create the comment string. The behavior of \fIcomment/2\fR is otherwise the same as function \fIct:comment/1\fR.
+
+
+.RE
+.B
+\fBcontinue() -> ok.\fR
+
+.br
+.RS
+.PP
+This function must be called to continue after a test case (not executing in a parallel group) has called function \fIct:break/1\fR.
+
+
+.RE
+.B
+\fBcontinue(TestCase) -> ok when TestCase :: atom().\fR
+
+.br
+.RS
+.PP
+This function must be called to continue after a test case has called \fIct:break/2\fR. If the paused test case, \fITestCase\fR, executes in a parallel group, this function, rather than \fIcontinue/0\fR, must be used to let the test case proceed.
+
+
+.RE
+.B
+\fBdecrypt_config_file(EncryptFileName, TargetFileName) ->\fR
+\fB                             ok | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 EncryptFileName :: string(),\fR
+\fB                                 TargetFileName :: string(),\fR
+\fB                                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Decrypts \fIEncryptFileName\fR, previously generated with \fIct:encrypt_config_file/2,3\fR. The original file contents is saved in the target file. The encryption key, a string, must be available in a text file named \fI.ct_config.crypt\fR, either in the current directory, or the home directory of the user (it is searched for in that order).
+
+
+.RE
+.B
+\fBdecrypt_config_file(EncryptFileName, TargetFileName, KeyOrFile) ->\fR
+\fB                             ok | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 EncryptFileName :: string(),\fR
+\fB                                 TargetFileName :: string(),\fR
+\fB                                 KeyOrFile ::\fR
+\fB                                     {key, string()} | {file, string()},\fR
+\fB                                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Decrypts \fIEncryptFileName\fR, previously generated with \fIct:encrypt_config_file/2,3\fR. The original file contents is saved in the target file. The key must have the same value as that used for encryption.
+
+
+.RE
+.B
+\fBencrypt_config_file(SrcFileName, EncryptFileName) ->\fR
+\fB                             ok | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 SrcFileName :: string(),\fR
+\fB                                 EncryptFileName :: string(),\fR
+\fB                                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Encrypts the source configuration file with DES3 and saves the result in file \fIEncryptFileName\fR. The key, a string, must be available in a text file named \fI.ct_config.crypt\fR, either in the current directory, or the home directory of the user (it is searched for in that order).
+
+.PP
+For information about using encrypted configuration files when running tests, see section Encrypted Configuration Files in the User's Guide.
+
+.PP
+For details on DES3 encryption/decryption, see application \fICrypto\fR.
+
+
+.RE
+.B
+\fBencrypt_config_file(SrcFileName, EncryptFileName, KeyOrFile) ->\fR
+\fB                             ok | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 SrcFileName :: string(),\fR
+\fB                                 EncryptFileName :: string(),\fR
+\fB                                 KeyOrFile ::\fR
+\fB                                     {key, string()} | {file, string()},\fR
+\fB                                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Encrypts the source configuration file with DES3 and saves the result in the target file \fIEncryptFileName\fR. The encryption key to use is either the value in \fI{key,Key}\fR or the value stored in the file specified by \fI{file,File}\fR.
+
+.PP
+For information about using encrypted configuration files when running tests, see section Encrypted Configuration Files in the User's Guide.
+
+.PP
+For details on DES3 encryption/decryption, see application \fICrypto\fR.
+
+
+.RE
+.B
+\fBfail(Reason) -> no_return() when Reason :: term().\fR
+
+.br
+.RS
+.PP
+Terminates a test case with the specified error \fIReason\fR.
+
+
+.RE
+.B
+\fBfail(Format, Args) -> no_return()\fR
+\fB              when Format :: io:format(), Args :: [term()].\fR
+
+.br
+.RS
+.PP
+Terminates a test case with an error message specified by a format string and a list of values (used as arguments to \fIio_lib:format/2\fR).
+
+
+.RE
+.B
+\fBget_config(Required, Default, Opts) -> ValueOrElement\fR
+\fB                    when\fR
+\fB                        Required ::\fR
+\fB                            KeyOrName |\fR
+\fB                            {KeyOrName, SubKey} |\fR
+\fB                            {KeyOrName, SubKey, SubKey},\fR
+\fB                        KeyOrName :: key_or_name(),\fR
+\fB                        SubKey :: atom(),\fR
+\fB                        Default :: term(),\fR
+\fB                        Opts :: [Opt],\fR
+\fB                        Opt :: element | all,\fR
+\fB                        ValueOrElement :: term() | Default.\fR
+
+.br
+.RS
+.PP
+Reads configuration data values.
+
+.PP
+Returns the matching values or configuration elements, given a configuration variable key or its associated name (if one has been specified with \fIct:require/2\fR or a \fIrequire\fR statement).
+
+.PP
+\fIExample:\fR
+
+.PP
+Given the following configuration file:
+
+.IP
+.nf
+{unix,[{telnet,IpAddr},
+       {user,[{username,Username},
+              {password,Password}]}]}.
+
+.fi
+
+.PP
+Then:
+
+.IP
+.nf
+ct:get_config(unix,Default) -> [{telnet,IpAddr},
+ {user, [{username,Username}, {password,Password}]}]
+ct:get_config({unix,telnet},Default) -> IpAddr
+ct:get_config({unix,user,username},Default) -> Username
+ct:get_config({unix,ftp},Default) -> Default
+ct:get_config(unknownkey,Default) -> Default
+
+.fi
+
+.PP
+If a configuration variable key has been associated with a name (by \fIct:require/2\fR or a \fIrequire\fR statement), the name can be used instead of the key to read the value:
+
+.IP
+.nf
+ct:require(myuser,{unix,user}) -> ok.
+ct:get_config(myuser,Default) -> [{username,Username}, {password,Password}]
+
+.fi
+
+.PP
+If a configuration variable is defined in multiple files, use option \fIall\fR to access all possible values. The values are returned in a list. The order of the elements corresponds to the order that the configuration files were specified at startup.
+
+.PP
+If configuration elements (key-value tuples) are to be returned as result instead of values, use option \fIelement\fR. The returned elements are then on the form \fI{Required,Value}\fR.
+
+.PP
+See also \fIct:get_config/1\fR, \fIct:get_config/2\fR, \fIct:require/1\fR, \fIct:require/2\fR.
+
+
+.RE
+.B
+\fBget_event_mgr_ref() -> EvMgrRef when EvMgrRef :: atom().\fR
+
+.br
+.RS
+.PP
+Gets a reference to the \fICommon Test\fR event manager. The reference can be used to, for example, add a user-specific event handler while tests are running.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+gen_event:add_handler(ct:get_event_mgr_ref(), my_ev_h, [])
+
+.fi
+
+
+.RE
+.B
+\fBget_progname() -> string().\fR
+
+.br
+.RS
+.PP
+Returns the command used to start this Erlang instance. If this information could not be found, the string \fI"no_prog_name"\fR is returned.
+
+
+.RE
+.B
+\fBget_status() -> TestStatus | {error, Reason} | no_tests_running\fR
+\fB                    when\fR
+\fB                        TestStatus :: [StatusElem],\fR
+\fB                        StatusElem ::\fR
+\fB                            {current, TestCaseInfo} |\fR
+\fB                            {successful, Successful} |\fR
+\fB                            {failed, Failed} |\fR
+\fB                            {skipped, Skipped} |\fR
+\fB                            {total, Total},\fR
+\fB                        TestCaseInfo ::\fR
+\fB                            {Suite, TestCase} | [{Suite, TestCase}],\fR
+\fB                        Suite :: atom(),\fR
+\fB                        TestCase :: atom(),\fR
+\fB                        Successful :: integer(),\fR
+\fB                        Failed :: integer(),\fR
+\fB                        Skipped :: {UserSkipped, AutoSkipped},\fR
+\fB                        UserSkipped :: integer(),\fR
+\fB                        AutoSkipped :: integer(),\fR
+\fB                        Total :: integer(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns status of ongoing test. The returned list contains information about which test case is executing (a list of cases when a parallel test case group is executing), as well as counters for successful, failed, skipped, and total test cases so far.
+
+
+.RE
+.B
+\fBget_target_name(Handle) -> {ok, TargetName} | {error, Reason}\fR
+\fB                         when\fR
+\fB                             Handle :: handle(),\fR
+\fB                             TargetName :: target_name(),\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns the name of the target that the specified connection belongs to.
+
+
+.RE
+.B
+\fBget_testspec_terms() -> TestSpecTerms | undefined\fR
+\fB                            when\fR
+\fB                                TestSpecTerms :: [{Tag, Value}],\fR
+\fB                                Tag :: atom(),\fR
+\fB                                Value :: [term()].\fR
+
+.br
+.RS
+.PP
+Gets a list of all test specification terms used to configure and run this test.
+
+
+.RE
+.B
+\fBget_testspec_terms(Tags) -> TestSpecTerms | undefined\fR
+\fB                            when\fR
+\fB                                Tags :: [Tag] | Tag,\fR
+\fB                                Tag :: atom(),\fR
+\fB                                TestSpecTerms ::\fR
+\fB                                    [{Tag, Value}] | {Tag, Value},\fR
+\fB                                Value :: [{Node, term()}] | [term()],\fR
+\fB                                Node :: atom().\fR
+
+.br
+.RS
+.PP
+Reads one or more terms from the test specification used to configure and run this test. \fITag\fR is any valid test specification tag, for example, \fIlabel\fR, \fIconfig\fR, or \fIlogdir\fR. User-specific terms are also available to read if option \fIallow_user_terms\fR is set.
+
+.PP
+All value tuples returned, except user terms, have the node name as first element.
+
+.PP
+To read test terms, use \fITag = tests\fR (rather than \fIsuites\fR, \fIgroups\fR, or \fIcases\fR). \fIValue\fR is then the list of \fIall\fR tests on the form \fI[{Node,Dir,[{TestSpec,GroupsAndCases1},...]},...]\fR, where \fIGroupsAndCases = [{Group,[Case]}] | [Case]\fR.
+
+
+.RE
+.B
+\fBget_timetrap_info() -> {Time, {Scaling, ScaleVal}}\fR
+\fB                           when\fR
+\fB                               Time :: timeout(),\fR
+\fB                               Scaling :: boolean(),\fR
+\fB                               ScaleVal :: integer().\fR
+
+.br
+.RS
+.PP
+Reads information about the timetrap set for the current test case. \fIScaling\fR indicates if \fICommon Test\fR will attempt to compensate timetraps automatically for runtime delays introduced by, for example, tools like cover. \fIScaleVal\fR is the value of the current scaling multiplier (always 1 if scaling is disabled). Note the \fITime\fR is not the scaled result.
+
+
+.RE
+.B
+\fBget_verbosity(Category) -> Level | undefined\fR
+\fB                       when\fR
+\fB                           Category :: default | atom(),\fR
+\fB                           Level :: integer().\fR
+
+.br
+.RS
+.PP
+This function returns the verbosity level for the specified logging category. See the User's Guide for details. Use the value \fIdefault\fR to read the general verbosity level.
+
+
+.RE
+.B
+\fBinstall(Opts) -> ok | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Opts :: [Opt],\fR
+\fB                     Opt ::\fR
+\fB                         {config, ConfigFiles} |\fR
+\fB                         {event_handler, Modules} |\fR
+\fB                         {decrypt, KeyOrFile},\fR
+\fB                     ConfigFiles :: [ConfigFile],\fR
+\fB                     ConfigFile :: string(),\fR
+\fB                     Modules :: [atom()],\fR
+\fB                     KeyOrFile :: {key, Key} | {file, KeyFile},\fR
+\fB                     Key :: string(),\fR
+\fB                     KeyFile :: string(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Installs configuration files and event handlers.
+
+.PP
+Run this function once before the first test.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+install([{config,["config_node.ctc","config_user.ctc"]}])
+
+.fi
+
+.PP
+This function is automatically run by program \fIct_run\fR.
+
+
+.RE
+.B
+\fBlistenv(Telnet) -> {ok, [Env]} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Telnet :: ct_telnet:connection(),\fR
+\fB                     Env :: {Key, Value},\fR
+\fB                     Key :: string(),\fR
+\fB                     Value :: string(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Performs command \fIlistenv\fR on the specified Telnet connection and returns the result as a list of key-value pairs.
+
+
+.RE
+.B
+\fBlog(Format) -> ok when Format :: string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIlog(default, ?STD_IMPORTANCE, Format, [], [])\fR.
+
+
+.RE
+.B
+\fBlog(Category, Importance, Format, FormatArgs, Opts) -> ok\fR
+\fB             when\fR
+\fB                 Category :: atom() | integer() | string(),\fR
+\fB                 Importance :: integer(),\fR
+\fB                 Format :: string(),\fR
+\fB                 FormatArgs :: list(),\fR
+\fB                 Opts :: [Opt],\fR
+\fB                 Opt :: {heading, string()} | no_css | esc_chars.\fR
+
+.br
+.RS
+.PP
+Prints from a test case to the log file.
+
+.PP
+This function is meant for printing a string directly from a test case to the test case log file.
+
+.PP
+Default \fICategory\fR is \fIdefault\fR, default \fIImportance\fR is \fI?STD_IMPORTANCE\fR, and default value for \fIFormatArgs\fR is \fI[]\fR.
+
+.PP
+For details on \fICategory\fR, \fIImportance\fR and the \fIno_css\fR option, see section Logging - Categories and Verbosity Levels in the User's Guide.
+
+.PP
+Common Test will not escape special HTML characters (<, > and &) in the text printed with this function, unless the \fIesc_chars\fR option is used.
+
+
+.RE
+.B
+\fBmake_priv_dir() -> ok | {error, Reason} when Reason :: term().\fR
+
+.br
+.RS
+.PP
+If the test is started with option \fIcreate_priv_dir\fR set to \fImanual_per_tc\fR, in order for the test case to use the private directory, it must first create it by calling this function.
+
+
+.RE
+.B
+\fBnotify(Name, Data) -> ok when Name :: atom(), Data :: term().\fR
+
+.br
+.RS
+.PP
+Sends an asynchronous notification of type \fIName\fR with \fIData\fRto the Common Test event manager. This can later be caught by any installed event manager.
+
+.PP
+See also \fIgen_event\fR.
+
+
+.RE
+.B
+\fBpal(Format) -> ok when Format :: string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIpal(default, ?STD_IMPORTANCE, Format, [])\fR.
+
+
+.RE
+.B
+\fBpal(Category, Importance, Format, FormatArgs, Opts) -> ok\fR
+\fB             when\fR
+\fB                 Category :: atom() | integer() | string(),\fR
+\fB                 Importance :: integer(),\fR
+\fB                 Format :: string(),\fR
+\fB                 FormatArgs :: list(),\fR
+\fB                 Opts :: [Opt],\fR
+\fB                 Opt :: {heading, string()} | no_css.\fR
+
+.br
+.RS
+.PP
+Prints and logs from a test case.
+
+.PP
+This function is meant for printing a string from a test case, both to the test case log file and to the console.
+
+.PP
+Default \fICategory\fR is \fIdefault\fR, default \fIImportance\fR is \fI?STD_IMPORTANCE\fR, and default value for \fIFormatArgs\fR is \fI[]\fR.
+
+.PP
+For details on \fICategory\fR and \fIImportance\fR, see section Logging - Categories and Verbosity Levels in the User's Guide.
+
+.PP
+Note that special characters in the text (<, > and &) will be escaped by Common Test before the text is printed to the log file.
+
+
+.RE
+.B
+\fBparse_table(Data) -> {Heading, Table}\fR
+\fB                     when\fR
+\fB                         Data :: [string()],\fR
+\fB                         Heading :: tuple(),\fR
+\fB                         Table :: [tuple()].\fR
+
+.br
+.RS
+.PP
+Parses the printout from an SQL table and returns a list of tuples.
+
+.PP
+The printout to parse is typically the result of a \fIselect\fR command in SQL. The returned \fITable\fR is a list of tuples, where each tuple is a row in the table.
+
+.PP
+\fIHeading\fR is a tuple of strings representing the headings of each column in the table.
+
+
+.RE
+.B
+\fBprint(Format) -> ok when Format :: string().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIprint(default, ?STD_IMPORTANCE, Format, [], [])\fR.
+
+
+.RE
+.B
+\fBprint(Category, Importance, Format, FormatArgs, Opts) -> ok\fR
+\fB               when\fR
+\fB                   Category :: atom() | integer() | string(),\fR
+\fB                   Importance :: integer(),\fR
+\fB                   Format :: string(),\fR
+\fB                   FormatArgs :: list(),\fR
+\fB                   Opts :: [Opt],\fR
+\fB                   Opt :: {heading, string()}.\fR
+
+.br
+.RS
+.PP
+Prints from a test case to the console.
+
+.PP
+This function is meant for printing a string from a test case to the console.
+
+.PP
+Default \fICategory\fR is \fIdefault\fR, default \fIImportance\fR is \fI?STD_IMPORTANCE\fR, and default value for \fIFormatArgs\fR is \fI[]\fR.
+
+.PP
+For details on \fICategory\fR and \fIImportance\fR, see section Logging - Categories and Verbosity Levels in the User's Guide.
+
+
+.RE
+.B
+\fBreload_config(Required) -> ValueOrElement | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Required ::\fR
+\fB                               KeyOrName |\fR
+\fB                               {KeyOrName, SubKey} |\fR
+\fB                               {KeyOrName, SubKey, SubKey},\fR
+\fB                           KeyOrName :: key_or_name(),\fR
+\fB                           SubKey :: atom(),\fR
+\fB                           ValueOrElement :: term(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Reloads configuration file containing specified configuration key.
+
+.PP
+This function updates the configuration data from which the specified configuration variable was read, and returns the (possibly) new value of this variable.
+
+.PP
+If some variables were present in the configuration, but are not loaded using this function, they are removed from the configuration table together with their aliases.
+
+
+.RE
+.B
+\fBremaining_test_procs() -> {TestProcs, SharedGL, OtherGLs}\fR
+\fB                              when\fR
+\fB                                  TestProcs :: [{pid(), GL}],\fR
+\fB                                  GL :: pid(),\fR
+\fB                                  SharedGL :: pid(),\fR
+\fB                                  OtherGLs :: [pid()].\fR
+
+.br
+.RS
+.PP
+This function will return the identity of test- and group leader processes that are still running at the time of this call. \fITestProcs\fR are processes in the system that have a Common Test IO process as group leader. \fISharedGL\fR is the central Common Test IO process, responsible for printing to log files for configuration functions and sequentially executing test cases. \fIOtherGLs\fR are Common Test IO processes that print to log files for test cases in parallel test case groups.
+
+.PP
+The process information returned by this function may be used to locate and terminate remaining processes after tests have finished executing. The function would typically by called from Common Test Hook functions.
+
+.PP
+Note that processes that execute configuration functions or test cases are never included in \fITestProcs\fR. It is therefore safe to use post configuration hook functions (such as post_end_per_suite, post_end_per_group, post_end_per_testcase) to terminate all processes in \fITestProcs\fR that have the current group leader process as its group leader.
+
+.PP
+Note also that the shared group leader (\fISharedGL\fR) must never be terminated by the user, only by Common Test. Group leader processes for parallel test case groups (\fIOtherGLs\fR) may however be terminated in post_end_per_group hook functions.
+
+
+.RE
+.B
+\fBremove_config(Callback, Config) -> ok\fR
+\fB                       when Callback :: atom(), Config :: string().\fR
+
+.br
+.RS
+.PP
+Removes configuration variables (together with their aliases) that were loaded with specified callback module and configuration string.
+
+
+.RE
+.B
+\fBrequire(Required) -> ok | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Required ::\fR
+\fB                         Key | {Key, SubKeys} | {Key, SubKey, SubKeys},\fR
+\fB                     Key :: atom(),\fR
+\fB                     SubKeys :: SubKey | [SubKey],\fR
+\fB                     SubKey :: atom(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Checks if the required configuration is available. Arbitrarily deep tuples can be specified as \fIRequired\fR. Only the last element of the tuple can be a list of \fISubKey\fRs.
+
+.PP
+\fIExample 1.\fR Require the variable \fImyvar\fR:
+
+.IP
+.nf
+ok = ct:require(myvar).
+
+.fi
+
+.PP
+In this case the configuration file must at least contain:
+
+.IP
+.nf
+{myvar,Value}.
+
+.fi
+
+.PP
+\fIExample 2.\fR Require key \fImyvar\fR with subkeys \fIsub1\fR and \fIsub2\fR:
+
+.IP
+.nf
+ok = ct:require({myvar,[sub1,sub2]}).
+
+.fi
+
+.PP
+In this case the configuration file must at least contain:
+
+.IP
+.nf
+{myvar,[{sub1,Value},{sub2,Value}]}.
+
+.fi
+
+.PP
+\fIExample 3.\fR Require key \fImyvar\fR with subkey \fIsub1\fR with \fIsubsub1\fR:
+
+.IP
+.nf
+ok = ct:require({myvar,sub1,sub2}).
+
+.fi
+
+.PP
+In this case the configuration file must at least contain:
+
+.IP
+.nf
+{myvar,[{sub1,[{sub2,Value}]}]}.
+
+.fi
+
+.PP
+See also \fIct:get_config/1\fR, \fIct:get_config/2\fR, \fIct:get_config/3\fR, \fIct:require/2\fR.
+
+
+.RE
+.B
+\fBrequire(Name, Required) -> ok | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Name :: atom(),\fR
+\fB                     Required ::\fR
+\fB                         Key | {Key, SubKey} | {Key, SubKey, SubKey},\fR
+\fB                     SubKey :: Key,\fR
+\fB                     Key :: atom(),\fR
+\fB                     Reason :: term().\fR
+
+.br
+.RS
+.PP
+Checks if the required configuration is available and gives it a name. The semantics for \fIRequired\fR is the same as in \fIct:require/1\fR except that a list of \fISubKey\fRs cannot be specified.
+
+.PP
+If the requested data is available, the subentry is associated with \fIName\fR so that the value of the element can be read with \fIct:get_config/1,2\fR provided \fIName\fR is used instead of the whole \fIRequired\fR term.
+
+.PP
+\fIExample:\fR
+
+.PP
+Require one node with a Telnet connection and an FTP connection. Name the node \fIa\fR:
+
+.IP
+.nf
+ok = ct:require(a,{machine,node}).
+
+.fi
+
+.PP
+All references to this node can then use the node name. For example, a file over FTP is fetched like follows:
+
+.IP
+.nf
+ok = ct:ftp_get(a,RemoteFile,LocalFile).
+
+.fi
+
+.PP
+For this to work, the configuration file must at least contain:
+
+.IP
+.nf
+{machine,[{node,[{telnet,IpAddr},{ftp,IpAddr}]}]}.
+
+.fi
+
+.PP
+\fBNOTE: \fRThe behavior of this function changed radically in \fICommon Test\fR 1.6.2. To keep some backwards compatibility, it is still possible to do: \fIct:require(a,{node,[telnet,ftp]}).\fR This associates the name \fIa\fR with the top-level \fInode\fR entry. For this to work, the configuration file must at least contain: \fI{node,[{telnet,IpAddr},{ftp,IpAddr}]}.\fR
+
+
+.PP
+See also \fIct:get_config/1\fR, \fIct:get_config/2\fR, \fIct:get_config/3\fR, \fIct:require/1\fR.
+
+
+.RE
+.B
+\fBrun(TestDirs) -> Result\fR
+\fB             when\fR
+\fB                 TestDirs :: TestDir | [TestDir],\fR
+\fB                 TestDir :: string(),\fR
+\fB                 Result :: [TestResult] | {error, Reason},\fR
+\fB                 TestResult :: term(),\fR
+\fB                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Runs all test cases in all suites in the specified directories.
+
+.PP
+See also \fIct:run/3\fR.
+
+
+.RE
+.B
+\fBrun(TestDir, Suite) -> Result\fR
+\fB             when\fR
+\fB                 TestDir :: string(),\fR
+\fB                 Suite :: atom(),\fR
+\fB                 Result :: [TestResult] | {error, Reason},\fR
+\fB                 TestResult :: term(),\fR
+\fB                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Runs all test cases in the specified suite.
+
+.PP
+See also \fIct:run/3\fR.
+
+
+.RE
+.B
+\fBrun(TestDir, Suite, Cases) -> Result\fR
+\fB             when\fR
+\fB                 TestDir :: string(),\fR
+\fB                 Suite :: atom(),\fR
+\fB                 Cases :: atom() | [atom()],\fR
+\fB                 Result :: [TestResult] | {error, Reason},\fR
+\fB                 TestResult :: term(),\fR
+\fB                 Reason :: term().\fR
+
+.br
+.RS
+.PP
+Runs the specified test cases.
+
+.PP
+Requires that \fIct:install/1\fR has been run first.
+
+.PP
+Suites (\fI*_SUITE.erl\fR) files must be stored in \fITestDir\fR or \fITestDir/test\fR. All suites are compiled when the test is run.
+
+
+.RE
+.B
+\fBrun_test(Opts) -> Result\fR
+\fB                  when\fR
+\fB                      Opts :: [OptTuples],\fR
+\fB                      OptTuples ::\fR
+\fB                          {dir, TestDirs} |\fR
+\fB                          {suite, Suites} |\fR
+\fB                          {group, Groups} |\fR
+\fB                          {testcase, Cases} |\fR
+\fB                          {spec, TestSpecs} |\fR
+\fB                          {join_specs, boolean()} |\fR
+\fB                          {label, Label} |\fR
+\fB                          {config, CfgFiles} |\fR
+\fB                          {userconfig, UserConfig} |\fR
+\fB                          {allow_user_terms, boolean()} |\fR
+\fB                          {logdir, LogDir} |\fR
+\fB                          {silent_connections, Conns} |\fR
+\fB                          {stylesheet, CSSFile} |\fR
+\fB                          {cover, CoverSpecFile} |\fR
+\fB                          {cover_stop, boolean()} |\fR
+\fB                          {step, StepOpts} |\fR
+\fB                          {event_handler, EventHandlers} |\fR
+\fB                          {include, InclDirs} |\fR
+\fB                          {auto_compile, boolean()} |\fR
+\fB                          {abort_if_missing_suites, boolean()} |\fR
+\fB                          {create_priv_dir, CreatePrivDir} |\fR
+\fB                          {multiply_timetraps, M} |\fR
+\fB                          {scale_timetraps, boolean()} |\fR
+\fB                          {repeat, N} |\fR
+\fB                          {duration, DurTime} |\fR
+\fB                          {until, StopTime} |\fR
+\fB                          {force_stop, ForceStop} |\fR
+\fB                          {decrypt, DecryptKeyOrFile} |\fR
+\fB                          {refresh_logs, LogDir} |\fR
+\fB                          {logopts, LogOpts} |\fR
+\fB                          {verbosity, VLevels} |\fR
+\fB                          {basic_html, boolean()} |\fR
+\fB                          {esc_chars, boolean()} |\fR
+\fB                          {keep_logs, KeepSpec} |\fR
+\fB                          {ct_hooks, CTHs} |\fR
+\fB                          {ct_hooks_order, CTHsOrder} |\fR
+\fB                          {enable_builtin_hooks, boolean()} |\fR
+\fB                          {release_shell, boolean()},\fR
+\fB                      TestDirs :: [string()] | string(),\fR
+\fB                      Suites ::\fR
+\fB                          [string()] | [atom()] | string() | atom(),\fR
+\fB                      Cases :: [atom()] | atom(),\fR
+\fB                      Groups :: GroupNameOrPath | [GroupNameOrPath],\fR
+\fB                      GroupNameOrPath :: [atom()] | atom() | all,\fR
+\fB                      TestSpecs :: [string()] | string(),\fR
+\fB                      Label :: string() | atom(),\fR
+\fB                      CfgFiles :: [string()] | string(),\fR
+\fB                      UserConfig ::\fR
+\fB                          [{CallbackMod, CfgStrings}] |\fR
+\fB                          {CallbackMod, CfgStrings},\fR
+\fB                      CallbackMod :: atom(),\fR
+\fB                      CfgStrings :: [string()] | string(),\fR
+\fB                      LogDir :: string(),\fR
+\fB                      Conns :: all | [atom()],\fR
+\fB                      CSSFile :: string(),\fR
+\fB                      CoverSpecFile :: string(),\fR
+\fB                      StepOpts :: [StepOpt],\fR
+\fB                      StepOpt :: config | keep_inactive,\fR
+\fB                      EventHandlers :: EH | [EH],\fR
+\fB                      EH ::\fR
+\fB                          atom() |\fR
+\fB                          {atom(), InitArgs} |\fR
+\fB                          {[atom()], InitArgs},\fR
+\fB                      InitArgs :: [term()],\fR
+\fB                      InclDirs :: [string()] | string(),\fR
+\fB                      CreatePrivDir ::\fR
+\fB                          auto_per_run | auto_per_tc | manual_per_tc,\fR
+\fB                      M :: integer(),\fR
+\fB                      N :: integer(),\fR
+\fB                      DurTime :: HHMMSS,\fR
+\fB                      HHMMSS :: string(),\fR
+\fB                      StopTime :: YYMoMoDDHHMMSS | HHMMSS,\fR
+\fB                      YYMoMoDDHHMMSS :: string(),\fR
+\fB                      ForceStop :: skip_rest | boolean(),\fR
+\fB                      DecryptKeyOrFile ::\fR
+\fB                          {key, DecryptKey} | {file, DecryptFile},\fR
+\fB                      DecryptKey :: string(),\fR
+\fB                      DecryptFile :: string(),\fR
+\fB                      LogOpts :: [LogOpt],\fR
+\fB                      LogOpt :: no_nl | no_src,\fR
+\fB                      VLevels :: VLevel | [{Category, VLevel}],\fR
+\fB                      VLevel :: integer(),\fR
+\fB                      Category :: atom(),\fR
+\fB                      KeepSpec :: all | pos_integer(),\fR
+\fB                      CTHs :: [CTHModule | {CTHModule, CTHInitArgs}],\fR
+\fB                      CTHsOrder :: atom(),\fR
+\fB                      CTHModule :: atom(),\fR
+\fB                      CTHInitArgs :: term(),\fR
+\fB                      Result ::\fR
+\fB                          {Ok, Failed, {UserSkipped, AutoSkipped}} |\fR
+\fB                          TestRunnerPid |\fR
+\fB                          {error, Reason},\fR
+\fB                      Ok :: integer(),\fR
+\fB                      Failed :: integer(),\fR
+\fB                      UserSkipped :: integer(),\fR
+\fB                      AutoSkipped :: integer(),\fR
+\fB                      TestRunnerPid :: pid(),\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+Runs tests as specified by the combination of options in \fIOpts\fR. The options are the same as those used with program \fIct_run\fR, see Run Tests from Command Line in the \fIct_run\fR manual page.
+
+.PP
+Here a \fITestDir\fR can be used to point out the path to a \fISuite\fR. Option \fItestcase\fR corresponds to option \fI-case\fR in program \fIct_run\fR. Configuration files specified in \fIOpts\fR are installed automatically at startup.
+
+.PP
+\fITestRunnerPid\fR is returned if \fIrelease_shell == true\fR. For details, see \fIct:break/1\fR.
+
+.PP
+\fIReason\fR indicates the type of error encountered.
+
+
+.RE
+.B
+\fBrun_testspec(TestSpec) -> Result\fR
+\fB                      when\fR
+\fB                          TestSpec :: [term()],\fR
+\fB                          Result ::\fR
+\fB                              {Ok, Failed, {UserSkipped, AutoSkipped}} |\fR
+\fB                              {error, Reason},\fR
+\fB                          Ok :: integer(),\fR
+\fB                          Failed :: integer(),\fR
+\fB                          UserSkipped :: integer(),\fR
+\fB                          AutoSkipped :: integer(),\fR
+\fB                          Reason :: term().\fR
+
+.br
+.RS
+.PP
+Runs a test specified by \fITestSpec\fR. The same terms are used as in test specification files.
+
+.PP
+\fIReason\fR indicates the type of error encountered.
+
+
+.RE
+.B
+\fBset_verbosity(Category, Level) -> ok\fR
+\fB                       when\fR
+\fB                           Category :: default | atom(),\fR
+\fB                           Level :: integer().\fR
+
+.br
+.RS
+.PP
+Use this function to set, or modify, the verbosity level for a logging category. See the User's Guide for details. Use the value \fIdefault\fR to set the general verbosity level.
+
+
+.RE
+.B
+\fBsleep(Time) -> ok\fR
+\fB               when\fR
+\fB                   Time ::\fR
+\fB                       {hours, Hours} |\fR
+\fB                       {minutes, Mins} |\fR
+\fB                       {seconds, Secs} |\fR
+\fB                       Millisecs,\fR
+\fB                   Hours :: integer(),\fR
+\fB                   Mins :: integer(),\fR
+\fB                   Secs :: integer(),\fR
+\fB                   Millisecs :: timeout() | float().\fR
+
+.br
+.RS
+.PP
+This function, similar to \fItimer:sleep/1\fR in STDLIB, suspends the test case for a specified time. However, this function also multiplies \fITime\fR with the \fImultiply_timetraps\fR value (if set) and under certain circumstances also scales up the time automatically if \fIscale_timetraps\fR is set to \fItrue\fR (default is \fIfalse\fR).
+
+
+.RE
+.B
+\fBstart_interactive() -> ok.\fR
+
+.br
+.RS
+.PP
+Starts \fICommon Test\fR in interactive mode.
+
+.PP
+From this mode, all test case support functions can be executed directly from the Erlang shell. The interactive mode can also be started from the OS command line with \fIct_run -shell [-config File...]\fR.
+
+.PP
+If any functions (for example, Telnet or FTP) using "required configuration data" are to be called from the Erlang shell, configuration data must first be required with \fIct:require/2\fR.
+
+.PP
+\fIExample:\fR
+
+.IP
+.nf
+> ct:require(unix_telnet, unix).
+ok
+> ct_telnet:open(unix_telnet).
+{ok,<0.105.0>}
+> ct_telnet:cmd(unix_telnet, "ls .").
+{ok,["ls","file1  ...",...]}
+
+.fi
+
+
+.RE
+.B
+\fBstep(TestDir, Suite, Case) -> Result\fR
+\fB              when\fR
+\fB                  TestDir :: string(),\fR
+\fB                  Suite :: atom(),\fR
+\fB                  Case :: atom(),\fR
+\fB                  Result :: term().\fR
+
+.br
+.RS
+.PP
+Steps through a test case with the debugger.
+
+.PP
+See also \fIct:run/3\fR.
+
+
+.RE
+.B
+\fBstep(TestDir, Suite, Case, Opts) -> Result\fR
+\fB              when\fR
+\fB                  TestDir :: string(),\fR
+\fB                  Suite :: atom(),\fR
+\fB                  Case :: atom(),\fR
+\fB                  Opts :: [Opt],\fR
+\fB                  Opt :: config | keep_inactive,\fR
+\fB                  Result :: term().\fR
+
+.br
+.RS
+.PP
+Steps through a test case with the debugger. If option \fIconfig\fR has been specified, breakpoints are also set on the configuration functions in \fISuite\fR.
+
+.PP
+See also \fIct:run/3\fR.
+
+
+.RE
+.B
+\fBstop_interactive() -> ok.\fR
+
+.br
+.RS
+.PP
+Exits the interactive mode.
+
+.PP
+See also \fIct:start_interactive/0\fR.
+
+
+.RE
+.B
+\fBsync_notify(Name, Data) -> ok when Name :: atom(), Data :: term().\fR
+
+.br
+.RS
+.PP
+Sends a synchronous notification of type \fIName\fR with \fIData\fR to the \fICommon Test\fR event manager. This can later be caught by any installed event manager.
+
+.PP
+See also \fIgen_event\fR.
+
+
+.RE
+.B
+\fBtestcases(TestDir, Suite) -> Testcases | {error, Reason}\fR
+\fB                   when\fR
+\fB                       TestDir :: string(),\fR
+\fB                       Suite :: atom(),\fR
+\fB                       Testcases :: list(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns all test cases in the specified suite.
+
+
+.RE
+.B
+\fBtimetrap(Time) -> infinity | pid()\fR
+\fB                  when\fR
+\fB                      Time ::\fR
+\fB                          {hours, Hours} |\fR
+\fB                          {minutes, Mins} |\fR
+\fB                          {seconds, Secs} |\fR
+\fB                          timeout() |\fR
+\fB                          Func,\fR
+\fB                      Hours :: integer(),\fR
+\fB                      Mins :: integer(),\fR
+\fB                      Secs :: integer(),\fR
+\fB                      Func :: {M, F, A} | function(),\fR
+\fB                      M :: atom(),\fR
+\fB                      F :: atom(),\fR
+\fB                      A :: list().\fR
+
+.br
+.RS
+.PP
+Sets a new timetrap for the running test case.
+
+.PP
+If the argument is \fIFunc\fR, the timetrap is triggered when this function returns. \fIFunc\fR can also return a new \fITime\fR value, which in that case is the value for the new timetrap.
+
+
+.RE
+.B
+\fBuserdata(TestDir, Suite) -> SuiteUserData | {error, Reason}\fR
+\fB                  when\fR
+\fB                      TestDir :: string(),\fR
+\fB                      Suite :: atom(),\fR
+\fB                      SuiteUserData :: [term()],\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns any data specified with tag \fIuserdata\fR in the list of tuples returned from \fIsuite/0\fR.
+
+
+.RE
+.B
+\fBuserdata(TestDir, Suite, Case :: GroupOrCase) ->\fR
+\fB                  TCUserData | {error, Reason}\fR
+\fB                  when\fR
+\fB                      TestDir :: string(),\fR
+\fB                      Suite :: atom(),\fR
+\fB                      GroupOrCase :: {group, GroupName} | atom(),\fR
+\fB                      GroupName :: atom(),\fR
+\fB                      TCUserData :: [term()],\fR
+\fB                      Reason :: term().\fR
+
+.br
+.RS
+.PP
+Returns any data specified with tag \fIuserdata\fR in the list of tuples returned from \fISuite:group(GroupName)\fR or \fISuite:Case()\fR.
+
+
+.RE

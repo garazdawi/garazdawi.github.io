@@ -1,0 +1,289 @@
+.TH cprof 3 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+cprof \- A simple Call Count Profiling Tool using breakpoints for minimal runtime performance impact.
+
+.SH DESCRIPTION
+.PP
+The \fIcprof\fR module is used to profile a program to find out how many times different functions are called. To minimize runtime performance impact, breakpoints containing counters are used.
+
+.PP
+Since breakpoints are used there is no need for special compilation of the modules to be profiled. These breakpoints can only be set on BEAM code, so BIFs cannot be call-count traced.
+
+.PP
+The size of the call counters is the host machine word size. One bit is used when pausing the counter, so the maximum counter value for a 32-bit host is 2,147,483,647.
+
+.PP
+The profiling result is delivered as a term containing a sorted list of entries, one per module. Each module entry contains a sorted list of functions. The sorting order in both cases is of decreasing call count.
+
+.PP
+Call count tracing is lightweight compared to other forms of tracing, such as \fIeprof\fR or \fIfprof\fR, since no trace messages have to be generated. Some measurements indicates that the performance degradation is about 10 percent.
+
+.PP
+For more information and some examples, see the User's Guide for \fIcprof\fR.
+
+.SH DATA TYPES
+.LP
+.B
+\fBfunc_analysis_list() ::\fR
+\fB          [{mfa(), FuncCallCount :: non_neg_integer()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmod_analysis() ::\fR
+\fB          {Mod :: module(),\fR
+\fB           ModCallCount :: non_neg_integer(),\fR
+\fB           FuncAnalysisList :: func_analysis_list()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmod_analysis_list() :: [mod_analysis()].\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBanalyse(Limit) ->\fR
+\fB                 {AllCallCount :: non_neg_integer(),\fR
+\fB                  ModAnalysisList :: mod_analysis_list()}\fR
+\fB                 when Limit :: non_neg_integer();\fR
+\fB             (Mod) -> ModAnalysis :: mod_analysis() when Mod :: module().\fR
+
+.br
+.RS
+.PP
+Collect call counters for one or more modules.
+
+.PP
+If \fIModLimit\fR is a module name (an atom), this call is equivalent to \fIanalyse(ModLimit, 1)\fR.
+
+.PP
+If \fIModLimit\fR is an integer, this function calls \fIanalyse(Module, ModLimit)\fR for each \fIModule\fR that is currently loaded (except the \fIcprof\fR module itself). The result from those calls are returned in a list.
+
+
+.RE
+.B
+\fBanalyse(Mod, Limit) -> ModAnalysis :: mod_analysis()\fR
+\fB                 when Mod :: module(), Limit :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Collects and analyses all call counters for module \fIModule\fR.
+
+.PP
+This function returns:
+
+.IP
+.nf
+{Module, ModuleCount, FuncAnalysisList}
+
+.fi
+
+.PP
+where \fIFuncAnalysisList\fR is a list of tuples, one for each function:
+
+.IP
+.nf
+{{Module, FunctionName, Arity}, FuncCallCount}
+
+.fi
+
+.PP
+If call counters are still running while \fIanalyse/0,1,2\fR is executing, the result could be inconsistent. This happens if the process executing \fIanalyse/0,1,2\fR is scheduled out so some other process can increment the counters that are being analysed. Calling \fIpause()\fR before analysing takes care of that problem.
+
+.PP
+All functions with a \fIFuncCallCount\fR lower than \fILimit\fR are excluded from \fIFuncAnalysisList\fR. They are still included in \fIModCallCount\fR, though.
+
+
+.RE
+.B
+\fBpause() -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Pause call count tracing for all functions in all modules and stop it for all functions in modules to be loaded.
+
+.PP
+This call is equivalent to \fIpause('_', '_', '_') + stop({on_load})\fR.
+
+
+.RE
+.B
+\fBpause(FuncSpec) -> non_neg_integer()\fR
+\fB               when\fR
+\fB                   FuncSpec ::\fR
+\fB                       (Mod :: module()) | mfa() | {FS :: term()}.\fR
+
+.br
+.RS
+.PP
+If \fIFuncSpec\fR is an atom, it is assumed to be a module name, and this call is equivalent to \fIpause(FuncSpec, '_', '_')\fR.
+
+.PP
+If \fIFuncSpec\fR is an MFA tuple, \fI{Module, Name, Arity\fR}, this call is equivalent to \fIpause(Module, Name, Arity)\fR.
+
+.PP
+If \fIFuncSpec\fR is tuple \fI{FS}\fR, \fIFS\fR is the first argument to \fIerlang:trace_pattern/3\fR. For example, if \fIFuncSpec\fR is \fI{on_load}\fR, call counters will be paused for all functions in modules to be loaded.
+
+
+.RE
+.B
+\fBpause(Mod, Func, Arity) -> non_neg_integer()\fR
+\fB               when Mod :: module(), Func :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Pause call counters for matching functions in matching modules.
+
+.PP
+The call counters for all matching functions that have call count breakpoints are paused at their current count.
+
+.PP
+Return the number of matching functions that can have call count breakpoints, the same as \fIstart/*\fR with the same arguments would have returned.
+
+
+.RE
+.B
+\fBrestart(FuncSpec) -> non_neg_integer()\fR
+\fB                 when\fR
+\fB                     FuncSpec ::\fR
+\fB                         (Mod :: module()) | mfa() | {FS :: term()}.\fR
+
+.br
+.RS
+.PP
+If \fIFuncSpec\fR is an atom, it is assumed to be a module name, and this call is equivalent to \fIrestart(FuncSpec, '_', '_')\fR.
+
+.PP
+If \fIFuncSpec\fR is an MFA tuple, \fI{Module, Name, Arity\fR}, this call is equivalent to \fIrestart(Module, Name, Arity)\fR.
+
+.PP
+If \fIFuncSpec\fR is tuple \fI{FS}\fR, \fIFS\fR is the first argument to \fIerlang:trace_pattern/3\fR. For example, if \fIFuncSpec\fR is \fI{on_load}\fR, call counters will be set to zero and running for all functions in modules to be loaded.
+
+
+.RE
+.B
+\fBrestart(Mod, Func, Arity) -> non_neg_integer()\fR
+\fB                 when Mod :: module(), Func :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Restart call counters for the matching functions in matching modules that are call-count traced.
+
+.PP
+The call counters for all matching functions that has call count breakpoints are set to zero and running.
+
+.PP
+Return the number of matching functions that can have call count breakpoints, the same as \fIstart/*\fR with the same arguments would have returned.
+
+
+.RE
+.B
+\fBstart() -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Start call count tracing for all functions in all modules, and also for all functions in modules to be loaded.
+
+.PP
+This is equivalent to \fIstart('_', '_', '_') + start({on_load})\fR.
+
+
+.RE
+.B
+\fBstart(FuncSpec) -> non_neg_integer()\fR
+\fB               when\fR
+\fB                   FuncSpec ::\fR
+\fB                       (Mod :: module()) | mfa() | {FS :: term()}.\fR
+
+.br
+.RS
+.PP
+If \fIFuncSpec\fR is an atom, it is assumed to be a module name, and this call is equivalent to \fIstart(FuncSpec, '_', '_')\fR.
+
+.PP
+If \fIFuncSpec\fR is an MFA tuple, \fI{Module, Name, Arity\fR}, this call is equivalent to \fIstart(Module, Name, Arity)\fR.
+
+.PP
+If \fIFuncSpec\fR is tuple \fI{FS}\fR, \fIFS\fR is the first argument to \fIerlang:trace_pattern/3\fR. For example, if \fIFuncSpec\fR is \fI{on_load}\fR, call counters will be set to zero and running for all functions in modules to be loaded.
+
+
+.RE
+.B
+\fBstart(Mod, Func, Arity) -> non_neg_integer()\fR
+\fB               when Mod :: module(), Func :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Start call count tracing for matching functions in matching modules.
+
+.PP
+Set call count breakpoints on the matching functions that has no call count breakpoints. Call counters are set to zero and running for all matching functions.
+
+.PP
+Return the number of matching functions that has call count breakpoints.
+
+
+.RE
+.B
+\fBstop() -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Stop call count tracing for all functions in all modules, and also for all functions in modules to be loaded.
+
+.PP
+This is equivalent to \fIstop('_', '_', '_') + stop({on_load})\fR.
+
+
+.RE
+.B
+\fBstop(FuncSpec) -> non_neg_integer()\fR
+\fB              when\fR
+\fB                  FuncSpec :: (Mod :: module()) | mfa() | {FS :: term()}.\fR
+
+.br
+.RS
+.PP
+If \fIFuncSpec\fR is an atom, it is assumed to be a module name, and this call is equivalent to \fIstop(FuncSpec, '_', '_')\fR.
+
+.PP
+If \fIFuncSpec\fR is an MFA tuple, \fI{Module, Name, Arity\fR}, this call is equivalent to \fIstop(Module, Name, Arity)\fR.
+
+.PP
+If \fIFuncSpec\fR is tuple \fI{FS}\fR, \fIFS\fR is the first argument to \fIerlang:trace_pattern/3\fR. For example, if \fIFuncSpec\fR is \fI{on_load}\fR, call counters be disabled for all functions in modules to be loaded.
+
+
+.RE
+.B
+\fBstop(Mod, Func, Arity) -> non_neg_integer()\fR
+\fB              when Mod :: module(), Func :: atom(), Arity :: arity().\fR
+
+.br
+.RS
+.PP
+Stop call count tracing for matching functions in matching modules.
+
+.PP
+Remove call count breakpoints from the matching functions that has call count breakpoints.
+
+.PP
+Return the number of matching functions that can have call count breakpoints, which is the same as \fIstart/*\fR with the same arguments would have returned.
+
+
+.RE

@@ -1,0 +1,1553 @@
+.TH gen_event 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+gen_event \- Generic event handling behavior.
+
+.SH DESCRIPTION
+.PP
+This behavior module provides event handling functionality. It consists of a generic event manager process with any number of event handlers that are added and deleted dynamically.
+
+.PP
+An event manager implemented using this module has a standard set of interface functions and includes functionality for tracing and error reporting.  It also fits into an OTP supervision tree. For more information, see gen_event section in OTP Design Principles.
+
+.PP
+Each event handler is implemented as a callback module exporting a predefined set of functions. The relationship between the behavior functions and the callback functions is as follows:
+
+.IP
+.nf
+gen_event module                   Callback module
+----------------                   ---------------
+gen_event:start
+gen_event:start_monitor
+gen_event:start_link       ----->  -
+
+gen_event:add_handler
+gen_event:add_sup_handler  ----->  Module:init/1
+
+gen_event:notify
+gen_event:sync_notify      ----->  Module:handle_event/2
+
+gen_event:send_request
+gen_event:call             ----->  Module:handle_call/2
+
+-                          ----->  Module:handle_info/2
+
+gen_event:delete_handler   ----->  Module:terminate/2
+
+gen_event:swap_handler
+gen_event:swap_sup_handler ----->  Module1:terminate/2
+                                   Module2:init/1
+
+gen_event:which_handlers   ----->  -
+
+gen_event:stop             ----->  Module:terminate/2
+
+-                          ----->  Module:code_change/3
+
+.fi
+
+.PP
+As each event handler is one callback module, an event manager has many callback modules that are added and deleted dynamically. \fIgen_event\fR is therefore more tolerant of callback module errors than the other behaviors.  If a callback function for an installed event handler fails with \fIReason\fR, or returns a bad value \fITerm\fR, the event manager does not fail.  It deletes the event handler by calling callback function \fIModule:terminate/2\fR, giving as argument \fI{error, {'EXIT', Reason}}\fR or \fI{error, Term}\fR, respectively.  No other event handler is affected.
+
+.PP
+A \fIgen_event\fR process handles system messages as described in \fIsys\fR. The \fIsys\fR module can be used for debugging an event manager.
+
+.PP
+Notice that an event manager \fIdoes\fR trap exit signals automatically.
+
+.PP
+The \fIgen_event\fR process can go into hibernation (see \fIerlang:hibernate/3\fR) if a callback function in a handler module specifies \fIhibernate\fR in its return value.  This can be useful if the server is expected to be idle for a long time. However, use this feature with care, as hibernation implies at least two garbage collections (when hibernating and shortly after waking up) and is not something you want to do between each event handled by a busy event manager.
+
+.PP
+Notice that when multiple event handlers are invoked, it is sufficient that one single event handler returns a \fIhibernate\fR request for the whole event manager to go into hibernation.
+
+.PP
+Unless otherwise stated, all functions in this module fail if the specified event manager does not exist or if bad arguments are specified.
+
+.PP
+\fBNOTE: \fRFor some important information about distributed signals, see the \fIBlocking Signaling Over Distribution\fR  section in the \fIProcesses\fR chapter of the \fIErlang Reference Manual\fR. Blocking signaling can, for example, cause call timeouts in \fIgen_event\fR to be significantly delayed.
+
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIsupervisor\fR, \fIsys\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBadd_handler_ret() :: ok | term() | {'EXIT', term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdebug_flag() ::\fR
+\fB          trace | log | statistics | debug | {logfile, string()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdel_handler_ret() :: ok | term() | {'EXIT', term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBemgr_name() ::\fR
+\fB          {local, atom()} | {global, term()} | {via, atom(), term()}.\fR
+
+.br
+.RS
+.PP
+Event manager name specification: \fIlocal\fR, \fIglobal\fR, or \fIvia\fR registered.
+
+{local, Name}
+.RS 2
+the event manager is registered locally as 
+\fIName\fR using \fIregister/2\fR.
+
+.RE
+{global, GlobalName}
+.RS 2
+The event manager is registered globally as 
+\fIGlobalName\fR using \fIglobal:register_name/2\fR. If no name is provided, the event manager is not registered.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI\fI{via, Module, ViaName}\fR\fR, the event manager registers with the registry represented by \fIModule\fR. The \fIModule\fR callback is to export the functions \fIregister_name/2\fR, \fIunregister_name/1\fR, \fIwhereis_name/1\fR, and \fIsend/2\fR, which are to behave as the corresponding functions in \fIglobal\fR.  Thus, \fI{via, global, GlobalName}\fR is a valid reference.
+
+.RE
+
+
+.RE
+.B
+\fBemgr_ref() ::\fR
+\fB          atom() |\fR
+\fB          {atom(), node()} |\fR
+\fB          {global, term()} |\fR
+\fB          {via, atom(), term()} |\fR
+\fB          pid().\fR
+
+.br
+.RS
+.PP
+A reference used to locate an event manager.
+
+.PP
+The reference can be any of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The pid of the event manager
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIName\fR, if the event manager is locally registered
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{Name, Node}\fR, if the event manager is locally registered at another node
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{global, GlobalName}\fR, if the event manager is globally registered
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{via, Module, ViaName}\fR, if the event manager is registered through an alternative process registry
+
+.RE
+
+
+.RE
+.B
+\fBformat_status() ::\fR
+\fB          #{state => term(),\fR
+\fB            message => term(),\fR
+\fB            reason => term(),\fR
+\fB            log => [sys:system_event()]}.\fR
+
+.br
+.RS
+.PP
+A map that describes the \fIgen_event\fR process status.
+
+.PP
+The keys are:
+
+state
+.RS 2
+The internal state of the event handler.
+
+
+.RE
+message
+.RS 2
+The message that caused the event handler to terminate.
+
+
+.RE
+reason
+.RS 2
+The reason that caused the event handler to terminate.
+
+
+.RE
+log
+.RS 2
+The sys log of the server.
+
+
+.RE
+
+.PP
+New associations may be added into the status map without prior notice.
+
+
+.RE
+.B
+\fBhandler() :: atom() | {atom(), term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhandler_args() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoptions() ::\fR
+\fB          [{timeout, timeout()} |\fR
+\fB           {debug, [debug_flag()]} |\fR
+\fB           {spawn_opt, [proc_lib:start_spawn_option()]} |\fR
+\fB           {hibernate_after, timeout()}].\fR
+
+.br
+.RS
+.PP
+Options that can be used to configure an event handler when it is started.
+
+
+.RE
+.B
+\fB-opaque request_id() \fR
+
+.br
+.RS
+.PP
+An opaque request identifier. See \fIsend_request/3\fR for details.
+
+
+.RE
+.B
+\fB-opaque request_id_collection() \fR
+
+.br
+.RS
+.PP
+An opaque collection of request identifiers (\fIrequest_id/0\fR).
+
+.PP
+Each request identifier can be associated with a label chosen by the user.  For more information see \fIreqids_new/0\fR.
+
+
+.RE
+.B
+\fBresponse_timeout() :: timeout() | {abs, integer()}.\fR
+
+.br
+.RS
+.PP
+Response time-out for an asynchronous call.
+
+.PP
+Used to set a time limit on how long to wait for a response using either \fIreceive_response/2\fR, \fIreceive_response/3\fR, \fIwait_response/2\fR, or \fIwait_response/3\fR. The time unit used is \fImillisecond\fR. Currently valid values:
+
+0..4294967295
+.RS 2
+Timeout relative to current time in milliseconds.
+
+
+.RE
+
+infinity
+.RS 2
+Infinite timeout. That is, the operation will never time out.
+
+
+.RE
+
+{abs, Timeout}
+.RS 2
+An absolute Erlang monotonic time timeout in milliseconds.  That is, the operation will time out when 
+\fIerlang:monotonic_time(millisecond)\fR returns a value larger than or equal to \fITimeout\fR. \fITimeout\fR is not allowed to identify a time further into the future than \fI4294967295\fR milliseconds. Identifying the timeout using an absolute timeout value is especially handy when you have a deadline for responses corresponding to a complete collection of requests (\fIrequest_id_collection/0\fR) , since you do not have to recalculate the relative time until the deadline over and over again.
+
+.RE
+
+
+.RE
+.B
+\fBstart_mon_ret() :: {ok, {pid(), reference()}} | {error, term()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstart_ret() :: {ok, pid()} | {error, term()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_handler(EventMgrRef :: emgr_ref(),\fR
+\fB                  Handler :: handler(),\fR
+\fB                  Args :: term()) ->\fR
+\fB                     term().\fR
+
+.br
+.RS
+.PP
+Add a new event handler to an event manager.
+
+.PP
+The new event handler is added to event manager \fIEventMgrRef\fR. The event manager calls \fIModule:init/1\fR to initiate the event handler and its internal state.
+
+.PP
+\fIHandler\fR is the name of the callback module \fIModule\fR or a tuple \fI{Module, Id}\fR, where \fIId\fR is any term. The \fI{Module, Id}\fR representation makes it possible to identify a specific event handler, when many event handlers use the same callback module.
+
+.PP
+\fIArgs\fR is any term that is passed as the argument to \fIModule:init/1\fR.
+
+.PP
+If \fIModule:init/1\fR returns a correct value indicating successful completion, the event manager adds the event handler and this function returns \fIok\fR. If \fIModule:init/1\fR fails with \fIReason\fR or returns \fI{error,Reason}\fR, the event handler is ignored and this function returns \fI{'EXIT',Reason}\fR or \fI{error,Reason}\fR, respectively.
+
+
+.RE
+.B
+\fBadd_sup_handler(EventMgrRef :: emgr_ref(),\fR
+\fB                      Handler :: handler(),\fR
+\fB                      Args :: term()) ->\fR
+\fB                         term().\fR
+
+.br
+.RS
+.PP
+Add a new event handler to an event manager, supervised.
+
+.PP
+The new event handler is added as for \fIadd_handler/3\fR, but the event manager also supervises the connection by linking the event handler and the calling process.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the calling process later terminates with \fIReason\fR, the event manager deletes any supervised event handlers by calling \fIModule:terminate/2\fR, then calls \fIModule:handle_info/2\fR for each remaining handler.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the event handler is deleted later, the event manager sends a message \fI{gen_event_EXIT,Handler,Reason}\fR to the calling process. \fIReason\fR is one of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInormal\fR, if the event handler has been removed because of a call to \fIdelete_handler/3\fR, or \fIremove_handler\fR has been returned by a callback function (see below).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshutdown\fR, if the event handler has been removed because the event manager is terminating.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{swapped, NewHandler, Pid}\fR, if the process \fIPid\fR has replaced the event handler with another event handler \fINewHandler\fR, through a call to \fIswap_handler/3\fR or \fIswap_sup_handler/3\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Other \fIterm/0\fR, if the event handler is removed because of an error.  Which term depends on the error.
+
+.RE
+
+.RE
+
+.PP
+For a description of the arguments and return values, see \fIadd_handler/3\fR.
+
+
+.RE
+.B
+\fBcall(EventMgrRef :: emgr_ref(),\fR
+\fB           Handler :: handler(),\fR
+\fB           Request :: term(),\fR
+\fB           Timeout :: timeout()) ->\fR
+\fB              term().\fR
+
+.br
+.RS
+.PP
+Make a synchronous call to an event handler.
+
+.PP
+The call is sent to \fIHandler\fR, installed in event manager \fIEventMgrRef\fR, by sending a request and waiting until a reply arrives, or a time-out occurs.  The event manager calls \fIModule:handle_call/2\fR to handle the request.
+
+.PP
+\fIRequest\fR is any term that is passed as one of the arguments to \fIModule:handle_call/2\fR.
+
+.PP
+\fITimeout\fR is an integer greater than zero that specifies how many milliseconds to wait for a reply, or the atom \fIinfinity\fR to wait indefinitely.  Defaults to 5000.  If no reply is received within the specified time, the function call fails.
+
+.PP
+The return value \fIReply\fR is defined in the return value of \fIModule:handle_call/2\fR.  If the specified event handler is not installed, the function returns \fI{error, bad_module}\fR.  If the callback function fails with \fIReason\fR, or returns an unexpected value \fITerm\fR, this function returns \fI{error, {'EXIT', Reason}}\fR or \fI{error, Term}\fR, respectively.
+
+.PP
+When this call fails it exits the calling process. The exit term is of the form \fI{Reason, Location}\fR where \fILocation = {gen_event, call, ArgList}\fR. See \fIgen_server:call/3\fR that has a description of relevant values for the \fIReason\fR in the exit term.
+
+
+.RE
+.B
+\fBcheck_response(Msg, ReqId) -> Result\fR
+\fB                        when\fR
+\fB                            Msg :: term(),\fR
+\fB                            ReqId :: request_id(),\fR
+\fB                            Response ::\fR
+\fB                                {reply, Reply :: term()} |\fR
+\fB                                {error, {Reason :: term(), emgr_ref()}},\fR
+\fB                            Result :: Response | no_reply.\fR
+
+.br
+.RS
+.PP
+Check if a received message is a request response.
+
+.PP
+Check if \fIMsg\fR is a response corresponding to the request identifier \fIReqId\fR.  The request must have been made by \fIsend_request/3\fR, and by the same process calling this function.
+
+.PP
+If \fIMsg\fR is a response corresponding to \fIReqId\fR the response is returned in \fIReply\fR.  Otherwise this function returns \fIno_reply\fR and no cleanup is done.  Thus this function must be invoked repeatedly until a response is returned.
+
+.PP
+If the specified event handler is not installed, the function returns \fI{error, bad_module}\fR.  If the callback function fails with \fIReason\fR or returns an unexpected value \fITerm\fR, this function returns \fI{error, {'EXIT', Reason}}\fR or \fI{error, Term}\fR, respectively. If the event manager has died before this function is called, that is; \fIMsg\fR reports the server's death, this function returns \fI{error,{Reason, EventMgrRef}}\fR where \fIReason\fR is the exit reason.
+
+
+.RE
+.B
+\fBcheck_response(Msg, ReqIdCollection, Delete) -> Result\fR
+\fB                        when\fR
+\fB                            Msg :: term(),\fR
+\fB                            ReqIdCollection :: request_id_collection(),\fR
+\fB                            Delete :: boolean(),\fR
+\fB                            Response ::\fR
+\fB                                {reply, Reply :: term()} |\fR
+\fB                                {error, {Reason :: term(), emgr_ref()}},\fR
+\fB                            Result ::\fR
+\fB                                {Response,\fR
+\fB                                 Label :: term(),\fR
+\fB                                 NewReqIdCollection ::\fR
+\fB                                     request_id_collection()} |\fR
+\fB                                no_request | no_reply.\fR
+
+.br
+.RS
+.PP
+Check if a received message is a request response in a collection.
+
+.PP
+Check if \fIMsg\fR is a response corresponding to a request identifier stored in \fIReqIdCollection\fR.  All request identifiers of \fIReqIdCollection\fR must correspond to requests that have been made using \fIsend_request/3\fR or \fIsend_request/5\fR, and all requests must have been made by the process calling this function.
+
+.PP
+The \fILabel\fR in the response is the \fILabel\fR associated with the request identifier that the response corresponds to. The \fILabel\fR of a request identifier is associated when storing the request id in a collection, or when sending the request using \fIsend_request/5\fR.
+
+.PP
+Compared to \fIcheck_response/2\fR, the returned result or exception associated with a specific request identifier will be wrapped in a 3-tuple \fI{Response, Label, NewReqIdCollection}\fR. \fIResponse\fR is the value that would have been produced by \fIcheck_response/2\fR, \fILabel\fR is the value associated with the specific request identifier and \fINewReqIdCollection\fR is a possibly modified request identifier collection.
+
+.PP
+If \fIReqIdCollection\fR is empty, \fIno_request\fR will be returned.
+
+.PP
+If \fIMsg\fR does not correspond to any of the request identifiers in \fIReqIdCollection\fR, \fIno_reply\fR is returned.
+
+.PP
+If \fIDelete\fR is \fItrue\fR, the association with \fILabel\fR has been deleted from \fIReqIdCollection\fR in the resulting \fINewReqIdCollection\fR. If \fIDelete\fR is \fIfalse\fR, \fINewReqIdCollection\fR will equal \fIReqIdCollection\fR. Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIcheck_response/3\fR), \fIreceive_response/3\fR, and \fIwait_response/3\fR.
+
+.PP
+However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return.  Note that if you pass a collection only containing associations of already handled or abandoned requests to \fIcheck_response/3\fR, it will always return \fIno_reply\fR.
+
+
+.RE
+.B
+\fBdelete_handler(EventMgrRef :: emgr_ref(),\fR
+\fB                     Handler :: handler(),\fR
+\fB                     Args :: term()) ->\fR
+\fB                        term().\fR
+
+.br
+.RS
+.PP
+Deletes an event handler from an event manager.
+
+.PP
+This function deletes event handler \fIHandler\fR from event manager \fIEventMgrRef\fR. The event manager calls \fIModule:terminate/2\fR to terminate the event handler.
+
+.PP
+\fIArgs\fR is any term that is passed as one of the arguments to \fIModule:terminate/2\fR.
+
+.PP
+The return value is the return value of \fIModule:terminate/2\fR.  If the specified event handler is not installed, the function returns \fI{error, module_not_found}\fR. If the callback function fails with \fIReason\fR, the function returns \fI{'EXIT', Reason}\fR.
+
+
+.RE
+.B
+\fBnotify(EventMgrRef :: emgr_ref(), Event :: term()) -> ok.\fR
+
+.br
+.RS
+.PP
+Send an asynchronous event notification to an event manager.
+
+.PP
+The event is sent to \fIEventMgrRef\fR, that calls \fIModule:handle_event/2\fR for each installed event handler to handle the event.
+
+.PP
+\fIEvent\fR is any term that is passed as one of the arguments to \fIModule:handle_event/2\fR.
+
+.PP
+\fInotify/1\fR does not fail even if the specified event manager does not exist, unless it is specified as \fIName\fR.
+
+
+.RE
+.B
+\fBreceive_response(ReqId, Timeout) -> Result\fR
+\fB                          when\fR
+\fB                              ReqId :: request_id(),\fR
+\fB                              Timeout :: response_timeout(),\fR
+\fB                              Response ::\fR
+\fB                                  {reply, Reply :: term()} |\fR
+\fB                                  {error,\fR
+\fB                                   {Reason :: term(), emgr_ref()}},\fR
+\fB                              Result :: Response | timeout.\fR
+
+.br
+.RS
+.PP
+Receive a request response.
+
+.PP
+Receive a response corresponding to the request identifier \fIReqId\fR. The request must have been made by \fIsend_request/3\fR, and it must have been made from the same process calling this function.
+
+.PP
+\fITimeout\fR specifies how long to wait for a response. If no response is received within the specified time, this function returns \fItimeout\fR. Assuming that the server executes on a node supporting aliases (introduced in OTP 24) the request will also be abandoned.  That is, no response will be received after a timeout. Otherwise, a stray response might be received at a later time.
+
+.PP
+The return value \fIReply\fR is defined in the return value of \fIModule:handle_call/2\fR.
+
+.PP
+If the specified event handler is not installed, this function returns \fI{error, bad_module}\fR. If the callback function fails with \fIReason\fR or returns an unexpected value \fITerm\fR, this function returns \fI{error, {'EXIT', Reason}}\fR or\fI{error,Term}\fR, respectively.  If the event manager dies before or during the request this function returns \fI{error, {Reason, EventMgrRef}}\fR.
+
+.PP
+The difference between \fIwait_response/2\fR and \fIreceive_response/2\fR is that \fIreceive_response/2\fR abandons the request at time-out so that a potential future response is ignored, while \fIwait_response/2\fR does not.
+
+
+.RE
+.B
+\fBreceive_response(ReqIdCollection, Timeout, Delete) -> Result\fR
+\fB                          when\fR
+\fB                              ReqIdCollection :: request_id_collection(),\fR
+\fB                              Timeout :: response_timeout(),\fR
+\fB                              Delete :: boolean(),\fR
+\fB                              Response ::\fR
+\fB                                  {reply, Reply :: term()} |\fR
+\fB                                  {error,\fR
+\fB                                   {Reason :: term(), emgr_ref()}},\fR
+\fB                              Result ::\fR
+\fB                                  {Response,\fR
+\fB                                   Label :: term(),\fR
+\fB                                   NewReqIdCollection ::\fR
+\fB                                       request_id_collection()} |\fR
+\fB                                  no_request | timeout.\fR
+
+.br
+.RS
+.PP
+Receive a request response in a collection.
+
+.PP
+Receive a response in \fIReqIdCollection\fR. All request identifiers of \fIReqIdCollection\fR must correspond to requests that have been made using \fIsend_request/3\fR or \fIsend_request/5\fR, and all requests must have been made by the process calling this function.
+
+.PP
+The \fILabel\fR in the response is the \fILabel\fR associated with the request identifier that the response corresponds to. The \fILabel\fR of a request identifier is associated when adding the request id to a collection, or when sending the request using \fIsend_request/5\fR.
+
+.PP
+Compared to \fIreceive_response/2\fR, the returned result or exception associated with a specific request identifier will be wrapped in a 3-tuple \fI{Response, Label, NewReqIdCollection}\fR. \fIResponse\fR is the value that would have been produced by \fIreceive_response/2\fR, \fILabel\fR is the value associated with the specific request identifier and \fINewReqIdCollection\fR is a possibly modified request identifier collection.
+
+.PP
+If \fIReqIdCollection\fR is empty, \fIno_request\fR will be returned.
+
+.PP
+\fITimeout\fR specifies how long to wait for a response.  If no response is received within the specified time, the function returns \fItimeout\fR. Assuming that the server executes on a node supporting aliases (introduced in OTP 24) all requests identified by \fIReqIdCollection\fR will also be abandoned.  That is, no responses will be received after a time-out.  Otherwise, stray responses might be received at a later time.
+
+.PP
+The difference between \fIreceive_response/3\fR and \fIwait_response/3\fR is that \fIreceive_response/3\fR abandons the requests at time-out so that potential future responses are ignored, while \fIwait_response/3\fR does not.
+
+.PP
+If \fIDelete\fR is \fItrue\fR, the association with \fILabel\fR is deleted from \fIReqIdCollection\fR in the resulting \fINewReqIdCollection\fR.  If \fIDelete\fR is \fIfalse\fR, \fINewReqIdCollection\fR will equal \fIReqIdCollection\fR.  Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIreceive_response/3\fR, \fIcheck_response/3\fR, and \fIwait_response/3\fR.
+
+.PP
+However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return. Note that if you pass a collection only containing associations of already handled or abandoned requests to \fIreceive_response/3\fR, it will always block until \fITimeout\fR expires and then return \fItimeout\fR.
+
+
+.RE
+.B
+\fBreqids_add(ReqId :: request_id(),\fR
+\fB                 Label :: term(),\fR
+\fB                 ReqIdCollection :: request_id_collection()) ->\fR
+\fB                    NewReqIdCollection :: request_id_collection().\fR
+
+.br
+.RS
+.PP
+Store a request identifier in a colletion.
+
+.PP
+Stores \fIReqId\fR and associates a \fILabel\fR with the request identifier by adding this information to \fIReqIdCollection\fR and returning the resulting request identifier collection.
+
+
+.RE
+.B
+\fBreqids_new() -> NewReqIdCollection :: request_id_collection().\fR
+
+.br
+.RS
+.PP
+Create an empty request identifier collection.
+
+.PP
+Returns a new empty request identifier collection. A request identifier collection can be utilized to handle multiple outstanding requests.
+
+.PP
+Request identifiers of requests made by \fIsend_request/3\fR can be saved in a request identifier collection using \fIreqids_add/3\fR. Such a collection of request identifiers can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIreceive_response/3\fR, \fIwait_response/3\fR, or, \fIcheck_response/3\fR.
+
+.PP
+\fIreqids_size/1\fR can be used to determine the number of request identifiers in a collection.
+
+
+.RE
+.B
+\fBreqids_size(ReqIdCollection :: request_id_collection()) ->\fR
+\fB                     non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of request identifiers in \fIReqIdCollection\fR.
+
+
+.RE
+.B
+\fBreqids_to_list(ReqIdCollection :: request_id_collection()) ->\fR
+\fB                        [{ReqId :: request_id(), Label :: term()}].\fR
+
+.br
+.RS
+.PP
+Convert a request identifier collection to a list.
+
+.PP
+Returns a list of \fI{ReqId, Label}\fR tuples which corresponds to all request identifiers with their associated labels in \fIReqIdCollection\fR.
+
+
+.RE
+.B
+\fBsend_request(EventMgrRef :: emgr_ref(),\fR
+\fB                   Handler :: handler(),\fR
+\fB                   Request :: term()) ->\fR
+\fB                      ReqId :: request_id().\fR
+
+.br
+.RS
+.PP
+Send an asynchronous \fIcall\fR request to an event handler.
+
+.PP
+This function sends the call request \fIRequest\fR to the event handler \fIHandler\fR installed in the event manager identified by \fIEventMgrRef\fR, and returns a request identifier \fIReqId\fR.  The return value \fIReqId\fR shall later be used with \fIreceive_response/2\fR, \fIwait_response/2\fR, or \fIcheck_response/2\fR to fetch the actual result of the request.
+
+.PP
+Besides passing the request identifier directly to these functions, it can also be stored in a request identifier collection using \fIreqids_add/3\fR.  Such a collection of request identifiers can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIreceive_response/3\fR, \fIwait_response/3\fR, or \fIcheck_response/3\fR. If you are about to store the request identifier in a collection, you may want to consider using \fIsend_request/5\fR instead.
+
+.PP
+The calls \fIgen_event:receive_response(gen_event:send_request(EventMgrRef, Handler, Request), Timeout)\fR can be seen as equivalent to \fIgen_event:call(EventMgrRef, Handler, Request, Timeout)\fR, ignoring the error handling.
+
+.PP
+The event manager calls \fIModule:handle_call/2\fR to handle the request.
+
+.PP
+\fIRequest\fR may be any term and is passed as one of the arguments to \fIModule:handle_call/2\fR.
+
+
+.RE
+.B
+\fBsend_request(EventMgrRef :: emgr_ref(),\fR
+\fB                   Handler :: handler(),\fR
+\fB                   Request :: term(),\fR
+\fB                   Label :: term(),\fR
+\fB                   ReqIdCollection :: request_id_collection()) ->\fR
+\fB                      NewReqIdCollection :: request_id_collection().\fR
+
+.br
+.RS
+.PP
+Send an asynchronous \fIcall\fR request to an event handler, storing it in a request identifier collection.
+
+.PP
+This function sends the call request \fIRequest\fR to the event handler \fIHandler\fR installed in the event manager identified by \fIEventMgrRef\fR. The \fILabel\fR will be associated with the request identifier of the operation and added to the returned request identifier collection \fINewReqIdCollection\fR.
+
+.PP
+The collection can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIreceive_response/3\fR, \fIwait_response/3\fR, or \fIcheck_response/3\fR.
+
+.PP
+The same as calling \fIgen_event:reqids_add\fR\fI(\fR\fIgen_event:send_request\fR\fI(EventMgrRef, Handler, Request), Label, ReqIdCollection)\fR, but slightly more efficient.
+
+
+.RE
+.B
+\fBstart(EventMgrName :: emgr_name()) -> start_ret();\fR
+\fB           (Options :: options()) -> start_ret().\fR
+
+.br
+.RS
+.PP
+Create a stand-alone event manager process, possibly nameless.
+
+.PP
+Equivalent to \fIstart(EventMgrName, Options)\fR.
+
+.PP
+With argument \fIEventMgrName\fR, \fIOptions\fR is \fI[]\fR.
+
+.PP
+With argument \fIOptions\fR a nameless event manager is created.
+
+.PP
+For a description of the arguments and return values, see \fIstart_link/2\fR.
+
+
+.RE
+.B
+\fBstart(EventMgrName :: emgr_name(), Options :: options()) ->\fR
+\fB               start_ret().\fR
+
+.br
+.RS
+.PP
+Create a stand-alone event manager process.
+
+.PP
+The created event manager process is not part of a supervision tree and thus has no supervisor.
+
+.PP
+For a description of the arguments and return values, see \fIstart_link/2\fR.
+
+
+.RE
+.B
+\fBstart_link(EventMgrName :: emgr_name()) -> start_ret();\fR
+\fB                (Options :: options()) -> start_ret().\fR
+
+.br
+.RS
+.PP
+Create an event manager process as part of a supervision tree, possibly nameless.
+
+.PP
+Equivalent to \fIstart_link(EventMgrName, Options)\fR.
+
+.PP
+With argument \fIEventMgrName\fR, \fIOptions\fR is \fI[]\fR.
+
+.PP
+With argument \fIOptions\fR a nameless event manager is created.
+
+.PP
+For a description of the arguments and return values, see \fIstart_link/2\fR.
+
+
+.RE
+.B
+\fBstart_link(EventMgrName :: emgr_name(), Options :: options()) ->\fR
+\fB                    start_ret().\fR
+
+.br
+.RS
+.PP
+Create an event manager process as part of a supervision tree.
+
+.PP
+The function is to be called, directly or indirectly, by the supervisor. For example, it ensures that the event manager is linked to the caller (supervisor).
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If option \fI{hibernate_after, HibernateAfterTimeout}\fR is present, the \fIgen_event\fR process awaits any message for \fIHibernateAfterTimeout\fR milliseconds and if no message is received, the process goes into hibernation automatically (by calling \fIproc_lib:hibernate/3\fR).
+
+.RE
+
+.PP
+If the event manager is successfully created, the function returns \fI{ok, Pid}\fR where \fIPid\fR is the \fIpid/0\fR of the event manager.
+
+.PP
+If a process with the specified \fIEventMgrName\fR exists already, the function returns \fI{error,{already_started,OtherPid}}\fR, where \fIOtherPid\fR is the pid of that process, and the event manager process exits with reason \fInormal\fR.
+
+.PP
+If the event manager fails to start within the specified start timeout \fI{timeout, Time}\fR, which is very unlikely since the start does not interact with other processes, the function returns \fI{error, timeout}\fR and the failed event manager is killed with \fIexit(_, kill)\fR.
+
+.PP
+If \fIstart_link/1,2\fR returns \fI{error, _}\fR, the started event manager process has terminated.  If an \fI'EXIT'\fR message was delivered to the calling process (due to the process link), that message has been consumed.
+
+.PP
+\fBWARNING: \fRBefore OTP 26.0, if the started event manager failed to register its name, this founction could return \fI{error, {already_started, OtherPid}}\fR \fIbefore\fR the started event manager process had terminated, so starting again might fail because the registered name was not yet unregistered, and an \fI'EXIT'\fR message could arrive later to the process calling this function. But if the start timed out, this function killed the started event manager process and returned \fI{error, timeout}\fR, and then the process link \fI{'EXIT', Pid, killed}\fR message \fIwas\fR consumed. The start was made synchronous in OTP 26.0 and a guarantee was implemented that no process link \fI'EXIT'\fR message from a failed start will linger in the caller's inbox.
+
+
+
+.RE
+.B
+\fBstart_monitor(EventMgrNameOrOptions :: emgr_name() | options()) ->\fR
+\fB                       start_mon_ret().\fR
+
+.br
+.RS
+.PP
+Creates a stand-alone event manager process, monitored, possibly nameless.
+
+.PP
+Equivalent to \fIstart_monitor(EventMgrName, Options)\fR.
+
+.PP
+With argument \fIEventMgrName\fR, \fIOptions\fR is \fI[]\fR.
+
+.PP
+With argument \fIOptions\fR a nameless event manager is created.
+
+.PP
+For a description of the arguments and return values, see \fIstart_monitor/2\fR and \fIstart_link/1\fR.
+
+
+.RE
+.B
+\fBstart_monitor(EventMgtName :: emgr_name(), Options :: options()) ->\fR
+\fB                       start_mon_ret().\fR
+
+.br
+.RS
+.PP
+Creates a stand-alone event manager process, monitored.
+
+.PP
+The created event manager process is not part of a supervision tree and thus has no supervisor.  A monitor is atomically set up to the newly created process.
+
+.PP
+For a description of the arguments and return values, see \fIstart_link/2\fR. Note that the return value for a successful start differs from \fIstart_link/2\fR. \fIstart_monitor/0,1,2\fR will return \fI{ok, {Pid, Mon}}\fR where \fIPid\fR is the process identifier of the process, and \fIMon\fR is a reference to the monitor set up to monitor the process. If the start is not successful, the caller will be blocked until the \fIDOWN\fR message has been received and removed from the message queue.
+
+
+.RE
+.B
+\fBstop(EventMgrRef :: emgr_ref(),\fR
+\fB           Reason :: term(),\fR
+\fB           Timeout :: timeout()) ->\fR
+\fB              ok.\fR
+
+.br
+.RS
+.PP
+Stop an event manager.
+
+.PP
+Orders event manager \fIEventMgrRef\fR to exit with the specifies \fIReason\fR, and waits for it to terminate.  Before terminating, \fIgen_event\fR calls \fIModule:terminate(stop,...)\fR for each installed event handler.
+
+.PP
+The function returns \fIok\fR if the event manager terminates with the expected reason.  Any other reason than \fInormal\fR, \fIshutdown\fR, or \fI{shutdown, Term}\fR causes an error report to be issued using \fIlogger\fR.
+
+.PP
+\fITimeout\fR is an integer greater than zero that specifies how many milliseconds to wait for the event manager to terminate, or the atom \fIinfinity\fR to wait indefinitely.  If the event manager has not terminated within the specified time, the call exits the calling process with reason \fItimeout\fR.
+
+.PP
+If the process does not exist, the call exits the calling process with reason \fInoproc\fR, and with reason \fI{nodedown, Node}\fR if the connection fails to the remote \fINode\fR where the server runs.
+
+
+.RE
+.B
+\fBswap_handler(EventMgrRef :: emgr_ref(),\fR
+\fB                   OldHandler :: {handler(), term()},\fR
+\fB                   NewHandler :: {handler(), term()}) ->\fR
+\fB                      ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Replace an event handler.
+
+.PP
+This function replaces an event handler in event manager \fIEventMgrRef\fR.
+
+.PP
+For a description of \fIOldHandler\fR and \fINewHandler\fR, see \fIadd_handler/3\fR.
+
+.PP
+First the old event handler \fIOldHandler\fR is deleted. The event manager calls \fIOldModule:terminate(Args1, ...)\fR, where \fIOldModule\fR is the callback module of \fIOldHandler\fR, and collects the return value.
+
+.PP
+Then the new event handler \fINewHandler\fR is added and initiated by calling \fINewModule:init({Args2,Term})\fR, where \fINewModule\fR is the callback module of \fINewHandler\fR, and \fITerm\fR is the return value of \fIOldModule:terminate/2\fR.  This makes it possible to transfer information from \fIOldHandler\fR to \fINewHandler\fR.
+
+.PP
+The new handler is added even if the the specified old event handler is not installed, in which case \fITerm = error\fR, or if \fIOldModule:terminate/2\fR fails with \fIReason\fR, in which case \fITerm = {'EXIT', Reason}\fR.  The old handler is deleted even if \fINewModule:init/1\fR fails.
+
+.PP
+If there was a supervised connection between \fIOldHandler\fR and a process \fIPid\fR, there is a supervised connection between \fINewHandler\fR and \fIPid\fR instead.
+
+.PP
+If \fINewModule:init/1\fR returns a correct value, this function returns \fIok\fR. If \fINewModule:init/1\fR fails with \fIReason\fR or returns an unexpected value \fITerm\fR, this function returns \fI{error, {'EXIT', Reason}}\fR or \fI{error, Term}\fR, respectively.
+
+
+.RE
+.B
+\fBswap_sup_handler(EventMgrRef :: emgr_ref(),\fR
+\fB                       OldHandler :: {handler(), term()},\fR
+\fB                       NewHandler :: {handler(), term()}) ->\fR
+\fB                          ok | {error, term()}.\fR
+
+.br
+.RS
+.PP
+Replace an event handler, and supervise it.
+
+.PP
+Replaces an event handler in event manager \fIEventMgrRef\fR in the same way as \fIswap_handler/3\fR, but also supervises the connection between \fINewHandler\fR and the calling process.
+
+.PP
+For a description of the arguments and return values, see \fIswap_handler/3\fR.
+
+
+.RE
+.B
+\fBsync_notify(EventMgrRef :: emgr_ref(), Event :: term()) -> ok.\fR
+
+.br
+.RS
+.PP
+Send a synchronous event notification to an event manager.
+
+.PP
+The event is sent to \fIEventMgrRef\fR that calls \fIModule:handle_event/2\fR for each installed event handler to handle the event. This function will return \fIok\fR after the event has been handled by all event handlers.
+
+.PP
+\fIEvent\fR is any term that is passed as one of the arguments to \fIModule:handle_event/2\fR.
+
+
+.RE
+.B
+\fBwait_response(ReqId, WaitTime) -> Result\fR
+\fB                       when\fR
+\fB                           ReqId :: request_id(),\fR
+\fB                           WaitTime :: response_timeout(),\fR
+\fB                           Response ::\fR
+\fB                               {reply, Reply :: term()} |\fR
+\fB                               {error, {Reason :: term(), emgr_ref()}},\fR
+\fB                           Result :: Response | timeout.\fR
+
+.br
+.RS
+.PP
+Wait for a request resonse.
+
+.PP
+Wait for the response to the request identifier \fIReqId\fR. The request must have been made by \fIsend_request/3\fR, from the same process that called \fIsend_request/3\fR.
+
+.PP
+\fIWaitTime\fR specifies how long to wait for a response. If no response is received within the specified time, the function returns \fItimeout\fR and no cleanup is done, Thus the function can be invoked repeatedly until a reply is returned.
+
+.PP
+The return value \fIReply\fR is defined in the return value of \fIModule:handle_call/2\fR.
+
+.PP
+If the specified event handler is not installed, the function returns \fI{error, bad_module}\fR.  If the callback function fails with \fIReason\fR, or returns an unexpected value \fITerm\fR, this function returns \fI{error,{'EXIT',Reason}}\fR or \fI{error,Term}\fR, respectively. If the event manager dies before or during the request this function returns \fI{error, {Reason, EventMgrRef}}\fR.
+
+.PP
+The difference between \fIreceive_response/2\fR and \fIwait_response/2\fR is that \fIreceive_response/2\fR abandons the request at timeout so that a potential future response is ignored, while \fIwait_response/2\fR does not.
+
+
+.RE
+.B
+\fBwait_response(ReqIdCollection, WaitTime, Delete) -> Result\fR
+\fB                       when\fR
+\fB                           ReqIdCollection :: request_id_collection(),\fR
+\fB                           WaitTime :: response_timeout(),\fR
+\fB                           Delete :: boolean(),\fR
+\fB                           Response ::\fR
+\fB                               {reply, Reply :: term()} |\fR
+\fB                               {error, {Reason :: term(), emgr_ref()}},\fR
+\fB                           Result ::\fR
+\fB                               {Response,\fR
+\fB                                Label :: term(),\fR
+\fB                                NewReqIdCollection ::\fR
+\fB                                    request_id_collection()} |\fR
+\fB                               no_request | timeout.\fR
+
+.br
+.RS
+.PP
+Wait for any request response in a collection.
+
+.PP
+Wait for a response in a \fIReqIdCollection\fR.  All request identifiers of \fIReqIdCollection\fR must correspond to requests that have been made using \fIsend_request/3\fR or \fIsend_request/5\fR, and all requests must have been made by the process calling this function.
+
+.PP
+The \fILabel\fR in the response is the \fILabel\fR associated with the request identifier that the response corresponds to. The \fILabel\fR of a request identifier is associated when adding the request id to a collection, or when sending the request using \fIsend_request/5\fR.
+
+.PP
+Compared to \fIwait_response/2\fR, the returned result or exception associated with a specific request identifier will be wrapped in a 3-tuple \fI{Response, Label, NewReqIdCollection}\fR. \fIResponse\fR is the value that would have been produced by \fIwait_response/2\fR, \fILabel\fR is the value associated with the specific request identifier and \fINewReqIdCollection\fR is a possibly modified request identifier collection.
+
+.PP
+If \fIReqIdCollection\fR is empty, \fIno_request\fR will be returned.
+
+.PP
+If no response is received before the \fIWaitTime\fR has expired, \fItimeout\fR is returned.  It is valid to continue waiting for a response as many times as needed up until a response has been received and completed by \fIcheck_response()\fR, \fIreceive_response()\fR, or \fIwait_response()\fR.
+
+.PP
+The difference between \fIreceive_response/3\fR and \fIwait_response/3\fR is that \fIreceive_response/3\fR abandons requests at time-out so that potential future responses are ignored, while \fIwait_response/3\fR does not.
+
+.PP
+If \fIDelete\fR is \fItrue\fR, the association with \fILabel\fR has been deleted from \fIReqIdCollection\fR in the resulting \fINewReqIdCollection\fR. If \fIDelete\fR is\fIfalse\fR, \fINewReqIdCollection\fR will equal \fIReqIdCollection\fR.  Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIwait_response/3\fR, \fIcheck_response/3\fR, and \fIreceive_response/3\fR.
+
+.PP
+However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return. Note that if you pass a collection only containing associations of already handled or abandoned requests to this function, it will always block until \fIWaitTime\fR expires and then return \fItimeout\fR.
+
+
+.RE
+.B
+\fBwhich_handlers(EventMgrRef :: emgr_ref()) -> [handler()].\fR
+
+.br
+.RS
+.PP
+Return all event handlers in an event manager.
+
+.PP
+This function returns a list of all event handlers installed in event manager \fIEventMgrRef\fR.
+
+.PP
+For a description of \fIHandler\fR, see \fIadd_handler/3\fR.
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBcode_change(OldVsn, State, Extra)\fR
+
+.br
+.RS
+.PP
+Update the event handler state after code change.
+
+.PP
+This function is called for an installed event handler that is to update its internal state during a release upgrade/downgrade, that is, when the instruction \fI{update, Module, Change,...}\fR, is specified in the \fIappup\fR file.
+
+.PP
+For more information, see OTP Design Principles.
+
+.PP
+For an upgrade, \fIOldVsn\fR is \fIVsn\fR, and for a downgrade, \fIOldVsn\fR is \fI{down, Vsn}\fR.  \fIVsn\fR is defined by the \fIvsn\fR attribute(s) of the old version of the callback module \fIModule\fR.  If no such attribute is defined, the version is the checksum of the Beam file.
+
+.PP
+\fIState\fR is the internal state of the event handler.
+
+.PP
+\fIExtra\fR is passed "as is" from the \fI{advanced, Extra}\fR part of the update instruction.
+
+.PP
+The function is to return the updated internal state.
+
+.PP
+\fBNOTE: \fRIf a release upgrade/downgrade with \fIChange={advanced, Extra}\fR specified in the \fI.appup\fR file is made when \fIcode_change/3\fR is not implemented the event handler will crash with an \fIundef\fR error reason.
+
+
+
+.RE
+.B
+\fBformat_status(Status)\fR
+
+.br
+.RS
+.PP
+Format/limit the status value.
+
+.PP
+This function is called by a \fIgen_event\fR process in in order to format/limit the server state for debugging and logging purposes.
+
+.PP
+It is called in the following situations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+One of \fIsys:get_status/1,2\fR is invoked to get the \fIgen_event\fR status.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The event handler terminates abnormally and \fIgen_event\fR logs an error.
+
+.RE
+
+.PP
+This callback is used to limit the status of the event handler returned by \fIsys:get_status/1,2\fR or sent to \fIlogger\fR.
+
+.PP
+The callback gets a map \fIStatus\fR describing the current status and shall return a map \fINewStatus\fR with the same keys, but it may transform some values.
+
+.PP
+Two possible use cases for this callback is to remove sensitive information from the state to prevent it from being printed in log files, or to compact large irrelevant status items that would only clutter the logs.
+
+.PP
+\fIExample\fR:
+
+.IP
+.nf
+format_status(Status) ->
+  maps:map(
+    fun(state,State) ->
+            maps:remove(private_key, State);
+       (message,{password, _Pass}) ->
+            {password, removed};
+       (_,Value) ->
+            Value
+    end, Status).
+
+.fi
+
+.PP
+\fBNOTE: \fRThis callback is optional, so event handler modules need not export it. If a handler does not export this function, the \fIgen_event\fR module uses the handler state directly for the purposes described below. If this callback is exported but fails, to hide possibly sensitive data, the default function will instead return the fact that \fIformat_status/1\fR has crashed.
+
+
+
+.RE
+.B
+\fBformat_status(Opt, StatusData)\fR
+
+.RS
+.LP
+Deprecated: the callback gen_event:format_status(_,_) is deprecated; use format_status/1 instead
+.RE
+
+.br
+.RS
+.PP
+Format/limit the status value.
+
+.PP
+This function is called by a \fIgen_event\fR process in in order to format/limit the server state for debugging and logging purposes.
+
+.PP
+It is called in the following situations:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+One of \fIsys:get_status/1,2\fR is invoked to get the \fIgen_event\fR status. \fIOpt\fR is set to the atom \fInormal\fR for this case.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The event handler terminates abnormally and \fIgen_event\fR logs an error. \fIOpt\fR is set to the atom \fIterminate\fR for this case.
+
+.RE
+
+.PP
+This function is useful for changing the form and appearance of the event handler state for these cases. An event handler callback module wishing to change the \fIsys:get_status/1,2\fR return value as well as how its state appears in termination error logs, exports an instance of \fIformat_status/2\fR that returns a term describing the current state of the event handler.
+
+.PP
+\fIPDict\fR is the current value of the process dictionary of \fIgen_event\fR.
+
+.PP
+\fIState\fR is the internal state of the event handler.
+
+.PP
+The function is to return \fIStatus\fR, a term that change the details of the current state of the event handler. Any term is allowed for \fIStatus\fR. The \fIgen_event\fR module uses \fIStatus\fR as follows:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When \fIsys:get_status/1,2\fR is called, \fIgen_event\fR ensures that its return value contains \fIStatus\fR in place of the state term of the event handler.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When an event handler terminates abnormally, \fIgen_event\fR logs \fIStatus\fR in place of the state term of the event handler.
+
+.RE
+
+.PP
+One use for this function is to return compact alternative state representations to avoid that large state terms are printed in log files.
+
+.PP
+\fBNOTE: \fRThis callback is optional, so event handler modules need not export it. If a handler does not export this function, the \fIgen_event\fR module uses the handler state directly for the purposes described below.
+
+
+
+.RE
+.B
+\fBhandle_call(Request, State)\fR
+
+.br
+.RS
+.PP
+Handle a call.
+
+.PP
+Whenever an event manager receives a request sent using \fIcall/3,4\fR, this function is called for the specified event handler to handle the request.
+
+.PP
+\fIRequest\fR is the \fIRequest\fR argument of \fIcall/3,4\fR.
+
+.PP
+\fIState\fR is the internal state of the event handler.
+
+.PP
+The return values are the same as for \fIModule:handle_event/2\fR except that they also contain a term \fIReply\fR, which is the reply to the client as the return value of \fIcall/3,4\fR.
+
+
+.RE
+.B
+\fBhandle_event(Event, State)\fR
+
+.br
+.RS
+.PP
+Handle an event.
+
+.PP
+Whenever an event manager receives an event sent using \fInotify/2\fR or \fIsync_notify/2\fR, this function is called for each installed event handler to handle the event.
+
+.PP
+\fIEvent\fR is the \fIEvent\fR argument of \fInotify/2\fR / \fIsync_notify/2\fR.
+
+.PP
+\fIState\fR is the internal state of the event handler.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fI{ok, NewState}\fR or \fI{ok, NewState, hibernate}\fR is returned, the event handler remains in the event manager with the possibly updated internal state \fINewState\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fI{ok, NewState, hibernate}\fR is returned, the event manager also goes into hibernation (by calling \fIproc_lib:hibernate/3\fR), waiting for the next event to occur.  It is sufficient that one of the event handlers return \fI{ok, NewState, hibernate}\fR for the whole event manager process to hibernate.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fI{swap_handler, Args1, NewState, Handler2, Args2}\fR is returned, the event handler is replaced by \fIHandler2\fR by first calling \fIModule:terminate(Args1, NewState)\fR and then \fIModule2:init({Args2, Term})\fR, where \fITerm\fR is the return value of \fIModule:terminate/2\fR. For more information, see \fIswap_handler/3\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIremove_handler\fR is returned, the event handler is deleted by calling \fIModule:terminate(remove_handler, State)\fR.
+
+.RE
+
+
+.RE
+.B
+\fBhandle_info(Info, State)\fR
+
+.br
+.RS
+.PP
+Handle an info message (regular process message).
+
+.PP
+This function is called for each installed event handler when an event manager receives any other message than an event or a synchronous request (or a system message).
+
+.PP
+\fIInfo\fR is the received message.
+
+.PP
+In particular, this callback will be made when a process terminated after calling \fIadd_sup_handler/3\fR. Any event handler attached to an event manager which in turn has a supervised handler should expect callbacks of the shape \fIModule:handle_info({'EXIT', Pid, Reason}, State)\fR.
+
+.PP
+For a description of \fIState\fR and possible return values, see \fIModule:handle_event/2\fR.
+
+.PP
+\fBNOTE: \fRThis callback is optional, so callback modules need not export it. The \fIgen_event\fR module provides a default implementation of this function that logs about the unexpected \fIInfo\fR message, drops it and returns \fI{ok, State}\fR.
+
+
+
+.RE
+.B
+\fBinit(InitArgs)\fR
+
+.br
+.RS
+.PP
+Initialize the event handler.
+
+.PP
+Whenever a new event handler is added to an event manager, this function is called to initialize the event handler.
+
+.PP
+If the event handler is added because of a call to \fIadd_handler/3\fR or \fIadd_sup_handler/3\fR, \fIInitArgs\fR is the \fIArgs\fR argument of these functions.
+
+.PP
+If the event handler replaces another event handler because of a call to \fIswap_handler/3\fR or \fIswap_sup_handler/3\fR, or because of a \fIswap\fR return tuple from one of the other callback functions, \fIInitArgs\fR is a tuple \fI{Args, Term}\fR, where \fIArgs\fR is the argument provided in the function call/return tuple and \fITerm\fR is the result of terminating the old event handler, see \fIswap_handler/3\fR.
+
+.PP
+If successful, the function returns \fI{ok, State}\fR or \fI{ok, State, hibernate}\fR, where \fIState\fR is the initial internal state of the event handler.
+
+.PP
+If \fI{ok, State, hibernate}\fR is returned, the event manager goes into hibernation (by calling \fIproc_lib:hibernate/3\fR), waiting for the next event to occur.
+
+
+.RE
+.B
+\fBterminate(Args, State)\fR
+
+.br
+.RS
+.PP
+Handle event handler termination.
+
+.PP
+Whenever an event handler is deleted from an event manager, this function is called. It is to be the opposite of \fIModule:init/1\fR and do any necessary cleaning up.
+
+.PP
+If the event handler is deleted because of a call to \fIdelete_handler/3\fR, \fIswap_handler/3\fR, or \fIswap_sup_handler/3\fR, \fIArg\fR is the \fIArgs\fR argument of this function call.
+
+.PP
+\fIArg = {stop, Reason}\fR if the event handler has a supervised connection to a process that has terminated with reason \fIReason\fR.
+
+.PP
+\fIArg = stop\fR if the event handler is deleted because the event manager is terminating.
+
+.PP
+The event manager terminates if it is part of a supervision tree and it is ordered by its supervisor to terminate.  Even if it is \fInot\fR part of a supervision tree, it terminates if it receives an \fI'EXIT'\fR message from its parent.
+
+.PP
+\fIArg = remove_handler\fR if the event handler is deleted because another callback function has returned \fIremove_handler\fR or \fI{remove_handler, Reply}\fR.
+
+.PP
+\fIArg = {error, Term}\fR if the event handler is deleted because a callback function returned an unexpected value \fITerm\fR, or \fIArg = {error, {'EXIT', Reason}}\fR if a callback function failed.
+
+.PP
+\fIState\fR is the internal state of the event handler.
+
+.PP
+The function can return any term.  If the event handler is deleted because of a call to \fIgen_event:delete_handler/3\fR, the return value of that function becomes the return value of this function. If the event handler is to be replaced with another event handler because of a swap, the return value is passed to the \fIinit\fR function of the new event handler. Otherwise the return value is ignored.
+
+.PP
+\fBNOTE: \fRThis callback is optional, so callback modules need not export it. The \fIgen_event\fR module provides a default implementation without cleanup.
+
+
+
+.RE

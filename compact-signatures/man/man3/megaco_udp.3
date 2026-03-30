@@ -1,0 +1,263 @@
+.TH megaco_udp 3 "megaco 4.8.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+megaco_udp \- Interface module to UDP transport protocol for Megaco/H.248.
+
+.SH DESCRIPTION
+.PP
+This module contains the public interface to the UDP/IP version transport protocol for Megaco/H.248.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcounter() ::\fR
+\fB          medGwyGatewayNumInMessages | medGwyGatewayNumInOctets |\fR
+\fB          medGwyGatewayNumOutMessages | medGwyGatewayNumOutOctets |\fR
+\fB          medGwyGatewayNumErrors.\fR
+
+.br
+.RS
+.PP
+Defines the different counters handled by this transport.
+
+
+.RE
+.B
+\fB-opaque handle() \fR
+
+.br
+.RS
+.PP
+An opaque data type representing an UDP socket.
+
+
+.RE
+.B
+\fB-opaque send_handle() \fR
+
+.br
+.RS
+.PP
+An opaque data type representing an UDP socket, used when sending.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBblock(Handle) -> ok when Handle :: handle() | send_handle().\fR
+
+.br
+.RS
+.PP
+Stop receiving incoming messages on the socket.
+
+
+.RE
+.B
+\fBclose(Handle) -> ok when Handle :: handle() | send_handle().\fR
+
+.br
+.RS
+.PP
+This function is used for closing an active UDP socket.
+
+
+.RE
+.B
+\fBcreate_send_handle(Handle, Host, Port) -> send_handle()\fR
+\fB                            when\fR
+\fB                                Handle :: handle(),\fR
+\fB                                Host ::\fR
+\fB                                    inet:ip4_address() | inet:hostname(),\fR
+\fB                                Port :: inet:port_number().\fR
+
+.br
+.RS
+.PP
+Creates a send handle from a transport handle. The send handle is intended to be used by megaco_udp:send_message/2.
+
+
+.RE
+.B
+\fBget_stats() -> {ok, TotalStats} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       TotalStats :: [{SH, [{Counter, integer()}]}],\fR
+\fB                       SH :: send_handle(),\fR
+\fB                       Counter :: counter(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Get all counter values for all known connections.
+
+
+.RE
+.B
+\fBget_stats(SH) -> {ok, Stats} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       SH :: send_handle(),\fR
+\fB                       Stats :: [{Counter, integer()}],\fR
+\fB                       Counter :: counter(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Get all counter values for a given handle.
+
+
+.RE
+.B
+\fBget_stats(SH, Counter) -> {ok, integer()} | {error, Reason}\fR
+\fB                   when\fR
+\fB                       SH :: send_handle(),\fR
+\fB                       Counter :: counter(),\fR
+\fB                       Reason :: term().\fR
+
+.br
+.RS
+.PP
+Get the value of a specific counter.
+
+
+.RE
+.B
+\fBopen(TransportRef, Opts) ->\fR
+\fB              {ok, Handle, ControlPid} | {error, Reason}\fR
+\fB              when\fR
+\fB                  TransportRef :: pid(),\fR
+\fB                  Opts ::\fR
+\fB                      {inet_backend, default | inet | socket} |\fR
+\fB                      {port, PortNum} |\fR
+\fB                      {options, list()} |\fR
+\fB                      {receive_handle, term()} |\fR
+\fB                      {module, atom()},\fR
+\fB                  PortNum :: inet:port_number(),\fR
+\fB                  Handle :: handle(),\fR
+\fB                  ControlPid :: pid(),\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+This function is used to open an UDP/IP socket.
+
+module
+.RS 2
+The option makes it possible for the user to provide their own callback module. The functions 
+\fIreceive_message/4\fR or \fIprocess_received_message/4\fR of this module is called when a new message is received. Which one depends on the size of the message:
+small
+.RS 2
+receive_message
+
+
+.RE
+
+large
+.RS 2
+process_received_message
+
+
+.RE
+
+.PP
+Default value is \fImegaco\fR.
+
+
+.RE
+
+inet_backend
+.RS 2
+Choose the inet-backend.
+
+.PP
+This option make it possible to use a different inet-backend ('default', 'inet' or 'socket').
+
+.PP
+Default is \fIdefault\fR (system default).
+
+
+.RE
+
+
+.RE
+.B
+\fBreset_stats() -> megaco:void().\fR
+
+.br
+.RS
+.PP
+Reset all counters for all UDP handles.
+
+
+.RE
+.B
+\fBreset_stats(SH) -> megaco:void() when SH :: send_handle().\fR
+
+.br
+.RS
+.PP
+Reset all counters for the given UDP handle.
+
+
+.RE
+.B
+\fBsend_message(SH, Msg) -> ok\fR
+\fB                      when\fR
+\fB                          SH :: send_handle(),\fR
+\fB                          Msg :: binary() | iolist().\fR
+
+.br
+.RS
+.PP
+Sends a message on a socket. The send handle is obtained by megaco_udp:create_send_handle/3. Increments the NumOutMessages and NumOutOctets counters if message successfully sent. In case of a failure to send, the NumErrors counter is \fInot\fR incremented. This is done elsewhere in the megaco app.
+
+
+.RE
+.B
+\fBsocket(Handle) -> Socket\fR
+\fB                when\fR
+\fB                    Handle :: handle() | send_handle(),\fR
+\fB                    Socket :: inet:socket().\fR
+
+.br
+.RS
+.PP
+This function is used to convert a socket \fIhandle()\fR to a inet \fIsocket()\fR.
+
+
+.RE
+.B
+\fBstart_transport() -> {ok, TransportRef} when TransportRef :: pid().\fR
+
+.br
+.RS
+.PP
+This function is used for starting the UDP/IP transport service. Use exit(TransportRef, Reason) to stop the transport service.
+
+
+.RE
+.B
+\fBunblock(Handle) -> ok when Handle :: handle() | send_handle().\fR
+
+.br
+.RS
+.PP
+Starting to receive incoming messages from the socket again.
+
+
+.RE
+.B
+\fBupgrade_receive_handle(ControlPid, NewRecvHandle) -> ok\fR
+\fB                                when\fR
+\fB                                    ControlPid :: pid(),\fR
+\fB                                    NewRecvHandle :: term().\fR
+
+.br
+.RS
+.PP
+Update the receive handle of the control process (e.g. after having changed protocol version).
+
+
+.RE

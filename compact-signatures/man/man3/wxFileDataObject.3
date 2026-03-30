@@ -1,0 +1,142 @@
+.TH wxFileDataObject 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxFileDataObject \- \fIwxFileDataObject\fR is a specialization of \fIwxDataObject\fR for file names.
+
+.SH DESCRIPTION
+.PP
+The program works with it just as if it were a list of absolute file names, but internally it uses the same format as Explorer and other compatible programs under Windows or GNOME/KDE file manager under Unix which makes it possible to receive files from them using this class.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDataObject\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxTextDataObject\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBitmapDataObject\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDataObject\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDataObject\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxFileDataObject
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxFileDataObject() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddFile(This, File) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxFileDataObject(),\fR
+\fB                     File :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Adds a file to the file list represented by this data object (Windows only).
+
+
+.RE
+.B
+\fBdestroy(This :: wxFileDataObject()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetFilenames(This) -> [unicode:charlist()]\fR
+\fB                      when This :: wxFileDataObject().\fR
+
+.br
+.RS
+.PP
+Returns the array of file names.
+
+
+.RE
+.B
+\fBnew() -> wxFileDataObject().\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE

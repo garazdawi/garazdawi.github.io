@@ -1,0 +1,615 @@
+.TH wxButton 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxButton \- A button is a control that contains a text string, and is one of the most common elements of a GUI.
+
+.SH DESCRIPTION
+.PP
+It may be placed on a \fIwxDialog\fR or on a \fIwxPanel\fR panel, or indeed on almost any other window.
+
+.PP
+By default, i.e. if none of the alignment styles are specified, the label is centered both horizontally and vertically. If the button has both a label and a bitmap, the alignment styles above specify the location of the rectangle combining both the label and the bitmap and the bitmap position set with \fIwxButton::SetBitmapPosition()\fR (not implemented in wx) defines the relative position of the bitmap with respect to the label (however currently non-default alignment combinations are not implemented on all platforms).
+
+.PP
+Since version 2.9.1 \fIwxButton\fR supports showing both text and an image (currently only when using wxMSW, wxGTK or wxOSX/Cocoa ports), see \fISetBitmap()\fR (not implemented in wx) and \fIsetBitmapLabel/2\fR, \fIsetBitmapDisabled/2\fR &c methods. In the previous wxWidgets versions this functionality was only available in (the now trivial) \fIwxBitmapButton\fR class which was only capable of showing an image without text.
+
+.PP
+A button may have either a single image for all states or different images for the following states (different images are not currently supported under macOS where the normal image is used for all states):
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInormal:\fR the default state
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdisabled:\fR bitmap shown when the button is disabled.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpressed:\fR bitmap shown when the button is pushed (e.g. while the user keeps the mouse button pressed on it)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfocus:\fR bitmap shown when the button has keyboard focus (but is not pressed as in this case the button is in the pressed state)
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcurrent:\fR bitmap shown when the mouse is over the button (but it is not pressed although it may have focus). Notice that if current bitmap is not specified but the current platform UI uses hover images for the buttons (such as Windows or GTK+), then the focus bitmap is used for hover state as well. This makes it possible to set focus bitmap only to get reasonably good behaviour on all platforms.
+
+.RE
+
+.PP
+All of the bitmaps must be of the same size and the normal bitmap must be set first (to a valid bitmap), before setting any other ones. Also, if the size of the bitmaps is changed later, you need to change the size of the normal bitmap before setting any other bitmaps with the new size (and you do need to reset all of them as their original values can be lost when the normal bitmap size changes).
+
+.PP
+The position of the image inside the button be configured using \fISetBitmapPosition()\fR (not implemented in wx). By default the image is on the left of the text.
+
+.PP
+Please also notice that GTK+ uses a global setting called \fIgtk-button-images\fR to determine if the images should be shown in the buttons at all. If it is off (which is the case in e.g. Gnome 2.28 by default), no images will be shown, consistently with the native behaviour.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBU_LEFT: Left-justifies the label. Windows and GTK+ only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBU_TOP: Aligns the label to the top of the button. Windows and GTK+ only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBU_RIGHT: Right-justifies the bitmap label. Windows and GTK+ only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBU_BOTTOM: Aligns the label to the bottom of the button. Windows and GTK+ only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBU_EXACTFIT: By default, all buttons are made of at least the standard button size, even if their contents is small enough to fit into a smaller size. This is done for consistency as most platforms use buttons of the same size in the native dialogs, but can be overridden by specifying this flag. If it is given, the button will be made just big enough for its contents. Notice that under MSW the button will still have at least the standard height, even with this style, if it has a non-empty label.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBU_NOTEXT: Disables the display of the text label in the button even if it has one or its id is one of the standard stock ids with an associated label: without using this style a button which is only supposed to show a bitmap but uses a standard id would display a label too.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxBORDER_NONE: Creates a button without border. This is currently implemented in MSW, GTK2 and OSX/Cocoa.
+
+.RE
+
+.PP
+See: \fIwxBitmapButton\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxButton
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_button_clicked\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxButton() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxButton(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {label, unicode:chardata()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Button creation function for two-step creation.
+
+.PP
+For more details, see \fInew/3\fR.
+
+
+.RE
+.B
+\fBdestroy(This :: wxButton()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetBitmapDisabled(This) -> wxBitmap:wxBitmap()\fR
+\fB                           when This :: wxButton().\fR
+
+.br
+.RS
+.PP
+Returns the bitmap for the disabled state, which may be invalid.
+
+.PP
+See: \fIsetBitmapDisabled/2\fR
+
+.PP
+Since: 2.9.1 (available in \fIwxBitmapButton\fR only in previous versions)
+
+
+.RE
+.B
+\fBgetBitmapFocus(This) -> wxBitmap:wxBitmap()\fR
+\fB                        when This :: wxButton().\fR
+
+.br
+.RS
+.PP
+Returns the bitmap for the focused state, which may be invalid.
+
+.PP
+See: \fIsetBitmapFocus/2\fR
+
+.PP
+Since: 2.9.1 (available in \fIwxBitmapButton\fR only in previous versions)
+
+
+.RE
+.B
+\fBgetBitmapLabel(This) -> wxBitmap:wxBitmap()\fR
+\fB                        when This :: wxButton().\fR
+
+.br
+.RS
+.PP
+Returns the bitmap for the normal state.
+
+.PP
+This is exactly the same as \fIGetBitmap()\fR (not implemented in wx) but uses a name backwards-compatible with \fIwxBitmapButton\fR.
+
+.PP
+See: \fIsetBitmapLabel/2\fR
+
+.PP
+Since: 2.9.1 (available in \fIwxBitmapButton\fR only in previous versions)
+
+
+.RE
+.B
+\fBgetDefaultSize() -> {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Returns the default size for the buttons.
+
+.PP
+It is advised to make all the dialog buttons of the same size and this function allows retrieving the (platform, and current font dependent) size which should be the best suited for this.
+
+.PP
+The optional \fIwin\fR argument is new since wxWidgets 3.1.3 and allows to get a per-monitor DPI specific size.
+
+
+.RE
+.B
+\fBgetDefaultSize(Win) -> {W :: integer(), H :: integer()}\fR
+\fB                        when Win :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew() -> wxButton().\fR
+
+.br
+.RS
+.PP
+Default ctor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxButton()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {label, unicode:chardata()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a button.
+
+.PP
+The preferred way to create standard buttons is to use default value of \fIlabel\fR. If no label is supplied and \fIid\fR is one of standard IDs from this list, a standard label will be used. In other words, if you use a predefined \fIwxID_XXX\fR constant, just omit the label completely rather than specifying it. In particular, help buttons (the ones with \fIid\fR of \fIwxID_HELP\fR) under macOS can't display any label at all and while \fIwxButton\fR will detect if the standard "Help" label is used and ignore it, using any other label will prevent the button from correctly appearing as a help button and so should be avoided.
+
+.PP
+In addition to that, the button will be decorated with stock icons under GTK+ 2.
+
+.PP
+See: \fIcreate/4\fR
+
+
+.RE
+.B
+\fBsetBitmapDisabled(This, Bitmap) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxButton(),\fR
+\fB                               Bitmap :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Sets the bitmap for the disabled button appearance.
+
+.PP
+If \fIbitmap\fR is invalid, the disabled bitmap is set to the automatically generated greyed out version of the normal bitmap, i.e. the same bitmap as is used by default if this method is not called at all. Use \fISetBitmap()\fR (not implemented in wx) with an invalid bitmap to remove the bitmap completely (for all states).
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetBitmapDisabled/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBitmapLabel/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBitmapFocus/2\fR
+
+.RE
+
+.PP
+Since: 2.9.1 (available in \fIwxBitmapButton\fR only in previous versions)
+
+
+.RE
+.B
+\fBsetBitmapFocus(This, Bitmap) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxButton(),\fR
+\fB                            Bitmap :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Sets the bitmap for the button appearance when it has the keyboard focus.
+
+.PP
+If \fIbitmap\fR is invalid, the normal bitmap will be used in the focused state.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetBitmapFocus/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBitmapLabel/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetBitmapDisabled/2\fR
+
+.RE
+
+.PP
+Since: 2.9.1 (available in \fIwxBitmapButton\fR only in previous versions)
+
+
+.RE
+.B
+\fBsetBitmapLabel(This, Bitmap) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxButton(),\fR
+\fB                            Bitmap :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Sets the bitmap label for the button.
+
+.PP
+Remark: This is the bitmap used for the unselected state, and for all other states if no other bitmaps are provided.
+
+.PP
+See: \fIgetBitmapLabel/1\fR
+
+.PP
+Since: 2.9.1 (available in \fIwxBitmapButton\fR only in previous versions)
+
+
+.RE
+.B
+\fBsetDefault(This) -> wxWindow:wxWindow() when This :: wxButton().\fR
+
+.br
+.RS
+.PP
+This sets the button to be the default item in its top-level window (e.g.
+
+.PP
+the panel or the dialog box containing it).
+
+.PP
+As normal, pressing return causes the default button to be depressed when the return key is pressed.
+
+.PP
+See also \fIwxWindow:setFocus/1\fR which sets the keyboard focus for windows and text panel items, and \fIwxTopLevelWindow::SetDefaultItem()\fR (not implemented in wx).
+
+.PP
+Remark: Under Windows, only dialog box buttons respond to this function.
+
+.PP
+Return: the old default item (possibly NULL)
+
+
+.RE
+.B
+\fBsetLabel(This, Label) -> ok\fR
+\fB                  when This :: wxButton(), Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the string label for the button.
+
+
+.RE

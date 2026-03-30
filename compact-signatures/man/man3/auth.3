@@ -1,0 +1,105 @@
+.TH auth 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+auth \- Erlang network authentication server.
+
+.SH DESCRIPTION
+.PP
+For a description of the Magic Cookie system, refer to Distributed Erlang in the Erlang Reference Manual.
+
+.SH DATA TYPES
+.LP
+.B
+\fBcookie() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcookie() -> Cookie when Cookie :: cookie().\fR
+
+.RS
+.LP
+Deprecated: auth:cookie/0 is deprecated; use erlang:get_cookie/0 instead
+.RE
+
+.br
+.RS
+.PP
+Use \fIerlang:get_cookie()\fR in ERTS instead.
+
+
+.RE
+.B
+\fBcookie(TheCookie) -> true\fR
+\fB                when TheCookie :: Cookie | [Cookie], Cookie :: cookie().\fR
+
+.RS
+.LP
+Deprecated: auth:cookie/1 is deprecated; use erlang:set_cookie/2 instead
+.RE
+
+.br
+.RS
+.PP
+Use \fIerlang:set_cookie(node(), Cookie)\fR in ERTS instead.
+
+
+.RE
+.B
+\fBis_auth(Node) -> yes | no when Node :: node().\fR
+
+.RS
+.LP
+Deprecated: auth:is_auth/1 is deprecated; use net_adm:ping/1 instead
+.RE
+
+.br
+.RS
+.PP
+Returns \fIyes\fR if communication with \fINode\fR is authorized.
+
+.PP
+Use \fInet_adm:ping(Node)\fR instead.
+
+.PP
+Notice that a connection to \fINode\fR is established in this case. Returns \fIno\fR if \fINode\fR does not exist or communication is not authorized (it has another cookie than \fIauth\fR thinks it has).
+
+
+.RE
+.B
+\fBnode_cookie(Cookies :: [node() | cookie(), ...]) -> yes | no.\fR
+
+.RS
+.LP
+Deprecated: auth:node_cookie/1 is deprecated; use erlang:set_cookie/2 and net_adm:ping/1 instead
+.RE
+
+.br
+.RS
+.PP
+Equivalent to \fInode_cookie(Node, Cookie)\fR.
+
+
+.RE
+.B
+\fBnode_cookie(Node, Cookie) -> yes | no\fR
+\fB                     when Node :: node(), Cookie :: cookie().\fR
+
+.RS
+.LP
+Deprecated: auth:node_cookie/2 is deprecated; use erlang:set_cookie/2 and net_adm:ping/1 instead
+.RE
+
+.br
+.RS
+.PP
+Sets the magic cookie of \fINode\fR to \fICookie\fR and verifies the status of the authorization.
+
+.PP
+Equivalent to calling \fIerlang:set_cookie(Node, Cookie)\fR, followed by \fIauth:is_auth(Node)\fR.
+
+
+.RE

@@ -1,0 +1,301 @@
+.TH snmpm_user 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpm_user \- Behaviour module for the SNMP manager user.
+
+.SH DESCRIPTION
+.PP
+This module defines the behaviour of the manager user. A \fIsnmpm_user\fR compliant module must export the following functions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_error/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_agent/5\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_pdu/4\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_trap/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_inform/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_report/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_invalid_result/2\fR
+
+.RE
+
+.PP
+The semantics of them and their exact signatures are explained below.
+
+.PP
+Some of the function has no defined return value (\fIvoid()\fR), they can of course return anything. But the functions that do have specified return value(s) \fImust\fR adhere to this. None of the functions can use exit of throw to return.
+
+.PP
+If the manager is not configured to use any particular transport domain, the behaviour \fIhandle_agent/5\fR will for backwards copmpatibility reasons be called with the old \fIIpAddr\fR and \fIPortNumber\fR arguments
+
+.SH DATA TYPES
+.LP
+.B
+\fBip_address() :: inet:ip_address().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBport_number() :: inet:port_number().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsnmp_gen_info() ::\fR
+\fB          {ErrorStatus :: atom(),\fR
+\fB           ErrorIndex :: pos_integer(),\fR
+\fB           Varbinds :: [snmp:varbind()]}.\fR
+
+.br
+.RS
+.PP
+General error information (does not \fIhave\fR to indicate an error)..
+
+
+.RE
+.B
+\fBsnmp_v1_trap_info() ::\fR
+\fB          {Enteprise :: snmp:oid(),\fR
+\fB           Generic :: integer(),\fR
+\fB           Spec :: integer(),\fR
+\fB           Timestamp :: integer(),\fR
+\fB           Varbinds :: [snmp:varbind()]}.\fR
+
+.br
+.RS
+.PP
+Trap related information.
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBhandle_agent(Domain, Address, Type, SnmpInfo, UserData)\fR
+
+.br
+.RS
+.PP
+This function is called when a message is received from an unknown agent.
+
+.PP
+Note that this will always be the default user that is called.
+
+.PP
+For more info about the \fIagent_config()\fR, see \fIsnmpm:register_agent/3\fR.
+
+.PP
+The arguments \fIType\fR and \fISnmpInfo\fR relates in the following way:
+
+pdu
+.RS 2
+
+\fISnmpPduInfo\fR (see \fIhandle_pdu/4\fR for more info).
+
+.RE
+trap
+.RS 2
+
+\fISnmpTrapInfo\fR (see \fIhandle_trap/3\fR for more info).
+
+.RE
+report
+.RS 2
+
+\fISnmpReportInfo\fR (see \fIhandle_report/3\fR for more info).
+
+.RE
+inform
+.RS 2
+
+\fISnmpInformInfo\fR (see \fIhandle_inform/3\fR for more info).
+
+.RE
+
+.PP
+The only user which would return \fI{register, UserId, TargetName, AgentConfig}\fR is the \fIdefault user\fR.
+
+
+.RE
+.B
+\fBhandle_error(ReqId, Reason, UserData)\fR
+
+.br
+.RS
+.PP
+This function is called when the manager needs to communicate an "asynchronous" error to the user: e.g. failure to send an asynchronous message (i.e. encoding error), a received message was discarded due to security error, the manager failed to generate a response message to a received inform-request, or when receiving an unexpected PDU from an agent (could be an expired async request).
+
+.PP
+If \fIReqId\fR is less then 0, it means that this information was not available to the manager (that info was never retrieved before the message was discarded).
+
+.PP
+For \fISnmpInfo\fR see handle_agent below.
+
+.PP
+Note that there is a special case when the value of \fIReqId\fR has the value of the atom \fInetif\fR. This means that the NetIF process has suffered a "fatal" error and been restarted. With possible loss of traffic!
+
+
+.RE
+.B
+\fBhandle_inform(TargetName, SnmpInform, UserData)\fR
+
+.br
+.RS
+.PP
+Handle a inform message.
+
+.PP
+For more info about the \fIagent_config()\fR, see \fIsnmpm:register_agent/3\fR.
+
+.PP
+The only user which would return \fI{register, UserId, TargetName2, AgentConfig}\fR is the \fIdefault user\fR.
+
+.PP
+If the inform request behaviour configuration option is set to \fIuser\fR or \fI{user, integer()}\fR, the response (acknowledgment) to this inform-request will be sent when this function returns.
+
+
+.RE
+.B
+\fBhandle_invalid_result(In, Out)\fR
+
+.br
+.RS
+.PP
+If \fIany\fR of the \fIother\fR callback functions crashes (exit, throw or a plain crash) or return an invalid result (if a valid return has been specified), this function is called. The purpose is to allow the user handle this error (for instance to issue an error report).
+
+.PP
+\fIIN\fR reprecents the function called (and its arguments). \fIOUT\fR represents the unexpected/invalid result.
+
+
+.RE
+.B
+\fBhandle_pdu(TargetName, ReqId, SnmpResponse, UserData)\fR
+
+.br
+.RS
+.PP
+Handle the reply to an asynchronous request, such as async_get, async_get_next or async_set.
+
+.PP
+It could also be a late reply to a synchronous request.
+
+.PP
+\fIReqId\fR is returned by the asynchronous request function.
+
+
+.RE
+.B
+\fBhandle_report(TargetName, SnmpReport, UserData)\fR
+
+.br
+.RS
+.PP
+Handle a report message.
+
+.PP
+For more info about the \fIagent_config()\fR, see \fIsnmpm:register_agent/3\fR.
+
+.PP
+The only user which would return \fI{register, UserId, TargetName2, AgentConfig}\fR is the \fIdefault user\fR.
+
+
+.RE
+.B
+\fBhandle_trap(TargetName, SnmpTrapInfo, UserData)\fR
+
+.br
+.RS
+.PP
+Handle a trap/notification message from an agent.
+
+.PP
+For more info about the \fIagent_config()\fR, see \fIsnmpm:register_agent/3\fR.
+
+.PP
+The only user which would return \fI{register, UserId, TargetName2, agent_info()}\fR is the \fIdefault user\fR.
+
+
+.RE

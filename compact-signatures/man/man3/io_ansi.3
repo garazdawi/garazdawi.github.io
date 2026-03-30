@@ -1,0 +1,3464 @@
+.TH io_ansi 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+io_ansi \- Controlling the terminal using virtual terminal sequences (aka [ANSI escape codes]).
+
+.SH DESCRIPTION
+.PP
+This module provides an interface to emit and parse virtual terminal sequences (VTS), also known as [ANSI escape codes]. VTS can be used to:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+change the style of text or background in the terminal by adding color or emphasis.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+delete printed characters or lines.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+move, hide or show the cursor
+
+.RE
+
+.PP
+and more things. As different terminals are interpret VTSs slightly differently, \fIio_ansi\fR uses the local [terminfo] database together with predefined sequences to emit the correct sequence for the terminal that is currently used. To fetch values directly from the [terminfo] database you can use \fItput/2\fR, \fItigetnum/1\fR and \fItigetflag/1\fR.
+
+.PP
+\fIio_ansi\fR provides two interfaces to emit sequences. You can either call the function representing the sequence you want to emit, for example \fIio_ansi:blue()\fR and it will return the sequence representing blue.
+
+.IP
+.nf
+1> io_ansi:blue().
+<<"\\e[34m">>
+
+.fi
+
+.PP
+This will use the [terminfo] database locally where the call is made, so it may not be correct if used across nodes.
+
+.PP
+You can also use the \fIio_ansi:format/1,2,3\fR functions which works just as \fIio_lib:bformat/3\fR, except that it also accepts atoms and tuples that represent VTSs. For example:
+
+.IP
+.nf
+1> io_ansi:format([blue,"~p"], [red]).
+<<"\\e[34mred\\e(B\\e[m">>
+
+.fi
+
+.PP
+\fIio_ansi:format/3\fR will automatically reset the terminal to its original state and strip any VTSs that are not supported by the terminal. It can also be disabled through an option. For example:
+
+.IP
+.nf
+1> io_ansi:format([blue,"~p"], [red], [{enabled, false}]).
+<<"red">>
+
+.fi
+
+.PP
+Finally there is \fIio_ansi:fwrite/1,2,3,4\fR which does not return the string to be printed, but instead sends it to the \fIio:device/0\fR that should handle it. \fIio_ansi:fwrite/4\fR works across nodes and will use the [terminfo] database where the data is outputted to decide what to emit.
+
+.PP
+https://man7.org/linux/man-pages/man5/terminfo.5.html https://en.wikipedia.org/wiki/ANSI_escape_code
+
+.SH DATA TYPES
+.LP
+.B
+\fBbackground_color() ::\fR
+\fB          black_background | blue_background | cyan_background |\fR
+\fB          green_background | magenta_background | red_background |\fR
+\fB          white_background | yellow_background | default_background |\fR
+\fB          light_black_background | light_blue_background |\fR
+\fB          light_cyan_background | light_green_background |\fR
+\fB          light_magenta_background | light_red_background |\fR
+\fB          light_white_background | light_yellow_background |\fR
+\fB          {background, 0..255} |\fR
+\fB          {background, R :: 0..255, G :: 0..255, B :: 0..255}.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that control the background color.
+
+
+.RE
+.B
+\fBcolor() ::\fR
+\fB          foreground_color() |\fR
+\fB          background_color() |\fR
+\fB          underline_color() |\fR
+\fB          {modify_color,\fR
+\fB           Index :: 0..255,\fR
+\fB           R :: 0..255,\fR
+\fB           G :: 0..255,\fR
+\fB           B :: 0..255}.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that control color.
+
+
+.RE
+.B
+\fBcolor_atom() ::\fR
+\fB          black | blue | cyan | green | magenta | red | white | yellow |\fR
+\fB          light_black | light_blue | light_cyan | light_green |\fR
+\fB          light_magenta | light_red | light_white | light_yellow.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcursor() ::\fR
+\fB          {cursor,\fR
+\fB           Line :: non_neg_integer(),\fR
+\fB           Column :: non_neg_integer()} |\fR
+\fB          {cursor_move,\fR
+\fB           DeltaLine :: integer(),\fR
+\fB           DeltaColumn :: integer()} |\fR
+\fB          cursor_down | cursor_up | cursor_backward | cursor_forward |\fR
+\fB          {cursor_down | cursor_backward | cursor_forward | cursor_up,\fR
+\fB           N :: non_neg_integer()} |\fR
+\fB          cursor_home | reverse_index | cursor_save | cursor_restore |\fR
+\fB          cursor_show | cursor_hide | cursor_next_line |\fR
+\fB          cursor_previous_line | cursor_horizontal_absolute |\fR
+\fB          cursor_vertical_absolute | cursor_horizontal_vertical |\fR
+\fB          cursor_report_position.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that controls the cursor.
+
+
+.RE
+.B
+\fBforeground_color() ::\fR
+\fB          color_atom() |\fR
+\fB          {color, 0..255} |\fR
+\fB          {color, R :: 0..255, G :: 0..255, B :: 0..255} |\fR
+\fB          default_color.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that control the foreground (aka text) color.
+
+
+.RE
+.B
+\fBformat() :: [string() | vts()].\fR
+
+.br
+.RS
+.PP
+The format string that can be passed to \fIformat/3\fR and \fIfwrite/4\fR
+
+
+.RE
+.B
+\fBhyperlink() ::\fR
+\fB          {hyperlink,\fR
+\fB           URL :: uri_string:uri_string(),\fR
+\fB           Text :: unicode:chardata()} |\fR
+\fB          {hyperlink,\fR
+\fB           URL :: uri_string:uri_string(),\fR
+\fB           hyperlink_params(),\fR
+\fB           Text :: unicode:chardata()} |\fR
+\fB          {hyperlink_start, URL :: uri_string:uri_string()} |\fR
+\fB          {hyperlink_start,\fR
+\fB           URL :: uri_string:uri_string(),\fR
+\fB           hyperlink_params()} |\fR
+\fB          hyperlink_reset.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that control whether emitted text shall be a hyper link or not.
+
+
+.RE
+.B
+\fBhyperlink_params() ::\fR
+\fB          [{Key :: unicode:chardata(), Value :: unicode:chardata()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBinput() ::\fR
+\fB          keypad_transmit_mode | keypad_transmit_mode_off |\fR
+\fB          kcursor_down | kcursor_up | kcursor_backward |\fR
+\fB          kcursor_forward | kcursor_home | kcursor_end.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences for cursor input.
+
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {reset, boolean()} |\fR
+\fB          {enabled, boolean()} |\fR
+\fB          {color, boolean()} |\fR
+\fB          io_lib:format_options().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoptions() :: [option()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstyle() ::\fR
+\fB          bold | bold_off | blink | blink_off | dim | dim_off |\fR
+\fB          invisible | invisible_off | italic | italic_off | inverse |\fR
+\fB          inverse_off | overline | overline_off | strikethrough |\fR
+\fB          strikethrough_off |\fR
+\fB          underline_style().\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that control text style.
+
+
+.RE
+.B
+\fBtab() :: tab | tab_backward | tab_set | tab_clear | tab_clear_all.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that works with tabs.
+
+
+.RE
+.B
+\fBtext() ::\fR
+\fB          text_formatting() |\fR
+\fB          text_modification() |\fR
+\fB          alternate_character_set_mode |\fR
+\fB          alternate_character_set_mode_off.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that works on text.
+
+
+.RE
+.B
+\fBtext_formatting() :: color() | style() | hyperlink().\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that control text formatting.
+
+
+.RE
+.B
+\fBtext_modification() ::\fR
+\fB          clear | erase_display | insert_character | delete_character |\fR
+\fB          erase_character | insert_line | delete_line | erase_line.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that can erase or overwrite text.
+
+
+.RE
+.B
+\fBunderline_color() ::\fR
+\fB          black_underline | blue_underline | cyan_underline |\fR
+\fB          green_underline | magenta_underline | red_underline |\fR
+\fB          white_underline | yellow_underline | default_underline |\fR
+\fB          light_black_underline | light_blue_underline |\fR
+\fB          light_cyan_underline | light_green_underline |\fR
+\fB          light_magenta_underline | light_red_underline |\fR
+\fB          light_white_underline | light_yellow_underline |\fR
+\fB          {underline_color, 0..255} |\fR
+\fB          {underline_color, R :: 0..255, G :: 0..255, B :: 0..255}.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that control underline color.
+
+
+.RE
+.B
+\fBunderline_style() ::\fR
+\fB          underline | underline_off | double_underline |\fR
+\fB          curly_underline | dotted_underline | dashed_underline.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that control underline style.
+
+
+.RE
+.B
+\fBvts() ::\fR
+\fB          text() |\fR
+\fB          cursor() |\fR
+\fB          window() |\fR
+\fB          tab() |\fR
+\fB          input() |\fR
+\fB          reset | device_report_attributes.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences.
+
+
+.RE
+.B
+\fBwindow() ::\fR
+\fB          alternate_screen | alternate_screen_off | scroll_forward |\fR
+\fB          scroll_backward | scroll_change_region.\fR
+
+.br
+.RS
+.PP
+Virtual terminal sequences that controls the screen.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBalternate_character_set_mode() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Enable the alternate characters set mode
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:alternate_character_set_mode().
+<<"\\e(0">>
+2> io_ansi:fwrite(["%%", alternate_character_set_mode, " tqqu\\n"]).
+%% ├──┤
+ok
+
+.fi
+
+
+.RE
+.B
+\fBalternate_character_set_mode_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Disable the alternate characters set mode
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:alternate_character_set_mode_off().
+<<"\\e(B">>
+
+.fi
+
+
+.RE
+.B
+\fBalternate_screen() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Activate the alternate screen buffer.
+
+.PP
+The alternate screen buffer is a separate screen buffer that full-screen terminal applications (like \fIvim\fR, \fIless\fR, \fIhtop\fR, or \fIman\fR) use to display their content. When activated, the current screen content and cursor position are saved. When deactivated with \fIalternate_screen_off/0\fR, the original screen content is restored, making it appear as if the full-screen application was never there.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:alternate_screen().
+<<"\\e[?1049h\\e[22;0;0t">>
+
+.fi
+
+
+.RE
+.B
+\fBalternate_screen_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Deactivate the alternate screen.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:alternate_screen_off().
+<<"\\e[?1049l\\e[23;0;0t">>
+
+.fi
+
+
+.RE
+.B
+\fBbackground(Index :: 0..255 | 0..87 | color_atom()) ->\fR
+\fB                    unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to index color. \fIIndex\fR 0-15 are equivilant to the named colors in \fIbackground_color/0\fR in the order that they are listed.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:background(2).
+<<"\\e[42m">>
+2> io_ansi:background(80).
+<<"\\e[48;5;80m">>
+
+.fi
+
+
+.RE
+.B
+\fBbackground(0..255, 0..255, 0..255) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to RGB color.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:background(255, 255, 0).
+<<"\\e[48;2;255;255;0m">>
+
+.fi
+
+
+.RE
+.B
+\fBblack() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to black.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:black().
+<<"\\e[30m">>
+
+.fi
+
+
+.RE
+.B
+\fBblack_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to black.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:black_background().
+<<"\\e[40m">>
+
+.fi
+
+
+.RE
+.B
+\fBblack_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to black. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:black_underline().
+<<"\\e[58;5;0m">>
+
+.fi
+
+
+.RE
+.B
+\fBblink() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on blink text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:blink().
+<<"\\e[5m">>
+
+.fi
+
+
+.RE
+.B
+\fBblink_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off blink text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:blink_off().
+<<"\\e[25m">>
+
+.fi
+
+
+.RE
+.B
+\fBblue() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to blue.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:blue().
+<<"\\e[34m">>
+
+.fi
+
+
+.RE
+.B
+\fBblue_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to blue.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:blue_background().
+<<"\\e[44m">>
+
+.fi
+
+
+.RE
+.B
+\fBblue_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to blue. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:blue_underline().
+<<"\\e[58;5;4m">>
+
+.fi
+
+
+.RE
+.B
+\fBbold() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on bold text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:bold().
+<<"\\e[1m">>
+
+.fi
+
+
+.RE
+.B
+\fBbold_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off bold text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:bold_off().
+<<"\\e[22m">>
+
+.fi
+
+
+.RE
+.B
+\fBclear() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Clear screen and set cursor to home.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:clear().
+<<"\\e[H\\e[2J">>
+
+.fi
+
+
+.RE
+.B
+\fBcolor(Index :: 0..255 | 0..87 | color_atom()) ->\fR
+\fB               unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to index color. \fIIndex\fR 0-15 are equivalent to the named colors in \fIforeground_color/0\fR in the order that they are listed.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:color(5).
+<<"\\e[35m">>
+2> io_ansi:color(80).
+<<"\\e[38;5;80m">>
+
+.fi
+
+
+.RE
+.B
+\fBcolor(0..255, 0..255, 0..255) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to RGB color.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:color(255, 0, 0).
+<<"\\e[38;2;255;0;0m">>
+
+.fi
+
+
+.RE
+.B
+\fBcolor_name_to_index(Color :: color_atom()) -> 0..15.\fR
+
+.br
+.RS
+.PP
+Convert a color atom to its corresponding index (0-15).
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:color_name_to_index(red).
+1
+
+.fi
+
+
+.RE
+.B
+\fBcurly_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on curly underline text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:curly_underline().
+<<"\\e[4:3m">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor(Line :: integer(), Column :: integer()) ->\fR
+\fB                unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor to the given position. Position 0,0 is at the top left of the terminal.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor(5, 10).
+<<"\\e[6;11H">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_backward() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor backward \fIN\fR characters.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_backward().
+<<"\\b">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_backward(N :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor backward \fIN\fR characters.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_backward(42).
+<<"\\e[42D">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_down() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor down one line.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_down().
+<<"\\n">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_down(N :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor down \fIN\fR lines.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_down(42).
+<<"\\e[42B">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_forward() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor forward one character.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_forward().
+<<"\\e[C">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_forward(N :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor forward \fIN\fR characters.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_forward().
+<<"\\e[C">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_get_position() ->\fR
+\fB                             {Row :: non_neg_integer(),\fR
+\fB                              Column :: non_neg_integer()} |\fR
+\fB                             {error, string()}.\fR
+
+.br
+.RS
+.PP
+Get the current cursor position as {Row, Column}. Example:
+
+.IP
+.nf
+## Enter noshell-raw mode and request cursor location and then print
+## the reply to stdout.
+$ erl -noshell -eval 'shell:start_interactive({noshell,raw}),
+    {Row,Col} = io_ansi:cursor_get_position(),
+    io:format("~p",[{Row,Col}])' -s init stop
+{58,1}
+
+.fi
+
+
+.RE
+.B
+\fBcursor_hide() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Hide the cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_hide().
+<<"\\e[?25l">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_home() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor to the start of the current line.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_home().
+<<"\\e[H">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_horizontal_absolute(X :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor to column \fIX\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_horizontal_absolute(10).
+<<"\\e[11G">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_horizontal_vertical(X :: integer(), Y :: integer()) ->\fR
+\fB                                    unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor to line \fIX\fR and column \fIY\fR. Position 1,1 is at the top left of the terminal.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_horizontal_vertical(10, 20).
+<<"\\e[10;20f">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_move(DeltaLine :: integer(), DeltaColumn :: integer()) ->\fR
+\fB                     unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor relative to its current position.
+
+.PP
+Positive \fIDeltaLine\fR moves down, negative moves up. Positive \fIDeltaColumn\fR moves right (forward), negative moves left (backward).
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_move(-5, 0).
+<<"\\e[5A">>
+2> io_ansi:cursor_move(0, 10).
+<<"\\e[10C">>
+3> io_ansi:cursor_move(3, -2).
+<<"\\e[3B\\e[2D">>
+4> io_ansi:cursor_move(0, 0).
+<<>>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_next_line() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor down one line and then returns it to home.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_next_line().
+<<"\\eE">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_previous_line() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor up one line and then returns it to home.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_previous_line().
+<<"\\e[F">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_report_position() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Instruct the terminal to report the current cursor position.
+
+.PP
+Examples:
+
+.IP
+.nf
+1> io_ansi:cursor_report_position().
+~"\\e[6n"
+
+.fi
+
+.IP
+.nf
+## Enter noshell-raw mode and request cursor location and then print
+## the reply to stdout.
+$ erl -noshell -eval 'shell:start_interactive({noshell,raw}),
+    io_ansi:fwrite([cursor_report_position]),
+    io:format("~p",[io:get_chars("",20)])' -s init stop
+"\\e[58;1R"
+
+.fi
+
+.PP
+The reported cursor position in the example is row 58 and column 1 both are 1 index based.
+
+
+.RE
+.B
+\fBcursor_restore() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Restore a saved cursor position.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_restore().
+<<"\\e8">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_save() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Save the current cursor position.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_save().
+<<"\\e7">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_show() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Show the cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_show().
+<<"\\e[?12;25h">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_up() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor up one line.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_up().
+<<"\\e[A">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_up(N :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor up \fIN\fR lines.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_up(42).
+<<"\\e[42A">>
+
+.fi
+
+
+.RE
+.B
+\fBcursor_vertical_absolute(X :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor to line \fIX\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cursor_vertical_absolute(20).
+<<"\\e[21d">>
+
+.fi
+
+
+.RE
+.B
+\fBcyan() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to cyan.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cyan().
+<<"\\e[36m">>
+
+.fi
+
+
+.RE
+.B
+\fBcyan_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to cyan.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cyan_background().
+<<"\\e[46m">>
+
+.fi
+
+
+.RE
+.B
+\fBcyan_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to cyan. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:cyan_underline().
+<<"\\e[58;5;6m">>
+
+.fi
+
+
+.RE
+.B
+\fBdashed_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on dashed underline text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:dashed_underline().
+<<"\\e[4:5m">>
+
+.fi
+
+
+.RE
+.B
+\fBdefault_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to the default color.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:default_background().
+<<"\\e[49m">>
+
+.fi
+
+
+.RE
+.B
+\fBdefault_color() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to the default color.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:default_color().
+<<"\\e[39m">>
+
+.fi
+
+
+.RE
+.B
+\fBdefault_underline_color() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Reset underline color to the default.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:default_underline_color().
+<<"\\e[59m">>
+
+.fi
+
+
+.RE
+.B
+\fBdelete_character() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Delete 1 character at cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:delete_character().
+<<"\\e[P">>
+
+.fi
+
+
+.RE
+.B
+\fBdelete_character(Chars :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Delete \fIChars\fR characters at cursor by shifting the text \fIChars\fR characters to the left.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:delete_character(2).
+<<"\\e[2P">>
+
+.fi
+
+
+.RE
+.B
+\fBdelete_line() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Delete 1 line at cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:delete_line().
+<<"\\e[M">>
+
+.fi
+
+
+.RE
+.B
+\fBdelete_line(Lines :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Delete \fILines\fR lines at cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:delete_line(3).
+<<"\\e[3M">>
+
+.fi
+
+
+.RE
+.B
+\fBdevice_report_attributes() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Tell the terminal emulator to report its device attributes.
+
+.PP
+Examples:
+
+.IP
+.nf
+1> io_ansi:device_report_attributes().
+<<"\\e[0c">>
+
+.fi
+
+.IP
+.nf
+## Enter noshell-raw mode and request device attributes and then print
+## the reply to stdout.
+$ erl -noshell -eval 'shell:start_interactive({noshell,raw}),
+     io_ansi:fwrite([device_report_attributes]),
+     io:format("~p",[io:get_chars("",20)])' -s init stop
+"\\e[?65;1;9c"
+
+.fi
+
+
+.RE
+.B
+\fBdim() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on dim text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:dim().
+<<"\\e[2m">>
+
+.fi
+
+
+.RE
+.B
+\fBdim_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off dim text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:dim_off().
+<<"\\e[22m">>
+
+.fi
+
+
+.RE
+.B
+\fBdotted_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on dotted underline text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:dotted_underline().
+<<"\\e[4:4m">>
+
+.fi
+
+
+.RE
+.B
+\fBdouble_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on double underline text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:double_underline().
+<<"\\e[4:2m">>
+
+.fi
+
+
+.RE
+.B
+\fBenabled() -> boolean().\fR
+
+.br
+.RS
+.PP
+Check if \fIio:user/0\fR can interpret ANSI escape sequences.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:enabled().
+true
+
+.fi
+
+
+.RE
+.B
+\fBenabled(io:device()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Check if \fIDevice\fR can interpret ANSI escape sequences.
+
+.PP
+This is done by checking if \fIDevice\fR represents a terminal and if the \fITERM\fR environment variable is set to a terminal type that supports virtual terminal sequences.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:enabled(standard_error).
+true
+2> {ok, File} = file:open("tmp",[write]), io_ansi:enabled(File).
+false
+
+.fi
+
+
+.RE
+.B
+\fBerase_character(Chars :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Erase \fIChars\fR characters at cursor by making \fIChars\fR characters before the cursor blank.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:erase_character(4).
+<<"\\e[4X">>
+
+.fi
+
+
+.RE
+.B
+\fBerase_display() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Clear screen after cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:erase_display().
+<<"\\e[J">>
+
+.fi
+
+
+.RE
+.B
+\fBerase_line() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Erase line at cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:erase_line().
+<<"\\e[K">>
+
+.fi
+
+
+.RE
+.B
+\fBformat(format(), Data :: [term()], options()) ->\fR
+\fB                unicode:unicode_binary().\fR
+
+.br
+.RS
+.PP
+Returns a character list that represents \fIData\fR formatted in accordance with \fIFormat\fR.
+
+.PP
+This function works just as \fIio_lib:bformat/2\fR, except that it also allows atoms and tuples represeting virtual terminal sequences as part of the \fIFormat\fR string.
+
+.PP
+Calling \fIformat/3\fR will always emit a \fIreset/0\fR VTS at the end of the returned string. To not emit this, set the \fIreset\fR option to \fIfalse\fR.
+
+.PP
+To force enabling or disabling of emitting VTSs set the \fIenabled\fR option to \fItrue\fR or \fIfalse\fR. By default the emitting of VTSs is enabled if \fIenabled/0\fR returns \fItrue\fR and disabled otherwise.
+
+.PP
+To disable emitting of color VTSs but still emit other VTSs, set the \fIcolor\fR option to \fIfalse\fR. The default color option is \fItrue\fR unless the \fINO_COLOR\fR environment variable is set to a non-empty value, in which case the default is \fIfalse\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:format([blue, underline, "Hello world"]).
+~"\\e[34m\\e[4mHello world\\e(B\\e[m"
+2> io_ansi:format([blue, underline, "Hello ~p"],[world]).
+~"\\e[34m\\e[4mHello world\\e(B\\e[m"
+3> io_ansi:format([blue, underline, "Hello ~p"],[world],[{reset,false}]).
+~"\\e[34m\\e[4mHello world"
+4> io_ansi:format([blue, underline, "Hello ~p"],[world],[{enabled,false}]).
+~"Hello world"
+5> io_ansi:format([blue, underline, "Hello ~p"],[world],[{color,false}]).
+~"\\e[4mHello world\\e(B\\e[m"
+6> io_ansi:format([invalid_code, "Hello world"]).
+** exception error: {invalid_code,invalid_code}
+     in function  io_ansi:format_internal/3
+
+.fi
+
+.PP
+For a detailed description of the available formatting options, see \fIio:fwrite/3\fR.
+
+
+.RE
+.B
+\fBfwrite(IODevice :: io:device(),\fR
+\fB             Format :: format(),\fR
+\fB             [term()],\fR
+\fB             options()) ->\fR
+\fB                ok.\fR
+
+.br
+.RS
+.PP
+Writes the items in \fIData\fR on the \fIIoDevice\fR in accordance with \fIFormat\fR.
+
+.PP
+This function works just as \fIio:fwrite/2\fR, except that it also allows atoms and tuples representing virtual terminal sequences (VTS) as part of the \fIFormat\fR string.
+
+.PP
+See \fIformat/3\fR for details on how the different \fIOptions\fR can be used.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:fwrite([blue, "%% Hello world\\n"]).
+%% Hello world
+ok
+2> io_ansi:fwrite([underline, "%% Hello ~p\\n"], [world]).
+%% Hello world
+ok
+3> io_ansi:fwrite([invalid_code, "%% Hello ~p\\n"], [world]).
+** exception error: {error,{put_ansi,unicode,invalid_code}}
+     in function  io_ansi:fwrite/4
+        called as io_ansi:fwrite(standard_io,[invalid_code,"%% Hello ~p\\n"],[world],[])
+
+.fi
+
+.PP
+The decision what each VTS should be converted to is done by the destination I/O device. This means that if the I/O device is on a remote node, the terminfo database loaded into that remote node will be used.
+
+.PP
+All VTSs are stripped if the target I/O device does not support handling VTSs, either because it is not implemented by the device (for example if the device is a \fIfile:io_server/0\fR) or if the device does not support a certain VTS. If you want to force usage of VTSs you can pass \fI{enabled, true}\fR and that will use the local defintions to translate.
+
+
+.RE
+.B
+\fBgreen() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to green.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:green().
+<<"\\e[32m">>
+
+.fi
+
+
+.RE
+.B
+\fBgreen_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to green.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:green_background().
+<<"\\e[42m">>
+
+.fi
+
+
+.RE
+.B
+\fBgreen_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to green. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:green_underline().
+<<"\\e[58;5;2m">>
+
+.fi
+
+
+.RE
+.B
+\fBhyperlink_reset() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Stop emitting a hyperlink.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:hyperlink_reset().
+<<"\\e]8;;\\e\\\\">>
+
+.fi
+
+
+.RE
+.B
+\fBhyperlink_start(uri_string:uri_string(),\fR
+\fB                      [{Key :: unicode:chardata(),\fR
+\fB                        Value :: unicode:chardata()}]) ->\fR
+\fB                         unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Start a hyperlink pointing to the given \fIURL\fR using \fIParams\fR.
+
+.PP
+The hyperlink can be any type of URL, but typically it would be a file or http URL.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:hyperlink_start("https://erlang.org").
+<<"\\e]8;https://erlang.org;\\e\\\\">>
+2> io_ansi:format([{hyperlink_start, "file://tmp/debug.log"},"debug log",hyperlink_reset]).
+~"\\e]8;file://tmp/debug.log;\\e\\\\debug log\\e]8;;\\e\\\\\\e(B\\e[m"
+
+.fi
+
+.PP
+See Hyperlinks (a.k.a. HTML-like anchors) in terminal emulators for more details on limitations and usage of terminal hyperlinks.
+
+
+.RE
+.B
+\fBinsert_character(Chars :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Insert \fIChars\fR at cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:insert_character(3).
+<<"\\e[3@">>
+
+.fi
+
+
+.RE
+.B
+\fBinsert_line() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Insert 1 line at cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:insert_line().
+<<"\\e[L">>
+
+.fi
+
+
+.RE
+.B
+\fBinsert_line(Lines :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Insert \fILines\fR lines at cursor.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:insert_line(2).
+<<"\\e[2L">>
+
+.fi
+
+
+.RE
+.B
+\fBinverse() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on inverse text style.
+
+.PP
+Inverse is also called reverse video or standout mode.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:inverse().
+<<"\\e[7m">>
+
+.fi
+
+
+.RE
+.B
+\fBinverse_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off inverse text style.
+
+.PP
+Inverse is also called reverse video or standout mode.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:inverse_off().
+<<"\\e[27m">>
+
+.fi
+
+
+.RE
+.B
+\fBinvisible() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on invisible text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:invisible().
+<<"\\e[8m">>
+
+.fi
+
+
+.RE
+.B
+\fBinvisible_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off invisible text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:invisible_off().
+<<"\\e[28m">>
+
+.fi
+
+
+.RE
+.B
+\fBitalic() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on italic text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:italic().
+<<"\\e[3m">>
+
+.fi
+
+
+.RE
+.B
+\fBitalic_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off italic text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:italic_off().
+<<"\\e[23m">>
+
+.fi
+
+
+.RE
+.B
+\fBkeypad_transmit_mode() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Enable keypad transmit mode.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:keypad_transmit_mode().
+<<"\\e[?1h\\e=">>
+
+.fi
+
+
+.RE
+.B
+\fBkeypad_transmit_mode_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Disable keypad transmit mode.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:keypad_transmit_mode_off().
+<<"\\e[?1l\\e>">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_black() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to light black.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_black().
+<<"\\e[90m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_black_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to light black.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_black_background().
+<<"\\e[100m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_black_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to light black. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_black_underline().
+<<"\\e[58;5;8m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_blue() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to light blue.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_blue().
+<<"\\e[94m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_blue_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to light blue.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_blue_background().
+<<"\\e[104m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_blue_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to light blue. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_blue_underline().
+<<"\\e[58;5;12m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_cyan() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to light cyan.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_cyan().
+<<"\\e[96m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_cyan_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to light cyan.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_cyan_background().
+<<"\\e[106m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_cyan_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to light cyan. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_cyan_underline().
+<<"\\e[58;5;14m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_green() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to light green.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_green().
+<<"\\e[92m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_green_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to light green.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_green_background().
+<<"\\e[102m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_green_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to light green. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_green_underline().
+<<"\\e[58;5;10m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_magenta() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to light magenta.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_magenta().
+<<"\\e[95m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_magenta_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to light magenta.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_magenta_background().
+<<"\\e[105m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_magenta_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to light magenta. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_magenta_underline().
+<<"\\e[58;5;13m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_red() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to light red.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_red().
+<<"\\e[91m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_red_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to light red.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_red_background().
+<<"\\e[101m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_red_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to light red. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_red_underline().
+<<"\\e[58;5;9m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_white() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to light white.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_white().
+<<"\\e[97m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_white_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to light white.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_white_background().
+<<"\\e[107m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_white_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to light white. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_white_underline().
+<<"\\e[58;5;15m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_yellow() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to light yellow.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_yellow().
+<<"\\e[93m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_yellow_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to light yellow.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_yellow_background().
+<<"\\e[103m">>
+
+.fi
+
+
+.RE
+.B
+\fBlight_yellow_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to light yellow. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:light_yellow_underline().
+<<"\\e[58;5;11m">>
+
+.fi
+
+
+.RE
+.B
+\fBmagenta() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to magenta.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:magenta().
+<<"\\e[35m">>
+
+.fi
+
+
+.RE
+.B
+\fBmagenta_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to magenta.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:magenta_background().
+<<"\\e[45m">>
+
+.fi
+
+
+.RE
+.B
+\fBmagenta_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to magenta. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:magenta_underline().
+<<"\\e[58;5;5m">>
+
+.fi
+
+
+.RE
+.B
+\fBmodify_color(Index :: 0..255,\fR
+\fB                   R :: 0..255,\fR
+\fB                   G :: 0..255,\fR
+\fB                   B :: 0..255) ->\fR
+\fB                      unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Modify the color referenced by \fIIndex\fR to be RGB.
+
+.PP
+Calling this function for \fIIndex\fR 0-15 will change the color of the named colors in \fIforeground_color/0\fR and \fIbackground_color/0\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:modify_color(1, 255, 100, 0).
+<<"\\e]4;1;rgb:41/19/00\\e\\\\">>
+
+.fi
+
+
+.RE
+.B
+\fBoverline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on overline text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:overline().
+<<"\\e[53m">>
+
+.fi
+
+
+.RE
+.B
+\fBoverline_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off overline text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:overline_off().
+<<"\\e[55m">>
+
+.fi
+
+
+.RE
+.B
+\fBred() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to red.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:red().
+<<"\\e[31m">>
+
+.fi
+
+
+.RE
+.B
+\fBred_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to red.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:red_background().
+<<"\\e[41m">>
+
+.fi
+
+
+.RE
+.B
+\fBred_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to red. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:red_underline().
+<<"\\e[58;5;1m">>
+
+.fi
+
+
+.RE
+.B
+\fBreset() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Reset virtual terminal sequences to their original state.
+
+.PP
+This only resets the things supported by the loaded terminfo database, which means that OSCs such as \fIhyperlink_start/2\fR are not reset but have to be reset by emitting \fIhyperlink_reset/0\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:reset().
+<<"\\e(B\\e[m">>
+
+.fi
+
+
+.RE
+.B
+\fBreverse_index() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move the cursor up one line, but keeps the cursor on the same location on the screen by scrolling the screen down.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:reverse_index().
+<<"\\eM">>
+
+.fi
+
+
+.RE
+.B
+\fBscan(unicode:chardata()) ->\fR
+\fB              [unicode:unicode_binary() |\fR
+\fB               vts() |\fR
+\fB               {csi, unicode:unicode_binary()}].\fR
+
+.br
+.RS
+.PP
+Scan the string for virtial terminal sequences.
+
+.PP
+The recognized VTSs will be converted into the corresponding \fIvts/0\fR.
+
+.PP
+If you intend to parse arrow keys it is recommended that you first set the terminal in application mode by using \fIkeypad_transmit_mode/0\fR. This will make it easier for \fIio_ansi\fR to correctly detect arrow keys.
+
+.PP
+Any unrecognized control sequence introducers, will be placed in a tuple tagged with \fIcsi\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:scan("\\eOA").
+[kcursor_up]
+2> io_ansi:scan("\\eOB").
+[kcursor_down]
+3> io_ansi:scan(io_ansi:format([bold, "text"])).
+[bold, ~"text", reset]
+4> io_ansi:scan(io_ansi:format([{cursor, 0, 0}])).
+[{csi, ~"\\e[1;1H"}, reset]
+
+.fi
+
+
+.RE
+.B
+\fBscroll_backward() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Scroll the screen backward 1 step.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:scroll_backward().
+<<"\\e[1T">>
+
+.fi
+
+
+.RE
+.B
+\fBscroll_backward(Steps :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Scroll the screen backward \fIN\fR step.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:scroll_backward(42).
+<<"\\e[42T">>
+
+.fi
+
+
+.RE
+.B
+\fBscroll_change_region(Line1 :: integer(), Line2 :: integer()) ->\fR
+\fB                              unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change the scolling region to be from \fILine1\fR to \fILine2\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:scroll_change_region(10, 20).
+<<"\\e[11;21r">>
+
+.fi
+
+
+.RE
+.B
+\fBscroll_forward() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Scroll the screen forward 1 step.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:scroll_forward().
+<<"\\e[1S">>
+
+.fi
+
+
+.RE
+.B
+\fBscroll_forward(N :: integer()) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Scroll the screen forward \fIN\fR step.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:scroll_forward(42).
+<<"\\e[42S">>
+
+.fi
+
+
+.RE
+.B
+\fBstrikethrough() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on strikethrough text style. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:strikethrough().
+<<"\\e[9m">>
+
+.fi
+
+
+.RE
+.B
+\fBstrikethrough_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off strikethrough text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:strikethrough_off().
+<<"\\e[29m">>
+
+.fi
+
+
+.RE
+.B
+\fBtab() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move cursor one tab forward.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:tab().
+<<"\\t">>
+
+.fi
+
+
+.RE
+.B
+\fBtab_backward() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Move cursor one tab backward.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:tab_backward().
+<<"\\e[Z">>
+
+.fi
+
+
+.RE
+.B
+\fBtab_clear() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Clear any tab location at the current cursor location.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:tab_clear().
+<<"\\e[0g">>
+
+.fi
+
+
+.RE
+.B
+\fBtab_clear_all() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Clear all tab locations.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:tab_clear_all().
+<<"\\e[3g">>
+
+.fi
+
+
+.RE
+.B
+\fBtab_set() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set a new tab location at the current cursor location.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:tab_set().
+<<"\\eH">>
+
+.fi
+
+
+.RE
+.B
+\fBtigetflag(TermInfoCapName :: string()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns true if the terminfo capability is available, otherwise false.
+
+.PP
+The names of the terminal capabilities can be found in the terminfo documentation, or by calling \fItinfo/0\fR. \fItigetflag/1\fR will use the terminfo definition associated with the \fITERM\fR environment variable when the Erlang VM is started. It is not possible to change after startup.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:tigetflag("xn").
+true
+2> io_ansi:tigetflag("foobar").
+false
+
+.fi
+
+
+.RE
+.B
+\fBtigetnum(TermInfoCapName :: string()) -> -1 | non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number representing a terminfo capability.
+
+.PP
+The names of the terminal capabilities can be found in the terminfo documentation, or by calling \fItinfo/0\fR. \fItigetnum/1\fR will use the terminfo definition associated with the \fITERM\fR environment variable when the Erlang VM is started. It is not possible to change after startup.
+
+.PP
+Returns \fI-1\fR if the capability is not available.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:tigetnum("co").
+80
+2> io_ansi:tigetnum("foobar").
+-1
+
+.fi
+
+
+.RE
+.B
+\fBtinfo() ->\fR
+\fB               #{bool :=\fR
+\fB                     [#{code := string(),\fR
+\fB                        name := string(),\fR
+\fB                        full_name := string()}]}.\fR
+
+.br
+.RS
+.PP
+Returns information about all available terminfo capabilities. See the terminfo documentation for details on each.
+
+.PP
+\fItinfo/0\fR will use the terminfo definition associated with the \fITERM\fR environment variable when the Erlang VM is started. It is not possible to change after startup.
+
+.PP
+When calling \fItput/2\fR, \fItigetnum/1\fR and \fItigetflag/1\fR you should provide the \fIname\fR of the capability you want.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:tinfo().
+#{ bool => [#{code => "xr",name => "OTxr",full_name => "return_does_clr_eol"} | ...],
+   str => [#{code => "bx",name => "box1",full_name => "box_chars_1"} | ...],
+   num => [#{code => "kn",name => "OTkn", full_name => "number_of_function_keys"} | ...]
+ }
+
+.fi
+
+
+.RE
+.B
+\fBtput(TermInfoCapName :: string(), Args :: [integer()]) ->\fR
+\fB              unicode:unicode_binary().\fR
+
+.br
+.RS
+.PP
+Returns the string representing the action taken by the given terminal capability.
+
+.PP
+The names of the terminal capabilities can be found in the terminfo documentation, or by calling \fItinfo/0\fR. \fItput/2\fR will use the terminfo definition associated with the \fITERM\fR environment variable when the Erlang VM is started. It is not possible to change after startup.
+
+.PP
+If the given capability is not defined in the terminfo database an \fIenotsup\fR error is generated, if the given capability is invalid a \fIbadarg\fR error is generated.
+
+.PP
+This function does not work on Windows and will always generate a \fIbadarg\fR exception.
+
+.PP
+Example:
+
+.IP
+.nf
+%% Set the foreground color to 3
+1> io_ansi:tput("setaf",[3]).
+<<"\\e[33m">>
+%% Move the cursor up 2 spaces
+2> io_ansi:tput("cuu",[2]).
+<<"\\e[2A">>
+%% Move the cursor down 1 space
+3> io_ansi:tput("cud1").
+<<"\\n">>
+%% unsupported capability
+4> io_ansi:tput("slm").
+** exception error: {enotsup,"slm"}
+     in function  io_ansi:tput/2
+%% unknown capability
+5> io_ansi:tput("foobar").
+** exception error: {einval,"foobar",[]}
+     in function  io_ansi:tput/2
+
+.fi
+
+
+.RE
+.B
+\fBunderline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn on underline text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:underline().
+<<"\\e[4m">>
+
+.fi
+
+
+.RE
+.B
+\fBunderline_color(Index :: 0..255 | color_atom()) ->\fR
+\fB                         unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set underline color to a named color or index color. Not widely supported.
+
+.PP
+Accepts color atoms (\fIred\fR, \fIblue\fR, \fIlight_green\fR, etc.) or index colors (0-255). Index 0-15 correspond to the named colors in \fIcolor_atom/0\fR.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:underline_color(red).
+<<"\\e[58;5;1m">>
+2> io_ansi:underline_color(light_cyan).
+<<"\\e[58;5;14m">>
+3> io_ansi:underline_color(196).
+<<"\\e[58;5;196m">>
+
+.fi
+
+
+.RE
+.B
+\fBunderline_color(0..255, 0..255, 0..255) -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set underline color to RGB color. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:underline_color(255, 0, 0).
+<<"\\e[58;2;255;0;0m">>
+
+.fi
+
+
+.RE
+.B
+\fBunderline_off() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Turn off underline text style.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:underline_off().
+<<"\\e[24m">>
+
+.fi
+
+
+.RE
+.B
+\fBwhite() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to white.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:white().
+<<"\\e[37m">>
+
+.fi
+
+
+.RE
+.B
+\fBwhite_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to white.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:white_background().
+<<"\\e[47m">>
+
+.fi
+
+
+.RE
+.B
+\fBwhite_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to white. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:white_underline().
+<<"\\e[58;5;7m">>
+
+.fi
+
+
+.RE
+.B
+\fByellow() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change foreground (aka text) color to yellow.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:yellow().
+<<"\\e[33m">>
+
+.fi
+
+
+.RE
+.B
+\fByellow_background() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change background color to yellow.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:yellow_background().
+<<"\\e[43m">>
+
+.fi
+
+
+.RE
+.B
+\fByellow_underline() -> unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Change underline color to yellow. Not widely supported.
+
+.PP
+Example:
+
+.IP
+.nf
+1> io_ansi:yellow_underline().
+<<"\\e[58;5;3m">>
+
+.fi
+
+
+.RE

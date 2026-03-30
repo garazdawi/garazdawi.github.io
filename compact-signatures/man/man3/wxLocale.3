@@ -1,0 +1,386 @@
+.TH wxLocale 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxLocale \- \fIwxLocale\fR class encapsulates all language-dependent settings and is a generalization of the C locale concept.
+
+.SH DESCRIPTION
+.PP
+In wxWidgets this class manages current locale. It also initializes and activates \fIwxTranslations\fR (not implemented in wx) object that manages message catalogs.
+
+.PP
+For a list of the supported languages, please see ?wxLanguage enum values. These constants may be used to specify the language in \fIinit/3\fR and are returned by \fIgetSystemLanguage/0\fR.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview i18n
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Examples
+
+.RE
+
+.PP
+wxWidgets docs: wxLocale
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxLocale() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddCatalog(This, Domain) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxLocale(), Domain :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Calls wxTranslations::AddCatalog(const wxString&).
+
+
+.RE
+.B
+\fBaddCatalog(This, Domain, MsgIdLanguage) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxLocale(),\fR
+\fB                        Domain :: unicode:chardata(),\fR
+\fB                        MsgIdLanguage :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Calls \fIwxTranslations::AddCatalog(const wxString&, wxLanguage)\fR (not implemented in wx).
+
+
+.RE
+.B
+\fBaddCatalog(This, Domain, MsgIdLanguage, MsgIdCharset) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxLocale(),\fR
+\fB                        Domain :: unicode:chardata(),\fR
+\fB                        MsgIdLanguage :: wx:wx_enum(),\fR
+\fB                        MsgIdCharset :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Calls \fIwxTranslations::AddCatalog(const wxString&, wxLanguage, const wxString&)\fR (not implemented in wx).
+
+
+.RE
+.B
+\fBaddCatalogLookupPathPrefix(Prefix) -> ok\fR
+\fB                                    when Prefix :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Calls \fIwxFileTranslationsLoader::AddCatalogLookupPathPrefix()\fR (not implemented in wx).
+
+
+.RE
+.B
+\fBdestroy(This :: wxLocale()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetCanonicalName(This) -> unicode:charlist()\fR
+\fB                          when This :: wxLocale().\fR
+
+.br
+.RS
+.PP
+Returns the canonical form of current locale name.
+
+.PP
+Canonical form is the one that is used on UNIX systems: it is a two- or five-letter string in xx or xx_YY format, where xx is ISO 639 code of language and YY is ISO 3166 code of the country. Examples are "en", "en_GB", "en_US" or "fr_FR". This form is internally used when looking up message catalogs. Compare \fIgetSysName/1\fR.
+
+
+.RE
+.B
+\fBgetHeaderValue(This, Header, [Option]) -> unicode:charlist()\fR
+\fB                        when\fR
+\fB                            This :: wxLocale(),\fR
+\fB                            Header :: unicode:chardata(),\fR
+\fB                            Option :: {szDomain, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Calls \fIwxTranslations::GetHeaderValue()\fR (not implemented in wx).
+
+
+.RE
+.B
+\fBgetLanguage(This) -> integer() when This :: wxLocale().\fR
+
+.br
+.RS
+.PP
+Returns the ?wxLanguage constant of current language.
+
+.PP
+Note that you can call this function only if you used the form of \fIinit/3\fR that takes ?wxLanguage argument.
+
+
+.RE
+.B
+\fBgetLanguageName(Lang) -> unicode:charlist() when Lang :: integer().\fR
+
+.br
+.RS
+.PP
+Returns English name of the given language or empty string if this language is unknown.
+
+.PP
+See \fIGetLanguageInfo()\fR (not implemented in wx) for a remark about special meaning of \fIwxLANGUAGE_DEFAULT\fR.
+
+
+.RE
+.B
+\fBgetLocale(This) -> unicode:charlist() when This :: wxLocale().\fR
+
+.br
+.RS
+.PP
+Returns the locale name as passed to the constructor or \fIinit/3\fR.
+
+.PP
+This is a full, human-readable name, e.g. "English" or "French".
+
+
+.RE
+.B
+\fBgetName(This) -> unicode:charlist() when This :: wxLocale().\fR
+
+.br
+.RS
+.PP
+Returns the current short name for the locale (as given to the constructor or the \fIinit/3\fR function).
+
+
+.RE
+.B
+\fBgetString(This, OrigString, [Option]) -> unicode:charlist()\fR
+\fB                   when\fR
+\fB                       This :: wxLocale(),\fR
+\fB                       OrigString :: unicode:chardata(),\fR
+\fB                       Option :: {szDomain, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Calls wxGetTranslation(const wxString&, const wxString&).
+
+
+.RE
+.B
+\fBgetString(This, OrigString, OrigString2, N, [Option]) ->\fR
+\fB                   unicode:charlist()\fR
+\fB                   when\fR
+\fB                       This :: wxLocale(),\fR
+\fB                       OrigString :: unicode:chardata(),\fR
+\fB                       OrigString2 :: unicode:chardata(),\fR
+\fB                       N :: integer(),\fR
+\fB                       Option :: {szDomain, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+Calls wxGetTranslation(const wxString&, const wxString&, unsigned, const wxString&).
+
+
+.RE
+.B
+\fBgetSysName(This) -> unicode:charlist() when This :: wxLocale().\fR
+
+.br
+.RS
+.PP
+Returns current platform-specific locale name as passed to setlocale().
+
+.PP
+Compare \fIgetCanonicalName/1\fR.
+
+
+.RE
+.B
+\fBgetSystemEncoding() -> wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Tries to detect the user's default font encoding.
+
+.PP
+Returns ?wxFontEncoding() value or \fIwxFONTENCODING_SYSTEM\fR if it couldn't be determined.
+
+
+.RE
+.B
+\fBgetSystemEncodingName() -> unicode:charlist().\fR
+
+.br
+.RS
+.PP
+Tries to detect the name of the user's default font encoding.
+
+.PP
+This string isn't particularly useful for the application as its form is platform-dependent and so you should probably use \fIgetSystemEncoding/0\fR instead.
+
+.PP
+Returns a user-readable string value or an empty string if it couldn't be determined.
+
+
+.RE
+.B
+\fBgetSystemLanguage() -> integer().\fR
+
+.br
+.RS
+.PP
+Tries to detect the user's default locale setting.
+
+.PP
+Returns the ?wxLanguage value or \fIwxLANGUAGE_UNKNOWN\fR if the language-guessing algorithm failed.
+
+.PP
+Note: This function works with \fIlocales\fR and returns the user's default locale. This may be, and usually is, the same as their preferred UI language, but it's not the same thing. Use wxTranslation to obtain \fIlanguage\fR information.
+
+
+.RE
+.B
+\fBinit(This, [Option]) -> boolean()\fR
+\fB              when\fR
+\fB                  This :: wxLocale(),\fR
+\fB                  Option :: {language, integer()} | {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Initializes the \fIwxLocale\fR instance.
+
+.PP
+The call of this function has several global side effects which you should understand: first of all, the application locale is changed - note that this will affect many of standard C library functions such as printf() or strftime(). Second, this \fIwxLocale\fR object becomes the new current global locale for the application and so all subsequent calls to ?wxGetTranslation() will try to translate the messages using the message catalogs for this locale.
+
+.PP
+Return: true on success or false if the given locale couldn't be set.
+
+
+.RE
+.B
+\fBinit(This, Name, [Option]) -> boolean()\fR
+\fB              when\fR
+\fB                  This :: wxLocale(),\fR
+\fB                  Name :: unicode:chardata(),\fR
+\fB                  Option ::\fR
+\fB                      {shortName, unicode:chardata()} |\fR
+\fB                      {locale, unicode:chardata()} |\fR
+\fB                      {bLoadDefault, boolean()}.\fR
+
+.br
+.RS
+.PP
+Deprecated:
+
+.PP
+This form is deprecated, use the other one unless you know what you are doing.
+
+
+.RE
+.B
+\fBisLoaded(This, Domain) -> boolean()\fR
+\fB                  when This :: wxLocale(), Domain :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Calls \fIwxTranslations::IsLoaded()\fR (not implemented in wx).
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxLocale().\fR
+
+.br
+.RS
+.PP
+Returns true if the locale could be set successfully.
+
+
+.RE
+.B
+\fBnew() -> wxLocale().\fR
+
+.br
+.RS
+.PP
+This is the default constructor and it does nothing to initialize the object: \fIinit/3\fR must be used to do that.
+
+
+.RE
+.B
+\fBnew(Language) -> wxLocale() when Language :: integer();\fR
+\fB         (Name) -> wxLocale() when Name :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fInew/2\fR
+
+
+.RE
+.B
+\fBnew(Language, [Option]) -> wxLocale()\fR
+\fB             when Language :: integer(), Option :: {flags, integer()};\fR
+\fB         (Name, [Option]) -> wxLocale()\fR
+\fB             when\fR
+\fB                 Name :: unicode:chardata(),\fR
+\fB                 Option ::\fR
+\fB                     {shortName, unicode:chardata()} |\fR
+\fB                     {locale, unicode:chardata()} |\fR
+\fB                     {bLoadDefault, boolean()}.\fR
+
+.br
+.RS
+.PP
+See \fIinit/3\fR for parameters description.
+
+.PP
+The call of this function has several global side effects which you should understand: first of all, the application locale is changed - note that this will affect many of standard C library functions such as printf() or strftime(). Second, this \fIwxLocale\fR object becomes the new current global locale for the application and so all subsequent calls to ?wxGetTranslation() will try to translate the messages using the message catalogs for this locale.
+
+
+.RE

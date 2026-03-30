@@ -1,0 +1,572 @@
+.TH wxNotebook 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxNotebook \- This class represents a notebook control, which manages multiple windows with associated tabs.
+
+.SH DESCRIPTION
+.PP
+To use the class, create a \fIwxNotebook\fR object and call \fIwxBookCtrlBase:addPage/4\fR or \fIwxBookCtrlBase:insertPage/5\fR, passing a window to be used as the page. Do not explicitly delete the window for a page that is currently managed by \fIwxNotebook\fR.
+
+.PP
+\fIwxNotebookPage\fR is a typedef for \fIwxWindow\fR.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNB_TOP: Place tabs on the top side.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNB_LEFT: Place tabs on the left side.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNB_RIGHT: Place tabs on the right side.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNB_BOTTOM: Place tabs under instead of above the notebook pages.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNB_FIXEDWIDTH: (Windows only) All tabs will have same width.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNB_MULTILINE: (Windows only) There can be several rows of tabs.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxNB_NOPAGETHEME: (Windows only) Display a solid colour on notebook pages, and not a gradient, which can reduce performance. The styles wxNB_LEFT, RIGHT and BOTTOM are not supported under Microsoft Windows when using visual themes.
+
+.RE
+
+.PP
+Page backgrounds
+
+.PP
+On Windows, the default theme paints a background on the notebook's pages. If you wish to suppress this theme, for aesthetic or performance reasons, there are three ways of doing it. You can use \fIwxNB_NOPAGETHEME\fR to disable themed drawing for a particular notebook, you can call \fIwxSystemOptions:setOption/2\fR to disable it for the whole application, or you can disable it for individual pages by using \fIwxWindow:setBackgroundColour/2\fR.
+
+.PP
+To disable themed pages globally:
+
+.PP
+Set the value to 1 to enable it again. To give a single page a solid background that more or less fits in with the overall theme, use:
+
+.PP
+On platforms other than Windows, or if the application is not using Windows themes, \fIgetThemeBackgroundColour/1\fR will return an uninitialised colour object, and the above code will therefore work on all platforms.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxBookCtrl
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBookCtrlEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Examples
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBookCtrlBase\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxNotebook
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_notebook_page_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_notebook_page_changing\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxNotebook() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBassignImageList(This, ImageList) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxNotebook(),\fR
+\fB                             ImageList :: wxImageList:wxImageList().\fR
+
+.br
+.RS
+.PP
+Sets the image list for the page control and takes ownership of the list.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetImageList/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBcreate(This, Parent, Id, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxNotebook(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Creates a notebook control.
+
+.PP
+See \fInew/3\fR for a description of the parameters.
+
+
+.RE
+.B
+\fBdestroy(This :: wxNotebook()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetImageList(This) -> wxImageList:wxImageList()\fR
+\fB                      when This :: wxNotebook().\fR
+
+.br
+.RS
+.PP
+Returns the associated image list, may be NULL.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetImageList/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetPageImage(This, NPage) -> integer()\fR
+\fB                      when This :: wxNotebook(), NPage :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the image index for the given page.
+
+
+.RE
+.B
+\fBgetRowCount(This) -> integer() when This :: wxNotebook().\fR
+
+.br
+.RS
+.PP
+Returns the number of rows in the notebook control.
+
+
+.RE
+.B
+\fBgetThemeBackgroundColour(This) -> wx:wx_colour4()\fR
+\fB                                  when This :: wxNotebook().\fR
+
+.br
+.RS
+.PP
+If running under Windows and themes are enabled for the application, this function returns a suitable colour for painting the background of a notebook page, and can be passed to \fIwxWindow:setBackgroundColour/2\fR.
+
+.PP
+Otherwise, an uninitialised colour will be returned.
+
+
+.RE
+.B
+\fBnew() -> wxNotebook().\fR
+
+.br
+.RS
+.PP
+Constructs a notebook control.
+
+
+.RE
+.B
+\fBnew(Parent, Id, [Option]) -> wxNotebook()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructs a notebook control.
+
+.PP
+Note that sometimes you can reduce flicker by passing the wxCLIP_CHILDREN window style.
+
+
+.RE
+.B
+\fBsetImageList(This, ImageList) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxNotebook(),\fR
+\fB                          ImageList :: wxImageList:wxImageList().\fR
+
+.br
+.RS
+.PP
+Sets the image list to use.
+
+.PP
+It does not take ownership of the image list, you must delete it yourself.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxImageList\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIassignImageList/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetPadding(This, Padding) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxNotebook(),\fR
+\fB                        Padding :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the amount of space around each page's icon and label, in pixels.
+
+.PP
+Note: The vertical padding cannot be changed in wxGTK.
+
+
+.RE
+.B
+\fBsetPageImage(This, Page, Image) -> boolean()\fR
+\fB                      when\fR
+\fB                          This :: wxNotebook(),\fR
+\fB                          Page :: integer(),\fR
+\fB                          Image :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the image index for the given page.
+
+.PP
+\fIimage\fR is an index into the image list which was set with \fIsetImageList/2\fR.
+
+
+.RE
+.B
+\fBsetPageSize(This, Size) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxNotebook(),\fR
+\fB                         Size :: {W :: integer(), H :: integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the width and height of the pages.
+
+.PP
+Note: This method is currently not implemented for wxGTK.
+
+
+.RE

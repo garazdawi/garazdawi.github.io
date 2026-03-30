@@ -1,0 +1,194 @@
+.TH wxGridCellFloatRenderer 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGridCellFloatRenderer \- This class may be used to format floating point data in a cell.
+
+.SH DESCRIPTION
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellRenderer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellBoolRenderer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellNumberRenderer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellStringRenderer\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellStringRenderer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGridCellRenderer\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGridCellFloatRenderer
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGridCellFloatRenderer() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxGridCellFloatRenderer()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetPrecision(This) -> integer()\fR
+\fB                      when This :: wxGridCellFloatRenderer().\fR
+
+.br
+.RS
+.PP
+Returns the precision.
+
+
+.RE
+.B
+\fBgetWidth(This) -> integer() when This :: wxGridCellFloatRenderer().\fR
+
+.br
+.RS
+.PP
+Returns the width.
+
+
+.RE
+.B
+\fBnew([Option]) -> wxGridCellFloatRenderer()\fR
+\fB             when\fR
+\fB                 Option ::\fR
+\fB                     {width, integer()} |\fR
+\fB                     {precision, integer()} |\fR
+\fB                     {format, integer()}.\fR
+
+.br
+.RS
+.PP
+Float cell renderer ctor.
+
+
+.RE
+.B
+\fBsetParameters(This, Params) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxGridCellFloatRenderer(),\fR
+\fB                           Params :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+The parameters string format is "width[,precision[,format]]" where \fIformat\fR should be chosen between f|e|g|E|G (f is used by default)
+
+
+.RE
+.B
+\fBsetPrecision(This, Precision) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxGridCellFloatRenderer(),\fR
+\fB                          Precision :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the precision.
+
+
+.RE
+.B
+\fBsetWidth(This, Width) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxGridCellFloatRenderer(),\fR
+\fB                      Width :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the width.
+
+
+.RE

@@ -1,0 +1,94 @@
+.TH megaco_transport 3 "megaco 4.8.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+megaco_transport \- Megaco transport behaviour.
+
+.SH DESCRIPTION
+.PP
+The following functions should be exported from a \fImegaco_transport\fR callback module:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsend_message/2\fR [\fImandatory\fR]
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsend_message/3\fR [\fIoptional\fR]
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIresend_message/2\fR [\fIoptional\fR]
+
+.RE
+
+.SH CALLBACKS
+.LP
+.B
+\fBresend_message(Handle, Msg)\fR
+
+.br
+.RS
+.PP
+Re-send a megaco message.
+
+.PP
+Note that this function will only be called if the user has set the resend_indication config option to \fItrue\fR\fIand\fR it is in fact a message resend. If not \fIboth\fR of these condition's are meet, \fIsend_message\fR will be called.
+
+.PP
+If the function returns \fI{cancel, Reason}\fR, this means the transport module decided not to send the message. This is \fInot\fR an error. No error messages will be issued and no error counters incremented. What actions this will result in depends on what kind of message was sent.
+
+.PP
+In the case of requests, megaco will cancel the message in much the same way as if \fImegaco:cancel\fR had been called (after a successfull send). The information will be propagated back to the user differently depending on how the request(s) where issued: For requests issued using megaco:call, the info will be delivered in the return value. For requests issued using \fImegaco:cast\fR the info will be delivered via a call to the callback function handle_trans_reply.
+
+.PP
+In the case of reply, megaco will cancel the reply and information of this will be returned to the user via a call to the callback function handle_trans_ack.
+
+
+.RE
+.B
+\fBsend_message(Handle, Msg, Resend)\fR
+
+.br
+.RS
+.PP
+Send a megaco message.
+
+.PP
+If the function returns \fI{cancel, Reason}\fR, this means the transport module decided not to send the message. This is \fInot\fR an error. No error messages will be issued and no error counters incremented. What actions this will result in depends on what kind of message was sent.
+
+.PP
+In the case of requests, megaco will cancel the message in much the same way as if \fImegaco:cancel\fR had been called (after a successfull send). The information will be propagated back to the user differently depending on how the request(s) where issued: For requests issued using \fImegaco:call/3\fR, the info will be delivered in the return value. For requests issued using \fImegaco:cast\fR the info will be delivered via a call to the callback function handle_trans_reply.
+
+.PP
+In the case of reply, megaco will cancel the reply and information of this will be returned to the user via a call to the callback function handle_trans_ack.
+
+.PP
+The function \fIsend_message/3\fR will only be called if the resend_indication config option has been set to the value \fIflag\fR. The third argument, \fIResend\fR then indicates if the message send is a resend or not.
+
+
+.RE

@@ -1,0 +1,1007 @@
+.TH ftp 3 "ftp 1.2.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ftp \- A File Transfer Protocol client.
+
+.SH DESCRIPTION
+.PP
+This module implements a client for file transfer according to a subset of the File Transfer Protocol (FTP), see RFC 959.
+
+.PP
+The FTP client always tries to use passive FTP mode and only resort to active FTP mode if this fails. This default behavior can be changed by start option mode.
+
+.PP
+For a simple example of an FTP session, see FTP User's Guide.
+
+.PP
+The return values of the following functions depend much on the implementation of the FTP server at the remote host. In particular, the results from \fIls\fR and \fInlist\fR varies. Often real errors are not reported as errors by \fIls\fR, even if, for example, a file or directory does not exist. \fInlist\fR is usually more strict, but some implementations have the peculiar behaviour of responding with an error if the request is a listing of the contents of a directory that exists but is empty.
+
+.SS "Errors"
+
+.PP
+The possible error reasons and the corresponding diagnostic strings returned by \fIformaterror/1\fR are as follows:
+
+echunk
+.RS 2
+Synchronization error during chunk sending according to one of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+call is made to \fIsend_chunk/2\fR or \fIsend_chunk_end/1\fR before a call to \fIsend_chunk_start/2\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+call has been made to another transfer function during chunk sending, that is, before a call to \fIsend_chunk_end/1\fR.
+
+.RE
+
+
+.RE
+
+eclosed
+.RS 2
+The session is closed.
+
+
+.RE
+
+econn
+.RS 2
+Connection to the remote server is prematurely closed.
+
+
+.RE
+
+ehost
+.RS 2
+Host is not found, FTP server is not found, or connection is rejected by FTP server.
+
+
+.RE
+
+elogin
+.RS 2
+User is not logged in.
+
+
+.RE
+
+enotbinary
+.RS 2
+Term is not a binary.
+
+
+.RE
+
+epath
+.RS 2
+No such file or directory, or directory already exists, or permission denied.
+
+
+.RE
+
+etype
+.RS 2
+No such type.
+
+
+.RE
+
+euser
+.RS 2
+Invalid username or password.
+
+
+.RE
+
+etnospc
+.RS 2
+Insufficient storage space in system [452].
+
+
+.RE
+
+epnospc
+.RS 2
+Exceeded storage allocation (for current directory or dataset) [552].
+
+
+.RE
+
+efnamena
+.RS 2
+Filename not allowed [553].
+
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBclient() :: pid().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaccount(Client :: client(), Acc :: string()) ->\fR
+\fB                 ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:account/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Sets the account for an operation, if needed.
+
+
+.RE
+.B
+\fBappend(Pid :: pid(),\fR
+\fB             LocalFileName :: file:filename(),\fR
+\fB             RemoteFileName :: file:filename()) ->\fR
+\fB                ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:append/3 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Transfers the file \fILocalFile\fR to the remote server. If \fIRemoteFile\fR is specified, the name of the remote file that the file is appended to is set to \fIRemoteFile\fR, otherwise to \fILocalFile\fR. If the file does not exists, it is created.
+
+
+.RE
+.B
+\fBappend_bin(Pid :: pid(), Bin :: binary(), RemoteFile :: string()) ->\fR
+\fB                    ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:append_bin/3 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Transfers the binary \fIBin\fR to the remote server and appends it to the file \fIRemoteFile\fR. If the file does not exist, it is created.
+
+
+.RE
+.B
+\fBappend_chunk(Client :: client(), Bin :: binary()) ->\fR
+\fB                      ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:append_chunk/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Transfers the chunk \fIBin\fR to the remote server, which appends it to the file specified in the call to \fIappend_chunk_start/2\fR.
+
+.PP
+For some errors, for example, file system full, it is necessary to call \fIappend_chunk_end\fR to get the proper reason.
+
+
+.RE
+.B
+\fBappend_chunk_end(Client :: client()) ->\fR
+\fB                          ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:append_chunk_end/1 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Stops transfer of chunks for appending to the remote server. The file at the remote server, specified in the call to \fIappend_chunk_start/2\fR, is closed by the server.
+
+
+.RE
+.B
+\fBappend_chunk_start(Client :: client(), RemoteFile :: string()) ->\fR
+\fB                            ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:append_chunk_start/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Starts the transfer of chunks for appending to the file \fIRemoteFile\fR at the remote server. If the file does not exist, it is created.
+
+
+.RE
+.B
+\fBcd(Client :: client(), Dir :: string()) ->\fR
+\fB            ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:cd/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Changes the working directory at the remote server to \fIDir\fR.
+
+
+.RE
+.B
+\fBclose(Client :: client()) -> ok.\fR
+
+.RS
+.LP
+Deprecated: ftp:close/1 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Ends an FTP session, created using function open.
+
+
+.RE
+.B
+\fBdelete(Client :: client(), File :: string()) ->\fR
+\fB                ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:delete/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Deletes the file \fIFile\fR at the remote server.
+
+
+.RE
+.B
+\fBformaterror(Tag :: atom() | {error, atom()}) -> string().\fR
+
+.RS
+.LP
+Deprecated: ftp:formaterror/1 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Given an error return value \fI{error, AtomReason}\fR, this function returns a readable string describing the error.
+
+
+.RE
+.B
+\fBlcd(Client :: client(), Dir :: string()) ->\fR
+\fB             ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:lcd/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Changes the working directory to \fIDir\fR for the local client.
+
+
+.RE
+.B
+\fBlpwd(Client :: client()) -> {ok, Dir :: string()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:lpwd/1 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Returns the current working directory at the local client.
+
+
+.RE
+.B
+\fBls(Client :: client(), Dir :: string()) ->\fR
+\fB            {ok, Listing :: string()} | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:ls/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Returns a list of files in long format.
+
+.PP
+\fIDir\fR can be a directory or a file. The \fIDir\fR string can contain wildcards.
+
+.PP
+\fIls/1\fR implies the current remote directory of the user.
+
+.PP
+The format of \fIListing\fR depends on the operating system. On UNIX, it is typically produced from the output of the \fIls -l\fR shell command.
+
+
+.RE
+.B
+\fBmkdir(Client :: client(), Dir :: string()) ->\fR
+\fB               ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:mkdir/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Creates the directory \fIDir\fR at the remote server.
+
+
+.RE
+.B
+\fBnlist(Client :: client(), Pathname :: string()) ->\fR
+\fB               {ok, Listing :: string()} | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:nlist/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Returns a list of files in short format.
+
+.PP
+\fIPathname\fR can be a directory or a file. The \fIPathname\fR string can contain wildcards.
+
+.PP
+\fInlist/1\fR implies the current remote directory of the user.
+
+.PP
+The format of \fIListing\fR is a stream of filenames where each filename is separated by <CRLF> or <NL>. Contrary to function \fIls\fR, the purpose of \fInlist\fR is to enable a program to process filename information automatically.
+
+
+.RE
+.B
+\fBopen(Host :: string() | inet:ip_address(), Opts) ->\fR
+\fB              {ok, Client :: client()} | {error, Reason :: term()}\fR
+\fB              when\fR
+\fB                  Opts :: [Opt],\fR
+\fB                  Opt :: StartOption | OpenOption,\fR
+\fB                  StartOption :: {verbose, Verbose} | {debug, Debug},\fR
+\fB                  Verbose :: boolean(),\fR
+\fB                  Debug :: disable | debug | trace,\fR
+\fB                  OpenOption ::\fR
+\fB                      {ipfamily, IpFamily} |\fR
+\fB                      {port, Port :: port()} |\fR
+\fB                      {mode, Mode} |\fR
+\fB                      {tls, TLSOptions :: [ssl:tls_option()]} |\fR
+\fB                      {tls_sec_method, TLSSecMethod :: ftps | ftpes} |\fR
+\fB                      {tls_ctrl_session_reuse,\fR
+\fB                       TLSSessionReuse :: boolean()} |\fR
+\fB                      {timeout, Timeout :: timeout()} |\fR
+\fB                      {dtimeout, DTimeout :: timeout()} |\fR
+\fB                      {progress, Progress} |\fR
+\fB                      {sock_ctrl, SocketCtrls} |\fR
+\fB                      {sock_data_act, [SocketControl]} |\fR
+\fB                      {sock_data_pass, [SocketControl]},\fR
+\fB                  SocketCtrls :: [SocketControl],\fR
+\fB                  IpFamily :: inet | inet6 | inet6fb4,\fR
+\fB                  Mode :: active | passive,\fR
+\fB                  Module :: atom(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  InitialData :: term(),\fR
+\fB                  Progress :: ignore | {Module, Function, InitialData},\fR
+\fB                  SocketControl :: gen_tcp:option().\fR
+
+.RS
+.LP
+Deprecated: ftp:open/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Starts a FTP client process and opens a session with the FTP server at \fIHost\fR.
+
+.PP
+A session opened in this way is closed using function \fIclose/1\fR.
+
+.PP
+The available configuration options are as follows:
+
+{host, Host}
+.RS 2
+Host = 
+\fIstring() | ip_address()\fR
+
+.RE
+
+{port, Port}
+.RS 2
+Default is 
+\fI0\fR which aliases to \fI21\fR or \fI990\fR when used with \fI{tls_sec_method,ftps}\fR).
+
+.RE
+
+{mode, Mode}
+.RS 2
+Default is 
+\fIpassive\fR.
+
+.RE
+
+{verbose, Verbose}
+.RS 2
+Determines if the FTP communication is to be verbose or not.
+
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+{debug, Debug}
+.RS 2
+Debugging using the dbg toolkit.
+
+.PP
+Default is \fIdisable\fR.
+
+
+.RE
+
+{ipfamily, IpFamily}
+.RS 2
+With 
+\fIinet6fb4\fR the client behaves as before, that is, tries to use IPv6, and only if that does not work it uses IPv4).
+.PP
+Default is \fIinet\fR (IPv4).
+
+
+.RE
+
+{timeout, Timeout}
+.RS 2
+Connection time-out.
+
+.PP
+Default is \fI60000\fR (milliseconds).
+
+
+.RE
+
+{dtimeout, DTimeout}
+.RS 2
+Data connect time-out. The time the client waits for the server to connect to the data socket.
+
+.PP
+Default is \fIinfinity\fR.
+
+
+.RE
+
+{tls, TLSOptions}
+.RS 2
+The FTP session is transported over 
+\fItls\fR (\fIftps\fR, see RFC 4217). The list \fITLSOptions\fR can be empty. The function \fIssl:connect/3\fR is used for securing both the control connection and the data sessions.
+
+.RE
+
+{tls_sec_method, TLSSecMethod}
+.RS 2
+When set to 
+\fIftps\fR will connect immediately with SSL instead of upgrading with STARTTLS. This suboption is ignored unless the suboption \fItls\fR is also set.
+.PP
+Default is \fIftpes\fR
+
+
+.RE
+
+{tls_ctrl_session_reuse, boolean()}
+.RS 2
+When set to 
+\fItrue\fR the client will re-use the TLS session from the control channel on the data channel as enforced by many FTP servers as (proposed and implemented first by vsftpd).
+.PP
+Default is \fIfalse\fR.
+
+
+.RE
+
+{sock_ctrl, SocketCtrls :: [SocketControl :: gen_tcp:option()]}
+.RS 2
+Passes options from 
+\fISocketCtrls\fR down to the underlying transport layer (tcp).
+.PP
+\fIgen_tcp:option/0\fR except for \fIipv6_v6only\fR, \fIactive\fR, \fIpacket\fR, \fImode\fR, \fIpacket_size\fR and \fIheader\fR.
+
+.PP
+Default value is \fISocketCtrls = []\fR.
+
+
+.RE
+
+{sock_data_act, [SocketControl]}
+.RS 2
+Passes options from 
+\fI[SocketControl]\fR down to the underlying transport layer (tcp).
+.PP
+\fIsock_data_act\fR uses the value of \fIsock_ctrl\fR as default value.
+
+
+.RE
+
+{sock_data_pass, [SocketControl]}
+.RS 2
+Passes options from 
+\fI[SocketControl]\fR down to the underlying transport layer (tcp).
+.PP
+\fIsock_data_pass\fR uses the value of \fIsock_ctrl\fR as default value.
+
+
+.RE
+
+{progress, Progress}
+.RS 2
+Progress = 
+\fIignore | {Module, Function, InitialData}\fR
+.PP
+\fIModule = atom()\fR, \fIFunction = atom()\fR
+
+.PP
+\fIInitialData = term()\fR
+
+.PP
+Default is \fIignore\fR.
+
+.PP
+Option \fIprogress\fR is intended to be used by applications that want to create some type of progress report, such as a progress bar in a GUI. Default for the progress option is \fIignore\fR, that is, the option is not used. When the progress option is specified, the following happens when \fIftp:send/[3,4]\fR or \fIftp:recv/[3,4]\fR are called:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Before a file is transferred, the following call is made to indicate the start of the file transfer and how large the file is. The return value of the callback function is to be a new value for the \fIUserProgressTerm\fR that will be used as input the next time the callback function is called.
+
+.PP
+\fIModule:Function(InitialData, File, {file_size, FileSize})\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Every time a chunk of bytes is transferred the following call is made:
+
+.PP
+\fIModule:Function(UserProgressTerm, File, {transfer_size, TransferSize})\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+At the end of the file the following call is made to indicate the end of the transfer:
+
+.PP
+\fIModule:Function(UserProgressTerm, File, {transfer_size, 0})\fR
+
+.RE
+
+.PP
+The callback function is to be defined as follows:
+
+.PP
+\fIModule:Function(UserProgressTerm, File, Size) -> UserProgressTerm\fR
+
+.PP
+\fIUserProgressTerm = term()\fR
+
+.PP
+\fIFile = string()\fR
+
+.PP
+\fISize = {transfer_size, integer()} | {file_size, integer()} | {file_size, unknown}\fR
+
+.PP
+For remote files, \fIftp\fR cannot determine the file size in a platform independent way. In this case the size becomes \fIunknown\fR and it is left to the application to determine the size.
+
+.PP
+\fBNOTE: \fRThe callback is made by a middleman process, hence the file transfer is not affected by the code in the progress callback function. If the callback crashes, this is detected by the FTP connection process, which then prints an info-report and goes on as if the progress option was set to \fIignore\fR.
+
+
+.PP
+The file transfer type is set to the default of the FTP server when the session is opened. This is usually ASCII mode.
+
+.PP
+The current local working directory (compare \fIlpwd/1\fR) is set to the value reported by \fIfile:get_cwd/1\fR, the wanted local directory.
+
+.PP
+The return value \fIPid\fR is used as a reference to the newly created FTP client in all other functions, and they are to be called by the process that created the connection. The FTP client process monitors the process that created it and terminates if that process terminates.
+
+
+.RE
+
+
+.RE
+.B
+\fBpwd(Client :: client()) ->\fR
+\fB             {ok, Dir :: string()} | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:pwd/1 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Returns the current working directory at the remote server.
+
+
+.RE
+.B
+\fBquote(Client :: client(), Cmd :: string()) ->\fR
+\fB               [FTPLine :: string()].\fR
+
+.RS
+.LP
+Deprecated: ftp:quote/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+\fBNOTE: \fRThe telnet end of line characters, from the FTP protocol definition, CRLF, for example, "\\\\r\\\\n" has been removed.
+
+
+.PP
+Sends an arbitrary FTP command and returns verbatim a list of the lines sent back by the FTP server. This function is intended to give application accesses to FTP commands that are server-specific or that cannot be provided by this FTP client.
+
+.PP
+\fBNOTE: \fRFTP commands requiring a data connection cannot be successfully issued with this function.
+
+
+
+.RE
+.B
+\fBrecv(Pid :: pid(),\fR
+\fB           RemoteFileName :: file:filename(),\fR
+\fB           LocalFileName :: file:filename()) ->\fR
+\fB              ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:recv/3 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Transfers the file \fIRemoteFileName\fR from the remote server to the file system of the local client. If \fILocalFileName\fR is specified, the local file will be \fILocalFileName\fR, otherwise \fIRemoteFileName\fR.
+
+.PP
+If the file write fails, the command is aborted and \fI{error, term()}\fR is returned. However, the file is \fInot\fR removed.
+
+
+.RE
+.B
+\fBrecv_bin(Pid :: pid(), RemoteFile :: string()) ->\fR
+\fB                  {ok, Bin :: binary()} | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:recv_bin/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Transfers the file \fIRemoteFile\fR from the remote server and receives it as a binary.
+
+
+.RE
+.B
+\fBrecv_chunk(Client :: client()) ->\fR
+\fB                    ok |\fR
+\fB                    {ok, Bin :: binary()} |\fR
+\fB                    {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:recv_chunk/1 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Receives a chunk of the remote file (\fIRemoteFile\fR of \fIrecv_chunk_start\fR). The return values have the following meaning:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIok\fR = the transfer is complete.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{ok, Bin}\fR = just another chunk of the file.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{error, Reason}\fR = transfer failed.
+
+.RE
+
+
+.RE
+.B
+\fBrecv_chunk_start(Pid :: pid(), RemoteFile :: string()) ->\fR
+\fB                          ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:recv_chunk_start/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Starts transfer of the file \fIRemoteFile\fR from the remote server.
+
+
+.RE
+.B
+\fBrename(Client :: client(), Old :: string(), New :: string()) ->\fR
+\fB                ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:rename/3 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Renames \fIOld\fR to \fINew\fR at the remote server.
+
+
+.RE
+.B
+\fBrmdir(Client :: client(), Dir :: string()) ->\fR
+\fB               ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:rmdir/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Removes directory \fIDir\fR at the remote server.
+
+
+.RE
+.B
+\fBsend(Pid :: pid(),\fR
+\fB           LocalFileName :: file:filename(),\fR
+\fB           RemoteFileName :: file:filename()) ->\fR
+\fB              ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:send/3 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Transfers the file \fILocalFileName\fR to the remote server. If \fIRemoteFileName\fR is specified, the name of the remote file is set to \fIRemoteFileName\fR, otherwise to \fILocalFileName\fR.
+
+
+.RE
+.B
+\fBsend_bin(Client :: client(),\fR
+\fB               Bin :: binary(),\fR
+\fB               RemoteFile :: string()) ->\fR
+\fB                  ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:send_bin/3 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Transfers the binary \fIBin\fR into the file \fIRemoteFile\fR at the remote server.
+
+
+.RE
+.B
+\fBsend_chunk(Client :: client(), Bin :: binary()) ->\fR
+\fB                    ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:send_chunk/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Transfers the chunk \fIBin\fR to the remote server, which writes it into the file specified in the call to \fIsend_chunk_start/2\fR.
+
+.PP
+For some errors, for example, file system full, it is necessary to to call \fIsend_chunk_end\fR to get the proper reason.
+
+
+.RE
+.B
+\fBsend_chunk_end(Client :: client()) ->\fR
+\fB                        ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:send_chunk_end/1 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Stops transfer of chunks to the remote server. The file at the remote server, specified in the call to \fIsend_chunk_start/2\fR is closed by the server.
+
+
+.RE
+.B
+\fBsend_chunk_start(Client :: client(), RemoteFile :: string()) ->\fR
+\fB                          ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:send_chunk_start/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Starts transfer of chunks into the file \fIRemoteFile\fR at the remote server.
+
+
+.RE
+.B
+\fBtype(Client :: client(), Type :: ascii | binary) ->\fR
+\fB              ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:type/2 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Sets the file transfer type to \fIascii\fR or \fIbinary\fR. When an FTP session is opened, the default transfer type of the server is used, most often \fIascii\fR, which is default according to RFC 959.
+
+
+.RE
+.B
+\fBuser(Pid :: pid(), User :: string(), Pass :: string()) ->\fR
+\fB              ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:user/3 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Performs login of \fIUser\fR with \fIPass\fR.
+
+
+.RE
+.B
+\fBuser(Pid :: pid(),\fR
+\fB           User :: string(),\fR
+\fB           Pass :: string(),\fR
+\fB           Account :: string()) ->\fR
+\fB              ok | {error, Reason :: term()}.\fR
+
+.RS
+.LP
+Deprecated: ftp:user/4 is deprecated; Legacy protocol support will be dropped in OTP-30, use more modern approach for file transfer as for instance SFTP (SSH File Transfer Protocol).
+.RE
+
+.br
+.RS
+.PP
+Performs login of \fIUser\fR with \fIPass\fR to the account specified by \fIAccount\fR.
+
+
+.RE

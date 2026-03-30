@@ -1,0 +1,345 @@
+.TH erl_anno 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_anno \- Abstract datatype for the annotations of the Erlang Compiler.
+
+.SH DESCRIPTION
+.PP
+This module provides an abstract type that is used by the Erlang Compiler and its helper modules for holding data such as column, line number, and text. The data type is a collection of \fIannotations\fR as described in the following.
+
+.PP
+The Erlang Token Scanner returns tokens with a subset of the following annotations, depending on the options:
+
+column
+.RS 2
+The column where the token begins.
+
+
+.RE
+
+location
+.RS 2
+The line and column where the token begins, or just the line if the column is unknown.
+
+
+.RE
+
+text
+.RS 2
+The token's text.
+
+
+.RE
+
+.PP
+From this, the following annotation is derived:
+
+line
+.RS 2
+The line where the token begins.
+
+
+.RE
+
+.PP
+This module also supports the following annotations, which are used by various modules:
+
+file
+.RS 2
+A filename.
+
+
+.RE
+
+generated
+.RS 2
+A Boolean indicating if the abstract code is compiler-generated. The Erlang Compiler does not emit warnings for such code.
+
+
+.RE
+
+record
+.RS 2
+A Boolean indicating if the origin of the abstract code is a record. Used by Dialyzer to assign types to tuple elements.
+
+
+.RE
+
+.PP
+The functions \fIcolumn()\fR, \fIend_location()\fR, \fIline()\fR, \fIlocation()\fR, and \fItext()\fR in the \fIerl_scan\fR module can be used for inspecting annotations in tokens.
+
+.PP
+The functions \fIanno_from_term()\fR, \fIanno_to_term()\fR, \fIfold_anno()\fR, \fImap_anno()\fR, \fImapfold_anno()\fR, and \fInew_anno()\fR, in the \fIerl_parse\fR module can be used for manipulating annotations in abstract code.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIerl_parse\fR, \fIerl_scan\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fB-opaque anno() \fR
+
+.br
+.RS
+.PP
+A collection of annotations.
+
+
+.RE
+.B
+\fBanno_term() :: term().\fR
+
+.br
+.RS
+.PP
+The term representing a collection of annotations. It is either a \fIlocation/0\fR or a list of key-value pairs.
+
+
+.RE
+.B
+\fBcolumn() :: pos_integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfilename() :: file:filename_all().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgenerated() :: boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBline()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlocation()\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrecord_local() :: boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtext() :: string().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcolumn(Anno) -> column() | undefined when Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns the column of the annotations Anno.
+
+
+.RE
+.B
+\fBend_location(Anno) -> location() | undefined when Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns the end location of the annotations Anno.
+
+.PP
+If the end location annotation is present, its value is returned. Otherwise, if the text annotation is present, the end location is inferred from the location and the text. Finally, if there is no text, \fIundefined\fR is returned.
+
+
+.RE
+.B
+\fBfile(Anno) -> filename() | undefined when Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns the filename of the annotations Anno. If there is no filename, \fIundefined\fR is returned.
+
+
+.RE
+.B
+\fBfrom_term(Term) -> Anno when Term :: anno_term(), Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns annotations with representation Term.
+
+.PP
+See also to_term().
+
+
+.RE
+.B
+\fBgenerated(Anno) -> generated() when Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if annotations Anno is marked as generated. The default is to return \fIfalse\fR.
+
+
+.RE
+.B
+\fBis_anno(Term) -> boolean() when Term :: any().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if Term is a collection of annotations, otherwise \fIfalse\fR.
+
+
+.RE
+.B
+\fBline(Anno) -> line() when Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns the line of the annotations Anno.
+
+
+.RE
+.B
+\fBlocation(Anno) -> location() when Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns the location of the annotations Anno. If there is no location, a zero line number is returned.
+
+
+.RE
+.B
+\fBnew(Location) -> anno() when Location :: location().\fR
+
+.br
+.RS
+.PP
+Creates a new collection of annotations given a location.
+
+
+.RE
+.B
+\fBset_end_location(Location, Anno) -> Anno\fR
+\fB                          when Location :: location(), Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Modifies the end location of the annotations Anno.
+
+
+.RE
+.B
+\fBset_file(File, Anno) -> Anno\fR
+\fB                  when File :: filename(), Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Modifies the filename of the annotations Anno.
+
+
+.RE
+.B
+\fBset_generated(Generated, Anno) -> Anno\fR
+\fB                       when Generated :: generated(), Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Modifies the generated marker of the annotations Anno.
+
+
+.RE
+.B
+\fBset_line(Line, Anno) -> Anno when Line :: line(), Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Modifies the line of the annotations Anno.
+
+
+.RE
+.B
+\fBset_location(Location, Anno) -> Anno\fR
+\fB                      when Location :: location(), Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Modifies the location of the annotations Anno.
+
+
+.RE
+.B
+\fBset_record(Record, Anno) -> Anno\fR
+\fB                    when Record :: record_local(), Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Modifies the record marker of the annotations Anno.
+
+
+.RE
+.B
+\fBset_text(Text, Anno) -> Anno when Text :: text(), Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Modifies the text of the annotations Anno.
+
+
+.RE
+.B
+\fBtext(Anno) -> text() | undefined when Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns the text of the annotations Anno. If there is no text, \fIundefined\fR is returned.
+
+
+.RE
+.B
+\fBto_term(Anno) -> anno_term() when Anno :: anno().\fR
+
+.br
+.RS
+.PP
+Returns the term representing the annotations Anno.
+
+.PP
+See also from_term().
+
+
+.RE

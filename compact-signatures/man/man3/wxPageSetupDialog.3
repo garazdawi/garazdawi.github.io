@@ -1,0 +1,126 @@
+.TH wxPageSetupDialog 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPageSetupDialog \- This class represents the page setup common dialog.
+
+.SH DESCRIPTION
+.PP
+The page setup dialog contains controls for paper size (letter, A4, A5 etc.), orientation (landscape or portrait), and, only under Windows currently, controls for setting left, top, right and bottom margin sizes in millimetres.
+
+.PP
+The exact appearance of this dialog varies among the platforms as a native dialog is used when available (currently the case for all major platforms).
+
+.PP
+When the dialog has been closed, you need to query the \fIwxPageSetupDialogData\fR object associated with the dialog.
+
+.PP
+Note that the OK and Cancel buttons do not destroy the dialog; this must be done by the application.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview printing
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPrintDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPageSetupDialogData\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPageSetupDialog
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPageSetupDialog() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxPageSetupDialog()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetPageSetupData(This) ->\fR
+\fB                          wxPageSetupDialogData:wxPageSetupDialogData()\fR
+\fB                          when This :: wxPageSetupDialog().\fR
+
+.br
+.RS
+.PP
+Returns the \fIwxPageSetupDialogData\fR object associated with the dialog.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxPageSetupDialog()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {data,\fR
+\fB                      wxPageSetupDialogData:wxPageSetupDialogData()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+.PP
+Pass a parent window, and optionally a pointer to a block of page setup data, which will be copied to the print dialog's internal data.
+
+
+.RE
+.B
+\fBshowModal(This) -> integer() when This :: wxPageSetupDialog().\fR
+
+.br
+.RS
+.PP
+Shows the dialog, returning \fIwxID\\_OK\fR if the user pressed OK, and \fIwxID\\_CANCEL\fR otherwise.
+
+
+.RE

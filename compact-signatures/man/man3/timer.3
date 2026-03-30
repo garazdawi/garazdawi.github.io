@@ -1,0 +1,544 @@
+.TH timer 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+timer \- Timer functions.
+
+.SH DESCRIPTION
+.PP
+This module provides useful functions related to time. Unless otherwise stated, time is always measured in \fImilliseconds\fR. All timer functions return immediately, regardless of work done by another process.
+
+.PP
+Successful evaluations of the timer functions give return values containing a timer reference, denoted \fITRef\fR. By using \fIcancel/1\fR, the returned reference can be used to cancel any requested action. A \fITRef\fR is an Erlang term, which contents must not be changed.
+
+.PP
+The time-outs are not exact, but are \fIat least\fR as long as requested.
+
+.PP
+Creating timers using \fIerlang:send_after/3\fR and \fIerlang:start_timer/3\fR is more efficient than using the timers provided by this module. However, the timer module has been improved in OTP 25, making it more efficient and less susceptible to being overloaded. See the Timer Module section in the Efficiency Guide.
+
+.PP
+For more information on timers in Erlang in general, see the \fITimers\fR section of the \fITime and Time Correction in Erlang\fR ERTS User's guide.
+
+.SS "Examples"
+
+.PP
+\fIExample 1\fR
+
+.PP
+The following example shows how to print "Hello World!" in 5 seconds:
+
+.IP
+.nf
+1> timer:apply_after(5000, io, format, ["~nHello World!~n", []]).
+{ok,TRef}
+Hello World!
+
+.fi
+
+.PP
+\fIExample 2\fR
+
+.PP
+The following example shows a process performing a certain action, and if this action is not completed within a certain limit, the process is killed:
+
+.IP
+.nf
+Pid = spawn(mod, fun, [foo, bar]),
+%% If pid is not finished in 10 seconds, kill him
+{ok, R} = timer:kill_after(timer:seconds(10), Pid),
+...
+%% We change our mind...
+timer:cancel(R),
+...
+
+.fi
+
+.SS "Notes on timer behavior"
+
+.PP
+A timer can always be removed by calling \fIcancel/1\fR.
+
+.PP
+An interval timer, that is, a timer created by evaluating any of the functions \fIapply_interval/2\fR, \fIapply_interval/3\fR, \fIapply_interval/4\fR, \fIapply_repeatedly/2\fR, \fIapply_repeatedly/3\fR, \fIapply_repeatedly/4\fR, \fIsend_interval/2\fR, and \fIsend_interval/3\fR is linked to the process to which the timer performs its task.
+
+.PP
+A one-shot timer, that is, a timer created by evaluating any of the functions \fIapply_after/2\fR, \fIapply_after/3\fR, \fIapply_after/4\fR, \fIsend_after/2\fR, \fIsend_after/3\fR, \fIexit_after/2\fR, \fIexit_after/3\fR, \fIkill_after/1\fR, and \fIkill_after/2\fR is not linked to any process. Hence, such a timer is removed only when it reaches its time-out, or if it is explicitly removed by a call to \fIcancel/1\fR.
+
+.PP
+The functions given to \fIapply_after/2\fR, \fIapply_after/3\fR, \fIapply_interval/2\fR, \fIapply_interval/3\fR, \fIapply_repeatedly/2\fR, and \fIapply_repeatedly/3\fR, or denoted by \fIModule\fR, \fIFunction\fR and \fIArguments\fR given to \fIapply_after/4\fR, \fIapply_interval/4\fR, and \fIapply_repeatedly/4\fR are executed in a freshly-spawned process, and therefore calls to \fIself/0\fR in those functions will return the Pid of this process, which is different from the process that called \fItimer:apply_*\fR.
+
+.PP
+\fIExample\fR
+
+.PP
+In the following example, the intention is to set a timer to execute a function after 1 second, which performs a fictional task, and then wants to inform the process which set the timer about its completion, by sending it a \fIdone\fR message.
+
+.PP
+Using \fIself/0\fR \fIinside\fR the timed function, the code below does not work as intended. The task gets done, but the \fIdone\fR message gets sent to the wrong process and is lost.
+
+.IP
+.nf
+1> timer:apply_after(1000, fun() -> do_something(), self() ! done end).
+{ok,TRef}
+2> receive done -> done after 5000 -> timeout end.
+%% ... 5s pass...
+timeout
+
+.fi
+
+.PP
+The code below calls \fIself/0\fR in the process which sets the timer and assigns it to a variable, which is then used in the function to send the \fIdone\fR message to, and so works as intended.
+
+.IP
+.nf
+1> Target = self()
+<0.82.0>
+2> timer:apply_after(1000, fun() -> do_something(), Target ! done end).
+{ok,TRef}
+3> receive done -> done after 5000 -> timeout end.
+%% ... 1s passes...
+done
+
+.fi
+
+.PP
+Another option is to pass the message target as a parameter to the function.
+
+.IP
+.nf
+1> timer:apply_after(1000, fun(Target) -> do_something(), Target ! done end, [self()]).
+{ok,TRef}
+2> receive done -> done after 5000 -> timeout end.
+%% ... 1s passes...
+done
+
+.fi
+
+.SH DATA TYPES
+.LP
+.B
+\fBtime()\fR
+
+.br
+.RS
+.PP
+Time in milliseconds.
+
+
+.RE
+.B
+\fB-opaque tref() \fR
+
+.br
+.RS
+.PP
+A timer reference.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBapply_after(Time, Function) -> {ok, TRef} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Time :: time(),\fR
+\fB                         Function :: fun(() -> _),\fR
+\fB                         TRef :: tref(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(erlang, apply, [Function, []])\fR after \fITime\fR milliseconds.
+
+
+.RE
+.B
+\fBapply_after(Time, Function, Arguments) ->\fR
+\fB                     {ok, TRef} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Time :: time(),\fR
+\fB                         Function :: fun((...) -> _),\fR
+\fB                         Arguments :: [term()],\fR
+\fB                         TRef :: tref(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(erlang, apply, [Function, Arguments])\fR after \fITime\fR milliseconds.
+
+
+.RE
+.B
+\fBapply_after(Time, Module, Function, Arguments) ->\fR
+\fB                     {ok, TRef} | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Time :: time(),\fR
+\fB                         Module :: module(),\fR
+\fB                         Function :: atom(),\fR
+\fB                         Arguments :: [term()],\fR
+\fB                         TRef :: tref(),\fR
+\fB                         Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(Module, Function, Arguments)\fR after \fITime\fR milliseconds.
+
+
+.RE
+.B
+\fBapply_interval(Time, Function) -> {ok, TRef} | {error, Reason}\fR
+\fB                        when\fR
+\fB                            Time :: time(),\fR
+\fB                            Function :: fun(() -> _),\fR
+\fB                            TRef :: tref(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(erlang, apply, [Function, []])\fR repeatedly at intervals of \fITime\fR, irrespective of whether a previously spawned process has finished or not.
+
+
+.RE
+.B
+\fBapply_interval(Time, Function, Arguments) ->\fR
+\fB                        {ok, TRef} | {error, Reason}\fR
+\fB                        when\fR
+\fB                            Time :: time(),\fR
+\fB                            Function :: fun((...) -> _),\fR
+\fB                            Arguments :: [term()],\fR
+\fB                            TRef :: tref(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(erlang, apply, [Function, Arguments])\fR repeatedly at intervals of \fITime\fR, irrespective of whether a previously spawned process has finished or not.
+
+
+.RE
+.B
+\fBapply_interval(Time, Module, Function, Arguments) ->\fR
+\fB                        {ok, TRef} | {error, Reason}\fR
+\fB                        when\fR
+\fB                            Time :: time(),\fR
+\fB                            Module :: module(),\fR
+\fB                            Function :: atom(),\fR
+\fB                            Arguments :: [term()],\fR
+\fB                            TRef :: tref(),\fR
+\fB                            Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(Module, Function, Arguments)\fR repeatedly at intervals of \fITime\fR, irrespective of whether a previously spawned process has finished or not.
+
+.PP
+\fBWARNING: \fRIf the execution time of the spawned process is, on average, greater than the given \fITime\fR, multiple such processes will run at the same time. With long execution times, short intervals, and many interval timers running, this may even lead to exceeding the number of allowed processes. As an extreme example, consider \fI[timer:apply_interval(1, timer, sleep, [1000]) || _ <- lists:seq(1, 1000)]\fR, that is, 1,000 interval timers executing a process that takes 1s to complete, started in intervals of 1ms, which would result in 1,000,000 processes running at the same time, far more than a node started with default settings allows (see the System Limits section in the Effiency Guide).
+
+
+
+.RE
+.B
+\fBapply_repeatedly(Time, Function) -> {ok, TRef} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              Time :: time(),\fR
+\fB                              Function :: fun(() -> _),\fR
+\fB                              TRef :: tref(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(erlang, apply, [Function, []])\fR repeatedly at intervals of \fITime\fR, waiting for the spawned process to finish before starting the next.
+
+
+.RE
+.B
+\fBapply_repeatedly(Time, Function, Arguments) ->\fR
+\fB                          {ok, TRef} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              Time :: time(),\fR
+\fB                              Function :: fun((...) -> _),\fR
+\fB                              Arguments :: [term()],\fR
+\fB                              TRef :: tref(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(erlang, apply, [Function, Arguments])\fR repeatedly at intervals of \fITime\fR, waiting for the spawned process to finish before starting the next.
+
+
+.RE
+.B
+\fBapply_repeatedly(Time, Module, Function, Arguments) ->\fR
+\fB                          {ok, TRef} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              Time :: time(),\fR
+\fB                              Module :: module(),\fR
+\fB                              Function :: atom(),\fR
+\fB                              Arguments :: [term()],\fR
+\fB                              TRef :: tref(),\fR
+\fB                              Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIspawn(Module, Function, Arguments)\fR repeatedly at intervals of \fITime\fR, waiting for the spawned process to finish before starting the next.
+
+.PP
+If the execution time of the spawned process is greater than the given \fITime\fR, the next process is spawned immediately after the one currently running has finished. Assuming that execution times of the spawned processes performing the applies on average are smaller than \fITime\fR, the amount of applies made over a large amount of time will be the same even if some individual execution times are larger than \fITime\fR. The system will try to catch up as soon as possible. For example, if one apply takes \fI2.5*Time\fR, the following two applies will be made immediately one after the other in sequence.
+
+
+.RE
+.B
+\fBcancel(TRef) -> {ok, cancel} | {error, Reason}\fR
+\fB                when TRef :: tref(), Reason :: term().\fR
+
+.br
+.RS
+.PP
+Cancels a previously requested time-out. \fITRef\fR is a unique timer reference returned by the related timer function.
+
+.PP
+Returns \fI{ok, cancel}\fR, or \fI{error, Reason}\fR when \fITRef\fR is not a timer reference.
+
+
+.RE
+.B
+\fBexit_after(Time, Target, Reason1) -> {ok, TRef} | {error, Reason2}\fR
+\fB                    when\fR
+\fB                        Time :: time(),\fR
+\fB                        Target :: pid() | (RegName :: atom()),\fR
+\fB                        TRef :: tref(),\fR
+\fB                        Reason1 :: term(),\fR
+\fB                        Reason2 :: term().\fR
+
+.br
+.RS
+.PP
+Sends an exit signal with reason \fIReason1\fR to \fITarget\fR, which can be a local process identifier or an atom of a registered name.
+
+
+.RE
+.B
+\fBhms(Hours, Minutes, Seconds) -> MilliSeconds\fR
+\fB             when\fR
+\fB                 Hours :: non_neg_integer(),\fR
+\fB                 Minutes :: non_neg_integer(),\fR
+\fB                 Seconds :: non_neg_integer(),\fR
+\fB                 MilliSeconds :: time().\fR
+
+.br
+.RS
+.PP
+Returns the number of milliseconds in \fIHours + Minutes + Seconds\fR.
+
+
+.RE
+.B
+\fBhours(Hours) -> MilliSeconds\fR
+\fB               when Hours :: non_neg_integer(), MilliSeconds :: time().\fR
+
+.br
+.RS
+.PP
+Returns the number of milliseconds in \fIHours\fR.
+
+
+.RE
+.B
+\fBminutes(Minutes) -> MilliSeconds\fR
+\fB                 when\fR
+\fB                     Minutes :: non_neg_integer(),\fR
+\fB                     MilliSeconds :: time().\fR
+
+.br
+.RS
+.PP
+Returns the number of milliseconds in \fIMinutes\fR.
+
+
+.RE
+.B
+\fBnow_diff(T2, T1) -> Tdiff\fR
+\fB                  when\fR
+\fB                      T1 :: erlang:timestamp(),\fR
+\fB                      T2 :: erlang:timestamp(),\fR
+\fB                      Tdiff :: integer().\fR
+
+.br
+.RS
+.PP
+Calculates the time difference \fITdiff = T2 - T1\fR in \fImicroseconds\fR, where \fIT1\fR and \fIT2\fR are time-stamp tuples on the same format as returned from \fIerlang:timestamp/0\fR or \fIos:timestamp/0\fR.
+
+
+.RE
+.B
+\fBseconds(Seconds) -> MilliSeconds\fR
+\fB                 when\fR
+\fB                     Seconds :: non_neg_integer(),\fR
+\fB                     MilliSeconds :: time().\fR
+
+.br
+.RS
+.PP
+Returns the number of milliseconds in \fISeconds\fR.
+
+
+.RE
+.B
+\fBsend_after(Time, Destination, Message) ->\fR
+\fB                    {ok, TRef} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Time :: time(),\fR
+\fB                        Destination ::\fR
+\fB                            pid() |\fR
+\fB                            (RegName :: atom()) |\fR
+\fB                            {RegName :: atom(), Node :: node()},\fR
+\fB                        Message :: term(),\fR
+\fB                        TRef :: tref(),\fR
+\fB                        Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIDestination ! Message\fR after \fITime\fR milliseconds.
+
+.PP
+\fIDestination\fR can be a remote or local process identifier, an atom of a registered name or a tuple \fI{RegName, Node}\fR for a registered name at another node.
+
+.PP
+See also the Timer Module section in the Efficiency Guide.
+
+
+.RE
+.B
+\fBsend_interval(Time, Destination, Message) ->\fR
+\fB                       {ok, TRef} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Time :: time(),\fR
+\fB                           Destination ::\fR
+\fB                               pid() |\fR
+\fB                               (RegName :: atom()) |\fR
+\fB                               {RegName :: atom(), Node :: node()},\fR
+\fB                           Message :: term(),\fR
+\fB                           TRef :: tref(),\fR
+\fB                           Reason :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIDestination ! Message\fR repeatedly after \fITime\fR milliseconds.
+
+.PP
+\fIDestination\fR can be a remote or local process identifier, an atom of a registered name or a tuple \fI{RegName, Node}\fR for a registered name at another node.
+
+
+.RE
+.B
+\fBsleep(Time) -> ok when Time :: time() | infinity.\fR
+
+.br
+.RS
+.PP
+Suspends the process calling this function for \fITime\fR milliseconds and then returns \fIok\fR, or suspends the process forever if \fITime\fR is the atom \fIinfinity\fR. Naturally, this function does \fInot\fR return immediately.
+
+.PP
+\fBNOTE: \fRBefore OTP 25, \fItimer:sleep/1\fR did not accept integer timeout values greater than \fI16#ffffffff\fR, that is, \fI2^32-1\fR. Since OTP 25, arbitrarily high integer values are accepted.
+
+
+
+.RE
+.B
+\fBstart() -> ok.\fR
+
+.br
+.RS
+.PP
+Starts the timer server.
+
+.PP
+Normally, the server does not need to be started explicitly. It is started dynamically if it is needed. This is useful during development, but in a target system the server is to be started explicitly. Use configuration parameters for Kernel for this.
+
+
+.RE
+.B
+\fBtc(Fun, Arguments) -> {Time, Value}\fR
+\fB            when\fR
+\fB                Fun :: function(),\fR
+\fB                Arguments :: [term()],\fR
+\fB                Time :: integer(),\fR
+\fB                Value :: term();\fR
+\fB        (Fun, TimeUnit) -> {Time, Value}\fR
+\fB            when\fR
+\fB                Fun :: function(),\fR
+\fB                TimeUnit :: erlang:time_unit(),\fR
+\fB                Time :: integer(),\fR
+\fB                Value :: term().\fR
+
+.br
+.RS
+.PP
+Measures the execution time of \fIFun\fR.
+
+.PP
+Equivalent to \fItc(Fun, Arguments, microsecond)\fR if called as \fItc(Fun, Arguments)\fR.
+
+.PP
+Measures the execution time of \fIFun\fR in \fITimeUnit\fR if called as \fItc(Fun, TimeUnit)\fR. Added in OTP 26.0.
+
+
+.RE
+.B
+\fBtc(Module, Function, Arguments) -> {Time, Value}\fR
+\fB            when\fR
+\fB                Module :: module(),\fR
+\fB                Function :: atom(),\fR
+\fB                Arguments :: [term()],\fR
+\fB                Time :: integer(),\fR
+\fB                Value :: term();\fR
+\fB        (Fun, Arguments, TimeUnit) -> {Time, Value}\fR
+\fB            when\fR
+\fB                Fun :: function(),\fR
+\fB                Arguments :: [term()],\fR
+\fB                TimeUnit :: erlang:time_unit(),\fR
+\fB                Time :: integer(),\fR
+\fB                Value :: term().\fR
+
+.br
+.RS
+.PP
+Measures the execution time of \fIFun\fR or \fIapply(Module, Function, Arguments)\fR.
+
+.PP
+Equivalent to \fItc(Module, Function, Arguments, microsecond)\fR if called as \fItc(Module, Function, Arguments)\fR.
+
+.PP
+Equivalent to \fItc(erlang, apply, [Fun, Arguments], TimeUnit)\fR if called as \fItc(Fun, Arguments, TimeUnit)\fR. Added in OTP 26.0
+
+
+.RE
+.B
+\fBtc(Module, Function, Arguments, TimeUnit) -> {Time, Value}\fR
+\fB            when\fR
+\fB                Module :: module(),\fR
+\fB                Function :: atom(),\fR
+\fB                Arguments :: [term()],\fR
+\fB                TimeUnit :: erlang:time_unit(),\fR
+\fB                Time :: integer(),\fR
+\fB                Value :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Arguments)\fR and measures the elapsed real time as reported by \fIerlang:monotonic_time/0\fR.
+
+.PP
+Returns \fI{Time, Value}\fR, where \fITime\fR is the elapsed real time in the specified \fITimeUnit\fR, and \fIValue\fR is what is returned from the apply.
+
+
+.RE

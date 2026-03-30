@@ -1,0 +1,80 @@
+.TH wxFocusEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxFocusEvent \- A focus event is sent when a window's focus changes.
+
+.SH DESCRIPTION
+.PP
+The window losing focus receives a "kill focus" event while the window gaining it gets a "set focus" one.
+
+.PP
+Notice that the set focus event happens both when the user gives focus to the window (whether using the mouse or keyboard) and when it is done from the program itself using \fIwxWindow:setFocus/1\fR.
+
+.PP
+The focus event handlers should almost invariably call \fIwxEvent:skip/2\fR on their event argument to allow the default handling to take place. Failure to do this may result in incorrect behaviour of the native controls. Also note that wxEVT_KILL_FOCUS handler must not call \fIwxWindow:setFocus/1\fR as this, again, is not supported by all native controls. If you need to do this, consider using the \fIDelayed Action Mechanism\fR (not implemented in wx) described in \fIwxIdleEvent\fR documentation.
+
+.PP
+See: Overview events
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxFocusEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxFocusEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxFocus() :: #wxFocus{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxFocusEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxFocusEventType() :: set_focus | kill_focus.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetWindow(This) -> wxWindow:wxWindow() when This :: wxFocusEvent().\fR
+
+.br
+.RS
+.PP
+Returns the window associated with this event, that is the window which had the focus before for the \fIwxEVT\\_SET\\_FOCUS\fR event and the window which is going to receive focus for the \fIwxEVT\\_KILL\\_FOCUS\fR one.
+
+.PP
+Warning: the window pointer may be NULL!
+
+
+.RE

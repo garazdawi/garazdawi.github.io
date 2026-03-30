@@ -1,0 +1,97 @@
+.TH snmpa_supervisor 3 "snmp 5.20.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+snmpa_supervisor \- A supervisor for the SNMP agent Processes
+
+.SH DESCRIPTION
+.PP
+This is the top supervisor for the agent part of the SNMP application. There is always one supervisor at each node with an SNMP agent (master agent or sub-agent).
+
+.SH FUNCTIONS
+.LP
+.B
+\fBstart_master_sup(Opts) -> {ok, Pid} | {error, Reason}\fR
+\fB                          when\fR
+\fB                              Opts :: [Opt],\fR
+\fB                              Opt ::\fR
+\fB                                  {db_dir, string()} |\fR
+\fB                                  {config, ConfOpts} |\fR
+\fB                                  {atom(), term()},\fR
+\fB                              ConfOpts :: [ConfOpt],\fR
+\fB                              ConfOpt ::\fR
+\fB                                  {dir, string()} | {atom(), term()},\fR
+\fB                              Pid :: pid(),\fR
+\fB                              Reason :: {already_started, Pid} | term().\fR
+
+.br
+.RS
+.PP
+Starts a supervisor for the SNMP agent system. The supervisor starts all involved SNMP processes, including the master agent. Sub-agents should be started by calling \fIstart_subagent/3\fR.
+
+.PP
+\fIdb_dir\fR is mandatory.
+
+.PP
+\fIdir\fR in config is mandatory.
+
+.PP
+See snmp config for a description of the options.
+
+
+.RE
+.B
+\fBstart_sub_agent(ParentAgent, Subtree, Mibs) ->\fR
+\fB                         {ok, Pid} | {error, Reason}\fR
+\fB                         when\fR
+\fB                             ParentAgent :: pid(),\fR
+\fB                             Subtree :: snmp:oid(),\fR
+\fB                             Mibs :: [MibName],\fR
+\fB                             MibName :: string(),\fR
+\fB                             Pid :: pid(),\fR
+\fB                             Reason :: term().\fR
+
+.br
+.RS
+.PP
+Starts a sub-agent on the node where the function is called. The \fIsnmpa_supervisor\fR must be running.
+
+.PP
+If the supervisor is not running, the function fails with the reason \fIbadarg\fR.
+
+
+.RE
+.B
+\fBstart_sub_sup(Opts) -> {ok, Pid} | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Opts :: [Opt],\fR
+\fB                           Opt ::\fR
+\fB                               {db_dir, snmp:dir()} | {atom(), term()},\fR
+\fB                           Pid :: pid(),\fR
+\fB                           Reason :: {already_started, Pid} | term().\fR
+
+.br
+.RS
+.PP
+Starts a supervisor for the SNMP agent system without a master agent. The supervisor starts all involved SNMP agent processes, but no agent processes. Sub-agents should be started by calling \fIstart_sub_agent/3\fR.
+
+.PP
+\fIdb_dir\fR is mandatory.
+
+.PP
+See configuration parameters for a description of the options.
+
+
+.RE
+.B
+\fBstop_sub_agent(SubAgentPid) -> ok | no_such_child\fR
+\fB                        when SubAgentPid :: pid().\fR
+
+.br
+.RS
+.PP
+Stops the sub-agent on the node where the function is called. The \fIsnmpa_supervisor\fR must be running.
+
+.PP
+If the supervisor is not running, the function fails with the reason \fIbadarg\fR.
+
+
+.RE

@@ -1,0 +1,224 @@
+.TH STDLIB Application 6 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+STDLIB Application
+.SH DESCRIPTION
+.SS "Description"
+
+.PP
+The STDLIB application is mandatory in the sense that the minimal system based on Erlang/OTP consists of Kernel and STDLIB. The STDLIB application contains no services.
+
+.SS "Configuration"
+
+.PP
+The following configuration parameters are defined for the STDLIB application. For more information about configuration parameters, see the \fIapp(4)\fR module in Kernel.
+
+shell_esc = icl | abort
+.RS 2
+Can be used to change the behavior of the Erlang shell when 
+\fI^G\fR is pressed.
+
+.RE
+
+restricted_shell = module()
+.RS 2
+Can be used to run the Erlang shell in restricted mode.
+
+
+.RE
+
+shell_catch_exception = boolean()
+.RS 2
+Can be used to set the exception handling of the evaluator process of Erlang shell.
+
+
+.RE
+
+shell_docs_columns = pos_integer()
+.RS 2
+Configures how wide the documentation should be rendered in the shell.
+
+.PP
+See also \fIshell_docs:config/0\fR.
+
+
+.RE
+
+shell_expand_location = above | below
+.RS 2
+Sets where the tab expansion text should appear in the shell. The default is 
+\fIbelow\fR. This will open a pager below the cursor that is scrollable one line at a time with \fIUp/Down\fR arrow keys or 5 lines at a time with \fIPgUp/PgDn\fR.
+
+.RE
+
+shell_history_length = integer() >= 0
+.RS 2
+Can be used to determine how many commands are saved by the Erlang shell. See 
+\fIedlin\fR for more.
+
+.RE
+
+shell_keymap = #{}
+.RS 2
+Can be used to override the default keymap configuration for the shell.
+
+
+.RE
+
+format_shell_func = {Mod, Func} | string() | default
+.RS 2
+Can be used to set the formatting of the Erlang shell output. This has an effect on commands that have been submitted and how it is saved in history or if the formatting hotkey is pressed while editing an expression (Alt+F by default). You can specify a Mod:Func/1 that expects the whole expression as a string and returns a formatted expressions as a string. See 
+\fIshell:format_shell_func/1\fR for how to set it from inside the shell.
+.PP
+If instead a string is provided, it will be used as a shell command. Your command must include \fI${file}\fR somewhere in the string, for the shell to know where the file goes in the command.
+
+.IP
+.nf
+-stdlib format_shell_func "\\"emacs -batch \\${file} -l ~/erlang-format/emacs-format-file -f emacs-format-function\\""
+
+.fi
+
+.IP
+.nf
+-stdlib format_shell_func "{shell, erl_pp_format_func}"
+
+.fi
+
+
+.RE
+
+shell_prompt_func = {Mod, Func} | default
+.RS 2
+where
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIMod = atom()\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFunc = atom()\fR
+
+.RE
+
+.PP
+Can be used to set a customized Erlang shell prompt function.
+
+
+.RE
+
+shell_multiline_prompt = {Mod, Func} | string() | default
+.RS 2
+where
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIMod = atom()\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFunc = atom()\fR
+
+.RE
+
+.PP
+Can be used to set a customized multiline shell prompt function. The multiline prompt function takes the main prompt as its only parameter.
+
+
+.RE
+
+shell_saved_results = integer() >= 0
+.RS 2
+Can be used to determine how many results are saved by the Erlang shell.
+
+
+.RE
+
+shell_session_slogan = string() | fun() -> string())
+.RS 2
+The slogan printed when starting an Erlang shell. Example:
+
+.IP
+.nf
+$ erl -stdlib shell_session_slogan '"Test slogan"'
+Erlang/OTP 26 [DEVELOPMENT] [erts-13.0.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [jit:ns]
+
+Test slogan
+1>
+
+.fi
+
+
+.RE
+
+shell_slogan = string() | fun(() -> string())
+.RS 2
+The slogan printed when starting the Erlang shell subsystem. Example:
+
+.IP
+.nf
+$ erl -stdlib shell_slogan '"Test slogan"'
+Test slogan
+Eshell V13.0.2  (abort with ^G)
+1>
+
+.fi
+
+.PP
+The default is the return value of \fIerlang:system_info(system_version)\fR.
+
+
+.RE
+
+shell_strings = boolean()
+.RS 2
+Can be used to determine how the Erlang shell outputs lists of integers.
+
+
+.RE
+
+shell_hints = boolean()
+.RS 2
+Can be used to enable/disable printing of helpful hints in the shell.
+
+
+.RE
+
+.SS "See Also"
+
+.PP
+\fIapp(4)\fR, \fIapplication\fR, \fIshell\fR
+

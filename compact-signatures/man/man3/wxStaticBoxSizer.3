@@ -1,0 +1,166 @@
+.TH wxStaticBoxSizer 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxStaticBoxSizer \- \fIwxStaticBoxSizer\fR is a sizer derived from \fIwxBoxSizer\fR but adds a static box around the sizer.
+
+.SH DESCRIPTION
+.PP
+The static box may be either created independently or the sizer may create it itself as a convenience. In any case, the sizer owns the \fIwxStaticBox\fR control and will delete it in the \fIwxStaticBoxSizer\fR destructor.
+
+.PP
+Note that since wxWidgets 2.9.1 you are encouraged to create the windows which are added to \fIwxStaticBoxSizer\fR as children of \fIwxStaticBox\fR itself, see this class documentation for more details.
+
+.PP
+Example of use of this class:
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxStaticBox\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBoxSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview sizer
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBoxSizer\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxSizer\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxStaticBoxSizer
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxStaticBoxSizer() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxStaticBoxSizer()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetStaticBox(This) -> wxStaticBox:wxStaticBox()\fR
+\fB                      when This :: wxStaticBoxSizer().\fR
+
+.br
+.RS
+.PP
+Returns the static box associated with the sizer.
+
+
+.RE
+.B
+\fBnew(Orient, Parent) -> wxStaticBoxSizer()\fR
+\fB             when Orient :: integer(), Parent :: wxWindow:wxWindow();\fR
+\fB         (Box, Orient) -> wxStaticBoxSizer()\fR
+\fB             when Box :: wxStaticBox:wxStaticBox(), Orient :: integer().\fR
+
+.br
+.RS
+.PP
+This constructor uses an already existing static box.
+
+
+.RE
+.B
+\fBnew(Orient, Parent, [Option]) -> wxStaticBoxSizer()\fR
+\fB             when\fR
+\fB                 Orient :: integer(),\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option :: {label, unicode:chardata()}.\fR
+
+.br
+.RS
+.PP
+This constructor creates a new static box with the given label and parent window.
+
+
+.RE

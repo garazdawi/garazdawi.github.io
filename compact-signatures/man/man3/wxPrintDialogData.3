@@ -1,0 +1,372 @@
+.TH wxPrintDialogData 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPrintDialogData \- This class holds information related to the visual characteristics of \fIwxPrintDialog\fR.
+
+.SH DESCRIPTION
+.PP
+It contains a \fIwxPrintData\fR object with underlying printing settings.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview printing
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxPrintDialog\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview cmndlg
+
+.RE
+
+.PP
+wxWidgets docs: wxPrintDialogData
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPrintDialogData() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxPrintDialogData()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBenableHelp(This, Flag) -> ok\fR
+\fB                    when This :: wxPrintDialogData(), Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables or disables the "Help" button.
+
+
+.RE
+.B
+\fBenablePageNumbers(This, Flag) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxPrintDialogData(),\fR
+\fB                               Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables or disables the "Page numbers" controls.
+
+
+.RE
+.B
+\fBenablePrintToFile(This, Flag) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxPrintDialogData(),\fR
+\fB                               Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables or disables the "Print to file" checkbox.
+
+
+.RE
+.B
+\fBenableSelection(This, Flag) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxPrintDialogData(),\fR
+\fB                             Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables or disables the "Selection" radio button.
+
+
+.RE
+.B
+\fBgetAllPages(This) -> boolean() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns true if the user requested that all pages be printed.
+
+
+.RE
+.B
+\fBgetCollate(This) -> boolean() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns true if the user requested that the document(s) be collated.
+
+
+.RE
+.B
+\fBgetFromPage(This) -> integer() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns the \fIfrom\fR page number, as entered by the user.
+
+
+.RE
+.B
+\fBgetMaxPage(This) -> integer() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns the \fImaximum\fR page number.
+
+
+.RE
+.B
+\fBgetMinPage(This) -> integer() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns the \fIminimum\fR page number.
+
+
+.RE
+.B
+\fBgetNoCopies(This) -> integer() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns the number of copies requested by the user.
+
+
+.RE
+.B
+\fBgetPrintData(This) -> wxPrintData:wxPrintData()\fR
+\fB                      when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns a reference to the internal \fIwxPrintData\fR object.
+
+
+.RE
+.B
+\fBgetPrintToFile(This) -> boolean() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns true if the user has selected printing to a file.
+
+
+.RE
+.B
+\fBgetSelection(This) -> boolean() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns true if the user requested that the selection be printed (where "selection" is a concept specific to the application).
+
+
+.RE
+.B
+\fBgetToPage(This) -> integer() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns the \fI"print to"\fR page number, as entered by the user.
+
+
+.RE
+.B
+\fBisOk(This) -> boolean() when This :: wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Returns true if the print data is valid for using in print dialogs.
+
+.PP
+This can return false on Windows if the current printer is not set, for example. On all other platforms, it returns true.
+
+
+.RE
+.B
+\fBnew() -> wxPrintDialogData().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(DialogData) -> wxPrintDialogData()\fR
+\fB             when\fR
+\fB                 DialogData ::\fR
+\fB                     wxPrintDialogData:wxPrintDialogData() |\fR
+\fB                     wxPrintData:wxPrintData().\fR
+
+.br
+.RS
+.PP
+Copy constructor.
+
+
+.RE
+.B
+\fBsetCollate(This, Flag) -> ok\fR
+\fB                    when This :: wxPrintDialogData(), Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets the "Collate" checkbox to true or false.
+
+
+.RE
+.B
+\fBsetFromPage(This, Page) -> ok\fR
+\fB                     when This :: wxPrintDialogData(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the \fIfrom\fR page number.
+
+
+.RE
+.B
+\fBsetMaxPage(This, Page) -> ok\fR
+\fB                    when This :: wxPrintDialogData(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the \fImaximum\fR page number.
+
+
+.RE
+.B
+\fBsetMinPage(This, Page) -> ok\fR
+\fB                    when This :: wxPrintDialogData(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the \fIminimum\fR page number.
+
+
+.RE
+.B
+\fBsetNoCopies(This, N) -> ok\fR
+\fB                     when This :: wxPrintDialogData(), N :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the default number of copies the user has requested to be printed out.
+
+
+.RE
+.B
+\fBsetPrintData(This, PrintData) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxPrintDialogData(),\fR
+\fB                          PrintData :: wxPrintData:wxPrintData().\fR
+
+.br
+.RS
+.PP
+Sets the internal \fIwxPrintData\fR.
+
+
+.RE
+.B
+\fBsetPrintToFile(This, Flag) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxPrintDialogData(),\fR
+\fB                            Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets the "Print to file" checkbox to true or false.
+
+
+.RE
+.B
+\fBsetSelection(This, Flag) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxPrintDialogData(), Flag :: boolean().\fR
+
+.br
+.RS
+.PP
+Selects the "Selection" radio button.
+
+.PP
+The effect of printing the selection depends on how the application implements this command, if at all.
+
+
+.RE
+.B
+\fBsetToPage(This, Page) -> ok\fR
+\fB                   when This :: wxPrintDialogData(), Page :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the \fI"print to"\fR page number.
+
+
+.RE

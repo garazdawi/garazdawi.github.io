@@ -1,0 +1,98 @@
+.TH wxDCOverlay 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxDCOverlay \- Connects an overlay with a drawing DC.
+
+.SH DESCRIPTION
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxOverlay\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxDCOverlay
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxDCOverlay() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBclear(This) -> ok when This :: wxDCOverlay().\fR
+
+.br
+.RS
+.PP
+Clears the layer, restoring the state at the last init.
+
+
+.RE
+.B
+\fBdestroy(This :: wxDCOverlay()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew(Overlay, Dc) -> wxDCOverlay()\fR
+\fB             when Overlay :: wxOverlay:wxOverlay(), Dc :: wxDC:wxDC().\fR
+
+.br
+.RS
+.PP
+Convenience wrapper that behaves the same using the entire area of the dc.
+
+
+.RE
+.B
+\fBnew(Overlay, Dc, X, Y, Width, Height) -> wxDCOverlay()\fR
+\fB             when\fR
+\fB                 Overlay :: wxOverlay:wxOverlay(),\fR
+\fB                 Dc :: wxDC:wxDC(),\fR
+\fB                 X :: integer(),\fR
+\fB                 Y :: integer(),\fR
+\fB                 Width :: integer(),\fR
+\fB                 Height :: integer().\fR
+
+.br
+.RS
+.PP
+Connects this overlay to the corresponding drawing dc, if the overlay is not initialized yet this call will do so.
+
+
+.RE

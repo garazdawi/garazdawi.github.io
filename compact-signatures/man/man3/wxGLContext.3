@@ -1,0 +1,98 @@
+.TH wxGLContext 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGLContext \- An instance of a \fIwxGLContext\fR represents the state of an OpenGL state machine and the connection between OpenGL and the system.
+
+.SH DESCRIPTION
+.PP
+The OpenGL state includes everything that can be set with the OpenGL API: colors, rendering variables, buffer data ids, texture objects, etc. It is possible to have multiple rendering contexts share buffer data and textures. This feature is specially useful when the application use multiple threads for updating data into the memory of the graphics card.
+
+.PP
+Whether one only rendering context is used with or bound to multiple output windows or if each window has its own bound context is a developer decision. It is important to take into account that GPU makers may set different pointers to the same OGL function for different contexts. The way these pointers are retrieved from the OGL driver should be used again for each new context.
+
+.PP
+Binding (making current) a rendering context with another instance of a \fIwxGLCanvas\fR however works only if the both \fIwxGLCanvas\fR instances were created with the same attributes.
+
+.PP
+OpenGL version 3 introduced a new type of specification profile, the modern core profile. The old compatibility profile maintains all legacy features. Since wxWidgets 3.1.0 you can choose the type of context and even ask for a specified OGL version number. However, its advised to use only core profile as the compatibility profile may run a bit slower.
+
+.PP
+OpenGL core profile specification defines several flags at context creation that determine not only the type of context but also some features. Some of these flags can be set in the list of attributes used at \fIwxGLCanvas\fR ctor. But since wxWidgets 3.1.0 it is strongly encouraged to use the new mechanism: setting the context attributes with a \fIwxGLContextAttrs\fR (not implemented in wx) object and the canvas attributes with a \fIwxGLAttributes\fR (not implemented in wx) object.
+
+.PP
+The best way of knowing if your OpenGL environment supports a specific type of context is creating a \fIwxGLContext\fR instance and checking \fIisOK/1\fR. If it returns false, then simply delete that instance and create a new one with other attributes.
+
+.PP
+wxHAS_OPENGL_ES is defined on platforms that only have this implementation available (e.g. the iPhone) and don't support the full specification.
+
+.PP
+See: \fIwxGLCanvas\fR
+
+.PP
+wxWidgets docs: wxGLContext
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGLContext() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxGLContext()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBisOK(This) -> boolean() when This :: wxGLContext().\fR
+
+.br
+.RS
+.PP
+Checks if the underlying OpenGL rendering context was correctly created by the system with the requested attributes.
+
+.PP
+If this function returns false then the \fIwxGLContext\fR object is useless and should be deleted and recreated with different attributes.
+
+.PP
+Since: 3.1.0
+
+
+.RE
+.B
+\fBnew(Win, [Option]) -> wxGLContext()\fR
+\fB             when\fR
+\fB                 Win :: wxGLCanvas:wxGLCanvas(),\fR
+\fB                 Option :: {other, wxGLContext()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBsetCurrent(This, Win) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxGLContext(),\fR
+\fB                        Win :: wxGLCanvas:wxGLCanvas().\fR
+
+.br
+.RS
+.PP
+Makes the OpenGL state that is represented by this rendering context current with the \fIwxGLCanvas\fR \fIwin\fR.
+
+.PP
+Note: \fIwin\fR can be a different \fIwxGLCanvas\fR window than the one that was passed to the constructor of this rendering context. If \fIRC\fR is an object of type \fIwxGLContext\fR, the statements \fI"RC.SetCurrent(win);"\fR and \fI"win.SetCurrent(RC);"\fR are equivalent, see \fIwxGLCanvas:setCurrent/2\fR.
+
+
+.RE

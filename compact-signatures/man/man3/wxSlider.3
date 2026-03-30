@@ -1,0 +1,921 @@
+.TH wxSlider 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSlider \- A slider is a control with a handle which can be pulled back and forth to change the value.
+
+.SH DESCRIPTION
+.PP
+On Windows, the track bar control is used.
+
+.PP
+On GTK+, tick marks are only available for version 2.16 and later.
+
+.PP
+Slider generates the same events as \fIwxScrollBar\fR but in practice the most convenient way to process \fIwxSlider\fR updates is by handling the slider-specific \fIwxEVT_SLIDER\fR event which carries \fIwxCommandEvent\fR containing just the latest slider position.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_HORIZONTAL: Displays the slider horizontally (this is the default).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_VERTICAL: Displays the slider vertically.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_AUTOTICKS: Displays tick marks (Windows, GTK+ 2.16 and later).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_MIN_MAX_LABELS: Displays minimum, maximum labels (new since wxWidgets 2.9.1).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_VALUE_LABEL: Displays value label (new since wxWidgets 2.9.1).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_LABELS: Displays minimum, maximum and value labels (same as wxSL_VALUE_LABEL and wxSL_MIN_MAX_LABELS together).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_LEFT: Displays ticks on the left and forces the slider to be vertical (Windows and GTK+ 3 only).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_RIGHT: Displays ticks on the right and forces the slider to be vertical.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_TOP: Displays ticks on the top (Windows and GTK+ 3 only).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_BOTTOM: Displays ticks on the bottom (this is the default).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_BOTH: Displays ticks on both sides of the slider. Windows only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_SELRANGE: Displays a highlighted selection range. Windows only.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxSL_INVERSE: Inverses the minimum and maximum endpoints on the slider. Not compatible with wxSL_SELRANGE. Notice that \fIwxSL_LEFT\fR, \fIwxSL_TOP\fR, \fIwxSL_RIGHT\fR and \fIwxSL_BOTTOM\fR specify the position of the slider ticks and that the slider labels, if any, are positioned on the opposite side. So, to have a label on the left side of a vertical slider, \fIwxSL_RIGHT\fR must be used (or none of these styles at all should be specified as left and top are default positions for the vertical and horizontal sliders respectively).
+
+.RE
+
+.PP
+The difference between EVT_SCROLL_THUMBRELEASE and EVT_SCROLL_CHANGED
+
+.PP
+The EVT_SCROLL_THUMBRELEASE event is only emitted when actually dragging the thumb using the mouse and releasing it (This EVT_SCROLL_THUMBRELEASE event is also followed by an EVT_SCROLL_CHANGED event).
+
+.PP
+The EVT_SCROLL_CHANGED event also occurs when using the keyboard to change the thumb position, and when clicking next to the thumb (In all these cases the EVT_SCROLL_THUMBRELEASE event does not happen). In short, the EVT_SCROLL_CHANGED event is triggered when scrolling/ moving has finished independently of the way it had started. Please see the page_samples_widgets ("Slider" page) to see the difference between EVT_SCROLL_THUMBRELEASE and EVT_SCROLL_CHANGED in action.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxScrollBar\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSlider
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_top\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_bottom\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_lineup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_linedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_pageup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_pagedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_thumbtrack\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_thumbrelease\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_top\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_bottom\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_lineup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_linedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_pageup\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_pagedown\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_thumbtrack\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_thumbrelease\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscroll_changed\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcommand_slider_updated\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSlider() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, Id, Value, MinValue, MaxValue, [Option]) ->\fR
+\fB                boolean()\fR
+\fB                when\fR
+\fB                    This :: wxSlider(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Value :: integer(),\fR
+\fB                    MinValue :: integer(),\fR
+\fB                    MaxValue :: integer(),\fR
+\fB                    Option ::\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()} |\fR
+\fB                        {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Used for two-step slider construction.
+
+.PP
+See \fInew/6\fR for further details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxSlider()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetLineSize(This) -> integer() when This :: wxSlider().\fR
+
+.br
+.RS
+.PP
+Returns the line size.
+
+.PP
+See: \fIsetLineSize/2\fR
+
+
+.RE
+.B
+\fBgetMax(This) -> integer() when This :: wxSlider().\fR
+
+.br
+.RS
+.PP
+Gets the maximum slider value.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMin/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetRange/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetMin(This) -> integer() when This :: wxSlider().\fR
+
+.br
+.RS
+.PP
+Gets the minimum slider value.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMin/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetRange/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetPageSize(This) -> integer() when This :: wxSlider().\fR
+
+.br
+.RS
+.PP
+Returns the page size.
+
+.PP
+See: \fIsetPageSize/2\fR
+
+
+.RE
+.B
+\fBgetThumbLength(This) -> integer() when This :: wxSlider().\fR
+
+.br
+.RS
+.PP
+Returns the thumb length.
+
+.PP
+Only for:wxmsw
+
+.PP
+See: \fIsetThumbLength/2\fR
+
+
+.RE
+.B
+\fBgetValue(This) -> integer() when This :: wxSlider().\fR
+
+.br
+.RS
+.PP
+Gets the current slider value.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMin/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMax/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetValue/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBnew() -> wxSlider().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, Id, Value, MinValue, MaxValue, [Option]) -> wxSlider()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Id :: integer(),\fR
+\fB                 Value :: integer(),\fR
+\fB                 MinValue :: integer(),\fR
+\fB                 MaxValue :: integer(),\fR
+\fB                 Option ::\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()} |\fR
+\fB                     {validator, wx:wx_object()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a slider.
+
+.PP
+See: \fIcreate/7\fR
+
+
+.RE
+.B
+\fBsetLineSize(This, LineSize) -> ok\fR
+\fB                     when This :: wxSlider(), LineSize :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the line size for the slider.
+
+.PP
+See: \fIgetLineSize/1\fR
+
+
+.RE
+.B
+\fBsetPageSize(This, PageSize) -> ok\fR
+\fB                     when This :: wxSlider(), PageSize :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the page size for the slider.
+
+.PP
+See: \fIgetPageSize/1\fR
+
+
+.RE
+.B
+\fBsetRange(This, MinValue, MaxValue) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxSlider(),\fR
+\fB                      MinValue :: integer(),\fR
+\fB                      MaxValue :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the minimum and maximum slider values.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMin/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMax/1\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetThumbLength(This, Len) -> ok\fR
+\fB                        when This :: wxSlider(), Len :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the slider thumb length.
+
+.PP
+Only for:wxmsw
+
+.PP
+See: \fIgetThumbLength/1\fR
+
+
+.RE
+.B
+\fBsetValue(This, Value) -> ok\fR
+\fB                  when This :: wxSlider(), Value :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the slider position.
+
+
+.RE

@@ -1,0 +1,111 @@
+.TH wxAuiTabArt 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxAuiTabArt \- Tab art provider defines all the drawing functions used by \fIwxAuiNotebook\fR.
+
+.SH DESCRIPTION
+.PP
+This allows the \fIwxAuiNotebook\fR to have a pluggable look-and-feel.
+
+.PP
+By default, a \fIwxAuiNotebook\fR uses an instance of this class called \fIwxAuiDefaultTabArt\fR (not implemented in wx) which provides bitmap art and a colour scheme that is adapted to the major platforms' look. You can either derive from that class to alter its behaviour or write a completely new tab art class.
+
+.PP
+Another example of creating a new \fIwxAuiNotebook\fR tab bar is \fIwxAuiSimpleTabArt\fR.
+
+.PP
+Call \fIwxAuiNotebook:setArtProvider/2\fR to make use of this new tab art.
+
+.PP
+wxWidgets docs: wxAuiTabArt
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxAuiTabArt() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBsetActiveColour(This, Colour) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxAuiTabArt(),\fR
+\fB                             Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the colour of the selected tab.
+
+.PP
+Since: 2.9.2
+
+
+.RE
+.B
+\fBsetColour(This, Colour) -> ok\fR
+\fB                   when This :: wxAuiTabArt(), Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the colour of the inactive tabs.
+
+.PP
+Since: 2.9.2
+
+
+.RE
+.B
+\fBsetFlags(This, Flags) -> ok\fR
+\fB                  when This :: wxAuiTabArt(), Flags :: integer().\fR
+
+.br
+.RS
+.PP
+Sets flags.
+
+
+.RE
+.B
+\fBsetMeasuringFont(This, Font) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxAuiTabArt(),\fR
+\fB                              Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font used for calculating measurements.
+
+
+.RE
+.B
+\fBsetNormalFont(This, Font) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxAuiTabArt(),\fR
+\fB                           Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the normal font for drawing labels.
+
+
+.RE
+.B
+\fBsetSelectedFont(This, Font) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxAuiTabArt(),\fR
+\fB                             Font :: wxFont:wxFont().\fR
+
+.br
+.RS
+.PP
+Sets the font for drawing text for selected UI elements.
+
+
+.RE

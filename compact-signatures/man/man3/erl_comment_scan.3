@@ -1,0 +1,98 @@
+.TH erl_comment_scan 3 "syntax_tools 4.0.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_comment_scan \- Functions for reading comment lines from Erlang source code.
+
+.SH DESCRIPTION
+.SH DATA TYPES
+.LP
+.B
+\fBcomment() ::\fR
+\fB          {Line :: integer(),\fR
+\fB           Column :: integer(),\fR
+\fB           Indentation :: integer(),\fR
+\fB           Text :: [string()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBcommentLine() ::\fR
+\fB          {Line :: integer(),\fR
+\fB           Column :: integer(),\fR
+\fB           Indent :: integer(),\fR
+\fB           Text :: string()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBfile(file:filename()) -> [comment()].\fR
+
+.br
+.RS
+.PP
+Extracts comments from an Erlang source code file.
+
+.PP
+Returns a list of entries representing \fImulti-line\fR comments, listed in order of increasing line-numbers.  For each entry, \fIText\fR is a list of strings representing the consecutive comment lines in top-down order; the strings contain \fIall\fR characters following (but not including) the first comment-introducing \fI%\fR character on the line, up to (but not including) the line-terminating newline.
+
+.PP
+Furthermore, \fILine\fR is the line number and \fIColumn\fR the left column of the comment (that is, the column of the comment-introducing \fI%\fR character). \fIIndent\fR is the indentation (or padding), measured in character positions between the last non-whitespace character before the comment (or the left margin), and the left column of the comment. \fILine\fR and \fIColumn\fR are always positive integers, and \fIIndentation\fR is a nonnegative integer.
+
+.PP
+Evaluation exits with reason \fI{read, Reason}\fR if a read error occurred, where \fIReason\fR is an atom corresponding to a Posix error code; see the module \fI//kernel/file\fR for details.
+
+
+.RE
+.B
+\fBjoin_lines([commentLine()]) -> [comment()].\fR
+
+.br
+.RS
+.PP
+join_lines(CommentLines) ->
+
+.PP
+Joins individual comment lines into multi-line comments.
+
+.PP
+The input is a list of entries representing individual comment lines, \fIin order of decreasing line-numbers\fR; see \fIscan_lines/1\fR for details. The result is a list of entries representing \fImulti-line\fR comments, \fIstill listed in order of decreasing line-numbers\fR, but where for each entry, \fIText\fR is a list of consecutive comment lines in order of \fIincreasing\fR line-numbers (that is, top-down).
+
+.PP
+\fISee also: \fR\fIscan_lines/1\fR.
+
+
+.RE
+.B
+\fBscan_lines(string()) -> [commentLine()].\fR
+
+.br
+.RS
+.PP
+Extracts individual comment lines from a source code string.
+
+.PP
+Returns a list of comment lines found in the text, listed in order of \fIdecreasing\fR line-numbers, that is, the last comment line in the input is first in the resulting list. \fIText\fR is a single string, containing all characters following (but not including) the first comment-introducing \fI%\fR character on the line, up to (but not including) the line-terminating newline. For details on \fILine\fR, \fIColumn\fR and \fIIndent\fR, see \fIfile/1\fR.
+
+
+.RE
+.B
+\fBstring(string()) -> [comment()].\fR
+
+.br
+.RS
+.PP
+Extracts comments from a string containing Erlang source code.
+
+.PP
+Except for reading directly from a string, the behavior is the same as for \fIfile/1\fR.
+
+.PP
+\fISee also: \fR\fIfile/1\fR.
+
+
+.RE

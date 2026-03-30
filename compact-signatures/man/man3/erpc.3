@@ -1,0 +1,1235 @@
+.TH erpc 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erpc \- Enhanced Remote Procedure Call
+
+.SH DESCRIPTION
+.PP
+This module provide services similar to Remote Procedure Calls. A remote procedure call is a method to call a function on a remote node and collect the answer. It is used for collecting information on a remote node, or for running a function with some specific side effects on the remote node.
+
+.PP
+This is an enhanced subset of the operations provided by the \fIrpc\fR module. Enhanced in the sense that it makes it possible to distinguish between returned value, raised exceptions, and other errors. \fIerpc\fR also has better performance and scalability than the original \fIrpc\fR implementation. However, current \fIrpc\fR module will utilize \fIerpc\fR in order to also provide these properties when possible.
+
+.PP
+In order for an \fIerpc\fR operation to succeed, the remote node also needs to support \fIerpc\fR. Typically only ordinary Erlang nodes as of OTP 23 have \fIerpc\fR support.
+
+.PP
+Note that it is up to the user to ensure that correct code to execute via \fIerpc\fR is available on the involved nodes.
+
+.PP
+\fBNOTE: \fRFor some important information about distributed signals, see the Blocking Signaling Over Distribution section in the \fIProcesses\fR chapter of the \fIErlang Reference Manual\fR. Blocking signaling can, for example, cause timeouts in \fIerpc\fR to be significantly delayed.
+
+
+.SH DATA TYPES
+.LP
+.B
+\fBcall_options() ::\fR
+\fB          #{timeout => Timeout :: timeout_time(),\fR
+\fB            always_spawn => AlwaysSpawn :: boolean()}.\fR
+
+.br
+.RS
+.PP
+Options to be used in \fIcall/3,5\fR and \fImulticall/3,5\fR functions.
+
+timeout
+.RS 2
+Upper time limit for call operations to complete, see 
+\fItimeout_time/0\fR. Default: \fIinfinity\fR.
+
+.RE
+
+always_spawn
+.RS 2
+If 
+\fItrue\fR, the \fIapply()\fR will \fIalways\fR be performed in a freshly spawned process. If \fIfalse\fR, the calling process \fImay\fR be used instead, if possible. Default: \fIfalse\fR.
+
+.RE
+
+
+.RE
+.B
+\fBcaught_call_exception() ::\fR
+\fB          {throw, Throw :: term()} |\fR
+\fB          {exit, {exception, Reason :: term()}} |\fR
+\fB          {error,\fR
+\fB           {exception, Reason :: term(), StackTrace :: [stack_item()]}} |\fR
+\fB          {exit, {signal, Reason :: term()}} |\fR
+\fB          {error, {erpc, Reason :: term()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque request_id() \fR
+
+.br
+.RS
+.PP
+An opaque request identifier. For more information see \fIsend_request/4\fR.
+
+
+.RE
+.B
+\fB-opaque request_id_collection() \fR
+
+.br
+.RS
+.PP
+An opaque collection of request identifiers (\fIrequest_id/0\fR) where each request identifier can be associated with a label chosen by the user. For more information see \fIreqids_new/0\fR.
+
+
+.RE
+.B
+\fBstack_item() ::\fR
+\fB          {Module :: atom(),\fR
+\fB           Function :: atom(),\fR
+\fB           Arity :: arity() | (Args :: [term()]),\fR
+\fB           Location ::\fR
+\fB               [{file, Filename :: string()} |\fR
+\fB                {line, Line :: pos_integer()}]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtimeout_time() :: 0..4294967295 | infinity | {abs, integer()}.\fR
+
+.br
+.RS
+.PP
+The timeout time used by erpc functions.
+
+.PP
+The value can be:
+
+0..4294967295
+.RS 2
+Timeout relative to current time in milliseconds.
+
+
+.RE
+
+infinity
+.RS 2
+Infinite timeout. That is, the operation will never time out.
+
+
+.RE
+
+{abs, Timeout}
+.RS 2
+An absolute Erlang monotonic time timeout in milliseconds. That is, the operation will time out when 
+\fIerlang:monotonic_time(millisecond)\fR returns a value larger than or equal to \fITimeout\fR. \fITimeout\fR is not allowed to identify a time further into the future than \fI4294967295\fR milliseconds. Identifying the timeout using an absolute timeout value is especially handy when you have a deadline for responses corresponding to a complete collection of requests (\fIrequest_id_collection/0\fR), since you do not have to recalculate the relative time until the deadline over and over again.
+
+.RE
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcall(Node, Fun, TimeoutOrOptions) -> Result\fR
+\fB              when\fR
+\fB                  Node :: node(),\fR
+\fB                  Fun :: function(),\fR
+\fB                  TimeoutOrOptions :: timeout_time() | call_options(),\fR
+\fB                  Result :: term().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIerpc:call(Node, erlang, apply, [Fun,[]], #{timeout => Timeout})\fR.
+
+.PP
+May raise all the same exceptions as \fIcall/5\fR plus an \fI{erpc, badarg}\fR \fIerror\fR exception if \fIFun\fR is not a fun of zero arity.
+
+
+.RE
+.B
+\fBcall(Node, Module, Function, Args, TimeoutOrOptions) -> Result\fR
+\fB              when\fR
+\fB                  Node :: node(),\fR
+\fB                  Module :: atom(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: [term()],\fR
+\fB                  TimeoutOrOptions :: timeout_time() | call_options(),\fR
+\fB                  Result :: term().\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on node \fINode\fR and returns the corresponding value \fIResult\fR.
+
+.PP
+\fITimeoutOrOptions\fR can be either a \fItimeout time\fR or a \fIcall options\fR map (since OTP 28.0).
+
+.PP
+The \fIcall()\fR function only returns if the applied function successfully returned without raising any uncaught exceptions, the operation did not time out, and no failures occurred. In all other cases an exception is raised. The following exceptions, listed by exception class, can currently be raised by \fIcall()\fR:
+
+throw
+.RS 2
+The applied function called 
+\fIthrow(Value)\fR and did not catch this exception. The exception reason \fIValue\fR equals the argument passed to \fIthrow/1\fR.
+
+.RE
+
+exit
+.RS 2
+Exception reason:
+
+{exception, ExitReason}
+.RS 2
+The applied function called 
+\fIexit(ExitReason)\fR and did not catch this exception. The exit reason \fIExitReason\fR equals the argument passed to \fIexit/1\fR.
+
+.RE
+
+{signal, ExitReason}
+.RS 2
+The process that applied the function received an exit signal and terminated due to this signal. The process terminated with exit reason 
+\fIExitReason\fR.
+
+.RE
+
+
+.RE
+
+error
+.RS 2
+Exception reason:
+
+{exception, ErrorReason, StackTrace}
+.RS 2
+A runtime error occurred which raised an error exception while applying the function, and the applied function did not catch the exception. The error reason 
+\fIErrorReason\fR indicates the type of error that occurred. \fIStackTrace\fR is formatted as when caught in a \fItry/catch\fR construct. The \fIStackTrace\fR is limited to the applied function and functions called by it.
+
+.RE
+
+{erpc, ERpcErrorReason}
+.RS 2
+The 
+\fIerpc\fR operation failed. The following \fIERpcErrorReason\fRs are the most common ones:
+badarg
+.RS 2
+If any one of these are true:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINode\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIModule\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFunction\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIArgs\fR is not a list. Note that the list is not verified to be a proper list at the client side.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fITimeout\fR is invalid.
+
+.RE
+
+
+.RE
+
+noconnection
+.RS 2
+The connection to 
+\fINode\fR was lost or could not be established. The function may or may not be applied.
+
+.RE
+
+system_limit
+.RS 2
+The 
+\fIerpc\fR operation failed due to some system limit being reached. This typically due to failure to create a process on the remote node \fINode\fR, but can be other things as well.
+
+.RE
+
+timeout
+.RS 2
+The 
+\fIerpc\fR operation timed out. The function may or may not be applied.
+
+.RE
+
+notsup
+.RS 2
+The remote node 
+\fINode\fR does not support this \fIerpc\fR operation.
+
+.RE
+
+
+.RE
+
+
+.RE
+
+.PP
+If the \fIerpc\fR operation fails, but it is unknown if the function is/will be applied (that is, a timeout or a connection loss), the caller will not receive any further information about the result if/when the applied function completes. If the applied function explicitly communicates with the calling process, such communication may, of course, reach the calling process.
+
+.PP
+\fBNOTE: \fRIf the \fIalways_spawn\fR option is \fIfalse\fR (which is the default), you cannot make \fIany\fR assumptions about the process that will perform the \fIapply()\fR. It may be the calling process itself, or a freshly spawned process.
+
+
+
+.RE
+.B
+\fBcast(Node, Fun) -> ok when Node :: node(), Fun :: function().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIerpc:cast(Node,erlang,apply,[Fun,[]])\fR.
+
+.PP
+\fIcast/2\fR fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINode\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFun\fR is not a a fun of zero arity.
+
+.RE
+
+
+.RE
+.B
+\fBcast(Node, Module, Function, Args) -> ok\fR
+\fB              when\fR
+\fB                  Node :: node(),\fR
+\fB                  Module :: atom(),\fR
+\fB                  Function :: atom(),\fR
+\fB                  Args :: [term()].\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on node \fINode\fR. No response is delivered to the calling process. \fIcast()\fR returns immediately after the cast request has been sent. Any failures beside bad arguments are silently ignored.
+
+.PP
+\fIcast/4\fR fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINode\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIModule\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFunction\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIArgs\fR is not a list. Note that the list is not verified to be a proper list at the client side.
+
+.RE
+
+
+.RE
+.B
+\fBcheck_response(Message, RequestId) ->\fR
+\fB                        {response, Result} | no_response\fR
+\fB                        when\fR
+\fB                            Message :: term(),\fR
+\fB                            RequestId :: request_id(),\fR
+\fB                            Result :: term().\fR
+
+.br
+.RS
+.PP
+Check if a message is a response to a \fIcall\fR request previously made by the calling process using \fIsend_request/4\fR.
+
+.PP
+\fIRequestId\fR should be the value returned from the previously made \fIsend_request/4\fR call, and the corresponding response should not already have been received and handled to completion by \fIcheck_response/2\fR, \fIreceive_response/2\fR, or \fIwait_response/2\fR. \fIMessage\fR is the message to check.
+
+.PP
+If \fIMessage\fR does not correspond to the response, the atom \fIno_response\fR is returned. If \fIMessage\fR corresponds to the response, the \fIcall\fR operation is completed and either the result is returned as \fI{response, Result}\fR where \fIResult\fR corresponds to the value returned from the applied function or an exception is raised. The exceptions that can be raised corresponds to the same exceptions as can be raised by \fIcall/4\fR. That is, no \fI{erpc, timeout}\fR \fIerror\fR exception can be raised. \fIcheck_response()\fR will fail with an \fI{erpc, badarg}\fR exception if/when an invalid \fIRequestId\fR is detected.
+
+.PP
+If the \fIerpc\fR operation fails, but it is unknown if the function is/will be applied (that is, a connection loss), the caller will not receive any further information about the result if/when the applied function completes. If the applied function explicitly communicates with the calling process, such communication may, of course, reach the calling process.
+
+
+.RE
+.B
+\fBcheck_response(Message, RequestIdCollection, Delete) ->\fR
+\fB                        {{response, Result},\fR
+\fB                         Label, NewRequestIdCollection} |\fR
+\fB                        no_response | no_request\fR
+\fB                        when\fR
+\fB                            Message :: term(),\fR
+\fB                            RequestIdCollection ::\fR
+\fB                                request_id_collection(),\fR
+\fB                            Delete :: boolean(),\fR
+\fB                            Result :: term(),\fR
+\fB                            Label :: term(),\fR
+\fB                            NewRequestIdCollection ::\fR
+\fB                                request_id_collection().\fR
+
+.br
+.RS
+.PP
+Check if a message is a response to a \fIcall\fR request corresponding to a request identifier saved in \fIRequestIdCollection\fR. All request identifiers of \fIRequestIdCollection\fR must correspond to requests that have been made using \fIsend_request/4\fR or \fIsend_request/6\fR, and all requests must have been made by the process calling this function.
+
+.PP
+\fILabel\fR is the label associated with the request identifier of the request that the response corresponds to. A request identifier is associated with a label when adding a request identifier in a request identifier collection, or when sending the request using \fIsend_request/6\fR.
+
+.PP
+Compared to \fIcheck_response/2\fR, the returned result associated with a specific request identifier or an exception associated with a specific request identifier will be wrapped in a 3-tuple. The first element of this tuple equals the value that would have been produced by \fIcheck_response/2\fR, the second element equals the \fILabel\fR associated with the specific request identifier, and the third element \fINewRequestIdCollection\fR is a possibly modified request identifier collection. The \fIerror\fR exception \fI{erpc, badarg}\fR is not associated with any specific request identifier, and will hence not be wrapped.
+
+.PP
+If \fIRequestIdCollection\fR is empty, the atom \fIno_request\fR will be returned. If \fIMessage\fR does not correspond to any of the request identifiers in \fIRequestIdCollection\fR, the atom \fIno_response\fR is returned.
+
+.PP
+If \fIDelete\fR equals \fItrue\fR, the association with \fILabel\fR will have been deleted from \fIRequestIdCollection\fR in the resulting \fINewRequestIdCollection\fR. If \fIDelete\fR equals \fIfalse\fR, \fINewRequestIdCollection\fR will equal \fIRequestIdCollection\fR. Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIcheck_response/3\fR, \fIreceive_response/3\fR, and \fIwait_response/3\fR. However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return. Note that if you pass a collection only containing associations of already handled or abandoned requests to \fIcheck_response/3\fR, it will always return \fIno_response\fR.
+
+.PP
+Note that a response might have been consumed uppon an \fI{erpc, badarg}\fR exception and if so, will be lost for ever.
+
+
+.RE
+.B
+\fBmulticall(Nodes, Fun, TimeoutOrOptions) -> Result\fR
+\fB                   when\fR
+\fB                       Nodes :: [atom()],\fR
+\fB                       Fun :: function(),\fR
+\fB                       TimeoutOrOptions ::\fR
+\fB                           timeout_time() | call_options(),\fR
+\fB                       Result :: term().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIerpc:multicall(Nodes, erlang, apply, [Fun,[]], #{timeout => Timeout})\fR.
+
+.PP
+May raise all the same exceptions as \fImulticall/5\fR plus an \fI{erpc, badarg}\fR \fIerror\fR exception if \fIFun\fR is not a fun of zero arity.
+
+
+.RE
+.B
+\fBmulticall(Nodes, Module, Function, Args, TimeoutOrOptions) ->\fR
+\fB                   Result\fR
+\fB                   when\fR
+\fB                       Nodes :: [atom()],\fR
+\fB                       Module :: atom(),\fR
+\fB                       Function :: atom(),\fR
+\fB                       Args :: [term()],\fR
+\fB                       TimeoutOrOptions ::\fR
+\fB                           timeout_time() | call_options(),\fR
+\fB                       Result ::\fR
+\fB                           [{ok, ReturnValue :: term()} |\fR
+\fB                            caught_call_exception()].\fR
+
+.br
+.RS
+.PP
+Performs multiple \fIcall\fR operations in parallel on multiple nodes.
+
+.PP
+That is, evaluates \fIapply(Module, Function, Args)\fR on the nodes \fINodes\fR in parallel.
+
+.PP
+\fITimeoutOrOptions\fR can be either a \fItimeout time\fR or a \fIcall options\fR map (since OTP 28.0).
+
+.PP
+The result is returned as a list where the result from each node is placed at the same position as the node name is placed in \fINodes\fR. Each item in the resulting list is formatted as either:
+
+{ok, Result}
+.RS 2
+The 
+\fIcall\fR operation for this specific node returned \fIResult\fR.
+
+.RE
+
+{Class, ExceptionReason}
+.RS 2
+The 
+\fIcall\fR operation for this specific node raised an exception of class \fIClass\fR with exception reason \fIExceptionReason\fR. These correspond to the exceptions that \fIcall/5\fR can raise.
+
+.RE
+
+.PP
+\fImulticall/5\fR fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINodes\fR is not a proper list of atoms. Note that some requests may already have been sent when the failure occurs. That is, the function may or may not be applied on some nodes.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIModule\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFunction\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIArgs\fR is not a list. Note that the list is not verified to be a proper list at the client side.
+
+.RE
+
+.PP
+The call \fIerpc:multicall(Nodes, Module, Function, Args)\fR is equivalent to the call \fIerpc:multicall(Nodes, Module, Function, Args, infinity)\fR. These calls are also equivalent to calling \fImy_multicall(Nodes, Module, Function, Args)\fR below if one disregard performance and failure behavior. \fImulticall()\fR can utilize a selective receive optimization which removes the need to scan the message queue from the beginning in order to find a matching message. The \fIsend_request()/receive_response()\fR combination can, however, not utilize this optimization.
+
+.IP
+.nf
+my_multicall(Nodes, Module, Function, Args) ->
+  ReqIds = lists:map(fun (Node) ->
+                       erpc:send_request(Node, Module, Function, Args)
+                     end,
+                     Nodes),
+  lists:map(fun (ReqId) ->
+              try
+                {ok, erpc:receive_response(ReqId, infinity)}
+              catch
+                Class:Reason ->
+                  {Class, Reason}
+              end
+            end,
+            ReqIds).
+
+.fi
+
+.PP
+If an \fIerpc\fR operation fails, but it is unknown if the function is/will be applied (that is, a timeout, connection loss, or an improper \fINodes\fR list), the caller will not receive any further information about the result if/when the applied function completes. If the applied function communicates with the calling process, such communication may, of course, reach the calling process.
+
+.PP
+\fBNOTE: \fRIf the \fIalways_spawn\fR option is \fIfalse\fR (which is the default), you cannot make \fIany\fR assumptions about the processes that will perform the \fIapply()\fRs. It may be the calling process itself, or freshly spawned processes, or a mix of both.
+
+
+
+.RE
+.B
+\fBmulticast(Nodes, Fun) -> ok\fR
+\fB                   when Nodes :: [node()], Fun :: function().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIerpc:multicast(Nodes,erlang,apply,[Fun,[]])\fR.
+
+.PP
+\fImulticast/2\fR fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINodes\fR is not a proper list of atoms.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFun\fR is not a a fun of zero arity.
+
+.RE
+
+
+.RE
+.B
+\fBmulticast(Nodes, Module, Function, Args) -> ok\fR
+\fB                   when\fR
+\fB                       Nodes :: [node()],\fR
+\fB                       Module :: atom(),\fR
+\fB                       Function :: atom(),\fR
+\fB                       Args :: [term()].\fR
+
+.br
+.RS
+.PP
+Evaluates \fIapply(Module, Function, Args)\fR on the nodes \fINodes\fR. No response is delivered to the calling process. \fImulticast()\fR returns immediately after the cast requests have been sent. Any failures beside bad arguments are silently ignored.
+
+.PP
+\fImulticast/4\fR fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINodes\fR is not a proper list of atoms. Note that some requests may already have been sent when the failure occurs. That is, the function may or may not be applied on some nodes.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIModule\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFunction\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIArgs\fR is not a list. Note that the list is not verified to be a proper list at the client side.
+
+.RE
+
+
+.RE
+.B
+\fBreceive_response(RequestId, Timeout) -> Result\fR
+\fB                          when\fR
+\fB                              RequestId :: request_id(),\fR
+\fB                              Timeout :: timeout_time(),\fR
+\fB                              Result :: term().\fR
+
+.br
+.RS
+.PP
+Receive a response to a \fIcall\fR request previously made by the calling process using \fIsend_request/4\fR.
+
+.PP
+\fIRequestId\fR should be the value returned from the previously made \fIsend_request/4\fR call, and the corresponding response should not already have been received and handled to completion by \fIreceive_response()\fR, \fIcheck_response/4\fR, or \fIwait_response/4\fR.
+
+.PP
+\fITimeout\fR sets an upper time limit on how long to wait for a response. If the operation times out, the request identified by \fIRequestId\fR will be abandoned, then an \fI{erpc, timeout}\fR \fIerror\fR exception will be raised. That is, no response corresponding to the request will ever be received after a timeout. If a response is received, the \fIcall\fR operation is completed and either the result is returned or an exception is raised. The exceptions that can be raised corresponds to the same exceptions as can be raised by \fIcall/5\fR. \fIreceive_response/2\fR will fail with an \fI{erpc, badarg}\fR exception if/when an invalid \fIRequestId\fR is detected or if an invalid \fITimeout\fR is passed.
+
+.PP
+A call to the function \fImy_call(Node, Module, Function, Args, Timeout)\fR below is equivalent to the call \fIerpc:call(Node, Module, Function, Args, Timeout)\fR if one disregards performance. \fIcall()\fR can utilize a selective receive optimization which removes the need to scan the message queue from the beginning in order to find a matching message. The \fIsend_request()/receive_response()\fR combination can, however, not utilize this optimization.
+
+.IP
+.nf
+my_call(Node, Module, Function, Args, Timeout) ->
+  RequestId = erpc:send_request(Node, Module, Function, Args),
+  erpc:receive_response(RequestId, Timeout).
+
+.fi
+
+.PP
+If the \fIerpc\fR operation fails, but it is unknown if the function is/will be applied (that is, a timeout, or a connection loss), the caller will not receive any further information about the result if/when the applied function completes. If the applied function explicitly communicates with the calling process, such communication may, of course, reach the calling process.
+
+
+.RE
+.B
+\fBreceive_response(RequestIdCollection, Timeout, Delete) ->\fR
+\fB                          {Result, Label, NewRequestIdCollection} |\fR
+\fB                          no_request\fR
+\fB                          when\fR
+\fB                              RequestIdCollection ::\fR
+\fB                                  request_id_collection(),\fR
+\fB                              Timeout :: timeout_time(),\fR
+\fB                              Delete :: boolean(),\fR
+\fB                              Result :: term(),\fR
+\fB                              Label :: term(),\fR
+\fB                              NewRequestIdCollection ::\fR
+\fB                                  request_id_collection().\fR
+
+.br
+.RS
+.PP
+Receive a response to a \fIcall\fR request corresponding to a request identifier saved in \fIRequestIdCollection\fR. All request identifiers of \fIRequestIdCollection\fR must correspond to requests that have been made using \fIsend_request/4\fR or \fIsend_request/6\fR, and all requests must have been made by the process calling this function.
+
+.PP
+\fILabel\fR is the label associated with the request identifier of the request that the response corresponds to. A request identifier is associated with a label when adding a request identifier in a request identifier collection, or when sending the request using \fIsend_request/6\fR.
+
+.PP
+Compared to \fIreceive_response/2\fR, the returned result associated with a specific request identifier or an exception associated with a specific request identifier will be wrapped in a 3-tuple. The first element of this tuple equals the value that would have been produced by \fIreceive_response/2\fR, the second element equals the \fILabel\fR associated with the specific request identifier, and the third element \fINewRequestIdCollection\fR is a possibly modified request identifier collection. The \fIerror\fR exceptions \fI{erpc, badarg}\fR and \fI{erpc, timeout}\fR are not associated with any specific request identifiers, and will hence not be wrapped.
+
+.PP
+If \fIRequestIdCollection\fR is empty, the atom \fIno_request\fR will be returned.
+
+.PP
+If the operation times out, all requests identified by \fIRequestIdCollection\fR will be abandoned, then an \fI{erpc, timeout}\fR \fIerror\fR exception will be raised. That is, no responses corresponding to any of the request identifiers in \fIRequestIdCollection\fR will ever be received after a timeout. The difference between \fIreceive_response/3\fR and \fIwait_response/3\fR is that \fIreceive_response/3\fR abandons the requests at timeout so that any potential future responses are ignored, while \fIwait_response/3\fR does not.
+
+.PP
+If \fIDelete\fR equals \fItrue\fR, the association with \fILabel\fR will have been deleted from \fIRequestIdCollection\fR in the resulting \fINewRequestIdCollection\fR. If \fIDelete\fR equals \fIfalse\fR, \fINewRequestIdCollection\fR will equal \fIRequestIdCollection\fR. Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIreceive_response/3\fR, \fIcheck_response/3\fR, and \fIwait_response/3\fR. However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return. Note that if you pass a collection only containing associations of already handled or abandoned requests to \fIreceive_response/3\fR, it will always block until a timeout determined by \fITimeout\fR is triggered.
+
+.PP
+Note that a response might have been consumed uppon an \fI{erpc, badarg}\fR exception and if so, will be lost for ever.
+
+
+.RE
+.B
+\fBreqids_add(RequestId :: request_id(),\fR
+\fB                 Label :: term(),\fR
+\fB                 RequestIdCollection :: request_id_collection()) ->\fR
+\fB                    NewRequestIdCollection :: request_id_collection().\fR
+
+.br
+.RS
+.PP
+Saves \fIRequestId\fR and associates a \fILabel\fR with the request identifier by adding this information to \fIRequestIdCollection\fR and returning the resulting request identifier collection.
+
+
+.RE
+.B
+\fBreqids_new() -> NewRequestIdCollection :: request_id_collection().\fR
+
+.br
+.RS
+.PP
+Returns a new empty request identifier collection. A request identifier collection can be utilized in order the handle multiple outstanding requests.
+
+.PP
+Request identifiers of requests made by \fIsend_request/4\fR can be saved in a request identifier collection using \fIreqids_add/3\fR. Such a collection of request identifiers can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIcheck_response/3\fR, \fIreceive_response/3\fR, and \fIwait_response/3\fR.
+
+.PP
+\fIreqids_size/1\fR can be used to determine the amount of request identifiers in a request identifier collection.
+
+
+.RE
+.B
+\fBreqids_size(RequestIdCollection :: request_id_collection()) ->\fR
+\fB                     non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the amount of request identifiers saved in \fIRequestIdCollection\fR.
+
+
+.RE
+.B
+\fBreqids_to_list(RequestIdCollection :: request_id_collection()) ->\fR
+\fB                        [{RequestId :: request_id(), Label :: term()}].\fR
+
+.br
+.RS
+.PP
+Returns a list of \fI{RequestId, Label}\fR tuples which corresponds to all request identifiers with their associated labels present in the \fIRequestIdCollection\fR collection.
+
+
+.RE
+.B
+\fBsend_request(Node, Fun) -> RequestId\fR
+\fB                      when\fR
+\fB                          Node :: node(),\fR
+\fB                          Fun :: function(),\fR
+\fB                          RequestId :: request_id().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIerpc:send_request(Node, erlang, apply, [Fun, []])\fR.
+
+.PP
+Fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINode\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFun\fR is not a fun of zero arity.
+
+.RE
+
+
+.RE
+.B
+\fBsend_request(Node, Module, Function, Args) -> RequestId\fR
+\fB                      when\fR
+\fB                          Node :: node(),\fR
+\fB                          Module :: atom(),\fR
+\fB                          Function :: atom(),\fR
+\fB                          Args :: [term()],\fR
+\fB                          RequestId :: request_id();\fR
+\fB                  (Node, Fun, Label, RequestIdCollection) ->\fR
+\fB                      NewRequestIdCollection\fR
+\fB                      when\fR
+\fB                          Node :: node(),\fR
+\fB                          Fun :: function(),\fR
+\fB                          Label :: term(),\fR
+\fB                          RequestIdCollection :: request_id_collection(),\fR
+\fB                          NewRequestIdCollection ::\fR
+\fB                              request_id_collection().\fR
+
+.br
+.RS
+.PP
+Send an asynchronous \fIcall\fR request to the node \fINode\fR.
+
+.PP
+\fIsend_request/4\fR returns a request identifier that later is to be passed to either \fIreceive_response/2\fR, \fIwait_response/2\fR, or, \fIcheck_response/2\fR in order to get the response of the call request. Besides passing the request identifier directly to these functions, it can also be added in a request identifier collection using \fIreqids_add/3\fR. Such a collection of request identifiers can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIreceive_response/3\fR, \fIwait_response/3\fR, or, \fIcheck_response/3\fR. If you are about to save the request identifier in a request identifier collection, you may want to consider using \fIsend_request/6\fR instead.
+
+.PP
+A call to the function \fImy_call(Node, Module, Function, Args, Timeout)\fR below is equivalent to the call \fIerpc:call(Node, Module, Function, Args, Timeout)\fR if one disregards performance. \fIcall()\fR can utilize a selective receive optimization which removes the need to scan the message queue from the beginning in order to find a matching message. The \fIsend_request()/receive_response()\fR combination can, however, not utilize this optimization.
+
+.IP
+.nf
+my_call(Node, Module, Function, Args, Timeout) ->
+  RequestId = erpc:send_request(Node, Module, Function, Args),
+  erpc:receive_response(RequestId, Timeout).
+
+.fi
+
+.PP
+Fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINode\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIModule\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFunction\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIArgs\fR is not a list. Note that the list is not verified to be a proper list at the client side.
+
+.RE
+
+.PP
+Equivalent to \fIerpc:send_request(Node, erlang, apply, [Fun,[]]), Label, RequestIdCollection)\fR.
+
+.PP
+Fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINode\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFun\fR is not a fun of zero arity.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIRequestIdCollection\fR is detected not to be request identifier collection.
+
+.RE
+
+
+.RE
+.B
+\fBsend_request(Node, Module, Function, Args, Label,\fR
+\fB                   RequestIdCollection) ->\fR
+\fB                      NewRequestIdCollection\fR
+\fB                      when\fR
+\fB                          Node :: node(),\fR
+\fB                          Module :: atom(),\fR
+\fB                          Function :: atom(),\fR
+\fB                          Args :: [term()],\fR
+\fB                          Label :: term(),\fR
+\fB                          RequestIdCollection :: request_id_collection(),\fR
+\fB                          NewRequestIdCollection ::\fR
+\fB                              request_id_collection().\fR
+
+.br
+.RS
+.PP
+Send an asynchronous \fIcall\fR request to the node \fINode\fR. The \fILabel\fR will be associated with the request identifier of the operation and added to the returned request identifier collection \fINewRequestIdCollection\fR. The collection can later be used in order to get one response corresponding to a request in the collection by passing the collection as argument to \fIreceive_response/3\fR, \fIwait_response/3\fR, or, \fIcheck_response/3\fR.
+
+.PP
+Equivalent to \fIerpc:reqids_add\fR(\fIerpc:send_request\fR\fI(Node, Module, Function, Args), Label, RequestIdCollection)\fR, but calling \fIsend_request/6\fR is slightly more efficient.
+
+.PP
+Fails with an \fI{erpc, badarg}\fR \fIerror\fR exception if:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINode\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIModule\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIFunction\fR is not an atom.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIArgs\fR is not a list. Note that the list is not verified to be a proper list at the client side.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIRequestIdCollection\fR is detected not to be request identifier collection.
+
+.RE
+
+
+.RE
+.B
+\fBwait_response(RequestId) -> {response, Result} | no_response\fR
+\fB                       when RequestId :: request_id(), Result :: term().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIerpc:wait_response(RequestId, 0)\fR. That is, poll for a response message to a \fIcall\fR request previously made by the calling process.
+
+
+.RE
+.B
+\fBwait_response(RequestId, WaitTime) ->\fR
+\fB                       {response, Result} | no_response\fR
+\fB                       when\fR
+\fB                           RequestId :: request_id(),\fR
+\fB                           WaitTime :: timeout_time(),\fR
+\fB                           Result :: term().\fR
+
+.br
+.RS
+.PP
+Wait or poll for a response message to a \fIcall\fR request previously made by the calling process using \fIsend_request/4\fR.
+
+.PP
+\fIRequestId\fR should be the value returned from the previously made \fIsend_request()\fR call, and the corresponding response should not already have been received and handled to completion by \fIcheck_response/2\fR, \fIreceive_response/2\fR, or \fIwait_response()\fR.
+
+.PP
+\fIWaitTime\fR sets an upper time limit on how long to wait for a response. If no response is received before the \fIWaitTime\fR timeout has triggered, the atom \fIno_response\fR is returned. It is valid to continue waiting for a response as many times as needed up until a response has been received and completed by \fIcheck_response()\fR, \fIreceive_response()\fR, or \fIwait_response()\fR. If a response is received, the \fIcall\fR operation is completed and either the result is returned as \fI{response, Result}\fR where \fIResult\fR corresponds to the value returned from the applied function or an exception is raised. The exceptions that can be raised corresponds to the same exceptions as can be raised by \fIcall/4\fR. That is, no \fI{erpc, timeout}\fR \fIerror\fR exception can be raised. \fIwait_response/2\fR will fail with an \fI{erpc, badarg}\fR exception if/when an invalid \fIRequestId\fR is detected or if an invalid \fIWaitTime\fR is passed.
+
+.PP
+If the \fIerpc\fR operation fails, but it is unknown if the function is/will be applied (that is, a too large wait time value, or a connection loss), the caller will not receive any further information about the result if/when the applied function completes. If the applied function explicitly communicates with the calling process, such communication may, of course, reach the calling process.
+
+
+.RE
+.B
+\fBwait_response(RequestIdCollection, WaitTime, Delete) ->\fR
+\fB                       {{response, Result},\fR
+\fB                        Label, NewRequestIdCollection} |\fR
+\fB                       no_response | no_request\fR
+\fB                       when\fR
+\fB                           RequestIdCollection ::\fR
+\fB                               request_id_collection(),\fR
+\fB                           WaitTime :: timeout_time(),\fR
+\fB                           Delete :: boolean(),\fR
+\fB                           Label :: term(),\fR
+\fB                           NewRequestIdCollection ::\fR
+\fB                               request_id_collection(),\fR
+\fB                           Result :: term().\fR
+
+.br
+.RS
+.PP
+Wait or poll for a response to a \fIcall\fR request corresponding to a request identifier saved in \fIRequestIdCollection\fR. All request identifiers of \fIRequestIdCollection\fR must correspond to requests that have been made using \fIsend_request/4\fR or \fIsend_request/6\fR, and all requests must have been made by the process calling this function.
+
+.PP
+\fILabel\fR is the label associated with the request identifier of the request that the response corresponds to. A request identifier is associated with a label when adding a request identifier in a request identifier collection, or when sending the request using \fIsend_request/6\fR.
+
+.PP
+Compared to \fIwait_response/2\fR, the returned result associated with a specific request identifier or an exception associated with a specific request identifier will be wrapped in a 3-tuple. The first element of this tuple equals the value that would have been produced by \fIwait_response/2\fR, the second element equals the \fILabel\fR associated with the specific request identifier, and the third element \fINewRequestIdCollection\fR is a possibly modified request identifier collection. The \fIerror\fR exception \fI{erpc, badarg}\fR is not associated with any specific request identifier, and will hence not be wrapped.
+
+.PP
+If \fIRequestIdCollection\fR is empty, \fIno_request\fR will be returned. If no response is received before the \fIWaitTime\fR timeout has triggered, the atom \fIno_response\fR is returned. It is valid to continue waiting for a response as many times as needed up until a response has been received and completed by \fIcheck_response()\fR, \fIreceive_response()\fR, or \fIwait_response()\fR. The difference between \fIreceive_response/3\fR and \fIwait_response/3\fR is that \fIreceive_response/3\fR abandons requests at timeout so that any potential future responses are ignored, while \fIwait_response/3\fR does not.
+
+.PP
+If \fIDelete\fR equals \fItrue\fR, the association with \fILabel\fR will have been deleted from \fIRequestIdCollection\fR in the resulting \fINewRequestIdCollection\fR. If \fIDelete\fR equals \fIfalse\fR, \fINewRequestIdCollection\fR will equal \fIRequestIdCollection\fR. Note that deleting an association is not for free and that a collection containing already handled requests can still be used by subsequent calls to \fIwait_response/3\fR, \fIcheck_response/3\fR, and \fIreceive_response/3\fR. However, without deleting handled associations, the above calls will not be able to detect when there are no more outstanding requests to handle, so you will have to keep track of this some other way than relying on a \fIno_request\fR return. Note that if you pass a collection only containing associations of already handled or abandoned requests to \fIwait_response/3\fR, it will always block until a timeout determined by \fIWaitTime\fR is triggered and then return \fIno_response\fR.
+
+.PP
+Note that a response might have been consumed uppon an \fI{erpc, badarg}\fR exception and if so, will be lost for ever.
+
+
+.RE

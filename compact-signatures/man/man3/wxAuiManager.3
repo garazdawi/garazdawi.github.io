@@ -1,0 +1,828 @@
+.TH wxAuiManager 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxAuiManager \- \fIwxAuiManager\fR is the central class of the wxAUI class framework.
+
+.SH DESCRIPTION
+.PP
+\fIwxAuiManager\fR manages the panes associated with it for a particular \fIwxFrame\fR, using a pane's \fIwxAuiPaneInfo\fR information to determine each pane's docking and floating behaviour.
+
+.PP
+\fIwxAuiManager\fR uses wxWidgets' sizer mechanism to plan the layout of each frame. It uses a replaceable dock art class to do all drawing, so all drawing is localized in one area, and may be customized depending on an application's specific needs.
+
+.PP
+\fIwxAuiManager\fR works as follows: the programmer adds panes to the class, or makes changes to existing pane properties (dock position, floating state, show state, etc.). To apply these changes, \fIwxAuiManager\fR's \fIupdate/1\fR function is called. This batch processing can be used to avoid flicker, by modifying more than one pane at a time, and then "committing" all of the changes at once by calling \fIupdate/1\fR.
+
+.PP
+Panes can be added quite easily:
+
+.PP
+Later on, the positions can be modified easily. The following will float an existing pane in a tool window:
+
+.PP
+Layers, Rows and Directions, Positions
+
+.PP
+Inside wxAUI, the docking layout is figured out by checking several pane parameters. Four of these are important for determining where a pane will end up:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Direction: Each docked pane has a direction, Top, Bottom, Left, Right, or Center. This is fairly self-explanatory. The pane will be placed in the location specified by this variable.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Position: More than one pane can be placed inside of a dock. Imagine two panes being docked on the left side of a window. One pane can be placed over another. In proportionally managed docks, the pane position indicates its sequential position, starting with zero. So, in our scenario with two panes docked on the left side, the top pane in the dock would have position 0, and the second one would occupy position 1.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Row: A row can allow for two docks to be placed next to each other. One of the most common places for this to happen is in the toolbar. Multiple toolbar rows are allowed, the first row being row 0, and the second row 1. Rows can also be used on vertically docked panes.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Layer: A layer is akin to an onion. Layer 0 is the very center of the managed pane. Thus, if a pane is in layer 0, it will be closest to the center window (also sometimes known as the "content window"). Increasing layers "swallow up" all layers of a lower value. This can look very similar to multiple rows, but is different because all panes in a lower level yield to panes in higher levels. The best way to understand layers is by running the wxAUI sample.
+
+.RE
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_ALLOW_FLOATING: Allow a pane to be undocked to take the form of a \fIwxMiniFrame\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_ALLOW_ACTIVE_PANE: Change the color of the title bar of the pane when it is activated.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_TRANSPARENT_DRAG: Make the pane transparent during its movement.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_TRANSPARENT_HINT: The possible location for docking is indicated by a translucent area.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_VENETIAN_BLINDS_HINT: The possible location for docking is indicated by gradually appearing partially transparent hint.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_RECTANGLE_HINT: The possible location for docking is indicated by a rectangular outline.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_HINT_FADE: The translucent area where the pane could be docked appears gradually.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_NO_VENETIAN_BLINDS_FADE: Used in complement of wxAUI_MGR_VENETIAN_BLINDS_HINT to show the docking hint immediately.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_LIVE_RESIZE: When a docked pane is resized, its content is refreshed in live (instead of moving the border alone and refreshing the content at the end).
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxAUI_MGR_DEFAULT: Default behaviour, combines: wxAUI_MGR_ALLOW_FLOATING | wxAUI_MGR_TRANSPARENT_HINT | wxAUI_MGR_HINT_FADE | wxAUI_MGR_NO_VENETIAN_BLINDS_FADE.
+
+.RE
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview aui
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxAuiNotebook\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxAuiDockArt\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxAuiPaneInfo\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxAuiManager
+
+.SS "Events"
+
+.PP
+Event types emitted from this class:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaui_pane_button\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaui_pane_close\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaui_pane_maximize\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaui_pane_restore\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaui_pane_activated\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIaui_render\fR
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxAuiManager() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaddPane(This, Window, [Option]) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiManager(),\fR
+\fB                     Window :: wxWindow:wxWindow(),\fR
+\fB                     Option ::\fR
+\fB                         {direction, integer()} |\fR
+\fB                         {caption, unicode:chardata()};\fR
+\fB             (This, Window, Pane_info) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiManager(),\fR
+\fB                     Window :: wxWindow:wxWindow(),\fR
+\fB                     Pane_info :: wxAuiPaneInfo:wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIaddPane/4\fR tells the frame manager to start managing a child window.
+
+.PP
+There are several versions of this function. The first version allows the full spectrum of pane parameter possibilities. The second version is used for simpler user interfaces which do not require as much configuration. The last version allows a drop position to be specified, which will determine where the pane will be added.
+
+
+.RE
+.B
+\fBaddPane(This, Window, Pane_info, Drop_pos) -> boolean()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiManager(),\fR
+\fB                     Window :: wxWindow:wxWindow(),\fR
+\fB                     Pane_info :: wxAuiPaneInfo:wxAuiPaneInfo(),\fR
+\fB                     Drop_pos :: {X :: integer(), Y :: integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdestroy(This :: wxAuiManager()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBdetachPane(This, Window) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxAuiManager(),\fR
+\fB                        Window :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Tells the \fIwxAuiManager\fR to stop managing the pane specified by window.
+
+.PP
+The window, if in a floated frame, is reparented to the frame managed by \fIwxAuiManager\fR.
+
+
+.RE
+.B
+\fBgetAllPanes(This) -> [wxAuiPaneInfo:wxAuiPaneInfo()]\fR
+\fB                     when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+Returns an array of all panes managed by the frame manager.
+
+
+.RE
+.B
+\fBgetArtProvider(This) -> wxAuiDockArt:wxAuiDockArt()\fR
+\fB                        when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+Returns the current art provider being used.
+
+.PP
+See: \fIwxAuiDockArt\fR
+
+
+.RE
+.B
+\fBgetDockSizeConstraint(This) ->\fR
+\fB                               {Widthpct :: number(),\fR
+\fB                                Heightpct :: number()}\fR
+\fB                               when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+Returns the current dock constraint values.
+
+.PP
+See \fIsetDockSizeConstraint/3\fR for more information.
+
+
+.RE
+.B
+\fBgetFlags(This) -> integer() when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+Returns the current ?wxAuiManagerOption's flags.
+
+
+.RE
+.B
+\fBgetManagedWindow(This) -> wxWindow:wxWindow()\fR
+\fB                          when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+Returns the frame currently being managed by \fIwxAuiManager\fR.
+
+
+.RE
+.B
+\fBgetManager(Window) -> wxAuiManager()\fR
+\fB                    when Window :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Calling this method will return the \fIwxAuiManager\fR for a given window.
+
+.PP
+The \fIwindow\fR parameter should specify any child window or sub-child window of the frame or window managed by \fIwxAuiManager\fR.
+
+.PP
+The \fIwindow\fR parameter need not be managed by the manager itself, nor does it even need to be a child or sub-child of a managed window. It must however be inside the window hierarchy underneath the managed window.
+
+
+.RE
+.B
+\fBgetPane(This, Name) -> wxAuiPaneInfo:wxAuiPaneInfo()\fR
+\fB                 when This :: wxAuiManager(), Name :: unicode:chardata();\fR
+\fB             (This, Window) -> wxAuiPaneInfo:wxAuiPaneInfo()\fR
+\fB                 when\fR
+\fB                     This :: wxAuiManager(),\fR
+\fB                     Window :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+\fIgetPane/2\fR is used to lookup a \fIwxAuiPaneInfo\fR object either by window pointer or by pane name, which acts as a unique id for a window pane.
+
+.PP
+The returned \fIwxAuiPaneInfo\fR object may then be modified to change a pane's look, state or position. After one or more modifications to \fIwxAuiPaneInfo\fR, \fIupdate/1\fR should be called to commit the changes to the user interface. If the lookup failed (meaning the pane could not be found in the manager), a call to the returned \fIwxAuiPaneInfo\fR's IsOk() method will return false.
+
+
+.RE
+.B
+\fBhideHint(This) -> ok when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+\fIhideHint/1\fR hides any docking hint that may be visible.
+
+
+.RE
+.B
+\fBinsertPane(This, Window, Insert_location, [Option]) -> boolean()\fR
+\fB                    when\fR
+\fB                        This :: wxAuiManager(),\fR
+\fB                        Window :: wxWindow:wxWindow(),\fR
+\fB                        Insert_location :: wxAuiPaneInfo:wxAuiPaneInfo(),\fR
+\fB                        Option :: {insert_level, integer()}.\fR
+
+.br
+.RS
+.PP
+This method is used to insert either a previously unmanaged pane window into the frame manager, or to insert a currently managed pane somewhere else.
+
+.PP
+\fIinsertPane/4\fR will push all panes, rows, or docks aside and insert the window into the position specified by \fIinsert_location\fR.
+
+.PP
+Because \fIinsert_location\fR can specify either a pane, dock row, or dock layer, the \fIinsert_level\fR parameter is used to disambiguate this. The parameter \fIinsert_level\fR can take a value of wxAUI_INSERT_PANE, wxAUI_INSERT_ROW or wxAUI_INSERT_DOCK.
+
+
+.RE
+.B
+\fBloadPaneInfo(This, Pane_part, Pane) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxAuiManager(),\fR
+\fB                          Pane_part :: unicode:chardata(),\fR
+\fB                          Pane :: wxAuiPaneInfo:wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIloadPaneInfo/3\fR is similar to LoadPerspective, with the exception that it only loads information about a single pane.
+
+.PP
+This method writes the serialized data into the passed pane. Pointers to UI elements are not modified.
+
+.PP
+Note: This operation also changes the name in the pane information!
+
+.PP
+See: \fIloadPerspective/3\fR
+
+.PP
+See: \fIsavePaneInfo/2\fR
+
+.PP
+See: \fIsavePerspective/1\fR
+
+
+.RE
+.B
+\fBloadPerspective(This, Perspective, [Option]) -> boolean()\fR
+\fB                         when\fR
+\fB                             This :: wxAuiManager(),\fR
+\fB                             Perspective :: unicode:chardata(),\fR
+\fB                             Option :: {update, boolean()}.\fR
+
+.br
+.RS
+.PP
+Loads a saved perspective.
+
+.PP
+A perspective is the layout state of an AUI managed window.
+
+.PP
+All currently existing panes that have an object in "perspective" with the same name ("equivalent") will receive the layout parameters of the object in "perspective". Existing panes that do not have an equivalent in "perspective" remain unchanged, objects in "perspective" having no equivalent in the manager are ignored.
+
+.PP
+See: \fIloadPaneInfo/3\fR
+
+.PP
+See: \fIloadPerspective/3\fR
+
+.PP
+See: \fIsavePerspective/1\fR
+
+
+.RE
+.B
+\fBnew([Option]) -> wxAuiManager()\fR
+\fB             when\fR
+\fB                 Option ::\fR
+\fB                     {managed_wnd, wxWindow:wxWindow()} |\fR
+\fB                     {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor.
+
+
+.RE
+.B
+\fBsavePaneInfo(This, Pane) -> unicode:charlist()\fR
+\fB                      when\fR
+\fB                          This :: wxAuiManager(),\fR
+\fB                          Pane :: wxAuiPaneInfo:wxAuiPaneInfo().\fR
+
+.br
+.RS
+.PP
+\fIsavePaneInfo/2\fR is similar to SavePerspective, with the exception that it only saves information about a single pane.
+
+.PP
+Return: The serialized layout parameters of the pane are returned within the string. Information about the pointers to UI elements stored in the pane are not serialized.
+
+.PP
+See: \fIloadPaneInfo/3\fR
+
+.PP
+See: \fIloadPerspective/3\fR
+
+.PP
+See: \fIsavePerspective/1\fR
+
+
+.RE
+.B
+\fBsavePerspective(This) -> unicode:charlist()\fR
+\fB                         when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+Saves the entire user interface layout into an encoded \fIwxString\fR (not implemented in wx), which can then be stored by the application (probably using wxConfig).
+
+.PP
+See: \fIloadPerspective/3\fR
+
+.PP
+See: \fIloadPaneInfo/3\fR
+
+.PP
+See: \fIsavePaneInfo/2\fR
+
+
+.RE
+.B
+\fBsetArtProvider(This, Art_provider) -> ok\fR
+\fB                        when\fR
+\fB                            This :: wxAuiManager(),\fR
+\fB                            Art_provider :: wxAuiDockArt:wxAuiDockArt().\fR
+
+.br
+.RS
+.PP
+Instructs \fIwxAuiManager\fR to use art provider specified by parameter \fIart\\_provider\fR for all drawing calls.
+
+.PP
+This allows pluggable look-and-feel features. The previous art provider object, if any, will be deleted by \fIwxAuiManager\fR.
+
+.PP
+See: \fIwxAuiDockArt\fR
+
+
+.RE
+.B
+\fBsetDockSizeConstraint(This, Widthpct, Heightpct) -> ok\fR
+\fB                               when\fR
+\fB                                   This :: wxAuiManager(),\fR
+\fB                                   Widthpct :: number(),\fR
+\fB                                   Heightpct :: number().\fR
+
+.br
+.RS
+.PP
+When a user creates a new dock by dragging a window into a docked position, often times the large size of the window will create a dock that is unwieldy large.
+
+.PP
+\fIwxAuiManager\fR by default limits the size of any new dock to 1/3 of the window size. For horizontal docks, this would be 1/3 of the window height. For vertical docks, 1/3 of the width.
+
+.PP
+Calling this function will adjust this constraint value. The numbers must be between 0.0 and 1.0. For instance, calling SetDockSizeContraint with 0.5, 0.5 will cause new docks to be limited to half of the size of the entire managed window.
+
+
+.RE
+.B
+\fBsetFlags(This, Flags) -> ok\fR
+\fB                  when This :: wxAuiManager(), Flags :: integer().\fR
+
+.br
+.RS
+.PP
+This method is used to specify ?wxAuiManagerOption's flags.
+
+.PP
+\fIflags\fR specifies options which allow the frame management behaviour to be modified.
+
+
+.RE
+.B
+\fBsetManagedWindow(This, Managed_wnd) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxAuiManager(),\fR
+\fB                              Managed_wnd :: wxWindow:wxWindow().\fR
+
+.br
+.RS
+.PP
+Called to specify the frame or window which is to be managed by \fIwxAuiManager\fR.
+
+.PP
+Frame management is not restricted to just frames. Child windows or custom controls are also allowed.
+
+
+.RE
+.B
+\fBshowHint(This, Rect) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxAuiManager(),\fR
+\fB                      Rect ::\fR
+\fB                          {X :: integer(),\fR
+\fB                           Y :: integer(),\fR
+\fB                           W :: integer(),\fR
+\fB                           H :: integer()}.\fR
+
+.br
+.RS
+.PP
+This function is used by controls to explicitly show a hint window at the specified rectangle.
+
+.PP
+It is rarely called, and is mostly used by controls implementing custom pane drag/drop behaviour. The specified rectangle should be in screen coordinates.
+
+
+.RE
+.B
+\fBunInit(This) -> ok when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+Dissociate the managed window from the manager.
+
+.PP
+This function may be called before the managed frame or window is destroyed, but, since wxWidgets 3.1.4, it's unnecessary to call it explicitly, as it will be called automatically when this window is destroyed, as well as when the manager itself is.
+
+
+.RE
+.B
+\fBupdate(This) -> ok when This :: wxAuiManager().\fR
+
+.br
+.RS
+.PP
+This method is called after any number of changes are made to any of the managed panes.
+
+.PP
+\fIupdate/1\fR must be invoked after \fIaddPane/4\fR or \fIinsertPane/4\fR are called in order to "realize" or "commit" the changes. In addition, any number of changes may be made to \fIwxAuiPaneInfo\fR structures (retrieved with \fIgetPane/2\fR), but to realize the changes, \fIupdate/1\fR must be called. This construction allows pane flicker to be avoided by updating the whole layout at one time.
+
+
+.RE

@@ -1,0 +1,59 @@
+.TH edoc_layout 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc_layout \- The standard HTML layout module for EDoc. See the \fI\fIedoc\fR\fR module for details on usage.
+
+.SH DESCRIPTION
+.PP
+\fBSee also: \fR\fIedoc\fR.
+
+.SH DATA TYPES
+.LP
+.SH FUNCTIONS
+.LP
+.B
+\fBmodule(Element, Options) -> term()\fR
+\fB                when Element :: edoc:edoc_module(), Options :: options().\fR
+
+.br
+.RS
+.PP
+The layout function.
+
+.PP
+Options to the standard layout:
+
+.RS 4
+.TP
+\fB\fI{index_columns, integer()}\fR\fR
+Specifies the number of column pairs used for the function index tables. The default value is 1.
+.TP
+\fB\fI{pretty_printer, atom()}\fR\fR
+Specifies how types and specifications are pretty printed. If the value \fIerl_pp\fR is specified the Erlang pretty printer (the module \fIerl_pp\fR) will be used. The default is to do no pretty printing which implies that lines can be very long.
+.TP
+\fB\fI{stylesheet, string()}\fR\fR
+Specifies the URI used for referencing the stylesheet. The default value is \fI"stylesheet.css"\fR. If an empty string is specified, no stylesheet reference will be generated.
+.TP
+\fB\fI{sort_functions, boolean()}\fR\fR
+If \fItrue\fR, the detailed function descriptions are listed by name, otherwise they are listed in the order of occurrence in the source file. The default value is \fItrue\fR.
+.TP
+\fB\fI{xml_export, Module::atom()}\fR\fR
+Specifies an \fI\fIxmerl\fR\fR callback module to be used for exporting the documentation. See \fI\fI//xmerl/xmerl:export_simple/3\fR\fR for details.
+.RE
+
+.PP
+\fBSee also: \fR\fIedoc:layout/2\fR.
+
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBmodule/2\fR
+
+.br
+.RS
+.PP
+Layout entrypoint.
+
+
+.RE

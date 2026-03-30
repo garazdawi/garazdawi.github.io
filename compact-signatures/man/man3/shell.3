@@ -1,0 +1,1040 @@
+.TH shell 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+shell \- The Erlang shell.
+
+.SH DESCRIPTION
+.PP
+The shell is a user interface program for entering expression sequences. The expressions are evaluated and a value is returned. The shell provides an Emacs like set of shortcuts for editing the text of the current line. See tty - A Command-Line Interface in the ERTS User's Guide for a list of all available shortcuts. You may also change the shortcuts to suit your preferences more, see edlin - line editor in the shell.
+
+.PP
+A history mechanism saves previous commands and their values, which can then be incorporated in later commands. How many commands and results to save can be determined by the user, either interactively, by calling \fIhistory/1\fR and \fIresults/1\fR, or by setting the application configuration parameters \fIshell_history_length\fR and \fIshell_saved_results\fR for the STDLIB application. The shell history can be saved to disk by setting the application configuration parameter \fIshell_history\fR for the Kernel application.
+
+.PP
+The shell uses a helper process for evaluating commands to protect the history mechanism from exceptions. By default the evaluator process is killed when an exception occurs, but by calling \fIcatch_exception/1\fR or by setting the application configuration parameter \fIshell_catch_exception\fR for the STDLIB application this behavior can be changed. See also the example below.
+
+.PP
+Variable bindings, and local process dictionary changes that are generated in user expressions are preserved, and the variables can be used in later commands to access their values. The bindings can also be forgotten so the variables can be reused.
+
+.PP
+The special shell commands all have the syntax of (local) function calls. They are evaluated as normal function calls and many commands can be used in one expression sequence.
+
+.PP
+If a command (local function call) is not recognized by the shell, an attempt is first made to find the function in module \fIuser_default\fR, where customized local commands can be placed. If found, the function is evaluated, otherwise an attempt is made to evaluate the function in module \fIshell_default\fR. Module \fIuser_default\fR must be explicitly loaded.
+
+.PP
+The shell also permits the user to start multiple concurrent jobs. A job can be regarded as a set of processes that can communicate with the shell.
+
+.PP
+There is some support for reading and printing records in the shell. During compilation record expressions are translated to tuple expressions. In runtime it is not known whether a tuple represents a record, and the record definitions used by the compiler are unavailable at runtime. So, to read the record syntax and print tuples as records when possible, record definitions must be maintained by the shell itself.
+
+.PP
+The shell commands for reading, defining, forgetting, listing, and printing records are described below. Notice that each job has its own set of record definitions. To facilitate matters, record definitions in modules \fIshell_default\fR and \fIuser_default\fR (if loaded) are read each time a new job is started. For example, adding the following line to \fIuser_default\fR makes the definition of \fIfile_info\fR readily available in the shell:
+
+.IP
+.nf
+-include_lib("kernel/include/file.hrl").
+
+.fi
+
+.PP
+The shell runs in two modes:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fINormal (possibly restricted)\fR mode, in which commands can be edited and expressions evaluated
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Job Control Mode, \fIJCL\fR, in which jobs can be started, killed, detached, and connected
+
+.RE
+
+.PP
+Only the currently connected job can 'talk' to the shell.
+
+.SS "Shell Commands"
+
+.PP
+The commands below are the built-in shell commands that are always available. In most system the commands listed in the \fIc\fR module are also available in the shell.
+
+b()
+.RS 2
+Prints the current variable bindings.
+
+
+.RE
+
+f()
+.RS 2
+Removes all variable bindings.
+
+
+.RE
+
+f(X)
+.RS 2
+Removes the binding of variable 
+\fIX\fR.
+.PP
+\fBNOTE: \fRIf a huge value is stored in a variable binding, you have to both call \fIf(X)\fR and call \fIhistory(0)\fR or \fIresults(0)\fR to free up that memory.
+
+
+
+.RE
+
+h()
+.RS 2
+Prints the history list.
+
+
+.RE
+
+history(N)
+.RS 2
+Sets the number of previous commands to keep in the history list to 
+\fIN\fR. The previous number is returned. Defaults to 20.
+
+.RE
+
+results(N)
+.RS 2
+Sets the number of results from previous commands to keep in the history list to 
+\fIN\fR. The previous number is returned. Defaults to 20.
+
+.RE
+
+e(N)
+.RS 2
+Repeats command 
+\fIN\fR, if \fIN\fR is positive. If it is negative, the \fIN\fRth previous command is repeated (that is, \fIe(-1)\fR repeats the previous command).
+
+.RE
+
+v(N)
+.RS 2
+Uses the return value of command 
+\fIN\fR in the current command, if \fIN\fR is positive. If it is negative, the return value of the \fIN\fRth previous command is used (that is, \fIv(-1)\fR uses the value of the previous command).
+
+.RE
+
+help()
+.RS 2
+Evaluates 
+\fIshell_default:help()\fR.
+
+.RE
+
+h(Module, Function)
+.RS 2
+Print the documentation for 
+\fIModule:Function\fR in the shell if available.
+
+.RE
+
+ht(Module, Type)
+.RS 2
+Print the documentation for 
+\fIModule:Type\fR in the shell if available.
+
+.RE
+
+hcb(Module, Callback)
+.RS 2
+Print the documentation for 
+\fIModule:Callback\fR in the shell if available.
+
+.RE
+
+c(Mod)
+.RS 2
+Evaluates 
+\fIshell_default:c(Mod)\fR. This compiles and loads the module \fIMod\fR and purges old versions of the code, if necessary. \fIMod\fR can be either a module name or a a source file path, with or without \fI.erl\fR extension.
+
+.RE
+
+catch_exception(Bool)
+.RS 2
+Sets the exception handling of the evaluator process. The previous exception handling is returned. The default (
+\fIfalse\fR) is to kill the evaluator process when an exception occurs, which causes the shell to create a new evaluator process. When the exception handling is set to \fItrue\fR, the evaluator process lives on. This means, for example, that ports and ETS tables as well as processes linked to the evaluator process survive the exception.
+
+.RE
+
+rd(RecordName, RecordDefinition)
+.RS 2
+Defines a record in the shell. 
+\fIRecordName\fR is an atom and \fIRecordDefinition\fR lists the field names and the default values. Usually record definitions are made known to the shell by use of the \fIrr/1,2,3\fR commands described below, but sometimes it is handy to define records on the fly.
+
+.RE
+
+rf()
+.RS 2
+Removes all record definitions, then reads record definitions from the modules 
+\fIshell_default\fR and \fIuser_default\fR (if loaded). Returns the names of the records defined.
+
+.RE
+
+rf(RecordNames)
+.RS 2
+Removes selected record definitions. 
+\fIRecordNames\fR is a record name or a list of record names. To remove all record definitions, use \fI'_'\fR.
+
+.RE
+
+rl()
+.RS 2
+Prints all record definitions.
+
+
+.RE
+
+rl(RecordNames)
+.RS 2
+Prints selected record definitions. 
+\fIRecordNames\fR is a record name or a list of record names.
+
+.RE
+
+rp(Term)
+.RS 2
+Prints a term using the record definitions known to the shell. All of 
+\fITerm\fR is printed; the depth is not limited as is the case when a return value is printed.
+
+.RE
+
+rr(Module)
+.RS 2
+Reads record definitions from a module's BEAM file. If there are no record definitions in the BEAM file, the source file is located and read instead. Returns the names of the record definitions read. 
+\fIModule\fR is an atom.
+
+.RE
+
+rr(Wildcard)
+.RS 2
+Reads record definitions from files. Existing definitions of any of the record names read are replaced. 
+\fIWildcard\fR is a wildcard string as defined in \fIfilelib\fR, but not an atom.
+
+.RE
+
+rr(WildcardOrModule, RecordNames)
+.RS 2
+Reads record definitions from files but discards record names not mentioned in 
+\fIRecordNames\fR (a record name or a list of record names).
+
+.RE
+
+rr(WildcardOrModule, RecordNames, Options)
+.RS 2
+Reads record definitions from files. The compiler options 
+\fI{i, Dir}\fR, \fI{d, Macro}\fR, and \fI{d, Macro, Value}\fR are recognized and used for setting up the include path and macro definitions. To read all record definitions, use \fI'_'\fR as value of \fIRecordNames\fR.
+
+.RE
+
+lf()
+.RS 2
+Outputs locally defined function with function specs if they exist.
+
+
+.RE
+
+lt()
+.RS 2
+Outputs locally defined types.
+
+
+.RE
+
+lr()
+.RS 2
+Outputs locally defined records.
+
+
+.RE
+
+ff()
+.RS 2
+Forget locally defined functions (including function specs if they exist).
+
+
+.RE
+
+ff({FunName,Arity})
+.RS 2
+Forget a locally defined function (including function spec if it exist). Where 
+\fIFunName\fR is the name of the function as an atom and \fIArity\fR is an integer.
+
+.RE
+
+tf()
+.RS 2
+Forget locally defined types.
+
+
+.RE
+
+tf(Type)
+.RS 2
+Forget locally defined type where 
+\fIType\fR is the name of the type represented as an atom.
+
+.RE
+
+fl()
+.RS 2
+Forget locally defined functions, types and records.
+
+
+.RE
+
+save_module(FilePath)
+.RS 2
+Saves all locally defined functions, types and records to a module file, where 
+\fIFilePath\fR should include both the path to the file and the name of the module with \fI.erl\fR suffix.
+.PP
+Example: \fIsrc/my_module.erl\fR
+
+
+.RE
+
+.SS "Example"
+
+.PP
+The following example is a long dialog with the shell. Commands starting with \fI>\fR are inputs to the shell. All other lines are output from the shell.
+
+.IP
+.nf
+strider 1> erl
+Erlang (BEAM) emulator version 5.3 [hipe] [threads:0]
+
+Eshell V5.3  (abort with ^G)
+1> Str = "abcd".
+"abcd"
+
+.fi
+
+.PP
+Command 1 sets variable \fIStr\fR to string \fI"abcd"\fR.
+
+.IP
+.nf
+2> L = length(Str).
+4
+
+.fi
+
+.PP
+Command 2 sets \fIL\fR to the length of string \fIStr\fR.
+
+.IP
+.nf
+3> Descriptor = {L, list_to_atom(Str)}.
+{4,abcd}
+
+.fi
+
+.PP
+Command 3 builds the tuple \fIDescriptor\fR, evaluating the BIF \fIlist_to_atom/1\fR .
+
+.IP
+.nf
+4> L.
+4
+
+.fi
+
+.PP
+Command 4 prints the value of variable \fIL\fR.
+
+.IP
+.nf
+5> b().
+Descriptor = {4,abcd}
+L = 4
+Str = "abcd"
+ok
+
+.fi
+
+.PP
+Command 5 evaluates the internal shell command \fIb()\fR, which is an abbreviation of "bindings". This prints the current shell variables and their bindings. \fIok\fR at the end is the return value of function \fIb()\fR.
+
+.IP
+.nf
+6> f(L).
+ok
+
+.fi
+
+.PP
+Command 6 evaluates the internal shell command \fIf(L)\fR (abbreviation of "forget"). The value of variable \fIL\fR is removed.
+
+.IP
+.nf
+7> b().
+Descriptor = {4,abcd}
+Str = "abcd"
+ok
+
+.fi
+
+.PP
+Command 7 prints the new bindings.
+
+.IP
+.nf
+8> f(L).
+ok
+
+.fi
+
+.PP
+Command 8 has no effect, as \fIL\fR has no value.
+
+.IP
+.nf
+9> {L, _} = Descriptor.
+{4,abcd}
+
+.fi
+
+.PP
+Command 9 performs a pattern matching operation on \fIDescriptor\fR, binding a new value to \fIL\fR.
+
+.IP
+.nf
+10> L.
+4
+
+.fi
+
+.PP
+Command 10 prints the current value of \fIL\fR.
+
+.IP
+.nf
+11> {P, Q, R} = Descriptor.
+** exception error: no match of right hand side value {4,abcd}
+
+.fi
+
+.PP
+Command 11 tries to match \fI{P, Q, R}\fR against \fIDescriptor\fR, which is \fI{4, abc}\fR. The match fails and none of the new variables become bound. The printout starting with "\fI** exception error:\fR" is not the value of the expression (the expression had no value because its evaluation failed), but a warning printed by the system to inform the user that an error has occurred. The values of the other variables (\fIL\fR, \fIStr\fR, and so on) are unchanged.
+
+.IP
+.nf
+12> P.
+* 1:1: variable 'P' is unbound
+13> Descriptor.
+{4,abcd}
+
+.fi
+
+.PP
+Commands 12 and 13 show that \fIP\fR is unbound because the previous command failed, and that \fIDescriptor\fR has not changed.
+
+.IP
+.nf
+14>{P, Q} = Descriptor.
+{4,abcd}
+15> P.
+4
+
+.fi
+
+.PP
+Commands 14 and 15 show a correct match where \fIP\fR and \fIQ\fR are bound.
+
+.IP
+.nf
+16> f().
+ok
+
+.fi
+
+.PP
+Command 16 clears all bindings.
+
+.PP
+The next few commands assume that \fItest1:demo(X)\fR is defined as follows:
+
+.IP
+.nf
+demo(X) ->
+    put(aa, worked),
+    X = 1,
+    X + 10.
+
+.fi
+
+.IP
+.nf
+17> put(aa, hello).
+undefined
+18> get(aa).
+hello
+
+.fi
+
+.PP
+Commands 17 and 18 set and inspect the value of item \fIaa\fR in the process dictionary.
+
+.IP
+.nf
+19> Y = test1:demo(1).
+11
+
+.fi
+
+.PP
+Command 19 evaluates \fItest1:demo(1)\fR. The evaluation succeeds and the changes made in the process dictionary become visible to the shell. The new value of dictionary item \fIaa\fR can be seen in command 20.
+
+.IP
+.nf
+20> get().
+[{aa,worked}]
+21> put(aa, hello).
+worked
+22> Z = test1:demo(2).
+** exception error: no match of right hand side value 1
+     in function  test1:demo/1
+
+.fi
+
+.PP
+Commands 21 and 22 change the value of dictionary item \fIaa\fR to \fIhello\fR and call \fItest1:demo(2)\fR. Evaluation fails and the changes made to the dictionary in \fItest1:demo(2)\fR, before the error occurred, are discarded.
+
+.IP
+.nf
+23> Z.
+* 1:1: variable 'Z' is unbound
+24> get(aa).
+hello
+
+.fi
+
+.PP
+Commands 23 and 24 show that \fIZ\fR was not bound and that dictionary item \fIaa\fR has retained its original value.
+
+.IP
+.nf
+25> erase(), put(aa, hello).
+undefined
+26> spawn(test1, demo, [1]).
+<0.57.0>
+27> get(aa).
+hello
+
+.fi
+
+.PP
+Commands 25, 26, and 27 show the effect of evaluating \fItest1:demo(1)\fR in the background. In this case, the expression is evaluated in a newly spawned process. Any changes made in the process dictionary are local to the newly spawned process and therefore not visible to the shell.
+
+.IP
+.nf
+28> io:format("hello hello\\n").
+hello hello
+ok
+29> e(28).
+hello hello
+ok
+30> v(28).
+ok
+
+.fi
+
+.PP
+Commands 28, 29 and 30 use the history facilities of the shell. Command 29 re-evaluates command 28. Command 30 uses the value (result) of command 28. In the cases of a pure function (a function with no side effects), the result is the same. For a function with side effects, the result can be different.
+
+.PP
+The next few commands show some record manipulation. It is assumed that \fIex.erl\fR defines a record as follows:
+
+.PP
+\fI-record(rec, {a, b = val()}).\fR
+
+.PP
+\fIval() ->\fR      \fI3.\fR
+
+.IP
+.nf
+31> c(ex).
+{ok,ex}
+32> rr(ex).
+[rec]
+
+.fi
+
+.PP
+Commands 31 and 32 compile file \fIex.erl\fR and read the record definitions in \fIex.beam\fR. If the compiler did not output any record definitions on the BEAM file, \fIrr(ex)\fR tries to read record definitions from the source file instead.
+
+.IP
+.nf
+33> rl(rec).
+-record(rec,{a,b = val()}).
+ok
+
+.fi
+
+.PP
+Command 33 prints the definition of the record named \fIrec\fR.
+
+.IP
+.nf
+34> #rec{}.
+** exception error: undefined shell command val/0
+
+.fi
+
+.PP
+Command 34 tries to create a \fIrec\fR record, but fails as function \fIval/0\fR is undefined.
+
+.IP
+.nf
+35> #rec{b = 3}.
+#rec{a = undefined,b = 3}
+
+.fi
+
+.PP
+Command 35 shows the workaround: explicitly assign values to record fields that cannot otherwise be initialized.
+
+.IP
+.nf
+36> rp(v(-1)).
+#rec{a = undefined,b = 3}
+ok
+
+.fi
+
+.PP
+Command 36 prints the newly created record using record definitions maintained by the shell.
+
+.IP
+.nf
+37> rd(rec, {f = orddict:new()}).
+rec
+
+.fi
+
+.PP
+Command 37 defines a record directly in the shell. The definition replaces the one read from file \fIex.beam\fR.
+
+.IP
+.nf
+38> #rec{}.
+#rec{f = []}
+ok
+
+.fi
+
+.PP
+Command 38 creates a record using the new definition, and prints the result.
+
+.IP
+.nf
+39> rd(rec, {c}), A.
+* 1:15: variable 'A' is unbound
+40> #rec{}.
+#rec{c = undefined}
+ok
+
+.fi
+
+.PP
+Command 39 and 40 show that record definitions are updated as side effects. The evaluation of the command fails, but the definition of \fIrec\fR has been carried out.
+
+.PP
+For the next command, it is assumed that \fItest1:loop(N)\fR is defined as follows:
+
+.PP
+\fIloop(N) ->\fR      \fIio:format("Hello Number: ~w~n", [N]),\fR      \fIloop(N+1).\fR
+
+.IP
+.nf
+41> test1:loop(0).
+Hello Number: 0
+Hello Number: 1
+Hello Number: 2
+Hello Number: 3
+
+User switch command
+ --> i
+ --> c
+.
+.
+.
+Hello Number: 3374
+Hello Number: 3375
+Hello Number: 3376
+Hello Number: 3377
+Hello Number: 3378
+** exception exit: killed
+
+.fi
+
+.PP
+Command 41 evaluates \fItest1:loop(0)\fR, which puts the system into an infinite loop. At this point the user types \fI^G\fR (Control G), which suspends output from the current process, which is stuck in a loop, and activates \fIJCL\fR mode. In \fIJCL\fR mode the user can start and stop jobs.
+
+.PP
+In this particular case, command \fIi\fR ("interrupt") terminates the looping program, and command \fIc\fR connects to the shell again. As the process was running in the background before we killed it, more printouts occur before message "\fI** exception exit: killed\fR" is shown.
+
+.IP
+.nf
+42> E = ets:new(t, []).
+#Ref<0.1662103692.2407923716.214192>
+
+.fi
+
+.PP
+Command 42 creates an ETS table.
+
+.IP
+.nf
+43> ets:insert({d,1,2}).
+** exception error: undefined function ets:insert/1
+
+.fi
+
+.PP
+Command 43 tries to insert a tuple into the ETS table, but the first argument (the table) is missing. The exception kills the evaluator process.
+
+.IP
+.nf
+44> ets:insert(E, {d,1,2}).
+** exception error: argument is of wrong type
+     in function  ets:insert/2
+        called as ets:insert(16,{d,1,2})
+
+.fi
+
+.PP
+Command 44 corrects the mistake, but the ETS table has been destroyed as it was owned by the killed evaluator process.
+
+.IP
+.nf
+45> f(E).
+ok
+46> catch_exception(true).
+false
+
+.fi
+
+.PP
+Command 46 sets the exception handling of the evaluator process to \fItrue\fR. The exception handling can also be set when starting Erlang by \fIerl -stdlib shell_catch_exception true\fR.
+
+.IP
+.nf
+47> E = ets:new(t, []).
+#Ref<0.1662103692.2407923716.214197>
+48> ets:insert({d,1,2}).
+* exception error: undefined function ets:insert/1
+
+.fi
+
+.PP
+Command 48 makes the same mistake as in command 43, but this time the evaluator process lives on. The single star at the beginning of the printout signals that the exception has been caught.
+
+.IP
+.nf
+49> ets:insert(E, {d,1,2}).
+true
+
+.fi
+
+.PP
+Command 49 successfully inserts the tuple into the ETS table.
+
+.IP
+.nf
+50> ets:insert(#Ref<0.1662103692.2407923716.214197>, {e,3,4}).
+true
+
+.fi
+
+.PP
+Command 50 inserts another tuple into the ETS table. This time the first argument is the table identifier itself. The shell can parse commands with pids (\fI<0.60.0>\fR), ports (\fI#Port<0.536>\fR), references (\fI#Ref<0.1662103692.2407792644.214210>\fR), and external functions (\fI#Fun<a.b.1>\fR), but the command fails unless the corresponding pid, port, reference, or function can be created in the running system.
+
+.IP
+.nf
+51> halt().
+strider 2>
+
+.fi
+
+.PP
+Command 51 exits the Erlang runtime system.
+
+.SS "JCL Mode"
+
+.PP
+When the shell starts, it starts a single evaluator process. This process, together with any local processes that it spawns, is referred to as a \fIjob\fR. Only the current job, which is said to be \fIconnected\fR, can perform operations with standard I/O. All other jobs, which are said to be \fIdetached\fR, are \fIblocked\fR if they attempt to use standard I/O.
+
+.PP
+All jobs that do not use standard I/O run in the normal way.
+
+.PP
+The shell escape key \fI^G\fR (Control G) detaches the current job and activates \fIJCL\fR mode. The \fIJCL\fR mode prompt is \fI"-->"\fR. If \fI"?"\fR is entered at the prompt, the following help message is displayed:
+
+.IP
+.nf
+--> ?
+c [nn]            - connect to job
+i [nn]            - interrupt job
+k [nn]            - kill job
+j                 - list all jobs
+s [shell]         - start local shell
+r [node [shell]]  - start remote shell
+q                 - quit erlang
+? | h             - this message
+
+.fi
+
+.PP
+The \fIJCL\fR commands have the following meaning:
+
+c [nn]
+.RS 2
+Connects to job number 
+\fI<nn>\fR or the current job. The standard shell is resumed. Operations that use standard I/O by the current job are interleaved with user inputs to the shell.
+
+.RE
+
+i [nn]
+.RS 2
+Stops the current evaluator process for job number 
+\fInn\fR or the current job, but does not kill the shell process. So, any variable bindings and the process dictionary are preserved and the job can be connected again. This command can be used to interrupt an endless loop.
+
+.RE
+
+k [nn]
+.RS 2
+Kills job number 
+\fInn\fR or the current job. All spawned processes in the job are killed, provided they have not evaluated the \fIgroup_leader/1\fR BIF and are located on the local machine. Processes spawned on remote nodes are not killed.
+
+.RE
+
+j
+.RS 2
+Lists all jobs. A list of all known jobs is printed. The current job name is prefixed with '*'.
+
+
+.RE
+
+s
+.RS 2
+Starts a new job. This is assigned the new index 
+\fI[nn]\fR, which can be used in references.
+
+.RE
+
+s [shell]
+.RS 2
+Starts a new job. This is assigned the new index 
+\fI[nn]\fR, which can be used in references. If optional argument \fIshell\fR is specified, it is assumed to be a module that implements an alternative shell.
+
+.RE
+
+r [node]
+.RS 2
+Starts a remote job on 
+\fInode\fR. This is used in distributed Erlang to allow a shell running on one node to control a number of applications running on a network of nodes. If optional argument \fIshell\fR is specified, it is assumed to be a module that implements an alternative shell.
+
+.RE
+
+q
+.RS 2
+Quits Erlang. Notice that this option is disabled if Erlang is started with the ignore break, 
+\fI+Bi\fR, system flag (which can be useful, for example when running a restricted shell, see the next section).
+
+.RE
+
+?
+.RS 2
+Displays the help message above.
+
+
+.RE
+
+.PP
+The behavior of shell escape can be changed by the STDLIB application variable \fIshell_esc\fR. The value of the variable can be either \fIjcl\fR (\fIerl -stdlib shell_esc jcl\fR) or \fIabort\fR (\fIerl -stdlib shell_esc abort\fR). The first option sets \fI^G\fR to activate \fIJCL\fR mode (which is also default behavior). The latter sets \fI^G\fR to terminate the current shell and start a new one. \fIJCL\fR mode cannot be invoked when \fIshell_esc\fR is set to \fIabort\fR.
+
+.PP
+If you want an Erlang node to have a remote job active from the start (rather than the default local job), start Erlang with flag \fI-remsh\fR, for example, \fIerl -remsh other_node@other_host\fR
+
+.SS "Restricted Shell"
+
+.PP
+The shell can be started in a restricted mode. In this mode, the shell evaluates a function call only if allowed. This feature makes it possible to, for example, prevent a user from accidentally calling a function from the prompt that could harm a running system (useful in combination with system flag \fI+Bi\fR).
+
+.PP
+When the restricted shell evaluates an expression and encounters a function call or an operator application, it calls a callback function (with information about the function call in question). This callback function returns \fItrue\fR to let the shell go ahead with the evaluation, or \fIfalse\fR to abort it. There are two possible callback functions for the user to implement:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIlocal_allowed(Func, ArgList, State) -> {boolean(),NewState}\fR
+
+.PP
+This is used to determine if the call to the local function \fIFunc\fR with arguments \fIArgList\fR is to be allowed.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInon_local_allowed(FuncSpec, ArgList, State) -> {boolean(),NewState} | {{redirect,NewFuncSpec,NewArgList},NewState}\fR
+
+.PP
+This is used to determine if the call to non-local function \fIFuncSpec\fR (\fI{Module,Func}\fR or a fun) with arguments \fIArgList\fR is to be allowed. The return value \fI{redirect,NewFuncSpec,NewArgList}\fR can be used to let the shell evaluate some other function than the one specified by \fIFuncSpec\fR and \fIArgList\fR.
+
+.RE
+
+.PP
+These callback functions are called from local and non-local evaluation function handlers, described in the \fIerl_eval\fR manual page. (Arguments in \fIArgList\fR are evaluated before the callback functions are called.)
+
+.PP
+From OTP 25.0, if there are errors evaluating Erlang constructs, such as \fIbadmatch\fR during pattern matching or \fIbad_generator\fR in a comprehension, the evaluator will dispatch to \fIerlang:raise(error, Reason, Stacktrace)\fR. This call will be checked against the \fInon_local_allowed/3\fR callback function. You can either forbid it, allow it, or redirect to another call of your choice.
+
+.PP
+Argument \fIState\fR is a tuple \fI{ShellState,ExprState}\fR. The return value \fINewState\fR has the same form. This can be used to carry a state between calls to the callback functions. Data saved in \fIShellState\fR lives through an entire shell session. Data saved in \fIExprState\fR lives only through the evaluation of the current expression.
+
+.PP
+There are two ways to start a restricted shell session:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Use STDLIB application variable \fIrestricted_shell\fR and specify, as its value, the name of the callback module. Example (with callback functions implemented in \fIcallback_mod.erl\fR): \fI$ erl -stdlib restricted_shell callback_mod\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+From a normal shell session, call function \fIstart_restricted/1\fR. This exits the current evaluator and starts a new one in restricted mode.
+
+.RE
+
+.PP
+\fINotes:\fR
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When restricted shell mode is activated or deactivated, new jobs started on the node run in restricted or normal mode, respectively.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If restricted mode has been enabled on a particular node, remote shells connecting to this node also run in restricted mode.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The callback functions cannot be used to allow or disallow execution of functions called from compiled code (only functions called from expressions entered at the shell prompt).
+
+.RE
+
+.PP
+Errors when loading the callback module is handled in different ways depending on how the restricted shell is activated:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the restricted shell is activated by setting the STDLIB variable during emulator startup, and the callback module cannot be loaded, a default restricted shell allowing only the commands \fIq()\fR and \fIinit:stop()\fR is used as fallback.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If the restricted shell is activated using \fIstart_restricted/1\fR and the callback module cannot be loaded, an error report is sent to the error logger and the call returns \fI{error,Reason}\fR.
+
+.RE
+
+.SS "Prompting"
+
+.PP
+The default shell prompt function displays the name of the node (if the node can be part of a distributed system) and the current command number. The user can customize the prompt function by calling \fIprompt_func/1\fR or by setting application configuration parameter \fIshell_prompt_func\fR for the STDLIB application. Similarly the multiline prompt can be configured as well, by calling \fImultiline_prompt_func/1\fR or by setting the application parameter \fIshell_multiline_prompt\fR for the STDLIB application.
+
+.PP
+A customized prompt function is stated as a tuple \fI{Mod, Func}\fR. The function is called as \fIMod:Func(L)\fR, where \fIL\fR is a list of key-value pairs created by the shell. Currently there is only one pair: \fI{history, N}\fR, where \fIN\fR is the current command number. The function is to return a list of characters or an atom. This constraint is because of the Erlang I/O protocol. Unicode characters beyond code point 255 are allowed in the list and the atom. Notice that in restricted mode the call \fIMod:Func(L)\fR must be allowed or the default shell prompt function is called.
+

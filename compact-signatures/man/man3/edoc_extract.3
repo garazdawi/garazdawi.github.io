@@ -1,0 +1,171 @@
+.TH edoc_extract 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc_extract \- EDoc documentation extraction.
+
+.SH DESCRIPTION
+.PP
+\fBSee also: \fR\fIedoc\fR.
+
+.SH DATA TYPES
+.LP
+.SH FUNCTIONS
+.LP
+.B
+\fBfile(File, Context, Env, Opts) -> {ok, Tags} | {error, Reason}\fR
+\fB              when\fR
+\fB                  File :: filename(),\fR
+\fB                  Context :: context(),\fR
+\fB                  Env :: edoc:env(),\fR
+\fB                  Opts :: proplist(),\fR
+\fB                  Tags :: [term()],\fR
+\fB                  Reason :: term().\fR
+
+.br
+.RS
+.PP
+Reads a text file and returns the list of tags in the file. Any lines of text before the first tag are ignored. \fIEnv\fR is an environment created by \fI\fIedoc_lib:get_doc_env/3\fR\fR. Upon error, \fIReason\fR is an atom returned from the call to \fI\fI//kernel/file:read_file/1\fR\fR or the atom 'invalid_unicode'.
+
+.PP
+See \fI\fItext/4\fR\fR for options.
+
+
+.RE
+.B
+\fBheader(File, Env, Opts) -> edoc:entry_data()\fR
+\fB                when\fR
+\fB                    File :: filename(),\fR
+\fB                    Env :: edoc:env(),\fR
+\fB                    Opts :: proplist().\fR
+
+.br
+.RS
+.PP
+Similar to \fI\fIheader/5\fR\fR, but reads the syntax tree and the comments from the specified file.
+
+.PP
+\fBSee also: \fR\fIheader/4\fR, \fIedoc:read_comments/2\fR, \fIedoc:read_source/2\fR.
+
+
+.RE
+.B
+\fBheader(Forms, File, Env, Opts) -> edoc:entry_data()\fR
+\fB                when\fR
+\fB                    Forms :: erl_syntax:forms(),\fR
+\fB                    File :: filename(),\fR
+\fB                    Env :: edoc:env(),\fR
+\fB                    Opts :: proplist().\fR
+
+.br
+.RS
+.PP
+Extracts EDoc documentation from commented header file syntax trees. Similar to \fI\fIsource/5\fR\fR, but ignores any documentation that occurs before a module declaration or a function definition. (Warning messages are printed if content may be ignored.) \fIEnv\fR is assumed to already be set up with a suitable module context.
+
+.PP
+\fBSee also: \fR\fI//syntax_tools/erl_recomment\fR, \fIheader/5\fR.
+
+
+.RE
+.B
+\fBheader(Forms, Comments, File, Env, Opts) -> edoc:entry_data()\fR
+\fB                when\fR
+\fB                    Forms :: erl_syntax:forms(),\fR
+\fB                    Comments :: [edoc:comment()],\fR
+\fB                    File :: filename(),\fR
+\fB                    Env :: edoc:env(),\fR
+\fB                    Opts :: proplist().\fR
+
+.br
+.RS
+.PP
+Similar to \fI\fIheader/4\fR\fR, but first inserts the given comments in the syntax trees. The syntax trees must contain valid position information. (Cf. \fI\fIedoc:read_comments/2\fR\fR.)
+
+.PP
+\fBSee also: \fR\fI//syntax_tools/erl_recomment\fR, \fIheader/3\fR, \fIheader/4\fR.
+
+
+.RE
+.B
+\fBsource(File, Env, Opts) -> R\fR
+\fB                when\fR
+\fB                    File :: filename(),\fR
+\fB                    Env :: edoc:env(),\fR
+\fB                    Opts :: proplist(),\fR
+\fB                    R ::\fR
+\fB                        {module(), edoc:edoc_module()} |\fR
+\fB                        {module(), edoc:edoc_module(), [edoc:entry()]}.\fR
+
+.br
+.RS
+.PP
+Like \fI\fIsource/5\fR\fR, but reads the syntax tree and the comments from the specified file.
+
+.PP
+\fBSee also: \fR\fIsource/4\fR, \fIedoc:read_comments/2\fR, \fIedoc:read_source/2\fR.
+
+
+.RE
+.B
+\fBsource(Forms, File, Env, Opts) -> R\fR
+\fB                when\fR
+\fB                    Forms :: erl_syntax:forms(),\fR
+\fB                    File :: filename(),\fR
+\fB                    Env :: edoc:env(),\fR
+\fB                    Opts :: proplist(),\fR
+\fB                    R ::\fR
+\fB                        {module(), edoc:edoc_module()} |\fR
+\fB                        {module(), edoc:edoc_module(), [edoc:entry()]}.\fR
+
+.br
+.RS
+.PP
+Extracts EDoc documentation from commented source code syntax trees. The given \fIForms\fR must be a single syntax tree of type \fIform_list\fR, or a list of syntax trees representing "program forms" (cf. \fI\fIedoc:read_source/2\fR\fR. \fIEnv\fR is an environment created by \fI\fIedoc_lib:get_doc_env/3\fR\fR. The \fIFile\fR argument is used for error reporting and output file name generation only.
+
+.PP
+See \fI\fIedoc:get_doc/2\fR\fR for descriptions of the \fIdef\fR, \fIhidden\fR, \fIprivate\fR, and \fItodo\fR options.
+
+.PP
+\fBSee also: \fR\fI//syntax_tools/erl_recomment\fR, \fIsource/5\fR, \fIedoc:read_comments/2\fR, \fIedoc:read_source/2\fR.
+
+
+.RE
+.B
+\fBsource(Forms, Comments, File, Env, Opts) -> R\fR
+\fB                when\fR
+\fB                    Forms :: erl_syntax:forms(),\fR
+\fB                    Comments :: [edoc:comment()],\fR
+\fB                    File :: filename(),\fR
+\fB                    Env :: edoc:env(),\fR
+\fB                    Opts :: proplist(),\fR
+\fB                    R ::\fR
+\fB                        {module(), edoc:edoc_module()} |\fR
+\fB                        {module(), edoc:edoc_module(), [edoc:entry()]}.\fR
+
+.br
+.RS
+.PP
+Like \fI\fIsource/4\fR\fR, but first inserts the given comments in the syntax trees. The syntax trees must contain valid position information. (Cf. \fI\fIedoc:read_comments/2\fR\fR.)
+
+.PP
+\fBSee also: \fR\fI//syntax_tools/erl_recomment\fR, \fIsource/3\fR, \fIsource/4\fR, \fIedoc:read_comments/2\fR, \fIedoc:read_source/2\fR.
+
+
+.RE
+.B
+\fBtext(Text, Context, Env, Opts) -> Tags\fR
+\fB              when\fR
+\fB                  Text :: string(),\fR
+\fB                  Context :: context(),\fR
+\fB                  Env :: edoc:env(),\fR
+\fB                  Opts :: proplist(),\fR
+\fB                  Tags :: [term()].\fR
+
+.br
+.RS
+.PP
+Returns the list of tags in the text. Any lines of text before the first tag are ignored. \fIEnv\fR is an environment created by \fI\fIedoc_lib:get_doc_env/3\fR\fR.
+
+.PP
+See \fI\fIsource/4\fR\fR for a description of the \fIdef\fR option.
+
+
+.RE

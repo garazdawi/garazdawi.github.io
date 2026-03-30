@@ -1,0 +1,377 @@
+.TH edlin 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edlin \- Line and input interpretter for the erlang shell.
+
+.SH DESCRIPTION
+.PP
+This module reads input, handles any escape sequences that have been configured via edlin_key and outputs action requests. The action requests are handled either by modules \fIgroup\fR or the \fIuser_drv\fR.
+
+.SS "Key configuration"
+
+.PP
+You can setup a custom key configuration that overrides the default key configuration. This is done by setting the stdlib application parameter \fIshell_keymap\fR before Erlang is started. If you want to have the same keymap in all Erlang shells you can do so by putting a config file in your user's home directory and then set ERL_FLAGS to load it at startup. For example:
+
+.IP
+.nf
+$ cat $HOME/.erlang_keymap.config
+[{stdlib,
+  [{shell_keymap,
+    #{ normal => #{ "\\^[A" => clear } }
+  }]
+}].
+$ ERL_FLAGS="-config $HOME/.erlang_keymap" erl
+
+.fi
+
+.PP
+The current keymap configuration can be fetched through edlin:keymap(). If a custom keymap or keymap file is specified, then it will be merged with the default keymap.
+
+.PP
+The keymap is a map of maps where the keys in the parent map corresponds to different editing modes in the shell. The valid modes currently supported are \fInormal\fR and \fIsearch\fR.
+
+.PP
+The keys in the child maps are the escape sequences that are sent from the terminal when a key is pressed and each value is a valid action as seen below.
+
+.PP
+The default atom is used to specify that an action should happen when a key is pressed that does not have any mapping. Typically used to exit a mode.
+
+.PP
+See tty - A Command-Line Interface for more information about the default keymap.
+
+.SS "Actions"
+
+.PP
+The commands below are the built-in action requests for switching input modes on the normal shell or navigating, or manipulating the line feed. The line feed supports multiple lines.
+
+auto_blink
+.RS 2
+Automatically close the closest matching opening parenthesis.
+
+
+.RE
+
+backward_char
+.RS 2
+Move backward one character.
+
+
+.RE
+
+backward_delete_char
+.RS 2
+Delete the character behind the cursor.
+
+
+.RE
+
+backward_delete_word
+.RS 2
+Delete the word behind the cursor.
+
+
+.RE
+
+backward_kill_line
+.RS 2
+Delete all characters from the cursor to the beginning of the line and save them in the kill buffer.
+
+
+.RE
+
+backward_kill_word
+.RS 2
+Delete the word behind the cursor and save it in the kill buffer.
+
+
+.RE
+
+backward_line
+.RS 2
+Move backward one line.
+
+
+.RE
+
+backward_word
+.RS 2
+Move backward one word.
+
+
+.RE
+
+beginning_of_expression
+.RS 2
+Move to the beginning of the expression.
+
+
+.RE
+
+beginning_of_line
+.RS 2
+Move to the beginning of the line.
+
+
+.RE
+
+clear
+.RS 2
+Clear the screen.
+
+
+.RE
+
+clear_line
+.RS 2
+Clear the current expression.
+
+
+.RE
+
+end_of_expression
+.RS 2
+Move to the end of the expression.
+
+
+.RE
+
+end_of_line
+.RS 2
+Move to the end of the line.
+
+
+.RE
+
+forward_char
+.RS 2
+Move forward one character.
+
+
+.RE
+
+forward_delete_char
+.RS 2
+Delete the character under the cursor.
+
+
+.RE
+
+forward_line
+.RS 2
+Move forward one line.
+
+
+.RE
+
+forward_word
+.RS 2
+Move forward one word.
+
+
+.RE
+
+help
+.RS 2
+Display help for the module or function closest on the left of the cursor.
+
+
+.RE
+
+help_full
+.RS 2
+Display the whole help text for the module or function closest on the left of the cursor.
+
+
+.RE
+
+history_down
+.RS 2
+Move to the next item in the history.
+
+
+.RE
+
+history_up
+.RS 2
+Move to the previous item in the history.
+
+
+.RE
+
+kill_line
+.RS 2
+Delete all characters from the cursor to the end of the line and save them in the kill buffer.
+
+
+.RE
+
+kill_word
+.RS 2
+Delete the word under the cursor and save it in the kill buffer.
+
+
+.RE
+
+move_expand_down
+.RS 2
+Move down one line in the expand area e.g. help or tab completion pager.
+
+
+.RE
+
+move_expand_up
+.RS 2
+Move up one line in the expand area e.g. help or tab completion pager.
+
+
+.RE
+
+new_line_finish
+.RS 2
+Add a newline at the end of the line and try to evaluate the current expression.
+
+
+.RE
+
+newline
+.RS 2
+Add a newline at the cursor position.
+
+
+.RE
+
+open_editor
+.RS 2
+Open the current line in an editor e.g. EDITOR="code -w" opens a buffer in vs code. Note that you need to pass a flag to the editor so that it signals the shell when you close the buffer.
+
+
+.RE
+
+redraw_line
+.RS 2
+Redraw the current line.
+
+
+.RE
+
+scroll_expand_down
+.RS 2
+Scroll down five lines in the expand area e.g. help or tab completion pager.
+
+
+.RE
+
+scroll_expand_up
+.RS 2
+Scroll up five lines in the expand area e.g. help or tab completion pager.
+
+
+.RE
+
+search_cancel
+.RS 2
+Cancel the current search.
+
+
+.RE
+
+search_found
+.RS 2
+Accept the current search result and submit it.
+
+
+.RE
+
+search_quit
+.RS 2
+Accept the current search result, but edit it before submitting.
+
+
+.RE
+
+search
+.RS 2
+Enter search mode, search the history.
+
+
+.RE
+
+skip_down
+.RS 2
+Skip to the next line in the history that matches the current search expression.
+
+
+.RE
+
+skip_up
+.RS 2
+Skip to the previous line in the history that matches the current search expression.
+
+
+.RE
+
+tab_expand_full
+.RS 2
+Output all possible tab completions.
+
+
+.RE
+
+tab_expand_quit
+.RS 2
+Go back to normal mode.
+
+
+.RE
+
+tab_expand
+.RS 2
+Autocomplete the current word, or show 5 lines of possible completions.
+
+
+.RE
+
+transpose_char
+.RS 2
+Swap the character behind the cursor with the one in front of it.
+
+
+.RE
+
+transpose_word
+.RS 2
+Swap the word behind the cursor with the one in front of it.
+
+
+.RE
+
+yank
+.RS 2
+Insert the contents of the kill buffer at the cursor position.
+
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBkeymap() :: #{atom() => #{string() | default => atom()}}.\fR
+
+.br
+.RS
+.PP
+A map of maps for each shell mode containing key, action pairs.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBkeymap() -> keymap().\fR
+
+.br
+.RS
+.PP
+Get the current keymap used in the shell. Each key in the parent map represents a \fIshell mode\fR e.g. \fInormal\fR or \fIsearch\fR. Each map associated with the \fIshell modes\fR contains \fIkey sequences\fR represented as strings, paired with an \fIaction\fR, which is one of the valid actions mentioned above.
+
+
+.RE

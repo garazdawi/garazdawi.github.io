@@ -1,0 +1,187 @@
+.TH wxStaticLine 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxStaticLine \- A static line is just a line which may be used in a dialog to separate the groups of controls.
+
+.SH DESCRIPTION
+.PP
+The line may be only vertical or horizontal. Moreover, not all ports (notably not wxGTK) support specifying the transversal direction of the line (e.g. height for a horizontal line) so for maximal portability you should specify it as wxDefaultCoord.
+
+.SS "Styles"
+
+.PP
+This class supports the following styles:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLI_HORIZONTAL: Creates a horizontal line.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+wxLI_VERTICAL: Creates a vertical line.
+
+.RE
+
+.PP
+See: \fIwxStaticBox\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxControl\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxStaticLine
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxStaticLine() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Parent, [Option]) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxStaticLine(),\fR
+\fB                    Parent :: wxWindow:wxWindow(),\fR
+\fB                    Option ::\fR
+\fB                        {id, integer()} |\fR
+\fB                        {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                        {size, {W :: integer(), H :: integer()}} |\fR
+\fB                        {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Creates the static line for two-step construction.
+
+.PP
+See \fInew/2\fR for further details.
+
+
+.RE
+.B
+\fBdestroy(This :: wxStaticLine()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetDefaultSize() -> integer().\fR
+
+.br
+.RS
+.PP
+This static function returns the size which will be given to the smaller dimension of the static line, i.e.
+
+.PP
+its height for a horizontal line or its width for a vertical one.
+
+
+.RE
+.B
+\fBisVertical(This) -> boolean() when This :: wxStaticLine().\fR
+
+.br
+.RS
+.PP
+Returns true if the line is vertical, false if horizontal.
+
+
+.RE
+.B
+\fBnew() -> wxStaticLine().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Parent, [Option]) -> wxStaticLine()\fR
+\fB             when\fR
+\fB                 Parent :: wxWindow:wxWindow(),\fR
+\fB                 Option ::\fR
+\fB                     {id, integer()} |\fR
+\fB                     {pos, {X :: integer(), Y :: integer()}} |\fR
+\fB                     {size, {W :: integer(), H :: integer()}} |\fR
+\fB                     {style, integer()}.\fR
+
+.br
+.RS
+.PP
+Constructor, creating and showing a static line.
+
+.PP
+See: \fIcreate/3\fR
+
+
+.RE

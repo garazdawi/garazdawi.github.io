@@ -1,0 +1,721 @@
+.TH megaco_user 3 "megaco 4.8.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+megaco_user \- Callback module for users of the Megaco application
+
+.SH DESCRIPTION
+.PP
+This module defines the callback behaviour of Megaco users. A megaco_user compliant callback module must export the following functions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_connect/2,3
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_disconnect/3
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_syntax_error/3,4
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_message_error/3,4
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_trans_request/3,4
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_trans_long_request/3,4
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_trans_reply/4,5
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_trans_ack/4,5
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_unexpected_trans/3,4
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_trans_request_abort/4,5
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+handle_segment_reply/5,6
+
+.RE
+
+.PP
+The semantics of them and their exact signatures are explained below.
+
+.PP
+The \fIuser_args\fR configuration parameter which may be used to extend the argument list of the callback functions. For example, the handle_connect function takes by default two arguments:
+
+.IP
+.nf
+handle_connect(Handle, Version)
+
+.fi
+
+.PP
+but if the \fIuser_args\fR parameter is set to a longer list, such as \fI[SomePid,SomeTableRef]\fR, the callback function is expected to have these (in this case two) extra arguments last in the argument list:
+
+.IP
+.nf
+handle_connect(Handle, Version, SomePid, SomeTableRef)
+
+.fi
+
+.PP
+\fBNOTE: \fRMust of the functions below has an optional \fIExtra\fR argument (e.g. handle_unexpected_trans/4). The functions which takes this argument will be called if and only if one of the functions \fIreceive_message/5\fR or \fIprocess_received_message/5\fR was called with the \fIExtra\fR argument different than \fIignore_extra\fR.
+
+
+.SS "DATA TYPES"
+
+.IP
+.nf
+action_request() = #'ActionRequest'{}
+action_reply() = #'ActionReply'{}
+error_desc() = #'ErrorDescriptor'{}
+segment_no() = integer()
+
+.fi
+
+.IP
+.nf
+conn_handle() = #megaco_conn_handle{}
+
+.fi
+
+.PP
+The record initially returned by \fImegaco:connect/4,5\fR. It identifies a "virtual" connection and may be reused after a reconnect (disconnect + connect).
+
+.IP
+.nf
+protocol_version() = integer()
+
+.fi
+
+.PP
+Is the actual protocol version. In most cases the protocol version is retrieved from the processed message, but there are exceptions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+When \fIhandle_connect/2,3\fR is triggered by an explicit call to \fImegaco:connect/4,5\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_disconnect/3\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIhandle_syntax_error/3\fR
+
+.RE
+
+.PP
+In these cases, the ProtocolVersion default version is obtained from the static connection configuration:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImegaco:conn_info(ConnHandle, protocol_version)\fR.
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBconn_handle() :: #megaco_conn_handle{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmegaco_timer() ::\fR
+\fB          infinity | non_neg_integer() | #megaco_incr_timer{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBreceive_handle() :: #megaco_receive_handle{}.\fR
+
+.br
+.RS
+
+.RE
+.SH CALLBACKS
+.LP
+.B
+\fBhandle_connect(ConnHandle, ProtocolVersion, Extra)\fR
+
+.br
+.RS
+.PP
+Invoked when a new connection is established
+
+.PP
+Connections may either be established by an explicit call to megaco:connect/4 or implicitly at the first invocation of megaco:receive_message/3.
+
+.PP
+Normally a Media Gateway (MG) connects explicitly while a Media Gateway Controller (MGC) connects implicitly.
+
+.PP
+At the Media Gateway Controller (MGC) side it is possible to reject a connection request (and send a message error reply to the gateway) by returning \fI{error, ErrorDescr}\fR or simply \fIerror\fR which generates an error descriptor with code 402 (unauthorized) and reason "Connection refused by user" (this is also the case for all unknown results, such as exit signals or throw).
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_message_error/4\fR.
+
+.PP
+\fIhandle_connect/3\fR (with \fIExtra\fR) can also be called as a result of a call to the \fImegaco:connect/5\fR function (if that function is called with the \fIExtra\fR argument different than \fIignore_extra\fR.
+
+
+.RE
+.B
+\fBhandle_disconnect(ConnHandle, ProtocolVersion, Reason)\fR
+
+.br
+.RS
+.PP
+Invoked when a connection is teared down
+
+.PP
+The disconnect may either be made explicitly by a call to megaco:disconnect/2 or implicitly when the control process of the connection dies.
+
+
+.RE
+.B
+\fBhandle_message_error(ConnHandle, ProtocolVersion, ErrorDescr, Extra)\fR
+
+.br
+.RS
+.PP
+Invoked when a received message just contains an error instead of a list of transactions.
+
+.PP
+Incoming messages is delivered by megaco:receive_message/4 and successfully decoded. Normally a message contains a list of transactions, but it may instead contain an ErrorDescriptor on top level of the message.
+
+.PP
+Message errors are detected remotely on the other side of the protocol. And you probably don't want to reply to it, but it may indicate that you have outstanding transactions that not will get any response (request -> reply; reply -> ack).
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_message_error/4\fR.
+
+
+.RE
+.B
+\fBhandle_segment_reply(ConnHandle, ProtocolVersion, TransNo, SegNo, SegCompl, Extra)\fR
+
+.br
+.RS
+.PP
+This function is called when a segment reply has been received if the segment_reply_ind config option has been set to true.
+
+.PP
+This is in effect a progress report.
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_segment_reply/6\fR.
+
+
+.RE
+.B
+\fBhandle_syntax_error(ReceiveHandle, ProtocolVersion, DefaultED, Extra)\fR
+
+.br
+.RS
+.PP
+Invoked when a received message had syntax errors
+
+.PP
+Incoming messages is delivered by megaco:receive_message/4 and normally decoded successfully. But if the decoding failed this function is called in order to decide if the originator should get a reply message (reply) or if the reply silently should be discarded (no_reply).
+
+.PP
+Syntax errors are detected locally on this side of the protocol and may have many causes, e.g. a malfunctioning transport layer, wrong encoder/decoder selected, bad configuration of the selected encoder/decoder etc.
+
+.PP
+The error descriptor defaults to \fIDefaultED\fR, but can be overridden with an alternate one by returning \fI{reply,ED}\fR or \fI{no_reply,ED}\fR instead of \fIreply\fR and \fIno_reply\fR respectively.
+
+.PP
+Any other return values (including exit signals or throw) and the \fIDefaultED\fR will be used.
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_syntax_error/4\fR.
+
+
+.RE
+.B
+\fBhandle_trans_ack(ConnHandle, ProtocolVersion, AckStatus, AckData, Extra)\fR
+
+.br
+.RS
+.PP
+Optionally invoked for a transaction acknowledgement
+
+.PP
+If this function gets invoked or not, is controlled by the reply from the preceding call to handle_trans_request/3. The handle_trans_request/3 function may decide to return {handle_ack, ack_data()} or {handle_sloppy_ack, ack_data()} meaning that you need an immediate acknowledgement of the reply and that this function should be invoked to handle the acknowledgement.
+
+.PP
+The ack_data() argument to this function is the Erlang term returned by handle_trans_request/3.
+
+.PP
+If the AckStatus is ok, it is indicating that this is a true acknowledgement of the transaction reply.
+
+.PP
+If the AckStatus is {error, Reason}, it is an indication that the acknowledgement or even the reply (for which this is an acknowledgement) was not delivered, but there is no point in waiting any longer for it to arrive. This happens when:
+
+reply_timer
+.RS 2
+The 
+\fIreply_timer\fR eventually times out.
+
+.RE
+
+reply send failure
+.RS 2
+When megaco fails to send the reply (see handle_trans_reply), for whatever reason.
+
+
+.RE
+
+cancel
+.RS 2
+The user has explicitly cancelled the wait (megaco:cancel/2).
+
+
+.RE
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_trans_ack/5\fR.
+
+
+.RE
+.B
+\fBhandle_trans_long_request(ConnHandle, ProtocolVersion, ReqData, Extra)\fR
+
+.br
+.RS
+.PP
+Optionally invoked for a time consuming transaction request
+
+.PP
+If this function gets invoked or not is controlled by the reply from the preceding call to handle_trans_request/3. The handle_trans_request/3 function may decide to process the action requests itself or to delegate the processing to this function.
+
+.PP
+The req_data() argument to this function is the Erlang term returned by handle_trans_request/3.
+
+.PP
+Any other return values (including exit signals or throw) will result in an error descriptor with code 500 (internal gateway error) and the module name (of the callback module) as reason.
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_trans_long_request/4\fR.
+
+
+.RE
+.B
+\fBhandle_trans_reply(ConnHandle, ProtocolVersion, UserReply, ReplyData, Extra)\fR
+
+.br
+.RS
+.PP
+Optionally invoked for a transaction reply
+
+.PP
+The sender of a transaction request has the option of deciding, whether the originating Erlang process should synchronously wait (\fImegaco:call/3\fR) for a reply or if the message should be sent asynchronously (\fImegaco:cast/3\fR) and the processing of the reply should be delegated this callback function.
+
+.PP
+Note that if the reply is segmented (split into several smaller messages; segments), then some extra info, segment number and an indication if all segments of a reply has been received or not, is also included in the \fIUserReply\fR.
+
+.PP
+The \fIReplyData\fR defaults to \fImegaco:lookup(ConnHandle, reply_data)\fR, but may be explicitly overridden by a \fImegaco:cast/3\fR option in order to forward info about the calling context of the originating process.
+
+.PP
+At \fIsuccess()\fR, the \fIUserReply\fR either contains:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+list of 'ActionReply' records possibly containing error indications.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+tuple of size three containing: the segment number, the \fIlast segment indicator\fR and finally a list of 'ActionReply' records possibly containing error indications. This is of course only possible if the reply was segmented.
+
+.RE
+
+.PP
+\fIfailure()\fR indicates an local or external error and can be one of the following:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItransaction_reason()\fR, indicates that the remote user has replied with an explicit transactionError.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsegment_reason()\fR, indicates that the remote user has replied with an explicit transactionError for this segment. This is of course only possible if the reply was segmented.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIuser_cancel_reason()\fR, indicates that the request has been canceled by the user. \fIreason_for_user_cancel()\fR is the reason given in the call to the cancel function.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsend_reason()\fR, indicates that the transport module send_message function did not send the message. The reason for this can be:
+
+send_cancelled_reason()
+.RS 2
+the message sending was deliberately cancelled. 
+\fIreason_for_send_cancel()\fR is the reason given in the \fIcancel\fR return from the send_message function.
+
+.RE
+send_failed_reason()
+.RS 2
+an error occurred while attempting to send the message.
+
+
+.RE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An \fIother_reason()\fR, indicates some other error such as:
+
+timeout
+.RS 2
+the reply failed to arrive before the request timer expired.
+
+
+.RE
+{segment_timeout, missing_segments()}
+.RS 2
+one or more segments was not delivered before the expire of the segment timer.
+
+
+.RE
+exceeded_recv_pending_limit
+.RS 2
+the pending limit was exceeded for this request.
+
+
+.RE
+
+.RE
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_trans_reply/5\fR.
+
+
+.RE
+.B
+\fBhandle_trans_request(ConnHandle, ProtocolVersion, ActionRequests, Extra)\fR
+
+.br
+.RS
+.PP
+Invoked for each transaction request
+
+.PP
+Incoming messages is delivered by megaco:receive_message/4 and successfully decoded. Normally a message contains a list of transactions and this function is invoked for each TransactionRequest in the message.
+
+.PP
+This function takes a list of 'ActionRequest' records and has three main options:
+
+Return ignore_trans_request
+.RS 2
+Decide that these action requests shall be ignored completely.
+
+
+.RE
+
+Return pending()
+.RS 2
+Decide that the processing of these action requests will take a long time and that the originator should get an immediate 'TransactionPending' reply as interim response. The actual processing of these action requests instead should be delegated to the the handle_trans_long_request/3 callback function with the req_data() as one of its arguments.
+
+
+.RE
+
+Return reply()
+.RS 2
+Process the action requests and either return an error_descr() indicating some fatal error or a list of action replies (wildcarded or not).
+
+.PP
+If for some reason megaco is unable to deliver the reply, the reason for this will be passed to the user via a call to the callback function handle_trans_ack, unless \fIack_action() = discard_ack\fR.
+
+.PP
+The ack_action() is either:
+
+discard_ack
+.RS 2
+Meaning that you don't care if the reply is acknowledged or not.
+
+
+.RE
+
+{handle_ack, ack_data()} | {handle_ack, ack_data(), send_options()}
+.RS 2
+Meaning that you want an immediate acknowledgement when the other part receives this transaction reply. When the acknowledgement eventually is received, the handle_trans_ack/4 callback function will be invoked with the ack_data() as one of its arguments. ack_data() may be any Erlang term.
+
+
+.RE
+
+{handle_pending_ack, ack_data()} | {handle_pending_ack, ack_data(), send_options()}
+.RS 2
+This has the same effect as the above, 
+\fIif and only if\fR megaco has sent at least one pending message for this request (during the processing of the request). If no pending message has been sent, then immediate acknowledgement will \fInot\fR be requested.
+.PP
+Note that this only works as specified if the \fIsent_pending_limit\fR config option has been set to an integer value.
+
+
+.RE
+
+{handle_sloppy_ack, ack_data()}| {handle_sloppy_ack, ack_data(), send_options()}
+.RS 2
+Meaning that you want an acknowledgement 
+\fIsometime\fR. When the acknowledgement eventually is received, the handle_trans_ack/4 callback function will be invoked with the ack_data() as one of its arguments. ack_data() may be any Erlang term.
+
+.RE
+
+
+.RE
+
+.PP
+Any other return values (including exit signals or throw) will result in an error descriptor with code 500 (internal gateway error) and the module name (of the callback module) as reason.
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_trans_request/4\fR.
+
+
+.RE
+.B
+\fBhandle_trans_request_abort(ConnHandle, ProtocolVersion, TransNo, Pid, Extra)\fR
+
+.br
+.RS
+.PP
+Invoked when a transaction request has been aborted
+
+.PP
+This function is invoked if the originating pending limit has been exceeded. This usually means that a request has taken abnormally long time to complete.
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_trans_request_abort/5\fR.
+
+
+.RE
+.B
+\fBhandle_unexpected_trans(ConnHandle, ProtocolVersion, Trans, Extra)\fR
+
+.br
+.RS
+.PP
+Invoked when a unexpected message is received
+
+.PP
+If a reply to a request is not received in time, the megaco stack removes all info about the request from its tables. If a reply should arrive after this has been done the app has no way of knowing where to send this message. The message is delivered to the "user" by calling this function on the local node (the node which has the link).
+
+.PP
+See note above about the \fIExtra\fR argument in \fIhandle_unexpected_trans/4\fR.
+
+
+.RE

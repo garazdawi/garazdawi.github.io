@@ -1,0 +1,510 @@
+.TH wxTextAttr 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxTextAttr \- \fIwxTextAttr\fR represents the character and paragraph attributes, or style, for a range of text in a \fIwxTextCtrl\fR or \fIwxRichTextCtrl\fR (not implemented in wx).
+
+.SH DESCRIPTION
+.PP
+When setting up a \fIwxTextAttr\fR object, pass a bitlist mask to \fIsetFlags/2\fR to indicate which style elements should be changed. As a convenience, when you call a setter such as SetFont, the relevant bit will be set.
+
+.PP
+See: \fIwxTextCtrl\fR
+
+.PP
+wxWidgets docs: wxTextAttr
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxTextAttr() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxTextAttr()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetAlignment(This) -> wx:wx_enum() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the alignment flags.
+
+.PP
+See ?wxTextAttrAlignment for a list of available styles.
+
+
+.RE
+.B
+\fBgetBackgroundColour(This) -> wx:wx_colour4()\fR
+\fB                             when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the background colour.
+
+
+.RE
+.B
+\fBgetFlags(This) -> integer() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns flags indicating which attributes are applicable.
+
+.PP
+See \fIsetFlags/2\fR for a list of available flags.
+
+
+.RE
+.B
+\fBgetFont(This) -> wxFont:wxFont() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Creates and returns a font specified by the font attributes in the \fIwxTextAttr\fR object.
+
+.PP
+Note that \fIwxTextAttr\fR does not store a \fIwxFont\fR object, so this is only a temporary font.
+
+.PP
+For greater efficiency, access the font attributes directly.
+
+
+.RE
+.B
+\fBgetFontEncoding(This) -> wx:wx_enum() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the font encoding.
+
+
+.RE
+.B
+\fBgetFontFaceName(This) -> unicode:charlist()\fR
+\fB                         when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the font face name.
+
+
+.RE
+.B
+\fBgetFontSize(This) -> integer() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the font size in points.
+
+
+.RE
+.B
+\fBgetFontStyle(This) -> wx:wx_enum() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the font style.
+
+
+.RE
+.B
+\fBgetFontUnderlined(This) -> boolean() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if the font is underlined.
+
+
+.RE
+.B
+\fBgetFontWeight(This) -> wx:wx_enum() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the font weight.
+
+
+.RE
+.B
+\fBgetLeftIndent(This) -> integer() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the left indent in tenths of a millimetre.
+
+
+.RE
+.B
+\fBgetLeftSubIndent(This) -> integer() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the left sub-indent in tenths of a millimetre.
+
+
+.RE
+.B
+\fBgetRightIndent(This) -> integer() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the right indent in tenths of a millimeter.
+
+
+.RE
+.B
+\fBgetTabs(This) -> [integer()] when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns an array of tab stops, each expressed in tenths of a millimeter.
+
+.PP
+Each stop is measured from the left margin and therefore each value must be larger than the last.
+
+
+.RE
+.B
+\fBgetTextColour(This) -> wx:wx_colour4() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns the text foreground colour.
+
+
+.RE
+.B
+\fBhasBackgroundColour(This) -> boolean() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if the attribute object specifies a background colour.
+
+
+.RE
+.B
+\fBhasFont(This) -> boolean() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if the attribute object specifies any font attributes.
+
+
+.RE
+.B
+\fBhasTextColour(This) -> boolean() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns true if the attribute object specifies a text foreground colour.
+
+
+.RE
+.B
+\fBisDefault(This) -> boolean() when This :: wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Returns false if we have any attributes set, true otherwise.
+
+
+.RE
+.B
+\fBnew() -> wxTextAttr().\fR
+
+.br
+.RS
+.PP
+Constructors.
+
+
+.RE
+.B
+\fBnew(ColText) -> wxTextAttr() when ColText :: wx:wx_colour();\fR
+\fB         (Attr) -> wxTextAttr() when Attr :: wxTextAttr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnew(ColText, [Option]) -> wxTextAttr()\fR
+\fB             when\fR
+\fB                 ColText :: wx:wx_colour(),\fR
+\fB                 Option ::\fR
+\fB                     {colBack, wx:wx_colour()} |\fR
+\fB                     {font, wxFont:wxFont()} |\fR
+\fB                     {alignment, wx:wx_enum()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetAlignment(This, Alignment) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxTextAttr(),\fR
+\fB                          Alignment :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the paragraph alignment.
+
+.PP
+See ?wxTextAttrAlignment enumeration values.
+
+.PP
+Of these, wxTEXT_ALIGNMENT_JUSTIFIED is unimplemented. In future justification may be supported when printing or previewing, only.
+
+
+.RE
+.B
+\fBsetBackgroundColour(This, ColBack) -> ok\fR
+\fB                             when\fR
+\fB                                 This :: wxTextAttr(),\fR
+\fB                                 ColBack :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the background colour.
+
+
+.RE
+.B
+\fBsetFlags(This, Flags) -> ok\fR
+\fB                  when This :: wxTextAttr(), Flags :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the flags determining which styles are being specified.
+
+.PP
+The ?wxTextAttrFlags values can be passed in a bitlist.
+
+
+.RE
+.B
+\fBsetFont(This, Font, [Option]) -> ok\fR
+\fB                 when\fR
+\fB                     This :: wxTextAttr(),\fR
+\fB                     Font :: wxFont:wxFont(),\fR
+\fB                     Option :: {flags, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the attributes for the given font.
+
+.PP
+Note that \fIwxTextAttr\fR does not store an actual \fIwxFont\fR object.
+
+
+.RE
+.B
+\fBsetFontEncoding(This, Encoding) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxTextAttr(),\fR
+\fB                             Encoding :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the font encoding.
+
+
+.RE
+.B
+\fBsetFontFaceName(This, FaceName) -> ok\fR
+\fB                         when\fR
+\fB                             This :: wxTextAttr(),\fR
+\fB                             FaceName :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the font face name.
+
+
+.RE
+.B
+\fBsetFontFamily(This, Family) -> ok\fR
+\fB                       when This :: wxTextAttr(), Family :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the font family.
+
+
+.RE
+.B
+\fBsetFontPixelSize(This, PixelSize) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxTextAttr(),\fR
+\fB                              PixelSize :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the font size in pixels.
+
+
+.RE
+.B
+\fBsetFontPointSize(This, PointSize) -> ok\fR
+\fB                          when\fR
+\fB                              This :: wxTextAttr(),\fR
+\fB                              PointSize :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the font size in points.
+
+
+.RE
+.B
+\fBsetFontSize(This, PointSize) -> ok\fR
+\fB                     when This :: wxTextAttr(), PointSize :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the font size in points.
+
+
+.RE
+.B
+\fBsetFontStyle(This, FontStyle) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxTextAttr(),\fR
+\fB                          FontStyle :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the font style (normal, italic or slanted).
+
+
+.RE
+.B
+\fBsetFontUnderlined(This, Underlined) -> ok\fR
+\fB                           when\fR
+\fB                               This :: wxTextAttr(),\fR
+\fB                               Underlined :: boolean().\fR
+
+.br
+.RS
+.PP
+Sets the font underlining (solid line, text colour).
+
+
+.RE
+.B
+\fBsetFontWeight(This, FontWeight) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxTextAttr(),\fR
+\fB                           FontWeight :: wx:wx_enum().\fR
+
+.br
+.RS
+.PP
+Sets the font weight.
+
+
+.RE
+.B
+\fBsetLeftIndent(This, Indent, [Option]) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxTextAttr(),\fR
+\fB                           Indent :: integer(),\fR
+\fB                           Option :: {subIndent, integer()}.\fR
+
+.br
+.RS
+.PP
+Sets the left indent and left subindent in tenths of a millimetre.
+
+.PP
+The sub-indent is an offset from the left of the paragraph, and is used for all but the first line in a paragraph.
+
+.PP
+A positive value will cause the first line to appear to the left of the subsequent lines, and a negative value will cause the first line to be indented relative to the subsequent lines.
+
+.PP
+\fIwxRichTextBuffer\fR (not implemented in wx) uses indentation to render a bulleted item. The left indent is the distance between the margin and the bullet. The content of the paragraph, including the first line, starts at leftMargin + leftSubIndent. So the distance between the left edge of the bullet and the left of the actual paragraph is leftSubIndent.
+
+
+.RE
+.B
+\fBsetRightIndent(This, Indent) -> ok\fR
+\fB                        when This :: wxTextAttr(), Indent :: integer().\fR
+
+.br
+.RS
+.PP
+Sets the right indent in tenths of a millimetre.
+
+
+.RE
+.B
+\fBsetTabs(This, Tabs) -> ok\fR
+\fB                 when This :: wxTextAttr(), Tabs :: [integer()].\fR
+
+.br
+.RS
+.PP
+Sets the tab stops, expressed in tenths of a millimetre.
+
+.PP
+Each stop is measured from the left margin and therefore each value must be larger than the last.
+
+
+.RE
+.B
+\fBsetTextColour(This, ColText) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxTextAttr(),\fR
+\fB                           ColText :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Sets the text foreground colour.
+
+
+.RE

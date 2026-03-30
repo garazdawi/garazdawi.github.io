@@ -1,0 +1,144 @@
+.TH wxMask 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMask \- This class encapsulates a monochrome mask bitmap, where the masked area is black and the unmasked area is white.
+
+.SH DESCRIPTION
+.PP
+When associated with a bitmap and drawn in a device context, the unmasked area of the bitmap will be drawn, and the masked area will not be drawn.
+
+.PP
+Note: A mask can be associated also with a bitmap with an alpha channel but drawing such bitmaps under wxMSW may be slow so using them should be avoided if drawing performance is an important factor.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxBitmap\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxDC:blit/6\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMemoryDC\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMask
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMask() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBcreate(This, Bitmap) -> boolean()\fR
+\fB                when This :: wxMask(), Bitmap :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Constructs a mask from a monochrome bitmap.
+
+
+.RE
+.B
+\fBcreate(This, Bitmap, Index) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxMask(),\fR
+\fB                    Bitmap :: wxBitmap:wxBitmap(),\fR
+\fB                    Index :: integer();\fR
+\fB            (This, Bitmap, Colour) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxMask(),\fR
+\fB                    Bitmap :: wxBitmap:wxBitmap(),\fR
+\fB                    Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Constructs a mask from a bitmap and a colour that indicates the background.
+
+
+.RE
+.B
+\fBdestroy(This :: wxMask()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBnew() -> wxMask().\fR
+
+.br
+.RS
+.PP
+Default constructor.
+
+
+.RE
+.B
+\fBnew(Bitmap) -> wxMask() when Bitmap :: wxBitmap:wxBitmap().\fR
+
+.br
+.RS
+.PP
+Constructs a mask from a monochrome bitmap.
+
+
+.RE
+.B
+\fBnew(Bitmap, Index) -> wxMask()\fR
+\fB             when Bitmap :: wxBitmap:wxBitmap(), Index :: integer();\fR
+\fB         (Bitmap, Colour) -> wxMask()\fR
+\fB             when\fR
+\fB                 Bitmap :: wxBitmap:wxBitmap(), Colour :: wx:wx_colour().\fR
+
+.br
+.RS
+.PP
+Constructs a mask from a bitmap and a colour that indicates the background.
+
+
+.RE

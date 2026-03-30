@@ -1,0 +1,229 @@
+.TH counters 3 "erts 16.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+counters \- Counter Functions
+
+.SH DESCRIPTION
+.PP
+This module provides a set of functions to do operations towards shared mutable counter variables. The implementation does not utilize any software level locking, which makes it very efficient for concurrent access. The counters are organized into arrays with the following semantics:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Counters are 64 bit signed integers.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Counters wrap around at overflow and underflow operations.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Counters are initialized to zero.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Write operations guarantee atomicity. No intermediate results can be seen from a single write operation.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Two types of counter arrays can be created with options \fIatomics\fR or \fIwrite_concurrency\fR. The \fIatomics\fR counters have good allround performance with nice consistent semantics while \fIwrite_concurrency\fR counters offers even better concurrent write performance at the expense of some potential read inconsistencies. See \fInew/2\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Indexes into counter arrays are one-based. A counter array of size N contains N counters with index from 1 to N.
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fB-opaque counters_ref() \fR
+
+.br
+.RS
+.PP
+Identifies a counter array returned from \fInew/2\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd(Ref, Ix, Incr) -> ok\fR
+\fB             when\fR
+\fB                 Ref :: counters_ref(),\fR
+\fB                 Ix :: pos_integer(),\fR
+\fB                 Incr :: integer().\fR
+
+.br
+.RS
+.PP
+Add \fIIncr\fR to counter at index \fIIx\fR.
+
+
+.RE
+.B
+\fBget(Ref, Ix) -> integer()\fR
+\fB             when Ref :: counters_ref(), Ix :: pos_integer().\fR
+
+.br
+.RS
+.PP
+Read counter value.
+
+
+.RE
+.B
+\fBinfo(Ref) -> Info\fR
+\fB              when\fR
+\fB                  Ref :: counters_ref(),\fR
+\fB                  Info :: #{size := Size, memory := Memory},\fR
+\fB                  Size :: non_neg_integer(),\fR
+\fB                  Memory :: non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Return information about a counter array in a map.
+
+.PP
+The map has the following keys (at least):
+
+size
+.RS 2
+The number of counters in the array.
+
+
+.RE
+memory
+.RS 2
+Approximate memory consumption for the array in bytes.
+
+
+.RE
+
+
+.RE
+.B
+\fBnew(Size, Opts) -> counters_ref()\fR
+\fB             when\fR
+\fB                 Size :: pos_integer(),\fR
+\fB                 Opts :: [Opt],\fR
+\fB                 Opt :: atomics | write_concurrency.\fR
+
+.br
+.RS
+.PP
+Create a new counter array of \fISize\fR counters. All counters in the array are initially set to zero.
+
+.PP
+Argument \fIOpts\fR is a list of the following possible options:
+
+atomics (Default)
+.RS 2
+Counters will be sequentially consistent. If write operation A is done sequentially before write operation B, then a concurrent reader may see the result of none of them, only A, or both A and B. It cannot see the result of only B.
+
+
+.RE
+
+write_concurrency
+.RS 2
+This is an optimization to achieve very efficient concurrent 
+\fIadd\fR and \fIsub\fR operations at the expense of potential read inconsistency and memory consumption per counter.
+.PP
+Read operations may see sequentially inconsistent results with regard to concurrent write operations. Even if write operation A is done sequentially before write operation B, a concurrent reader may see any combination of A and B, including only B. A read operation is only guaranteed to see all writes done sequentially before the read. No writes are ever lost, but will eventually all be seen.
+
+.PP
+The typical use case for \fIwrite_concurrency\fR is when concurrent calls to \fIadd\fR and \fIsub\fR toward the same counters are very frequent, while calls to \fIget\fR and \fIput\fR are much less frequent. The lack of absolute read consistency must also be acceptable.
+
+
+.RE
+
+.PP
+Counters are not tied to the current process and are automatically garbage collected when they are no longer referenced.
+
+
+.RE
+.B
+\fBput(Ref, Ix, Value) -> ok\fR
+\fB             when\fR
+\fB                 Ref :: counters_ref(),\fR
+\fB                 Ix :: pos_integer(),\fR
+\fB                 Value :: integer().\fR
+
+.br
+.RS
+.PP
+Write \fIValue\fR to counter at index \fIIx\fR.
+
+.PP
+\fBNOTE: \fRDespite its name, the \fIwrite_concurrency\fR optimization does not improve \fIput\fR. A call to \fIput\fR is a relatively heavy operation compared to the very lightweight and scalable \fIadd\fR and \fIsub\fR. The cost for a \fIput\fR with \fIwrite_concurrency\fR is like a \fIget\fR plus a \fIput\fR without \fIwrite_concurrency\fR.
+
+
+
+.RE
+.B
+\fBsub(Ref, Ix, Decr) -> ok\fR
+\fB             when\fR
+\fB                 Ref :: counters_ref(),\fR
+\fB                 Ix :: pos_integer(),\fR
+\fB                 Decr :: integer().\fR
+
+.br
+.RS
+.PP
+Subtract \fIDecr\fR from counter at index \fIIx\fR.
+
+
+.RE

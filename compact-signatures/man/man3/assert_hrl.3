@@ -1,0 +1,332 @@
+.TH assert.hrl 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+assert.hrl \- Assert macros
+.SH DESCRIPTION
+.PP
+The include file \fIassert.hrl\fR provides macros for inserting assertions in your program code.
+
+.PP
+Include the following directive in the module from which the function is called:
+
+.IP
+.nf
+-include_lib("stdlib/include/assert.hrl").
+
+.fi
+
+.PP
+When an assertion succeeds, the assert macro yields the atom \fIok\fR. When an assertion fails, an exception of type \fIerror\fR is generated. The associated error term has the form \fI{Macro, Info}\fR. \fIMacro\fR is the macro name, for example, \fIassertEqual\fR. \fIInfo\fR is a list of tagged values, such as \fI[{module, M}, {line, L}, ...]\fR, which gives more information about the location and cause of the exception. All entries in the \fIInfo\fR list are optional; do not rely programmatically on any of them being present.
+
+.PP
+Each assert macro has a corresponding version with an extra argument, for adding comments to assertions. These can for example be printed as part of error reports, to clarify the meaning of the check that failed. For example, \fI?assertEqual(0, fib(0), "Fibonacci is defined for zero")\fR. The comment text can be any character data (string, UTF8-binary, or deep list of such data), and will be included in the error term as \fI{comment, Text}\fR.
+
+.PP
+If the macro \fINOASSERT\fR is defined when \fIassert.hrl\fR is read by the compiler, the macros are defined as equivalent to the atom \fIok\fR. The test will not be performed and there is no cost at runtime.
+
+.PP
+For example, using \fIerlc\fR to compile your modules, the following disables all assertions:
+
+.IP
+.nf
+erlc -DNOASSERT=true *.erl
+
+.fi
+
+.PP
+(The value of \fINOASSERT\fR does not matter, only the fact that it is defined.)
+
+.PP
+A few other macros also have effect on the enabling or disabling of assertions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fINODEBUG\fR is defined, it implies \fINOASSERT\fR (unless \fIDEBUG\fR is also defined, which overrides \fINODEBUG\fR).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If \fIASSERT\fR is defined, it overrides \fINOASSERT\fR, that is, the assertions remain enabled.
+
+.RE
+
+.PP
+If you prefer, you can thus use only \fIDEBUG\fR/\fINODEBUG\fR as the main flags to control the behavior of the assertions (which is useful if you have other compiler conditionals or debugging macros controlled by those flags), or you can use \fIASSERT\fR/\fINOASSERT\fR to control only the assert macros.
+
+.SS "Macros"
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassert(BoolExpr)\fR\fR
+
+.RE
+
+assert(BoolExpr, Comment)
+.RS 2
+Tests that 
+\fIBoolExpr\fR completes normally returning \fItrue\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertNot(BoolExpr)\fR\fR
+
+.RE
+
+assertNot(BoolExpr, Comment)
+.RS 2
+Tests that 
+\fIBoolExpr\fR completes normally returning \fIfalse\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertMatch(GuardedPattern, Expr)\fR\fR
+
+.RE
+
+assertMatch(GuardedPattern, Expr, Comment)
+.RS 2
+Tests that 
+\fIExpr\fR completes normally yielding a value that matches \fIGuardedPattern\fR, for example:
+.IP
+.nf
+?assertMatch({bork, _}, f())
+
+.fi
+
+.PP
+Notice that a guard \fIwhen ...\fR can be included:
+
+.IP
+.nf
+?assertMatch({bork, X} when X > 0, f())
+
+.fi
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertNotMatch(GuardedPattern, Expr)\fR\fR
+
+.RE
+
+assertNotMatch(GuardedPattern, Expr, Comment)
+.RS 2
+Tests that 
+\fIExpr\fR completes normally yielding a value that does not match \fIGuardedPattern\fR.
+.PP
+As in \fIassertMatch\fR, \fIGuardedPattern\fR can have a \fIwhen\fR part.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertEqual(ExpectedValue, Expr)\fR\fR
+
+.RE
+
+assertEqual(ExpectedValue, Expr, Comment)
+.RS 2
+Tests that 
+\fIExpr\fR completes normally yielding a value that is exactly equal to \fIExpectedValue\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertNotEqual(ExpectedValue, Expr)\fR\fR
+
+.RE
+
+assertNotEqual(ExpectedValue, Expr, Comment)
+.RS 2
+Tests that 
+\fIExpr\fR completes normally yielding a value that is not exactly equal to \fIExpectedValue\fR.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertException(Class, Term, Expr)\fR\fR
+
+.RE
+
+assertException(Class, Term, Expr, Comment)
+.RS 2
+Tests that 
+\fIExpr\fR completes abnormally with an exception of type \fIClass\fR and with the associated \fITerm\fR. The assertion fails if \fIExpr\fR raises a different exception or if it completes normally returning any value.
+.PP
+Notice that both \fIClass\fR and \fITerm\fR can be guarded patterns, as in \fIassertMatch\fR.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertNotException(Class, Term, Expr)\fR\fR
+
+.RE
+
+assertNotException(Class, Term, Expr, Comment)
+.RS 2
+Tests that 
+\fIExpr\fR does not evaluate abnormally with an exception of type \fIClass\fR and with the associated \fITerm\fR. The assertion succeeds if \fIExpr\fR raises a different exception or if it completes normally returning any value.
+.PP
+As in \fIassertException\fR, both \fIClass\fR and \fITerm\fR can be guarded patterns.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertError(Term, Expr)\fR\fR
+
+.RE
+
+assertError(Term, Expr, Comment)
+.RS 2
+Equivalent to 
+\fIassertException(error, Term, Expr)\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertExit(Term, Expr)\fR\fR
+
+.RE
+
+assertExit(Term, Expr, Comment)
+.RS 2
+Equivalent to 
+\fIassertException(exit, Term, Expr)\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIassertThrow(Term, Expr)\fR\fR
+
+.RE
+
+assertThrow(Term, Expr, Comment)
+.RS 2
+Equivalent to 
+\fIassertException(throw, Term, Expr)\fR
+
+.RE
+
+.SS "See Also"
+
+.PP
+\fIcompile\fR, \fIerlc(3)\fR
+

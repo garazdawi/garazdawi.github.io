@@ -1,0 +1,198 @@
+.TH wxTreeEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxTreeEvent \- A tree event holds information about events associated with \fIwxTreeCtrl\fR objects.
+
+.SH DESCRIPTION
+.PP
+To process input from a tree control, use these event handler macros to direct input to member functions that take a \fIwxTreeEvent\fR argument.
+
+.PP
+See: \fIwxTreeCtrl\fR
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxNotifyEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxTreeEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxTreeEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxTree() :: #wxTree{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxTreeEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxTreeEventType() ::\fR
+\fB          command_tree_begin_drag | command_tree_begin_rdrag |\fR
+\fB          command_tree_begin_label_edit | command_tree_end_label_edit |\fR
+\fB          command_tree_delete_item | command_tree_get_info |\fR
+\fB          command_tree_set_info | command_tree_item_expanded |\fR
+\fB          command_tree_item_expanding | command_tree_item_collapsed |\fR
+\fB          command_tree_item_collapsing | command_tree_sel_changed |\fR
+\fB          command_tree_sel_changing | command_tree_key_down |\fR
+\fB          command_tree_item_activated | command_tree_item_right_click |\fR
+\fB          command_tree_item_middle_click | command_tree_end_drag |\fR
+\fB          command_tree_state_image_click |\fR
+\fB          command_tree_item_gettooltip | command_tree_item_menu |\fR
+\fB          dirctrl_selectionchanged | dirctrl_fileactivated.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetItem(This) -> integer() when This :: wxTreeEvent().\fR
+
+.br
+.RS
+.PP
+Returns the item (valid for all events).
+
+
+.RE
+.B
+\fBgetKeyCode(This) -> integer() when This :: wxTreeEvent().\fR
+
+.br
+.RS
+.PP
+Returns the key code if the event is a key event.
+
+.PP
+Use \fIgetKeyEvent/1\fR to get the values of the modifier keys for this event (i.e. Shift or Ctrl).
+
+
+.RE
+.B
+\fBgetKeyEvent(This) -> wxKeyEvent:wxKeyEvent()\fR
+\fB                     when This :: wxTreeEvent().\fR
+
+.br
+.RS
+.PP
+Returns the key event for \fIEVT_TREE_KEY_DOWN\fR events.
+
+
+.RE
+.B
+\fBgetLabel(This) -> unicode:charlist() when This :: wxTreeEvent().\fR
+
+.br
+.RS
+.PP
+Returns the label if the event is a begin or end edit label event.
+
+
+.RE
+.B
+\fBgetOldItem(This) -> integer() when This :: wxTreeEvent().\fR
+
+.br
+.RS
+.PP
+Returns the old item index (valid for \fIEVT\\_TREE\\_SEL\\_CHANGING\fR and \fIEVT\\_TREE\\_SEL\\_CHANGED\fR events).
+
+
+.RE
+.B
+\fBgetPoint(This) -> {X :: integer(), Y :: integer()}\fR
+\fB                  when This :: wxTreeEvent().\fR
+
+.br
+.RS
+.PP
+Returns the position of the mouse pointer if the event is a drag or menu-context event.
+
+.PP
+In both cases the position is in client coordinates - i.e. relative to the \fIwxTreeCtrl\fR window (so that you can pass it directly to e.g. \fIwxWindow:popupMenu/4\fR).
+
+
+.RE
+.B
+\fBisEditCancelled(This) -> boolean() when This :: wxTreeEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the label edit was cancelled.
+
+.PP
+This should be called from within an \fIEVT_TREE_END_LABEL_EDIT\fR handler.
+
+
+.RE
+.B
+\fBsetToolTip(This, Tooltip) -> ok\fR
+\fB                    when\fR
+\fB                        This :: wxTreeEvent(),\fR
+\fB                        Tooltip :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Set the tooltip for the item (valid for \fIEVT\\_TREE\\_ITEM\\_GETTOOLTIP\fR events).
+
+.PP
+Windows only.
+
+
+.RE

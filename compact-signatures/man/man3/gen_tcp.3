@@ -1,0 +1,975 @@
+.TH gen_tcp 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+gen_tcp \- Interface to TCP/IP sockets.
+
+.SH DESCRIPTION
+.PP
+This module provides functions for communicating over TCP/IP protocol sockets.
+
+.PP
+The following code fragment is a simple example of a client connecting to a server at port 5678, transferring a binary, and closing the connection:
+
+.IP
+.nf
+client() ->
+    SomeHostInNet = "localhost", % to make it runnable on one machine
+    {ok, Sock} = gen_tcp:connect(SomeHostInNet, 5678,
+                                 [binary, {packet, 0}]),
+    ok = gen_tcp:send(Sock, "Some Data"),
+    ok = gen_tcp:close(Sock).
+
+.fi
+
+.PP
+At the other end, a server is listening on port 5678, accepts the connection, and receives the binary:
+
+.IP
+.nf
+server() ->
+    {ok, LSock} = gen_tcp:listen(5678, [binary, {packet, 0},
+                                        {active, false}]),
+    {ok, Sock} = gen_tcp:accept(LSock),
+    {ok, Bin} = do_recv(Sock, []),
+    ok = gen_tcp:close(Sock),
+    ok = gen_tcp:close(LSock),
+    Bin.
+
+do_recv(Sock, Bs) ->
+    case gen_tcp:recv(Sock, 0) of
+        {ok, B} ->
+            do_recv(Sock, [Bs, B]);
+        {error, closed} ->
+            {ok, list_to_binary(Bs)}
+    end.
+
+.fi
+
+.PP
+For more examples, see section Examples.
+
+.PP
+\fBNOTE: \fRFunctions that create sockets can take an optional option; \fI{inet_backend, Backend}\fR that, if specified, has to be the first option. This selects the implementation backend towards the platform's socket API. This is a \fItemporary\fR option that will be ignored in a future release. The default is \fIBackend = inet\fR that selects the traditional \fIinet_drv.c\fR driver. The other choice is \fIBackend = socket\fR that selects the new \fIsocket\fR module and its NIF implementation. The system default can be changed when the node is started with the application \fIkernel\fR's configuration variable \fIinet_backend\fR. For \fIgen_tcp\fR with \fIinet_backend = socket\fR we have tried to be as "compatible" as possible which has sometimes been impossible. Here is a list of cases when the behaviour of inet-backend \fIinet\fR (default) and \fIsocket\fR are different:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Non-blocking send If a user calling \fIgen_tcp:send/2\fR with \fIinet_backend = inet\fR, tries to send more data than there is room for in the OS buffers, the "rest data" is buffered by the inet driver (and later sent in the background). The effect for the user is that the call is non-blocking. This is \fInot\fR the effect when \fIinet_backend = socket\fR, since there is no buffering. Instead the user hangs either until all data has been sent or the \fIsend_timeout\fR timeout has been reached.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshutdown/2\fR may hide errors The call does not involve the receive process state, and is done right on the underlying socket.  On for example Linux, it is a known misbehaviour that it skips some checks so doing shutdown on a listen socket returns \fIok\fR while the logical result should have been \fI{error, enotconn}\fR.  The \fIinet_drv.c\fR driver did an extra check and simulated the correct error, but with \fIBackend = socket\fR it would introduce overhead to involve the receive process.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The option nodelay is a TCP specific option that is \fInot\fR compatible with \fIdomain = local\fR. When using \fIinet_backend = socket\fR, trying to create a socket (via listen or connect) with \fIdomain = local\fR (for example with option {ifaddr, {local,"/tmp/test"}}) \fIwill fail\fR with \fI{error, enotsup}\fR. This does not actually work for \fIinet_backend = inet\fR either, but in that case the error is simply \fIignored\fR, which is a \fIbad\fR idea. We have chosen to \fInot\fR ignore this error for \fIinet_backend = socket\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Async shutdown write Calling gen_tcp:shutdown(Socket, write | read_write) on a socket created with \fIinet_backend = socket\fR will take \fIimmediate\fR effect, unlike for a socket created with \fIinet_backend = inet\fR. See async shutdown write for more info.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Windows require sockets (domain = \fIinet | inet6\fR) to be bound. \fICurrently\fR all sockets created on Windows with \fIinet_backend = socket\fR will be bound. If the user does not provide an address, gen_tcp will try to 'figure out' an address itself.
+
+.RE
+
+
+.SS "Examples"
+
+.PP
+The following example illustrates use of option \fI{active,once}\fR and multiple accepts by implementing a server as a number of worker processes doing accept on a single listening socket. Function \fIstart/2\fR takes the number of worker processes and the port number on which to listen for incoming connections. If \fILPort\fR is specified as \fI0\fR, an ephemeral port number is used, which is why the start function returns the actual port number allocated:
+
+.IP
+.nf
+start(Num,LPort) ->
+    case gen_tcp:listen(LPort,[{active, false},{packet,2}]) of
+        {ok, ListenSock} ->
+            start_servers(Num,ListenSock),
+            {ok, Port} = inet:port(ListenSock),
+            Port;
+        {error,Reason} ->
+            {error,Reason}
+    end.
+
+start_servers(0,_) ->
+    ok;
+start_servers(Num,LS) ->
+    spawn(?MODULE,server,[LS]),
+    start_servers(Num-1,LS).
+
+server(LS) ->
+    case gen_tcp:accept(LS) of
+        {ok,S} ->
+            loop(S),
+            server(LS);
+        Other ->
+            io:format("accept returned ~w - goodbye!~n",[Other]),
+            ok
+    end.
+
+loop(S) ->
+    inet:setopts(S,[{active,once}]),
+    receive
+        {tcp,S,Data} ->
+            Answer = process(Data), % Not implemented in this example
+            gen_tcp:send(S,Answer),
+            loop(S);
+        {tcp_closed,S} ->
+            io:format("Socket ~w closed [~w]~n",[S,self()]),
+            ok
+    end.
+
+.fi
+
+.PP
+Example of a simple client:
+
+.IP
+.nf
+client(PortNo,Message) ->
+    {ok,Sock} = gen_tcp:connect("localhost",PortNo,[{active,false},
+                                                    {packet,2}]),
+    gen_tcp:send(Sock,Message),
+    A = gen_tcp:recv(Sock,0),
+    gen_tcp:close(Sock),
+    A.
+
+.fi
+
+.PP
+The \fIsend\fR call does not accept a time-out option because time-outs on send is handled through socket option \fIsend_timeout\fR. The behavior of a send operation with no receiver is mainly defined by the underlying TCP stack and the network infrastructure. To write code that handles a hanging receiver that can eventually cause the sender to hang on a \fIsend\fR do like the following.
+
+.PP
+Consider a process that receives data from a client process to be forwarded to a server on the network. The process is connected to the server through TCP/IP and does not get any acknowledge for each message it sends, but has to rely on the send time-out option to detect that the other end is unresponsive. Option \fIsend_timeout\fR can be used when connecting:
+
+.IP
+.nf
+...
+{ok,Sock} = gen_tcp:connect(HostAddress, Port,
+                            [{active,false},
+                             {send_timeout, 5000},
+                             {packet,2}]),
+                loop(Sock), % See below
+...
+
+.fi
+
+.PP
+In the loop where requests are handled, send time-outs can now be detected:
+
+.IP
+.nf
+loop(Sock) ->
+    receive
+        {Client, send_data, Binary} ->
+            case gen_tcp:send(Sock,[Binary]) of
+                {error, timeout} ->
+                    io:format("Send timeout, closing!~n",
+                              []),
+                    handle_send_timeout(), % Not implemented here
+                    Client ! {self(),{error_sending, timeout}},
+                    %% Usually, it's a good idea to give up in case of a
+                    %% send timeout, as you never know how much actually
+                    %% reached the server, maybe only a packet header?!
+                    gen_tcp:close(Sock);
+                {error, OtherSendError} ->
+                    io:format("Some other error on socket (~p), closing",
+                              [OtherSendError]),
+                    Client ! {self(),{error_sending, OtherSendError}},
+                    gen_tcp:close(Sock);
+                ok ->
+                    Client ! {self(), data_sent},
+                    loop(Sock)
+            end
+    end.
+
+.fi
+
+.PP
+Usually it suffices to detect time-outs on receive, as most protocols include some sort of acknowledgment from the server, but if the protocol is strictly one way, option \fIsend_timeout\fR comes in handy.
+
+.SH DATA TYPES
+.LP
+.B
+\fBconnect_option() ::\fR
+\fB          {fd, Fd :: non_neg_integer()} |\fR
+\fB          inet:address_family() |\fR
+\fB          {ifaddr,\fR
+\fB           socket:sockaddr_in() |\fR
+\fB           socket:sockaddr_in6() |\fR
+\fB           inet:socket_address()} |\fR
+\fB          {ip, inet:socket_address()} |\fR
+\fB          {port, inet:port_number()} |\fR
+\fB          {tcp_module, module()} |\fR
+\fB          {netns, file:filename_all()} |\fR
+\fB          {bind_to_device, binary()} |\fR
+\fB          option().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlisten_option() ::\fR
+\fB          {fd, Fd :: non_neg_integer()} |\fR
+\fB          inet:address_family() |\fR
+\fB          {ifaddr,\fR
+\fB           socket:sockaddr_in() |\fR
+\fB           socket:sockaddr_in6() |\fR
+\fB           inet:socket_address()} |\fR
+\fB          {ip, inet:socket_address()} |\fR
+\fB          {port, inet:port_number()} |\fR
+\fB          {backlog, B :: non_neg_integer()} |\fR
+\fB          {tcp_module, module()} |\fR
+\fB          {netns, file:filename_all()} |\fR
+\fB          {bind_to_device, binary()} |\fR
+\fB          option().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {active, true | false | once | -32768..32767} |\fR
+\fB          {buffer, non_neg_integer()} |\fR
+\fB          {debug, boolean()} |\fR
+\fB          {delay_send, boolean()} |\fR
+\fB          {deliver, port | term} |\fR
+\fB          {dontroute, boolean()} |\fR
+\fB          {exit_on_close, boolean()} |\fR
+\fB          {exclusiveaddruse, boolean()} |\fR
+\fB          {header, non_neg_integer()} |\fR
+\fB          {high_msgq_watermark, pos_integer()} |\fR
+\fB          {high_watermark, non_neg_integer()} |\fR
+\fB          {keepalive, boolean()} |\fR
+\fB          {keepcnt, integer()} |\fR
+\fB          {keepidle, integer()} |\fR
+\fB          {keepintvl, integer()} |\fR
+\fB          {linger, {boolean(), non_neg_integer()}} |\fR
+\fB          {low_msgq_watermark, pos_integer()} |\fR
+\fB          {low_watermark, non_neg_integer()} |\fR
+\fB          {mode, list | binary} |\fR
+\fB          list | binary |\fR
+\fB          {nodelay, boolean()} |\fR
+\fB          {packet,\fR
+\fB           0 | 1 | 2 | 4 | raw | sunrm | asn1 | cdr | fcgi | line |\fR
+\fB           tpkt | http | httph | http_bin | httph_bin} |\fR
+\fB          {packet_size, non_neg_integer()} |\fR
+\fB          {priority, non_neg_integer()} |\fR
+\fB          {raw,\fR
+\fB           Protocol :: non_neg_integer(),\fR
+\fB           OptionNum :: non_neg_integer(),\fR
+\fB           ValueBin :: binary()} |\fR
+\fB          {recbuf, non_neg_integer()} |\fR
+\fB          {reuseaddr, boolean()} |\fR
+\fB          {reuseport, boolean()} |\fR
+\fB          {reuseport_lb, boolean()} |\fR
+\fB          {send_timeout, timeout()} |\fR
+\fB          {send_timeout_close, boolean()} |\fR
+\fB          {show_econnreset, boolean()} |\fR
+\fB          {sndbuf, non_neg_integer()} |\fR
+\fB          {tos, non_neg_integer()} |\fR
+\fB          {tclass, non_neg_integer()} |\fR
+\fB          {ttl, non_neg_integer()} |\fR
+\fB          {recvtos, boolean()} |\fR
+\fB          {recvtclass, boolean()} |\fR
+\fB          {recvttl, boolean()} |\fR
+\fB          {user_timeout, non_neg_integer()} |\fR
+\fB          {ipv6_v6only, boolean()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption_name() ::\fR
+\fB          active | buffer | debug | delay_send | deliver | dontroute |\fR
+\fB          exit_on_close | exclusiveaddruse | header |\fR
+\fB          high_msgq_watermark | high_watermark | keepalive | keepcnt |\fR
+\fB          keepidle | keepintvl | linger | low_msgq_watermark |\fR
+\fB          low_watermark | mode | nodelay | packet | packet_size |\fR
+\fB          priority |\fR
+\fB          {raw,\fR
+\fB           Protocol :: non_neg_integer(),\fR
+\fB           OptionNum :: non_neg_integer(),\fR
+\fB           ValueSpec ::\fR
+\fB               (ValueSize :: non_neg_integer()) | (ValueBin :: binary())} |\fR
+\fB          recbuf | reuseaddr | reuseport | reuseport_lb | send_timeout |\fR
+\fB          send_timeout_close | show_econnreset | sndbuf | tos | tclass |\fR
+\fB          ttl | recvtos | recvtclass | recvttl | pktoptions |\fR
+\fB          user_timeout | ipv6_v6only.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBpktoptions_value() :: {pktoptions, inet:ancillary_data()}.\fR
+
+.br
+.RS
+.PP
+Value from socket option \fIpktoptions\fR.
+
+.PP
+If the platform implements the IPv4 option \fIIP_PKTOPTIONS\fR, or the IPv6 option \fIIPV6_PKTOPTIONS\fR or \fIIPV6_2292PKTOPTIONS\fR for the socket; this value is returned from \fIinet:getopts/2\fR when called with the option name \fIpktoptions\fR.
+
+.PP
+\fBNOTE: \fRThis option appears to be VERY Linux specific, and its existence in future Linux kernel versions is also worrying since the option is part of RFC 2292 which is since long (2003) obsoleted by RFC 3542 that \fIexplicitly\fR removes this possibility to get packet information from a stream socket. For comparison: it has existed in FreeBSD but is now removed, at least since FreeBSD 10.
+
+
+
+.RE
+.B
+\fBsocket() :: inet:socket().\fR
+
+.br
+.RS
+.PP
+As returned by \fIaccept/1,2\fR and \fIconnect/3,4\fR.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaccept(ListenSocket, Timeout) -> {ok, Socket} | {error, Reason}\fR
+\fB                when\fR
+\fB                    ListenSocket :: socket(),\fR
+\fB                    Timeout :: timeout(),\fR
+\fB                    Socket :: socket(),\fR
+\fB                    Reason ::\fR
+\fB                        closed | timeout | system_limit | inet:posix().\fR
+
+.br
+.RS
+.PP
+Accept an incoming connection request on a listen socket.
+
+.PP
+\fIListenSocket\fR must be a socket returned from \fIlisten/2\fR. \fITimeout\fR specifies a time-out value in milliseconds. Defaults to \fIinfinity\fR.
+
+.PP
+Returns:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{ok, Socket}\fR if a connection is established
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{error, closed}\fR if \fIListenSocket\fR is closed
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{error, timeout}\fR if no connection is established within \fITimeout\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{error, system_limit}\fR if all available ports in the Erlang emulator are in  use
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+POSIX error value if something else goes wrong, see \fIinet\fR about possible values
+
+.RE
+
+.PP
+To send packets (outbound) on the returned \fISocket\fR, use \fIsend/2\fR. Packets sent from the peer (inbound) are delivered as messages to the socket owner; the process that created the socket. Unless \fI{active, false}\fR is specified in the option list when creating the listening socket.
+
+.PP
+See \fIconnect/4\fR about \fIactive mode\fR socket messages and \fIpassive mode\fR.
+
+.PP
+\fBNOTE: \fRThe \fIaccept\fR call \fIdoesn't have to be\fR issued from the socket owner process. Using version 5.5.3 and higher of the emulator, multiple simultaneous accept calls can be issued from different processes, which allows for a pool of acceptor processes handling incoming connections.
+
+
+
+.RE
+.B
+\fBclose(Socket) -> ok when Socket :: socket().\fR
+
+.br
+.RS
+.PP
+Close a TCP socket.
+
+.PP
+Note that in most implementations of TCP, doing a \fIclose\fR does not guarantee that the data sent is delivered to the recipient.  It is guaranteed that the recepient will see all sent data before getting the close, but the sender gets no indication of that.
+
+.PP
+If the sender needs to know that the recepient has received all data there are two common ways to achieve this:
+
+.nr li 0 1
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+Use \fIgen_tcp:shutdown(Sock, write)\fR to signal that no more data is to be sent and wait for the other side to acknowledge seeing its read side being closed, by closing its write side, which shows as a socket close on this side.
+
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+Implement an acknowledgement in the protocol on top of TCP that both connection ends adhere to, indicating that all data has been seen.  The socket option \fI{packet, N}\fR may be useful.
+
+.RE
+
+
+.RE
+.B
+\fBconnect(SockAddr, Opts) -> {ok, Socket} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     SockAddr ::\fR
+\fB                         socket:sockaddr_in() | socket:sockaddr_in6(),\fR
+\fB                     Opts :: [inet:inet_backend() | connect_option()],\fR
+\fB                     Socket :: socket(),\fR
+\fB                     Reason :: inet:posix().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIconnect(SockAddr, Opts, infinity)\fR.
+
+
+.RE
+.B
+\fBconnect(Address, Port, Opts) -> {ok, Socket} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Address :: inet:socket_address() | inet:hostname(),\fR
+\fB                     Port :: inet:port_number(),\fR
+\fB                     Opts :: [inet:inet_backend() | connect_option()],\fR
+\fB                     Socket :: socket(),\fR
+\fB                     Reason :: inet:posix();\fR
+\fB             (SockAddr, Opts, Timeout) -> {ok, Socket} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     SockAddr ::\fR
+\fB                         socket:sockaddr_in() | socket:sockaddr_in6(),\fR
+\fB                     Opts :: [inet:inet_backend() | connect_option()],\fR
+\fB                     Timeout :: timeout(),\fR
+\fB                     Socket :: socket(),\fR
+\fB                     Reason :: timeout | inet:posix().\fR
+
+.br
+.RS
+.PP
+Create a socket connected to the specified address.
+
+.PP
+\fBWith arguments \fR\fB\fIAddress\fR\fR\fB and \fR\fB\fIPort\fR\fR
+
+.PP
+Equivalent to \fIconnect(Address, Port, Opts, infinity)\fR.
+
+.PP
+\fBWith argument \fR\fB\fISockAddr\fR\fR\fB \fR\fB\fB(since OTP 24.3)\fR\fR
+
+.PP
+Connects to a remote listen socket specified by \fISockAddr\fR where \fIsocket:sockaddr_in6/0\fR for example allows specifying the \fIscope_id\fR for link local IPv6 addresses.
+
+.PP
+IPv4 addresses on the same \fImap/0\fR format is also allowed.
+
+.PP
+Equivalent to \fIconnect/4\fR, besides the format of the destination address.
+
+
+.RE
+.B
+\fBconnect(Address, Port, Opts, Timeout) ->\fR
+\fB                 {ok, Socket} | {error, Reason}\fR
+\fB                 when\fR
+\fB                     Address :: inet:socket_address() | inet:hostname(),\fR
+\fB                     Port :: inet:port_number(),\fR
+\fB                     Opts :: [inet:inet_backend() | connect_option()],\fR
+\fB                     Timeout :: timeout(),\fR
+\fB                     Socket :: socket(),\fR
+\fB                     Reason :: timeout | inet:posix().\fR
+
+.br
+.RS
+.PP
+Create a socket connected to the specified address.
+
+.PP
+Creates a socket and connects it to a server on TCP port \fIPort\fR on the host with IP address \fIAddress\fR, that may also be a hostname.
+
+.PP
+\fB\fIOpts\fR\fR\fB (connect options)\fR
+
+{ip, Address}
+.RS 2
+If the local host has many IP addresses, this option specifies which one to use.
+
+
+.RE
+
+{ifaddr, Address}
+.RS 2
+Same as 
+\fI{ip, Address}\fR.
+.PP
+However, if \fIAddress\fR instead is a \fIsocket:sockaddr_in/0\fR or \fIsocket:sockaddr_in6/0\fR this takes precedence over any value previously set with the \fIip\fR and \fIport\fR options. If these options (\fIip\fR or/and \fIport\fR) however comes \fIafter\fR this option, they may be used to \fIupdate\fR the corresponding fields of this option (for \fIip\fR, the \fIaddr\fR field, and for \fIport\fR, the \fIport\fR field).
+
+
+.RE
+
+{fd, integer() >= 0}
+.RS 2
+If a socket has somehow been connected without using 
+\fIgen_tcp\fR, use this option to pass the file descriptor for it. If \fI{ip, Address}\fR and/or \fI{port, port_number()}\fR is combined with this option, the \fIfd\fR is bound to the specified interface and port before connecting. If these options are not specified, it is assumed that the \fIfd\fR is already bound appropriately.
+
+.RE
+
+inet
+.RS 2
+Sets up the socket for IPv4.
+
+
+.RE
+
+inet6
+.RS 2
+Sets up the socket for IPv6.
+
+
+.RE
+
+local
+.RS 2
+Sets up a Unix Domain Socket. See 
+\fIinet:local_address/0\fR
+
+.RE
+
+{port, Port}
+.RS 2
+Specifies which local port number to use.
+
+
+.RE
+
+{tcp_module, module()}
+.RS 2
+Overrides which callback module is used. Defaults to 
+\fIinet_tcp\fR for IPv4 and \fIinet6_tcp\fR for IPv6.
+
+.RE
+
+{protocol, tcp|mptcp}
+.RS 2
+With 
+\fImptcp\fR creates the socket with protocol IPPROTO_MPTCP, if that is defined on the system. Other than that the socket is regarded as a \fItcp\fR socket. If IPPROTO_MPTCP is not defined, \fI{error, eprotonosupport}\fR is returned. \fItcp\fR is the default value.
+
+.RE
+
+option/0
+.RS 2
+See 
+\fIinet:setopts/2\fR.
+
+.RE
+
+.PP
+\fBSocket Data\fR
+
+.PP
+Packets can be sent to the peer (outbound) with \fIsend(Socket, Packet)\fR.  Packets sent from the peer (inbound) are delivered as messages to the socket owner; the process that created the socket, unless \fI{active, false}\fR is specified in the \fIOptions\fR list.
+
+.PP
+\fBActive mode socket messages\fR
+
+{tcp, Socket, Data}
+.RS 2
+Inbound data from the socket.
+
+
+.RE
+
+{tcp_passive, Socket}
+.RS 2
+The socket was in 
+\fI{active, N}\fR mode (see \fIinet:setopts/2\fR for details) and its message counter reached \fI0\fR, indicating that the socket has transitioned to passive (\fI{active, false}\fR) mode.
+
+.RE
+
+{tcp_closed, Socket}
+.RS 2
+The socket was closed.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{tcp_error, Socket, Reason}\fR\fR A socket error occurred.
+
+.RE
+
+.PP
+\fBPassive mode\fR
+
+.PP
+If \fI{active, false}\fR is specified in the option list for the socket, packets and errors are retrieved by calling \fIrecv/2,3\fR (\fIsend/2\fR may also return errors).
+
+.PP
+\fBTimeout\fR
+
+.PP
+The optional \fITimeout\fR parameter specifies a connect time-out in milliseconds. Defaults to \fIinfinity\fR.
+
+.PP
+\fBNOTE: \fRKeep in mind that if the underlying OS \fIconnect()\fR call returns a timeout, \fIgen_tcp:connect\fR will also return a timeout (i.e. \fI{error, etimedout}\fR), even if a larger \fITimeout\fR was specified (for example \fIinfinity\fR).
+
+
+.PP
+\fBNOTE: \fRThe default values for options specified to \fIconnect\fR can be affected by the Kernel configuration parameter \fIinet_default_connect_options\fR. For details, see \fIinet\fR.
+
+
+
+.RE
+.B
+\fBcontrolling_process(Socket, Pid) -> ok | {error, Reason}\fR
+\fB                             when\fR
+\fB                                 Socket :: socket(),\fR
+\fB                                 Pid :: pid(),\fR
+\fB                                 Reason ::\fR
+\fB                                     closed | not_owner | badarg |\fR
+\fB                                     inet:posix().\fR
+
+.br
+.RS
+.PP
+Change the controlling process (owner) of a socket.
+
+.PP
+Assigns a new controlling process \fIPid\fR to \fISocket\fR. The controlling process is the process that the socket sends messages to.  If this function is called from any other process than the current controlling process, \fI{error, not_owner}\fR is returned.
+
+.PP
+If the process identified by \fIPid\fR is not an existing local \fIpid/0\fR, \fI{error, badarg}\fR is returned. \fI{error, badarg}\fR may also be returned in some cases when \fISocket\fR is closed during the execution of this function.
+
+.PP
+If the socket is in \fIactive mode\fR, this function will transfer any messages from the socket in the mailbox of the caller to the new controlling process.
+
+.PP
+If any other process is interacting with the socket during the transfer, it may not work correctly and messages may remain in the caller's mailbox. For instance, changing the sockets active mode during the transfer could cause this.
+
+
+.RE
+.B
+\fBlisten(Port, Options) -> {ok, ListenSocket} | {error, Reason}\fR
+\fB                when\fR
+\fB                    Port :: inet:port_number(),\fR
+\fB                    Options :: [inet:inet_backend() | listen_option()],\fR
+\fB                    ListenSocket :: socket(),\fR
+\fB                    Reason :: system_limit | inet:posix().\fR
+
+.br
+.RS
+.PP
+Create a listen socket.
+
+.PP
+Creates a socket and sets it to listen on port \fIPort\fR on the local host.
+
+.PP
+If \fIPort == 0\fR, the underlying OS assigns an available (ephemeral) port number, use \fIinet:port/1\fR to retrieve it.
+
+.PP
+The following options are available:
+
+list
+.RS 2
+Received 
+\fIPacket\fRs are delivered as lists of bytes, \fI\fR[\fIbyte/0\fR\fI]\fR.
+
+.RE
+
+binary
+.RS 2
+Received 
+\fIPacket\fRs are delivered as \fIbinary/0\fRs.
+
+.RE
+
+{backlog, B}
+.RS 2
+
+\fIB ::\fR \fInon_neg_integer/0\fR. The backlog value defines the maximum length that the queue of pending connections can grow to. Defaults to \fI5\fR.
+
+.RE
+
+inet6
+.RS 2
+Sets up the socket for IPv6.
+
+
+.RE
+
+inet
+.RS 2
+Sets up the socket for IPv4.
+
+
+.RE
+
+{fd, Fd}
+.RS 2
+If a socket has somehow been created without using 
+\fIgen_tcp\fR, use this option to pass the file descriptor for it.
+
+.RE
+
+{ip, Address}
+.RS 2
+If the host has many IP addresses, this option specifies which one to listen on.
+
+
+.RE
+
+{port, Port}
+.RS 2
+Specifies which local port number to use.
+
+
+.RE
+
+{ifaddr, Address}
+.RS 2
+Same as 
+\fI{ip, Address}\fR.
+.PP
+However, if this instead is an \fIsocket:sockaddr_in/0\fR or \fIsocket:sockaddr_in6/0\fR this takes precedence over any value previously set with the \fIip\fR and \fIport\fR options. If these options (\fIip\fR or/and \fIport\fR) however comes \fIafter\fR this option, they may be used to \fIupdate\fR their corresponding fields of this option (for \fIip\fR, the \fIaddr\fR field, and for \fIport\fR, the \fIport\fR field).
+
+
+.RE
+
+{tcp_module, module()}
+.RS 2
+Overrides which callback module is used. Defaults to 
+\fIinet_tcp\fR for IPv4 and \fIinet6_tcp\fR for IPv6.
+
+.RE
+
+{protocol, tcp|mptcp}
+.RS 2
+With 
+\fImptcp\fR creates the socket with protocol IPPROTO_MPTCP, if that is defined on the system. Other than that the socket is regarded as a \fItcp\fR socket. If IPPROTO_MPTCP is not defined, \fI{error, eprotonosupport}\fR is returned. \fItcp\fR is the default value.
+
+.RE
+
+option/0
+.RS 2
+See 
+\fIinet:setopts/2\fR.
+
+.RE
+
+.PP
+The returned socket \fIListenSocket\fR should be used when calling \fIaccept/1,2\fR to accept an incoming connection request.
+
+.PP
+\fBNOTE: \fRThe default values for options specified to \fIlisten\fR can be affected by the Kernel configuration parameter \fIinet_default_listen_options\fR. For details, see \fIinet\fR.
+
+
+
+.RE
+.B
+\fBrecv(Socket, Length, Timeout) -> {ok, Packet} | {error, Reason}\fR
+\fB              when\fR
+\fB                  Socket :: socket(),\fR
+\fB                  Length :: non_neg_integer(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Packet :: string() | binary() | HttpPacket,\fR
+\fB                  Reason :: closed | timeout | inet:posix(),\fR
+\fB                  HttpPacket :: term().\fR
+
+.br
+.RS
+.PP
+Receive a packet, from a socket in \fIpassive mode\fR.
+
+.PP
+A closed socket is indicated by the return value \fI{error, closed}\fR. If the socket is not in passive mode, the return value is \fI{error, einval}\fR.
+
+.PP
+Argument \fILength\fR is only meaningful when the socket is in \fIraw\fR mode and denotes the number of bytes to read.  If \fILength\fR is \fI0\fR, all available bytes are returned. If \fILength > 0\fR, exactly \fILength\fR bytes are returned, or an error; except if the socket is closed from the other side, then the last read before the one returning \fI{error, closed}\fR may return less than \fILength\fR bytes of data.
+
+.PP
+The optional \fITimeout\fR parameter specifies a time-out in milliseconds. Defaults to \fIinfinity\fR.
+
+.PP
+Any process can receive data from a passive socket, even if that process is not the controlling process of the socket. However, only one process can call this function on a socket at any given time. Using simultaneous calls to \fIrecv\fR is not recommended as the behavior depends on the socket implementation, and could return errors such as \fI{error, ealready}\fR.
+
+
+.RE
+.B
+\fBsend(Socket, Packet) -> ok | {error, Reason}\fR
+\fB              when\fR
+\fB                  Socket :: socket(),\fR
+\fB                  Packet :: iodata(),\fR
+\fB                  Reason :: closed | {timeout, RestData} | inet:posix(),\fR
+\fB                  RestData :: binary() | erlang:iovec().\fR
+
+.br
+.RS
+.PP
+Send a packet on a socket.
+
+.PP
+There is no \fIsend/2\fR call with a time-out option; use socket option \fIsend_timeout\fR if time-outs are desired.  See section Examples.
+
+.PP
+The return value \fI{error, {timeout, RestData}}\fR can only be returned when \fIinet_backend = socket\fR.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.PP
+\fBNon-blocking send.\fR
+
+.PP
+If the user tries to send more data than there is room for in the OS send buffers, the 'rest data' is stored in (inet driver) internal buffers and later sent in the background. The function immediately returns ok (\fInot\fR informing the caller that some date isn'nt sent yet). Any issue while sending the 'rest data' may be returned later. When using \fIinet_backend = socket\fR, the behaviour is different. There is \fIno\fR buffering, instead the caller will "hang" until all of the data has been sent or the send timeout (as specified by the \fIsend_timeout\fR option) expires (the function can "hang" even when using the \fIinet\fR backend if the internal buffers are full). If this happens when using \fIpacket =/= raw\fR, a partial packet has been written. A new packet therefore \fImustn't\fR be written at this point, as there is no way for the peer to distinguish this from data in the current packet. Instead, set the \fIpacket\fR option to \fIraw\fR, send the rest data (as raw data) and then set \fIpacket\fR back to the correct type.
+
+.RE
+
+
+.RE
+.B
+\fBshutdown(Socket, How) -> ok | {error, Reason}\fR
+\fB                  when\fR
+\fB                      Socket :: socket(),\fR
+\fB                      How :: read | write | read_write,\fR
+\fB                      Reason :: inet:posix().\fR
+
+.br
+.RS
+.PP
+Close the socket in one or both directions.
+
+.PP
+\fIHow == write\fR means closing the socket for writing, reading from it is still possible.
+
+.PP
+If \fIHow == read\fR or there is no outgoing data buffered in the \fISocket\fR port, the shutdown is performed immediately and any error encountered is returned in \fIReason\fR.
+
+.PP
+If there is data buffered in the socket port, shutdown isn't performed on the socket until that buffered data has been written to the OS protocol stack.  If any errors are encountered, the socket is closed and \fI{error, closed}\fR is returned by the next \fIrecv/2\fR or \fIsend/2\fR call.
+
+.PP
+Option \fI{exit_on_close, false}\fR is useful if the peer performs a shutdown of its write side.  Then the socket stays open for writing after receive has indicated that the socket was closed.
+
+.PP
+\fBNOTE: \fRAsync shutdown write (\fIHow :: write | read_write\fR). If the shutdown attempt is made while the inet driver is sending buffered data in the background, the shutdown is postponed until all buffered data has been sent.  This function immediately returns \fIok\fR, and the caller \fIisn't\fR informed (that the shutdown has been postponed). When using \fIinet_backend = socket\fR, the behaviour is different. A shutdown with \fIHow :: write | read_write\fR will always be performed \fIimmediately\fR.
+
+
+
+.RE

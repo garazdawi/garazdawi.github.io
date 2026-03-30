@@ -1,0 +1,780 @@
+.TH calendar 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+calendar \- Local and universal time, day of the week, date and time conversions.
+
+.SH DESCRIPTION
+.PP
+This module provides computation of local and universal time, day of the week, and many time conversion functions.
+
+.PP
+Time is local when it is adjusted in accordance with the current time zone and daylight saving. Time is universal when it reflects the time at longitude zero, without any adjustment for daylight saving. Universal Coordinated Time (UTC) time is also called Greenwich Mean Time (GMT).
+
+.PP
+The time functions \fIlocal_time/0\fR and \fIuniversal_time/0\fR in this module both return date and time. This is because separate functions for date and time can result in a date/time combination that is displaced by 24 hours. This occurs if one of the functions is called before midnight, and the other after midnight. This problem also applies to the Erlang BIFs \fIdate/0\fR and \fItime/0\fR, and their use is strongly discouraged if a reliable date/time stamp is required.
+
+.PP
+All dates conform to the Gregorian calendar. This calendar was introduced by Pope Gregory XIII in 1582 and was used in all Catholic countries from this year. Protestant parts of Germany and the Netherlands adopted it in 1698, England followed in 1752, and Russia in 1918 (the October revolution of 1917 took place in November according to the Gregorian calendar).
+
+.PP
+The Gregorian calendar in this module is extended back (proleptic Gregorian calendar) beyond year 0 to negative years. For a given date, the \fIgregorian days\fR is the number of days from Jan 1 year 0 up to the date specified. Similarly, the \fIgregorian seconds\fR for a specified date and time is the number of seconds from 0:00 Jan 1 year 0 up to the specified date and time.
+
+.PP
+Non-positive years use astronomical year numbering where year 0 = 1 BCE/BC, year -1 = 2 BCE/BC, and so on, because in the CE+BCE and AD+BC year numberings there is no year 0. Instead 1 CE (AD 1) is preceded by 1 BCE (1 BC).
+
+.PP
+For computing differences between epochs in time, use the functions counting gregorian days or seconds. If epochs are specified as local time, they must be converted to universal time to get the correct value of the elapsed time between epochs. Use of function \fItime_difference/2\fR is discouraged.
+
+.PP
+Different definitions exist for the week of the year. This module contains a week of the year implementation conforming to the ISO 8601 standard. As the week number for a specified date can fall on the previous, the current, or on the next year, it is important to specify both the year and the week number. Functions \fIiso_week_number/0\fR and \fIiso_week_number/1\fR return a tuple of the year and the week number.
+
+.SS "Leap Years"
+
+.PP
+The notion that every fourth year is a leap year is not completely true. By the Gregorian rule, a year Y is a leap year if one of the following rules is valid:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+is divisible by 4, but not by 100.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+is divisible by 400.
+
+.RE
+
+.PP
+Hence, 1996 is a leap year, 1900 is not, but 2000 is.
+
+.SS "Date and Time Source"
+
+.PP
+Local time is obtained from the Erlang BIF \fIlocaltime/0\fR. Universal time is computed from the BIF \fIuniversaltime/0\fR.
+
+.PP
+The following apply:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are 86400 seconds in a day.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are 365 days in an ordinary year.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are 366 days in a leap year.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are 1461 days in a 4 year period.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are 36524 days in a 100 year period.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are 146097 days in a 400 year period.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are 719528 days between Jan 1, 0 and Jan 1, 1970.
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBdate() :: {year(), month(), day()}.\fR
+
+.br
+.RS
+.PP
+A date using the Gregorian calendar.
+
+.PP
+All APIs expect this to be a valid date. If the source of the date is unknown, then verify that it is valid by calling \fIvalid_date/1\fR before using it.
+
+
+.RE
+.B
+\fBdatetime() :: {date(), time()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdatetime1970() :: {{year1970(), month(), day()}, time()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBday() :: 1..31.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdaynum() :: 1..7.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBhour() :: 0..23.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBldom() :: 28 | 29 | 30 | 31.\fR
+
+.br
+.RS
+.PP
+The last day of the month.
+
+
+.RE
+.B
+\fBminute() :: 0..59.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBmonth() :: 1..12.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoffset() :: [byte()] | (Time :: integer()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrfc3339_string() :: [byte(), ...] | binary().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrfc3339_time_unit() ::\fR
+\fB          microsecond | millisecond | nanosecond | second | native.\fR
+
+.br
+.RS
+.PP
+The time unit used by the rfc3339 conversion functions.
+
+.PP
+\fBNOTE: \fRThe \fInative\fR time unit was added to \fIrfc3339_time_unit/0\fR in OTP 25.0.
+
+
+
+.RE
+.B
+\fBsecond() :: 0..59.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsecs_per_day() :: 0..86399.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtime() :: {hour(), minute(), second()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBweeknum() :: 1..53.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fByear() :: integer().\fR
+
+.br
+.RS
+.PP
+The year using the Gregorian calendar.
+
+.PP
+Year cannot be abbreviated. For example, 93 denotes year 93, not 1993. The valid range depends on the underlying operating system.
+
+
+.RE
+.B
+\fByear1970() :: 1970..10000.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fByearweeknum() :: {year(), weeknum()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdate_to_gregorian_days(Date) -> Days\fR
+\fB                                when Date :: date(), Days :: integer().\fR
+
+.br
+.RS
+.PP
+Computes the number of gregorian days starting with year 0 and ending at the specified date.
+
+
+.RE
+.B
+\fBdatetime_to_gregorian_seconds(DateTime) -> Seconds\fR
+\fB                                       when\fR
+\fB                                           DateTime :: datetime(),\fR
+\fB                                           Seconds :: integer().\fR
+
+.br
+.RS
+.PP
+Computes the number of gregorian seconds starting with year 0 and ending at the specified date and time.
+
+
+.RE
+.B
+\fBday_of_the_week(Date) -> daynum() when Date :: date().\fR
+
+.br
+.RS
+.PP
+Computes the day of the week from the specified \fIYear\fR, \fIMonth\fR, and \fIDay\fR. Returns the day of the week as \fI1\fR: Monday, \fI2\fR: Tuesday, and so on.
+
+
+.RE
+.B
+\fBgregorian_days_to_date(Days) -> date() when Days :: integer().\fR
+
+.br
+.RS
+.PP
+Computes the date from the specified number of gregorian days.
+
+
+.RE
+.B
+\fBgregorian_seconds_to_datetime(Seconds) -> datetime()\fR
+\fB                                       when Seconds :: integer().\fR
+
+.br
+.RS
+.PP
+Computes the date and time from the specified number of gregorian seconds.
+
+
+.RE
+.B
+\fBis_leap_year(Year) -> boolean() when Year :: year().\fR
+
+.br
+.RS
+.PP
+Checks if the specified year is a leap year.
+
+
+.RE
+.B
+\fBiso_week_number() -> yearweeknum().\fR
+
+.br
+.RS
+.PP
+Returns tuple \fI{Year, WeekNum}\fR representing the ISO week number for the actual date. To determine the actual date, use function \fIlocal_time/0\fR.
+
+
+.RE
+.B
+\fBiso_week_number(Date) -> yearweeknum() when Date :: date().\fR
+
+.br
+.RS
+.PP
+Returns tuple \fI{Year, WeekNum}\fR representing the ISO week number for the specified date.
+
+
+.RE
+.B
+\fBlast_day_of_the_month(Year, Month) -> LastDay\fR
+\fB                               when\fR
+\fB                                   Year :: year(),\fR
+\fB                                   Month :: month(),\fR
+\fB                                   LastDay :: ldom().\fR
+
+.br
+.RS
+.PP
+Computes the number of days in a month.
+
+
+.RE
+.B
+\fBlocal_time() -> datetime().\fR
+
+.br
+.RS
+.PP
+Returns the local time reported by the underlying operating system.
+
+
+.RE
+.B
+\fBlocal_time_to_system_time(datetime1970(), Options) ->\fR
+\fB                                   pos_integer()\fR
+\fB                                   when\fR
+\fB                                       Options :: [Option],\fR
+\fB                                       Option ::\fR
+\fB                                           {unit, erlang:time_unit()}.\fR
+
+.br
+.RS
+.PP
+Converts local time into system time. Error will occur if the local time is non existing or ambiguous due to DST, see \fIcalendar:local_time_to_universal_time_dst/1\fR.
+
+
+.RE
+.B
+\fBlocal_time_to_universal_time(DateTime1) -> DateTime2\fR
+\fB                                      when\fR
+\fB                                          DateTime1 :: datetime1970(),\fR
+\fB                                          DateTime2 :: datetime1970().\fR
+
+.RS
+.LP
+Deprecated: calendar:local_time_to_universal_time/1 is deprecated; use calendar:local_time_to_universal_time_dst/1 instead
+.RE
+
+.br
+.RS
+.PP
+Converts from local time to Universal Coordinated Time (UTC). \fIDateTime1\fR must refer to a local date after Jan 1, 1970.
+
+.PP
+\fBWARNING: \fRThis function is deprecated. Use \fIlocal_time_to_universal_time_dst/1\fR instead, as it gives a more correct and complete result. Especially for the period that does not exist, as it is skipped during the switch \fIto\fR daylight saving time, this function still returns a result.
+
+
+
+.RE
+.B
+\fBlocal_time_to_universal_time_dst(DateTime1) -> [DateTime]\fR
+\fB                                          when\fR
+\fB                                              DateTime1 ::\fR
+\fB                                                  datetime1970(),\fR
+\fB                                              DateTime :: datetime1970().\fR
+
+.br
+.RS
+.PP
+Converts from local time to Universal Coordinated Time (UTC). \fIDateTime1\fR must refer to a local date after Jan 1, 1970.
+
+.PP
+The return value is a list of 0, 1, or 2 possible UTC times:
+
+[]
+.RS 2
+For a local 
+\fI{Date1, Time1}\fR during the period that is skipped when switching \fIto\fR daylight saving time, there is no corresponding UTC, as the local time is illegal (it has never occured).
+
+.RE
+
+[DstDateTimeUTC, DateTimeUTC]
+.RS 2
+For a local 
+\fI{Date1, Time1}\fR during the period that is repeated when switching \fIfrom\fR daylight saving time, two corresponding UTCs exist; one for the first instance of the period when daylight saving time is still active, and one for the second instance.
+
+.RE
+
+[DateTimeUTC]
+.RS 2
+For all other local times only one corresponding UTC exists.
+
+
+.RE
+
+
+.RE
+.B
+\fBnow_to_datetime(Now) -> datetime1970()\fR
+\fB                         when Now :: erlang:timestamp().\fR
+
+.br
+.RS
+.PP
+Returns Universal Coordinated Time (UTC) converted from the return value from \fIerlang:timestamp/0\fR.
+
+
+.RE
+.B
+\fBnow_to_local_time(Now) -> datetime1970()\fR
+\fB                           when Now :: erlang:timestamp().\fR
+
+.br
+.RS
+.PP
+Returns local date and time converted from the return value from \fIerlang:timestamp/0\fR.
+
+
+.RE
+.B
+\fBnow_to_universal_time(Now) -> datetime1970()\fR
+\fB                               when Now :: erlang:timestamp().\fR
+
+.br
+.RS
+.PP
+Returns Universal Coordinated Time (UTC) converted from the return value from \fIerlang:timestamp/0\fR.
+
+
+.RE
+.B
+\fBrfc3339_to_system_time(DateTimeString, Options) -> integer()\fR
+\fB                                when\fR
+\fB                                    DateTimeString :: rfc3339_string(),\fR
+\fB                                    Options :: [Option],\fR
+\fB                                    Option ::\fR
+\fB                                        {unit, rfc3339_time_unit()}.\fR
+
+.br
+.RS
+.PP
+Converts an RFC 3339 timestamp into system time. The data format of RFC 3339 timestamps is described by RFC 3339. Starting from OTP 25.1, the minutes part of the time zone is optional.
+
+.PP
+Valid option:
+
+{unit, Unit}
+.RS 2
+The time unit of the return value. The default is 
+\fIsecond\fR.
+
+.RE
+
+.IP
+.nf
+1> calendar:rfc3339_to_system_time("2018-02-01T16:17:58+01:00").
+1517498278
+2> calendar:rfc3339_to_system_time("2018-02-01 15:18:02.088Z",
+   [{unit, nanosecond}]).
+1517498282088000000
+3> calendar:rfc3339_to_system_time(<<"2018-02-01 15:18:02.088Z">>,
+   [{unit, nanosecond}]).
+1517498282088000000
+
+.fi
+
+
+.RE
+.B
+\fBseconds_to_daystime(Seconds) -> {Days, Time}\fR
+\fB                             when\fR
+\fB                                 Seconds :: integer(),\fR
+\fB                                 Days :: integer(),\fR
+\fB                                 Time :: time().\fR
+
+.br
+.RS
+.PP
+Converts a specified number of seconds into days, hours, minutes, and seconds. \fITime\fR is always non-negative, but \fIDays\fR is negative if argument \fISeconds\fR is.
+
+
+.RE
+.B
+\fBseconds_to_time(Seconds) -> time() when Seconds :: secs_per_day().\fR
+
+.br
+.RS
+.PP
+Computes the time from the specified number of seconds. \fISeconds\fR must be less than the number of seconds per day (86400).
+
+
+.RE
+.B
+\fBsystem_time_to_local_time(Time, TimeUnit) -> datetime()\fR
+\fB                                   when\fR
+\fB                                       Time :: integer(),\fR
+\fB                                       TimeUnit :: erlang:time_unit().\fR
+
+.br
+.RS
+.PP
+Converts a specified system time into local date and time.
+
+
+.RE
+.B
+\fBsystem_time_to_rfc3339(Time, Options) -> DateTimeString\fR
+\fB                                when\fR
+\fB                                    Time :: integer(),\fR
+\fB                                    Options :: [Option],\fR
+\fB                                    Option ::\fR
+\fB                                        {offset, offset()} |\fR
+\fB                                        {time_designator, byte()} |\fR
+\fB                                        {unit, rfc3339_time_unit()} |\fR
+\fB                                        {return, string | binary},\fR
+\fB                                    DateTimeString :: rfc3339_string().\fR
+
+.br
+.RS
+.PP
+Converts a system time into an RFC 3339 timestamp.
+
+.PP
+The data format of RFC 3339 timestamps is described by [RFC 3339]. The data format of offsets is also described by [RFC 3339].
+
+.PP
+Valid options:
+
+{offset, Offset}
+.RS 2
+The offset, either a string or an integer, to be included in the formatted string. An empty string, which is the default, is interpreted as local time. A non-empty string is included as is. The time unit of the integer is the same as the one of 
+\fITime\fR.
+
+.RE
+
+{time_designator, Character}
+.RS 2
+The character used as time designator, that is, the date and time separator. The default is 
+\fI$T\fR.
+
+.RE
+
+{unit, Unit}
+.RS 2
+The time unit of 
+\fITime\fR. The default is \fIsecond\fR. If some other unit is given (\fImillisecond\fR, \fImicrosecond\fR, \fInanosecond\fR, or \fInative\fR), the formatted string includes a fraction of a second. The number of fractional second digits is three, six, or nine depending on what time unit is chosen. For \fInative\fR three fractional digits are included. Notice that trailing zeros are not removed from the fraction.
+
+.RE
+
+{return, Return}
+.RS 2
+The desired encoding type for the output, whether a string or a binary is desired. Defaults to string.
+
+
+.RE
+
+.IP
+.nf
+1> calendar:system_time_to_rfc3339(erlang:system_time(second)).
+"2018-04-23T14:56:28+02:00"
+2> calendar:system_time_to_rfc3339(erlang:system_time(second),
+   [{offset, "-02:00"}]).
+"2018-04-23T10:56:52-02:00"
+3> calendar:system_time_to_rfc3339(erlang:system_time(second),
+   [{offset, -7200}]).
+"2018-04-23T10:57:05-02:00"
+4> calendar:system_time_to_rfc3339(erlang:system_time(millisecond),
+   [{unit, millisecond}, {time_designator, $\\s}, {offset, "Z"}]).
+"2018-04-23 12:57:20.482Z"
+5> calendar:system_time_to_rfc3339(erlang:system_time(millisecond),
+   [{unit, millisecond}, {time_designator, $\\s}, {offset, "Z"}, {return, binary}]).
+<<"2018-04-23 12:57:20.482Z">>
+
+.fi
+
+.PP
+https://www.ietf.org/rfc/rfc3339.txt
+
+
+.RE
+.B
+\fBsystem_time_to_universal_time(Time, TimeUnit) -> datetime()\fR
+\fB                                       when\fR
+\fB                                           Time :: integer(),\fR
+\fB                                           TimeUnit ::\fR
+\fB                                               erlang:time_unit().\fR
+
+.br
+.RS
+.PP
+Converts a specified system time into universal date and time.
+
+
+.RE
+.B
+\fBtime_difference(T1, T2) -> {Days, Time}\fR
+\fB                         when\fR
+\fB                             T1 :: datetime(),\fR
+\fB                             T2 :: datetime(),\fR
+\fB                             Days :: integer(),\fR
+\fB                             Time :: time().\fR
+
+.br
+.RS
+.PP
+Returns the difference between two \fI{Date, Time}\fR tuples. \fIT2\fR is to refer to an epoch later than \fIT1\fR.
+
+.PP
+\fBWARNING: \fRThis function is obsolete. Use the conversion functions for gregorian days and seconds instead.
+
+
+
+.RE
+.B
+\fBtime_to_seconds(Time) -> secs_per_day() when Time :: time().\fR
+
+.br
+.RS
+.PP
+Returns the number of seconds since midnight up to the specified time.
+
+
+.RE
+.B
+\fBuniversal_time() -> datetime().\fR
+
+.br
+.RS
+.PP
+Returns the Universal Coordinated Time (UTC) reported by the underlying operating system. Returns local time if universal time is unavailable.
+
+
+.RE
+.B
+\fBuniversal_time_to_local_time(DateTime) -> datetime()\fR
+\fB                                      when DateTime :: datetime1970().\fR
+
+.br
+.RS
+.PP
+Converts from Universal Coordinated Time (UTC) to local time. \fIDateTime\fR must refer to a date after Jan 1, 1970.
+
+
+.RE
+.B
+\fBuniversal_time_to_system_time(datetime(), Options) -> integer()\fR
+\fB                                       when\fR
+\fB                                           Options :: [Option],\fR
+\fB                                           Option ::\fR
+\fB                                               {unit,\fR
+\fB                                                erlang:time_unit()}.\fR
+
+.br
+.RS
+.PP
+Converts universal time into system time.
+
+
+.RE
+.B
+\fBvalid_date(Date) -> boolean() when Date :: date().\fR
+
+.br
+.RS
+.PP
+This function checks if a date is a valid.
+
+
+.RE

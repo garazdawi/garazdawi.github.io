@@ -1,0 +1,82 @@
+.TH edoc_run 3 "edoc 1.4.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+edoc_run \- Interface for calling EDoc from Erlang startup options.
+
+.SH DESCRIPTION
+.PP
+The following is an example of typical usage in a Makefile:
+
+.IP
+.nf
+     docs:
+             erl -noshell -run edoc_run application "'$(APP_NAME)'" \\
+               '"."' '[{def,{vsn,"$(VSN)"}}]'
+.fi
+
+.PP
+(note the single-quotes to avoid shell expansion, and the double-quotes enclosing the strings).
+
+.PP
+\fBNew feature in version 0.6.9\fR: It is no longer necessary to write \fI-s init stop\fR last on the command line in order to make the execution terminate. The termination (signalling success or failure to the operating system) is now built into these functions.
+
+.PP
+\fBSee also: \fR\fIedoc\fR.
+
+.SH DATA TYPES
+.LP
+.SH FUNCTIONS
+.LP
+.B
+\fBapplication(args()) -> no_return().\fR
+
+.br
+.RS
+.PP
+Calls \fI\fIedoc:application/3\fR\fR with the corresponding arguments. The strings in the list are parsed as Erlang constant terms. The list can be either \fI[App]\fR, \fI[App, Options]\fR or \fI[App, Dir, Options]\fR. In the first case \fI\fIedoc:application/1\fR\fR is called instead; in the second case, \fI\fIedoc:application/2\fR\fR is called.
+
+.PP
+The function call never returns; instead, the emulator is automatically terminated when the call has completed, signalling success or failure to the operating system.
+
+
+.RE
+.B
+\fBfile(args()) -> no_return().\fR
+
+.RS
+.LP
+Deprecated: This is part of the old interface to EDoc and is mainly kept for backwards compatibility. The preferred way of generating documentation is through one of the functions application/1 and files/1.
+.RE
+
+.br
+.RS
+.PP
+Calls \fI\fIedoc:file/2\fR\fR with the corresponding arguments. The strings in the list are parsed as Erlang constant terms. The list can be either \fI[File]\fR or \fI[File, Options]\fR. In the first case, an empty list of options is passed to \fI\fIedoc:file/2\fR\fR.
+
+.PP
+The following is an example of typical usage in a Makefile:
+
+.IP
+.nf
+     $(DOCDIR)/%.html:%.erl
+             erl -noshell -run edoc_run file '"$<"' '[{dir,"$(DOCDIR)"}]' \\
+               -s init stop
+.fi
+
+.PP
+The function call never returns; instead, the emulator is automatically terminated when the call has completed, signalling success or failure to the operating system.
+
+
+.RE
+.B
+\fBfiles(args()) -> no_return().\fR
+
+.br
+.RS
+.PP
+Calls \fI\fIedoc:files/2\fR\fR with the corresponding arguments. The strings in the list are parsed as Erlang constant terms. The list can be either \fI[Files]\fR or \fI[Files, Options]\fR. In the first case, \fI\fIedoc:files/1\fR\fR is called instead.
+
+.PP
+The function call never returns; instead, the emulator is automatically terminated when the call has completed, signalling success or failure to the operating system.
+
+
+.RE

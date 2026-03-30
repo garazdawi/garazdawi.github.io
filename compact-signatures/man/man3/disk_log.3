@@ -1,0 +1,1283 @@
+.TH disk_log 3 "kernel 10.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+disk_log \- \fIdisk_log\fR is a disk-based term logger that enables efficient logging of items on files.
+
+.SH DESCRIPTION
+.PP
+Three types of logs are supported:
+
+halt logs
+.RS 2
+Appends items to a single file, which size can be limited by the 
+\fIdisk_log\fR module.
+
+.RE
+
+wrap logs
+.RS 2
+Uses a sequence of wrap log files of limited size. As a wrap log file is filled up, further items are logged on to the next file in the sequence, starting all over with the first file when the last file is filled up.
+
+
+.RE
+
+rotate logs
+.RS 2
+Uses a sequence of rotate log files of limited size. As a log file is filled up, it is rotated and then compressed. There is one active log file and upto the configured number of compressed log files. Only externally formatted logs are supported. It follows the same naming convention as the handler logger_std_h for Logger. For more details about the naming convention check the file parameter for 
+\fIopen/1\fR.
+.PP
+It follows the same naming convention as that for the compressed files for Linux's logrotate and BSD's newsyslog.
+
+
+.RE
+
+.PP
+For efficiency reasons, items are always written to files as binaries.
+
+.PP
+Two formats of the log files are supported:
+
+internal format
+.RS 2
+Supports automatic repair of log files that are not properly closed and enables efficient reading of logged items in 
+\fIchunks\fR using a set of functions defined in this module. This is the only way to read internally formatted logs. An item logged to an internally formatted log must not occupy more than 4 GB of disk space (the size must fit in 4 bytes).
+
+.RE
+
+external format
+.RS 2
+Leaves it up to the user to read and interpret the logged data. The 
+\fIdisk_log\fR module cannot repair externally formatted logs.
+
+.RE
+
+.PP
+For each open disk log, one process handles requests made to the disk log. This process is created when \fIopen/1\fR is called, provided there exists no process handling the disk log. A process that opens a disk log can be an \fIowner\fR or an anonymous \fIuser\fR of the disk log. Each owner is linked to the disk log process, and an owner can close the disk log either explicitly (by calling \fIclose/1\fR) or by terminating.
+
+.PP
+Owners can subscribe to \fInotifications\fR, messages of the form \fI{disk_log, Node, Log, Info}\fR, which are sent from the disk log process when certain events occur, see the functions and in particular the \fIopen/1\fR option \fInotify\fR. A log can have many owners, but a process cannot own a log more than once. However, the same process can open the log as a user more than once.
+
+.PP
+For a disk log process to close its file properly and terminate, it must be closed by its owners and once by some non-owner process for each time the log was used anonymously. The users are counted and there must not be any users left when the disk log process terminates.
+
+.PP
+Items can be logged \fIsynchronously\fR by using functions \fIlog/2\fR, \fIblog/2\fR, \fIlog_terms/2\fR, and \fIblog_terms/2\fR. For each of these functions, the caller is put on hold until the items are logged (but not necessarily written, use \fIsync/1\fR to ensure that). By adding an \fIa\fR to each of the mentioned function names, we get functions that log items \fIasynchronously\fR. Asynchronous functions do not wait for the disk log process to write the items to the file, but return the control to the caller more or less immediately.
+
+.PP
+When using the internal format for logs, use functions \fIlog/2\fR, \fIlog_terms/2\fR, \fIalog/2\fR, and \fIalog_terms/2\fR. These functions log one or more Erlang terms. By prefixing each of the functions with a \fIb\fR (for "binary"), we get the corresponding \fIblog()\fR functions for the external format. These functions log one or more chunks of bytes. For example, to log the string \fI"hello"\fR in ASCII format, you can use \fIdisk_log:blog(Log, "hello")\fR, or \fIdisk_log:blog(Log, list_to_binary("hello"))\fR. The two alternatives are equally efficient.
+
+.PP
+The \fIblog()\fR functions can also be used for internally formatted logs, but in this case they must be called with binaries constructed with calls to \fIterm_to_binary/1\fR. There is no check to ensure this, it is entirely the responsibility of the caller. If these functions are called with binaries that do not correspond to Erlang terms, the \fIchunk/2,3\fR and automatic repair functions fail. The corresponding terms (not the binaries) are returned when \fIchunk/2,3\fR is called.
+
+.PP
+An open disk log is only accessible from the node where the disk log process runs. All processes on the node where the disk log process runs can log items or otherwise change, inspect, or close the log.
+
+.PP
+Errors are reported differently for asynchronous log attempts and other uses of the \fIdisk_log\fR module. When used synchronously, this module replies with an error message, but when called asynchronously, this module does not know where to send the error message. Instead, owners subscribing to notifications receive an \fIerror_status\fR message.
+
+.PP
+The \fIdisk_log\fR module does not report errors to the \fIerror_logger\fR module. It is up to the caller to decide whether to employ the error logger. Function \fIformat_error/1\fR can be used to produce readable messages from error replies. However, information events are sent to the error logger in two situations, namely when a log is repaired, or when a file is missing while reading chunks.
+
+.PP
+Error message \fIno_such_log\fR means that the specified disk log is not open. Nothing is said about whether the disk log files exist or not.
+
+.PP
+\fBNOTE: \fRIf an attempt to reopen or truncate a log fails (see \fIreopen/2,3\fR and \fItruncate/1,2\fR) the disk log process terminates immediately. Before the process terminates, links to owners and blocking processes (see \fIblock/1,2\fR) are removed. The effect is that the links work in one direction only. Any process using a disk log must check for error message \fIno_such_log\fR if some other process truncates or reopens the log simultaneously.
+
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIfile\fR, \fIwrap_log_reader\fR
+
+.SH DATA TYPES
+.LP
+.B
+\fBbchunk_ret() ::\fR
+\fB          {Continuation2 :: continuation(), Binaries :: [binary()]} |\fR
+\fB          {Continuation2 :: continuation(),\fR
+\fB           Binaries :: [binary()],\fR
+\fB           Badbytes :: non_neg_integer()} |\fR
+\fB          eof |\fR
+\fB          {error, Reason :: chunk_error_rsn()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBblock_error_rsn() :: no_such_log | nonode | {blocked_log, log()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBchunk_error_rsn() ::\fR
+\fB          no_such_log |\fR
+\fB          {format_external, log()} |\fR
+\fB          {blocked_log, log()} |\fR
+\fB          {badarg, continuation} |\fR
+\fB          {not_internal_wrap, log()} |\fR
+\fB          {corrupt_log_file, FileName :: file:filename()} |\fR
+\fB          {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBchunk_ret() ::\fR
+\fB          {Continuation2 :: continuation(), Terms :: [term()]} |\fR
+\fB          {Continuation2 :: continuation(),\fR
+\fB           Terms :: [term()],\fR
+\fB           Badbytes :: non_neg_integer()} |\fR
+\fB          eof |\fR
+\fB          {error, Reason :: chunk_error_rsn()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBclose_error_rsn() ::\fR
+\fB          no_such_log | nonode |\fR
+\fB          {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque continuation() \fR
+
+.br
+.RS
+.PP
+Chunk continuation returned by \fIchunk/2,3\fR, \fIbchunk/2,3\fR, or \fIchunk_step/3\fR.
+
+
+.RE
+.B
+\fBdlog_format() :: external | internal.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdlog_head_opt() :: none | term() | iodata().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdlog_info() ::\fR
+\fB          {name, Log :: log()} |\fR
+\fB          {file, File :: file:filename()} |\fR
+\fB          {type, Type :: dlog_type()} |\fR
+\fB          {format, Format :: dlog_format()} |\fR
+\fB          {size, Size :: dlog_size()} |\fR
+\fB          {mode, Mode :: dlog_mode()} |\fR
+\fB          {owners, [{pid(), Notify :: boolean()}]} |\fR
+\fB          {users, Users :: non_neg_integer()} |\fR
+\fB          {status,\fR
+\fB           Status :: ok | {blocked, QueueLogRecords :: boolean()}} |\fR
+\fB          {node, Node :: node()} |\fR
+\fB          {head,\fR
+\fB           Head ::\fR
+\fB               none |\fR
+\fB               {head, binary()} |\fR
+\fB               (MFA :: {atom(), atom(), list()})} |\fR
+\fB          {no_written_items, NoWrittenItems :: non_neg_integer()} |\fR
+\fB          {full, Full :: boolean} |\fR
+\fB          {no_current_bytes, non_neg_integer()} |\fR
+\fB          {no_current_items, non_neg_integer()} |\fR
+\fB          {no_items, non_neg_integer()} |\fR
+\fB          {current_file, pos_integer()} |\fR
+\fB          {no_overflows,\fR
+\fB           {SinceLogWasOpened :: non_neg_integer(),\fR
+\fB            SinceLastInfo :: non_neg_integer()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdlog_mode() :: read_only | read_write.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdlog_optattr() ::\fR
+\fB          name | file | linkto | repair | type | format | size |\fR
+\fB          notify | head | head_func | mode.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdlog_option() ::\fR
+\fB          {name, Log :: log()} |\fR
+\fB          {file, FileName :: file:filename()} |\fR
+\fB          {linkto, LinkTo :: none | pid()} |\fR
+\fB          {repair, Repair :: true | false | truncate} |\fR
+\fB          {type, Type :: dlog_type()} |\fR
+\fB          {format, Format :: dlog_format()} |\fR
+\fB          {size, Size :: dlog_size()} |\fR
+\fB          {notify, boolean()} |\fR
+\fB          {head, Head :: dlog_head_opt()} |\fR
+\fB          {head_func, MFA :: {atom(), atom(), list()}} |\fR
+\fB          {quiet, boolean()} |\fR
+\fB          {mode, Mode :: dlog_mode()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdlog_options() :: [dlog_option()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdlog_size() ::\fR
+\fB          infinity |\fR
+\fB          pos_integer() |\fR
+\fB          {MaxNoBytes :: pos_integer(), MaxNoFiles :: pos_integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdlog_type() :: halt | wrap | rotate.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfile_error() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBinc_wrap_error_rsn() :: next_file_error_rsn().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBinvalid_header() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlog() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlog_error_rsn() ::\fR
+\fB          no_such_log | nonode |\fR
+\fB          {read_only_mode, log()} |\fR
+\fB          {format_external, log()} |\fR
+\fB          {blocked_log, log()} |\fR
+\fB          {full, log()} |\fR
+\fB          {invalid_header, invalid_header()} |\fR
+\fB          {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnext_file_error_rsn() ::\fR
+\fB          no_such_log | nonode |\fR
+\fB          {read_only_mode, log()} |\fR
+\fB          {blocked_log, log()} |\fR
+\fB          {halt_log, log()} |\fR
+\fB          {rotate_log, log()} |\fR
+\fB          {invalid_header, invalid_header()} |\fR
+\fB          {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnotify_ret() :: ok | {error, no_such_log}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBopen_error_rsn() ::\fR
+\fB          no_such_log |\fR
+\fB          {badarg, term()} |\fR
+\fB          {size_mismatch,\fR
+\fB           CurrentSize :: dlog_size(),\fR
+\fB           NewSize :: dlog_size()} |\fR
+\fB          {arg_mismatch,\fR
+\fB           OptionName :: dlog_optattr(),\fR
+\fB           CurrentValue :: term(),\fR
+\fB           Value :: term()} |\fR
+\fB          {name_already_open, Log :: log()} |\fR
+\fB          {open_read_write, Log :: log()} |\fR
+\fB          {open_read_only, Log :: log()} |\fR
+\fB          {need_repair, Log :: log()} |\fR
+\fB          {not_a_log_file, FileName :: file:filename()} |\fR
+\fB          {invalid_index_file, FileName :: file:filename()} |\fR
+\fB          {invalid_header, invalid_header()} |\fR
+\fB          {file_error, file:filename(), file_error()} |\fR
+\fB          {node_already_open, Log :: log()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBopen_ret() ::\fR
+\fB          {ok, Log :: log()} |\fR
+\fB          {repaired,\fR
+\fB           Log :: log(),\fR
+\fB           {recovered, Rec :: non_neg_integer()},\fR
+\fB           {badbytes, Bad :: non_neg_integer()}} |\fR
+\fB          {error, open_error_rsn()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBreopen_error_rsn() ::\fR
+\fB          no_such_log | nonode |\fR
+\fB          {read_only_mode, log()} |\fR
+\fB          {blocked_log, log()} |\fR
+\fB          {same_file_name, log()} |\fR
+\fB          {invalid_index_file, file:filename()} |\fR
+\fB          {invalid_header, invalid_header()} |\fR
+\fB          {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsync_error_rsn() ::\fR
+\fB          no_such_log | nonode |\fR
+\fB          {read_only_mode, log()} |\fR
+\fB          {blocked_log, log()} |\fR
+\fB          {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtrunc_error_rsn() ::\fR
+\fB          no_such_log | nonode |\fR
+\fB          {read_only_mode, log()} |\fR
+\fB          {blocked_log, log()} |\fR
+\fB          {invalid_header, invalid_header()} |\fR
+\fB          {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBunblock_error_rsn() ::\fR
+\fB          no_such_log | nonode |\fR
+\fB          {not_blocked, log()} |\fR
+\fB          {not_blocked_by_pid, log()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBall() -> [Log] when Log :: log().\fR
+
+.br
+.RS
+.PP
+Returns the names of the disk logs accessible on the current node.
+
+
+.RE
+.B
+\fBalog(Log, Term) -> notify_ret() when Log :: log(), Term :: term().\fR
+
+.br
+.RS
+.PP
+Asynchronously version of \fIlog/2\fR.
+
+.PP
+Owners subscribing to notifications receive message \fIread_only\fR, \fIblocked_log\fR, or \fIformat_external\fR if the item cannot be written on the log, and possibly one of the messages \fIwrap\fR, \fIfull\fR, or \fIerror_status\fR if an item is written on the log. Message \fIerror_status\fR is sent if something is wrong with the header function or if a file error occurs.
+
+
+.RE
+.B
+\fBalog_terms(Log, TermList) -> notify_ret()\fR
+\fB                    when Log :: log(), TermList :: [term()].\fR
+
+.br
+.RS
+.PP
+Asynchronously version of \fIlog_terms/2\fR.
+
+.PP
+Owners subscribing to notifications receive message \fIread_only\fR, \fIblocked_log\fR, or \fIformat_external\fR if the items cannot be written on the log, and possibly one or more of the messages \fIwrap\fR, \fIfull\fR, and \fIerror_status\fR if items are written on the log. Message \fIerror_status\fR is sent if something is wrong with the header function or if a file error occurs.
+
+
+.RE
+.B
+\fBbalog(Log, Bytes) -> notify_ret()\fR
+\fB               when Log :: log(), Bytes :: iodata().\fR
+
+.br
+.RS
+.PP
+Asynchronously version of \fIblog/2\fR.
+
+.PP
+Owners subscribing to notifications receive message \fIread_only\fR, \fIblocked_log\fR, or \fIformat_external\fR if the item cannot be written on the log, and possibly one of the messages \fIwrap\fR, \fIfull\fR, or \fIerror_status\fR if an item is written on the log. Message \fIerror_status\fR is sent if something is wrong with the header function or if a file error occurs.
+
+
+.RE
+.B
+\fBbalog_terms(Log, ByteList) -> notify_ret()\fR
+\fB                     when Log :: log(), ByteList :: [iodata()].\fR
+
+.br
+.RS
+.PP
+Asynchronously version of \fIblog_terms/2\fR.
+
+.PP
+Owners subscribing to notifications receive message \fIread_only\fR, \fIblocked_log\fR, or \fIformat_external\fR if the items cannot be written on the log, and possibly one or more of the messages \fIwrap\fR, \fIfull\fR, and \fIerror_status\fR if items are written on the log. Message \fIerror_status\fR is sent if something is wrong with the header function or if a file error occurs.
+
+
+.RE
+.B
+\fBbchunk(Log, Continuation, N) -> bchunk_ret()\fR
+\fB                when\fR
+\fB                    Log :: log(),\fR
+\fB                    Continuation :: start | continuation(),\fR
+\fB                    N :: pos_integer() | infinity.\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIchunk(Log, Continuation, N)\fR except that it returns the binaries read from the file, that is it does not call \fIbinary_to_term/1\fR.
+
+
+.RE
+.B
+\fBblock(Log, QueueLogRecords) -> ok | {error, block_error_rsn()}\fR
+\fB               when Log :: log(), QueueLogRecords :: boolean().\fR
+
+.br
+.RS
+.PP
+With a call to \fIblock/2\fR a process can block a log.
+
+.PP
+If the blocking process is not an owner of the log, a temporary link is created between the disk log process and the blocking process. The link ensures that the disk log is unblocked if the blocking process terminates without first closing or unblocking the log.
+
+.PP
+Any process can probe a blocked log with \fIinfo/1\fR or close it with \fIclose/1\fR. The blocking process can also use functions \fIchunk/2,3\fR, \fIbchunk/2,3\fR, \fIchunk_step/3\fR, and \fIunblock/1\fR without being affected by the block. Any other attempt than those mentioned so far to update or read a blocked log suspends the calling process until the log is unblocked or returns error message \fI{blocked_log, Log}\fR, depending on whether the value of \fIQueueLogRecords\fR is \fItrue\fR or \fIfalse\fR.
+
+
+.RE
+.B
+\fBblog(Log, Bytes) -> ok | {error, Reason :: log_error_rsn()}\fR
+\fB              when Log :: log(), Bytes :: iodata().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIlog/2\fR except that it is used for externally formatted logs.
+
+.PP
+\fIblog/2\fR can also be used for internally formatted logs if the binaries are constructed with calls to \fIterm_to_binary/1\fR.
+
+
+.RE
+.B
+\fBblog_terms(Log, BytesList) ->\fR
+\fB                    ok | {error, Reason :: log_error_rsn()}\fR
+\fB                    when Log :: log(), BytesList :: [iodata()].\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIlog_terms/2\fR except that it is used for externally formatted logs.
+
+.PP
+\fIblog_terms/2\fR can also be used for internally formatted logs if the binaries are constructed with calls to \fIterm_to_binary/1\fR.
+
+
+.RE
+.B
+\fBbreopen(Log, File, BHead) -> ok | {error, reopen_error_rsn()}\fR
+\fB                 when\fR
+\fB                     Log :: log(),\fR
+\fB                     File :: file:filename(),\fR
+\fB                     BHead :: iodata().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIreopen\fR except that it is used for externally formatted logs.
+
+
+.RE
+.B
+\fBbtruncate(Log, BHead) -> ok | {error, trunc_error_rsn()}\fR
+\fB                   when Log :: log(), BHead :: iodata().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fItruncate/2\fR for externally formatted logs.
+
+
+.RE
+.B
+\fBchange_header(Log, Header) -> ok | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Log :: log(),\fR
+\fB                           Header ::\fR
+\fB                               {head, dlog_head_opt()} |\fR
+\fB                               {head_func,\fR
+\fB                                MFA :: {atom(), atom(), list()}},\fR
+\fB                           Reason ::\fR
+\fB                               no_such_log | nonode |\fR
+\fB                               {read_only_mode, Log} |\fR
+\fB                               {blocked_log, Log} |\fR
+\fB                               {badarg, head}.\fR
+
+.br
+.RS
+.PP
+Changes the value of option \fIhead\fR or \fIhead_func\fR for an owner of a disk log.
+
+
+.RE
+.B
+\fBchange_notify(Log, Owner, Notify) -> ok | {error, Reason}\fR
+\fB                       when\fR
+\fB                           Log :: log(),\fR
+\fB                           Owner :: pid(),\fR
+\fB                           Notify :: boolean(),\fR
+\fB                           Reason ::\fR
+\fB                               no_such_log | nonode |\fR
+\fB                               {blocked_log, Log} |\fR
+\fB                               {badarg, notify} |\fR
+\fB                               {not_owner, Owner}.\fR
+
+.br
+.RS
+.PP
+Changes the value of option \fInotify\fR for an owner of a disk log.
+
+
+.RE
+.B
+\fBchange_size(Log, Size) -> ok | {error, Reason}\fR
+\fB                     when\fR
+\fB                         Log :: log(),\fR
+\fB                         Size :: dlog_size(),\fR
+\fB                         Reason ::\fR
+\fB                             no_such_log | nonode |\fR
+\fB                             {read_only_mode, Log} |\fR
+\fB                             {blocked_log, Log} |\fR
+\fB                             {new_size_too_small, Log,\fR
+\fB                              CurrentSize :: pos_integer()} |\fR
+\fB                             {badarg, size} |\fR
+\fB                             {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+.PP
+Changes the size of an open log. For a halt log, the size can always be increased, but it cannot be decreased to something less than the current file size.
+
+.PP
+For a wrap or rotate log, both the size and the number of files can always be increased, as long as the number of files does not exceed 65000. For wrap logs, if the maximum number of files is decreased, the change is not valid until the current file is full and the log wraps to the next file. The redundant files are removed the next time the log wraps around, that is, starts to log to file number 1.
+
+.PP
+As an example, assume that the old maximum number of files is 10 and that the new maximum number of files is 6. If the current file number is not greater than the new maximum number of files, files 7-10 are removed when file 6 is full and the log starts to write to file number 1 again. Otherwise, the files greater than the current file are removed when the current file is full (for example, if the current file is 8, files 9 and 10 are removed). The files between the new maximum number of files and the current file (that is, files 7 and 8) are removed the next time file 6 is full.
+
+.PP
+For rotate logs, if the maximum number of files is decreased, the redundant files are deleted instantly.
+
+.PP
+If the size of the files is decreased, the change immediately affects the current log. It does not change the size of log files already full until the next time they are used.
+
+.PP
+If the log size is decreased, for example, to save space, function \fInext_file/1\fR, can be used to force the log to wrap.
+
+
+.RE
+.B
+\fBchunk(Log, Continuation, N) -> chunk_ret()\fR
+\fB               when\fR
+\fB                   Log :: log(),\fR
+\fB                   Continuation :: start | continuation(),\fR
+\fB                   N :: pos_integer() | infinity.\fR
+
+.br
+.RS
+.PP
+Efficiently reads the terms that are appended to an internally formatted log.
+
+.PP
+It minimizes disk I/O by reading 64 kilobyte chunks from the file.
+
+.PP
+The first time \fIchunk()\fR is called, an initial continuation, the atom \fIstart\fR, must be provided.
+
+.PP
+When \fIchunk/3\fR is called, \fIN\fR controls the maximum number of terms that are read from the log in each chunk. \fIinfinity\fR means that all the terms contained in the 64 kilobyte chunk are read. If less than \fIN\fR terms are returned, this does not necessarily mean that the end of the file is reached.
+
+.PP
+\fIchunk/3\fR returns a tuple \fI{Continuation2, Terms}\fR, where \fITerms\fR is a list of terms found in the log. \fIContinuation2\fR is yet another continuation, which must be passed on to any subsequent calls to \fIchunk()\fR. With a series of calls to \fIchunk()\fR, all terms from a log can be extracted.
+
+.PP
+\fIchunk/3\fR returns a tuple \fI{Continuation2, Terms, Badbytes}\fR if the log is opened in read-only mode and the read chunk is corrupt. \fIBadbytes\fR is the number of bytes in the file found not to be Erlang terms in the chunk. Notice that the log is not repaired. When trying to read chunks from a log opened in read-write mode, tuple \fI{corrupt_log_file, FileName}\fR is returned if the read chunk is corrupt.
+
+.PP
+\fIchunk/3\fR returns \fIeof\fR when the end of the log is reached, or \fI{error, Reason}\fR if an error occurs. If a wrap log file is missing, a message is output on the error log.
+
+.PP
+When \fIchunk/2,3\fR is used with wrap logs, the returned continuation might not be valid in the next call to \fIchunk/3\fR. This is because the log can wrap and delete the file into which the continuation points. To prevent this, the log can be blocked during the search.
+
+
+.RE
+.B
+\fBchunk_info(Continuation) -> InfoList | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Continuation :: continuation(),\fR
+\fB                        InfoList :: [{node, Node :: node()}, ...],\fR
+\fB                        Reason :: {no_continuation, Continuation}.\fR
+
+.br
+.RS
+.PP
+Returns the pair \fI{node, Node}\fR, describing the chunk continuation returned by \fIchunk/2,3\fR, \fIbchunk/2,3\fR, or \fIchunk_step/3\fR.
+
+.PP
+Terms are read from the disk log running on \fINode\fR.
+
+
+.RE
+.B
+\fBchunk_step(Log, Continuation, Step) ->\fR
+\fB                    {ok, any()} | {error, Reason}\fR
+\fB                    when\fR
+\fB                        Log :: log(),\fR
+\fB                        Continuation :: start | continuation(),\fR
+\fB                        Step :: integer(),\fR
+\fB                        Reason ::\fR
+\fB                            no_such_log | end_of_log |\fR
+\fB                            {format_external, Log} |\fR
+\fB                            {blocked_log, Log} |\fR
+\fB                            {badarg, continuation} |\fR
+\fB                            {file_error, file:filename(), file_error()}.\fR
+
+.br
+.RS
+.PP
+Can be used with \fIchunk/2,3\fR and \fIbchunk/2,3\fR to search through an internally formatted wrap log.
+
+.PP
+It takes as argument a continuation as returned by \fIchunk/2,3\fR, \fIbchunk/2,3\fR, or \fIchunk_step/3\fR, and steps forward (or backward) \fIStep\fR files in the wrap log. The continuation returned, points to the first log item in the new current file.
+
+.PP
+If atom \fIstart\fR is specified as continuation, the first file of the wrap log is chosen as the new current file.
+
+.PP
+If the wrap log is not full because all files are not yet used, \fI{error, end_of_log}\fR is returned if trying to step outside the log.
+
+
+.RE
+.B
+\fBclose(Log) -> ok | {error, close_error_rsn()} when Log :: log().\fR
+
+.br
+.RS
+.PP
+Closes a disk log properly.
+
+.PP
+An internally formatted log must be closed before the Erlang system is stopped. Otherwise, the log is regarded as unclosed and the automatic repair procedure is activated next time the log is opened.
+
+.PP
+The disk log process is not terminated as long as there are owners or users of the log. All owners must close the log, possibly by terminating. Also, any other process, not only the processes that have opened the log anonymously, can decrement the \fIusers\fR counter by closing the log. Attempts to close a log by a process that is not an owner are ignored if there are no users.
+
+.PP
+If the log is blocked by the closing process, the log is also unblocked.
+
+
+.RE
+.B
+\fBformat_error(Error) -> io_lib:chars() when Error :: term().\fR
+
+.br
+.RS
+.PP
+Given the error returned by any function in this module, this function returns a descriptive string of the error in English.
+
+.PP
+For file errors, function \fIformat_error/1\fR in module \fIfile\fR is called.
+
+
+.RE
+.B
+\fBinc_wrap_file(Log) -> ok | {error, inc_wrap_error_rsn()}\fR
+\fB                       when Log :: log().\fR
+
+.RS
+.LP
+Deprecated: disk_log:inc_wrap_file/1 is deprecated; use disk_log:next_file/1 instead
+.RE
+
+.br
+.RS
+.PP
+Forces the internally formatted disk log to start logging to the next log file. It can be used, for example, with \fIchange_size/2\fR to reduce the amount of disk space allocated by the disk log.
+
+.PP
+Owners subscribing to notifications normally receive a \fIwrap\fR message, but if an error occurs with a reason tag of \fIinvalid_header\fR or \fIfile_error\fR, an \fIerror_status\fR message is sent.
+
+
+.RE
+.B
+\fBinfo(Log) -> InfoList | {error, no_such_log}\fR
+\fB              when Log :: log(), InfoList :: [dlog_info()].\fR
+
+.br
+.RS
+.PP
+Returns a list of \fI{Tag, Value}\fR pairs describing a log running on the node.
+
+.PP
+The following pairs are returned for all logs:
+
+{name, Log}
+.RS 2
+
+\fILog\fR is the log name as specified by the \fIopen/1\fR option \fIname\fR.
+
+.RE
+
+{file, File}
+.RS 2
+For halt logs 
+\fIFile\fR is the filename, and for wrap logs \fIFile\fR is the base name.
+
+.RE
+
+{type, Type}
+.RS 2
+
+\fIType\fR is the log type as specified by the \fIopen/1\fR option \fItype\fR.
+
+.RE
+
+{format, Format}
+.RS 2
+
+\fIFormat\fR is the log format as specified by the \fIopen/1\fR option \fIformat\fR.
+
+.RE
+
+{size, Size}
+.RS 2
+
+\fISize\fR is the log size as specified by the \fIopen/1\fR option \fIsize\fR, or the size set by \fIchange_size/2\fR. The value set by \fIchange_size/2\fR is reflected immediately.
+
+.RE
+
+{mode, Mode}
+.RS 2
+
+\fIMode\fR is the log mode as specified by the \fIopen/1\fR option \fImode\fR.
+
+.RE
+
+{owners, [{pid(), Notify}]}
+.RS 2
+
+\fINotify\fR is the value set by the \fIopen/1\fR option \fInotify\fR or function \fIchange_notify/3\fR for the owners of the log.
+
+.RE
+
+{users, Users}
+.RS 2
+
+\fIUsers\fR is the number of anonymous users of the log, see the \fIopen/1\fR option \fIlinkto\fR.
+
+.RE
+
+{status, Status}
+.RS 2
+
+\fIStatus\fR is \fIok\fR or \fI{blocked, QueueLogRecords}\fR as set by functions \fIblock/1,2\fR and \fIunblock/1\fR.
+
+.RE
+
+{node, Node}
+.RS 2
+The information returned by the current invocation of function 
+\fIinfo/1\fR is gathered from the disk log process running on \fINode\fR.
+
+.RE
+
+.PP
+The following pairs are returned for all logs opened in \fIread_write\fR mode:
+
+{head, Head}
+.RS 2
+Depending on the value of the 
+\fIopen/1\fR options \fIhead\fR and \fIhead_func\fR, or set by function \fIchange_header/2\fR, the value of \fIHead\fR is \fInone\fR (default), \fI{head, H}\fR (\fIhead\fR option), or \fI{M,F,A}\fR (\fIhead_func\fR option).
+
+.RE
+
+{no_written_items, NoWrittenItems}
+.RS 2
+
+\fINoWrittenItems\fR is the number of items written to the log since the disk log process was created.
+
+.RE
+
+.PP
+The following pair is returned for halt logs opened in \fIread_write\fR mode:
+
+{full, Full}
+.RS 2
+
+\fIFull\fR is \fItrue\fR or \fIfalse\fR depending on whether the halt log is full or not.
+
+.RE
+
+.PP
+The following pairs are returned for wrap logs opened in \fIread_write\fR mode:
+
+{no_current_bytes, integer() >= 0}
+.RS 2
+The number of bytes written to the current wrap log file.
+
+
+.RE
+
+{no_current_items, integer() >= 0}
+.RS 2
+The number of items written to the current wrap log file, header inclusive.
+
+
+.RE
+
+{no_items, integer() >= 0}
+.RS 2
+The total number of items in all wrap log files.
+
+
+.RE
+
+{current_file, integer()}
+.RS 2
+The ordinal for the current wrap log file in the range 
+\fI1..MaxNoFiles\fR, where \fIMaxNoFiles\fR is specified by the \fIopen/1\fR option \fIsize\fR or set by \fIchange_size/2\fR.
+
+.RE
+
+{no_overflows, {SinceLogWasOpened, SinceLastInfo}}
+.RS 2
+
+\fISinceLogWasOpened\fR (\fISinceLastInfo\fR) is the number of times a wrap log file has been filled up and a new one is opened or \fIinc_wrap_file/1\fR has been called since the disk log was last opened (\fIinfo/1\fR was last called). The first time \fIinfo/2\fR is called after a log was (re)opened or truncated, the two values are equal.
+
+.RE
+
+.PP
+Notice that functions \fIchunk/2,3\fR, \fIbchunk/2,3\fR, and \fIchunk_step/3\fR do not affect any value returned by \fIinfo/1\fR.
+
+
+.RE
+.B
+\fBlog(Log, Term) -> ok | {error, Reason :: log_error_rsn()}\fR
+\fB             when Log :: log(), Term :: term().\fR
+
+.br
+.RS
+.PP
+Synchronously appends a term to a internally formatted disk log. Returns \fIok\fR or \fI{error, Reason}\fR when the term is written to disk.
+
+.PP
+Terms are written by the ordinary \fIwrite()\fR function of the operating system. Hence, it is not guaranteed that the term is written to disk, it can linger in the operating system kernel for a while. To ensure that the item is written to disk, function \fIsync/1\fR must be called.
+
+.PP
+Owners subscribing to notifications are notified of an error with an \fIerror_status\fR message if the error reason tag is \fIinvalid_header\fR or \fIfile_error\fR.
+
+
+.RE
+.B
+\fBlog_terms(Log, TermList) ->\fR
+\fB                   ok | {error, Reason :: log_error_rsn()}\fR
+\fB                   when Log :: log(), TermList :: [term()].\fR
+
+.br
+.RS
+.PP
+Synchronously appends a list of items to an internally formatted log.
+
+.PP
+It is more efficient to use this functions instead of \fIlog/2\fR. The specified list is split into as large sublists as possible (limited by the size of wrap log files), and each sublist is logged as one single item, which reduces the overhead.
+
+.PP
+Owners subscribing to notifications are notified of an error with an \fIerror_status\fR message if the error reason tag is \fIinvalid_header\fR or \fIfile_error\fR.
+
+
+.RE
+.B
+\fBnext_file(Log) -> ok | {error, next_file_error_rsn()}\fR
+\fB                   when Log :: log().\fR
+
+.br
+.RS
+.PP
+For wrap logs, it forces the disk log to start logging to the next log file. It can be used, for example, with \fIchange_size/2\fR to reduce the amount of disk space allocated by the disk log.
+
+.PP
+Owners subscribing to notifications normally receive a \fIwrap\fR message, but if an error occurs with a reason tag of \fIinvalid_header\fR or \fIfile_error\fR, an \fIerror_status\fR message is sent.
+
+.PP
+For rotate logs, it forces rotation of the currently active log file, compresses it and opens a new active file for logging.
+
+
+.RE
+.B
+\fBopen(ArgL) -> open_ret() when ArgL :: dlog_options().\fR
+
+.br
+.RS
+.PP
+Open a new disk_log file for reading or writing.
+
+.PP
+Parameter \fIArgL\fR is a list of the following options:
+
+{name, Log}
+.RS 2
+Specifies the log name. This name must be passed on as a parameter in all subsequent logging operations. A name must always be supplied.
+
+
+.RE
+
+{file, FileName}
+.RS 2
+Specifies the name of the file to be used for logged terms. If this value is omitted and the log name is an atom or a string, the filename defaults to 
+\fIlists:concat([Log, ".LOG"])\fR for halt logs.
+.PP
+For wrap logs, this is the base name of the files. Each file in a wrap log is called \fI<FileName>.N\fR, where \fIN\fR is an integer. Each wrap log also has two files called \fI<FileName>.idx\fR and \fI<FileName>.siz\fR.
+
+.PP
+For rotate logs, this is the name of the active log file. The compressed files are named as \fI<FileName>.N.gz\fR, where \fIN\fR is an integer and \fI<FileName>.0.gz\fR is the latest compressed log file. All the compressed files are renamed at each rotation so that the latest files have the smallest index. The maximum value for N is the value of \fIMaxNoFiles\fR minus 1.
+
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fI{linkto, LinkTo}\fR \fR  If \fILinkTo\fR is a pid, it becomes an owner of the log. If \fILinkTo\fR is \fInone\fR, the log records that it is used anonymously by some process by incrementing the \fIusers\fR counter. By default, the process that calls \fIopen/1\fR owns the log.
+
+.RE
+
+{repair, Repair}
+.RS 2
+If 
+\fIRepair\fR is \fItrue\fR, the current log file is repaired, if needed. As the restoration is initiated, a message is output on the error log. If \fIfalse\fR is specified, no automatic repair is attempted. Instead, the tuple \fI{error, {need_repair, Log}}\fR is returned if an attempt is made to open a corrupt log file. If \fItruncate\fR is specified, the log file becomes truncated, creating an empty log, regardless of previous content. Defaults to \fItrue\fR, which has no effect on logs opened in read-only mode.
+
+.RE
+
+{type, Type}
+.RS 2
+The log type. Defaults to 
+\fIhalt\fR.
+
+.RE
+
+{format, Format}
+.RS 2
+Disk log format. Defaults to 
+\fIinternal\fR.
+
+.RE
+
+{size, Size}
+.RS 2
+Log size.
+
+.PP
+When a halt log has reached its maximum size, all attempts to log more items are rejected. Defaults to \fIinfinity\fR, which for halt implies that there is no maximum size.
+
+.PP
+For wrap and rotate logs, parameter \fISize\fR can be a pair \fI{MaxNoBytes, MaxNoFiles}\fR. For wrap logs it can also be \fIinfinity\fR. In the latter case, if the files of an existing wrap log with the same name can be found, the size is read from the existing wrap log, otherwise an error is returned.
+
+.PP
+Wrap logs write at most \fIMaxNoBytes\fR bytes on each file and use \fIMaxNoFiles\fR files before starting all over with the first wrap log file. Regardless of \fIMaxNoBytes\fR, at least the header (if there is one) and one item are written on each wrap log file before wrapping to the next file.
+
+.PP
+The first time an existing wrap log is opened, that is, when the disk log process is created, the value of the option \fIsize\fR is allowed to differ from the current log size, and the size of the disk log is changed as per \fIchange_size/2\fR.
+
+.PP
+When opening an existing wrap log, it is not necessary to supply a value for option \fIsize\fR, but if the log is already open, that is, the disk log process exists, the supplied value must equal the current log size, otherwise the tuple \fI{error, {size_mismatch, CurrentSize, NewSize}}\fR is returned.
+
+.PP
+\fBNOTE: \fRBefore Erlang/OTP 24.0, the supplied value of option \fIsize\fR was to be equal to the current log size when opening an existing wrap log for the first time, that is, when creating the disk log process.
+
+
+.PP
+Rotate logs write at most \fIMaxNoBytes\fR bytes on the active log file and keep the latest \fIMaxNoFiles\fR compressed files. Regardless of \fIMaxNoBytes\fR, at least the header (if there is one) and one item are written on each rotate log file before rotation.
+
+.PP
+When opening an already open halt log, option \fIsize\fR is ignored.
+
+
+.RE
+
+{notify, boolean()}
+.RS 2
+If 
+\fItrue\fR, the log owners are notified when certain log events occur. Defaults to \fIfalse\fR. The owners are sent one of the following messages when an event occurs:
+{disk_log, Node, Log, {wrap, NoLostItems}}
+.RS 2
+Sent when a wrap log has filled up one of its files and a new file is opened. 
+\fINoLostItems\fR is the number of previously logged items that were lost when truncating existing files.
+
+.RE
+
+{disk_log, Node, Log, {truncated, NoLostItems}}
+.RS 2
+Sent when a log is truncated or reopened. For halt logs 
+\fINoLostItems\fR is the number of items written on the log since the disk log process was created. For wrap logs \fINoLostItems\fR is the number of items on all wrap log files.
+
+.RE
+
+{disk_log, Node, Log, {read_only, Items}}
+.RS 2
+Sent when an asynchronous log attempt is made to a log file opened in read-only mode. 
+\fIItems\fR is the items from the log attempt.
+
+.RE
+
+{disk_log, Node, Log, {blocked_log, Items}}
+.RS 2
+Sent when an asynchronous log attempt is made to a blocked log that does not queue log attempts. 
+\fIItems\fR is the items from the log attempt.
+
+.RE
+
+{disk_log, Node, Log, {format_external, Items}}
+.RS 2
+Sent when function 
+\fIalog/2\fR or \fIalog_terms/2\fR is used for internally formatted logs. \fIItems\fR is the items from the log attempt.
+
+.RE
+
+{disk_log, Node, Log, full}
+.RS 2
+Sent when an attempt to log items to a wrap log would write more bytes than the limit set by option 
+\fIsize\fR.
+
+.RE
+
+{disk_log, Node, Log, {error_status, Status}}
+.RS 2
+Sent when the error status changes. The error status is defined by the outcome of the last attempt to log items to the log, or to truncate the log, or the last use of function 
+\fIsync/1\fR, \fIinc_wrap_file/1\fR, or \fIchange_size/2\fR. \fIStatus\fR is either \fIok\fR or \fI{error, Error}\fR, the former is the initial value.
+
+.RE
+
+
+.RE
+
+{head, Head}
+.RS 2
+Specifies a header to be written first on the log file. If the log is a wrap or rotate log, the item 
+\fIHead\fR is written first in each new file. \fIHead\fR is to be a term if the format is \fIinternal\fR, otherwise an \fIiodata/0\fR. Defaults to \fInone\fR, which means that no header is written first on the file.
+
+.RE
+
+{head_func, {M,F,A}}
+.RS 2
+Specifies a function to be called each time a new log file is opened. The call 
+\fIM:F(A)\fR is assumed to return \fI{ok, Head}\fR. The item \fIHead\fR is written first in each file. \fIHead\fR is to be a term if the format is \fIinternal\fR, otherwise an \fIiodata/0\fR.
+
+.RE
+
+{mode, Mode}
+.RS 2
+Specifies if the log is to be opened in read-only or read-write mode. Defaults to 
+\fIread_write\fR.
+
+.RE
+
+{quiet, Boolean}
+.RS 2
+Specifies if messages will be sent to 
+\fIerror_logger\fR on recoverable errors with the log files. Defaults to \fIfalse\fR.
+
+.RE
+
+.PP
+\fIopen/1\fR returns \fI{ok, Log}\fR if the log file is successfully opened. If the file is successfully repaired, the tuple \fI{repaired, Log, {recovered, Rec}, {badbytes, Bad}}\fR is returned, where \fIRec\fR is the number of whole Erlang terms found in the file and \fIBad\fR is the number of bytes in the file that are non-Erlang terms.
+
+.PP
+When a disk log is opened in read-write mode, any existing log file is checked for. If there is none, a new empty log is created, otherwise the existing file is opened at the position after the last logged item, and the logging of items starts from there. If the format is \fIinternal\fR and the existing file is not recognized as an internally formatted log, a tuple \fI{error, {not_a_log_file, FileName}}\fR is returned.
+
+.PP
+\fIopen/1\fR cannot be used for changing the values of options of an open log. When there are prior owners or users of a log, all option values except \fIname\fR, \fIlinkto\fR, and \fInotify\fR are only checked against the values supplied before as option values to function \fIopen/1\fR, \fIchange_header/2\fR, \fIchange_notify/3\fR, or \fIchange_size/2\fR. Thus, none of the options except \fIname\fR is mandatory. If some specified value differs from the current value, a tuple \fI{error, {arg_mismatch, OptionName, CurrentValue, Value}}\fR is returned.
+
+.PP
+\fBNOTE: \fRIf an owner attempts to open a log as owner once again, it is acknowledged with the return value \fI{ok, Log}\fR, but the state of the disk log is not affected.
+
+
+.PP
+A log file can be opened more than once by giving different values to option \fIname\fR or by using the same file when opening a log on different nodes. It is up to the user of module \fIdisk_log\fR to ensure that not more than one disk log process has write access to any file, otherwise the file can be corrupted.
+
+.PP
+If an attempt to open a log file for the first time fails, the disk log process terminates with the EXIT message \fI{{failed,Reason},[{disk_log,open,1}]}\fR. The function returns \fI{error, Reason}\fR for all other errors.
+
+
+.RE
+.B
+\fBpid2name(Pid) -> {ok, Log} | undefined\fR
+\fB                  when Pid :: pid(), Log :: log().\fR
+
+.br
+.RS
+.PP
+Returns the log name given the pid of a disk log process on the current node, or \fIundefined\fR if the specified pid is not a disk log process.
+
+.PP
+This function is meant to be used for debugging only.
+
+
+.RE
+.B
+\fBreopen(Log, File) -> ok | {error, reopen_error_rsn()}\fR
+\fB                when Log :: log(), File :: file:filename().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fIreopen(Log, File, Head)\fR where \fIHead\fR is the \fIHead\fR specified in \fIopen/1\fR.
+
+
+.RE
+.B
+\fBreopen(Log, File, Head) -> ok | {error, reopen_error_rsn()}\fR
+\fB                when\fR
+\fB                    Log :: log(),\fR
+\fB                    File :: file:filename(),\fR
+\fB                    Head :: term().\fR
+
+.br
+.RS
+.PP
+Renames an internally formatted log file to \fIFile\fR and then recreates a new log file. If a wrap/rotate log exists, \fIFile\fR is used as the base name of the renamed files.
+
+.PP
+Writes the value of \fIHead\fR first in the newly opened log file. The header argument is used only once. Next time a wrap/rotate log file is opened, the header given to \fIopen/1\fR is used.
+
+.PP
+Owners subscribing to notifications receive a \fItruncate\fR message.
+
+.PP
+Upon failure to reopen the log, the disk log process terminates with the EXIT message \fI{{failed,Error},[{disk_log,Fun,Arity}]}\fR. Other processes having requests queued receive the message \fI{disk_log, Node, {error, disk_log_stopped}}\fR.
+
+
+.RE
+.B
+\fBsync(Log) -> ok | {error, sync_error_rsn()} when Log :: log().\fR
+
+.br
+.RS
+.PP
+Ensures that the contents of the log are written to the disk. This is usually a rather expensive operation.
+
+
+.RE
+.B
+\fBtruncate(Log) -> ok | {error, trunc_error_rsn()} when Log :: log().\fR
+
+.br
+.RS
+.PP
+Equivalent to \fItruncate(Log, Head)\fR where \fIHead\fR is the \fIHead\fR specified in \fIopen/1\fR.
+
+.PP
+This function can be used for both internally and externally formatted logs.
+
+
+.RE
+.B
+\fBtruncate(Log, Head) -> ok | {error, trunc_error_rsn()}\fR
+\fB                  when Log :: log(), Head :: term().\fR
+
+.br
+.RS
+.PP
+Removes all items from an internally formatted disk log. The argument \fIHead\fR or is written first in the newly truncated log.
+
+.PP
+The header argument is used only once. Next time a wrap/rotate log file is opened, the header given to \fIopen/1\fR is used.
+
+.PP
+Owners subscribing to notifications receive a \fItruncate\fR message.
+
+.PP
+If the attempt to truncate the log fails, the disk log process terminates with the EXIT message \fI{{failed,Reason},[{disk_log,Fun,Arity}]}\fR. Other processes having requests queued receive the message \fI{disk_log, Node, {error, disk_log_stopped}}\fR.
+
+
+.RE
+.B
+\fBunblock(Log) -> ok | {error, unblock_error_rsn()}\fR
+\fB                 when Log :: log().\fR
+
+.br
+.RS
+.PP
+Unblocks a log. A log can only be unblocked by the blocking process.
+
+
+.RE

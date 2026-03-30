@@ -1,0 +1,112 @@
+.TH wxGraphicsObject 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxGraphicsObject \- This class is the superclass of native graphics objects like pens etc.
+
+.SH DESCRIPTION
+.PP
+It allows reference counting. Not instantiated by user code.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsBrush\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsPen\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsMatrix\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxGraphicsPath\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxGraphicsObject
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxGraphicsObject() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBdestroy(This :: wxGraphicsObject()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBgetRenderer(This) -> wxGraphicsRenderer:wxGraphicsRenderer()\fR
+\fB                     when This :: wxGraphicsObject().\fR
+
+.br
+.RS
+.PP
+Returns the renderer that was used to create this instance, or NULL if it has not been initialized yet.
+
+
+.RE
+.B
+\fBisNull(This) -> boolean() when This :: wxGraphicsObject().\fR
+
+.br
+.RS
+.PP
+Return: false if this object is valid, otherwise returns true.
+
+
+.RE

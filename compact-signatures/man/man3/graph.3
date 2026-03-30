@@ -1,0 +1,1237 @@
+.TH graph 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+graph \- A functional implementation of labeled directed graphs.
+
+.SH DESCRIPTION
+.PP
+This module is closely modelled on the \fIdigraph\fR and \fIdigraph_utils\fR modules, which represent graphs using mutable ETS tables. This functional implementation is more lightweight and does not involve mutable state and table ownership, and makes it easy to keep multiple versions of a graph, but for large tables with a long lifetime, the ETS based implementation can be more suitable. In the context of this module, we only use the term "digraph" when referring to the \fIdigraph\fR implementation, and not to directed graphs in general.
+
+.PP
+When rewriting code from using \fIdigraph\fR to using \fIgraph\fR, keep in mind that:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Graphs are immutable: each modifying operation returns the new graph, which needs to be saved in a variable and passed to the next operation, for example \fIG0 = graph:new(), G1 = graph:add_vertex(G0, v1), G2 = graph:add_vertex(G1, v2)\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Graphs are garbage collected and do not need to be explicitly deleted.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+There are no \fIprotected\fR or \fIprivate\fR options and no \fImemory\fR info key.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Edges are not objects with identity and state. An edge is uniquely identified by the triple \fI{From, To, Label}\fR where the default label is \fI[]\fR. There can be multiple edges with the same \fIFrom\fR and \fITo\fR but only if they have different values for \fILabel\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Vertices, however, have a unique identifier just as in \fIdigraph\fR. The label of an existing vertex can be replaced by a new call to \fIadd_vertex(Id, Label)\fR. The label defaults to \fI[]\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The functions in \fIdigraph_utils\fR have been included directly in the \fIgraph\fR module for simplicity.
+
+.RE
+
+.PP
+Some graph theoretical definitions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdirected graph\fR (here simply called "graph") is a pair (V, E) of a finite set V of \fIvertices\fR and a finite set E of \fIdirected edges\fR (here simply called "edges"). The set of edges E is a subset of V × V (the Cartesian product of V with itself).
+
+.PP
+In this module, V is allowed to be empty. The so obtained unique graph is called the \fIempty graph\fR. Each vertex has a unique Erlang term as identifier.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Graphs can be annotated with more information. Such information can be attached to the vertices and to the edges of the graph. An annotated graph is called a \fIlabeled graph\fR, and the information attached to a vertex or an edge is called a \fIlabel\fR. Labels are Erlang terms.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An edge e = (v, w) is said to \fIemanate\fR from vertex v and to be \fIincident\fR on vertex w.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIout-degree\fR of a vertex is the number of edges emanating from that vertex.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIin-degree\fR of a vertex is the number of edges incident on that vertex.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If an edge is emanating from v and incident on w, then w is said to be an \fIout-neighbor\fR of v, and v is said to be an \fIin-neighbor\fR of w.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsubgraph\fR G' of G is a graph whose vertices and edges form subsets of the vertices and edges of G.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+G' is \fImaximal\fR with respect to a property P if all other subgraphs that include the vertices of G' do not have property P.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpath\fR P from v[1] to v[k] in a graph (V, E) is a non-empty sequence v[1], v[2], ..., v[k] of vertices in V such that there is an edge (v[i], v[i+1]) in E for 1 <= i < k.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIlength\fR of path P is k-1.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Path P is \fIsimple\fR if all vertices are distinct, except that the first and the last vertices can be the same.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Path P is a \fIcycle\fR if the length of P is not zero and v[1] = v[k].
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIloop\fR is a cycle of length one.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsimple cycle\fR is a path that is both a cycle and simple.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An \fIacyclic graph\fR is a graph without cycles.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fItree\fR is an acyclic non-empty graph such that there is a unique path between every pair of vertices, considering all edges undirected. In an undirected tree, any vertex can be used as root. Informally however, "tree" is often used to refer to mean an \fIout-tree\fR (arborescence), in particular in computer science.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+An \fIarborescence\fR or \fIdirected rooted tree\fR or \fIout-tree\fR is an acyclic directed graph with a vertex V, the \fIroot\fR, such that there is a unique path from V to every other vertex of G.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIforest\fR is a disjoint union of trees.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIstrongly connected component\fR  is a maximal subgraph such that there is a path between each pair of vertices.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIconnected component\fR is a maximal subgraph such that there is a path between each pair of vertices, considering all edges undirected.
+
+.RE
+
+.PP
+This module also provides algorithms based on depth-first traversal of directed graphs.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdepth-first traversal\fR of a directed graph can be viewed as a process that visits all vertices of the graph. Initially, all vertices are marked as unvisited. The traversal starts with an arbitrarily chosen vertex, which is marked as visited, and follows an edge to an unmarked vertex, marking that vertex. The search then proceeds from that vertex in the same fashion, until there is no edge leading to an unvisited vertex. At that point the process backtracks, and the traversal continues as long as there are unexamined edges. If unvisited vertices remain when all edges from the first vertex have been examined, some so far unvisited vertex is chosen, and the process is repeated.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpartial ordering\fR of a set S is a transitive, antisymmetric, and reflexive relation between the objects of S.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The problem of \fItopological sorting\fR  is to find a total ordering of S that is a superset of the partial ordering. A graph G = (V, E) is equivalent to a relation E on V (we neglect that the version of directed graphs provided by the \fIdigraph\fR module allows multiple edges between vertices). If the graph has no cycles of length two or more, the reflexive and transitive closure of E is a partial ordering.
+
+.RE
+
+.SH DATA TYPES
+.LP
+.B
+\fBedge() :: {vertex(), vertex(), label()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBedge_map() :: #{vertex() => ordsets:ordset(vertex())}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgraph() :: #graph{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgraph_cyclicity() :: acyclic | cyclic.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgraph_type() :: graph_cyclicity().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlabel() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBvertex() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBvertice_map() :: #{vertex() => label()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBadd_edge(G, V1, V2, L) -> graph()\fR
+\fB                  when\fR
+\fB                      G :: graph(),\fR
+\fB                      V1 :: vertex(),\fR
+\fB                      V2 :: vertex(),\fR
+\fB                      L :: label().\fR
+
+.br
+.RS
+.PP
+Creates an edge \fI{V1, V2, L}\fR in graph \fIG\fR.
+
+.PP
+The edge is emanating from \fIV1\fR and incident on \fIV2\fR, and has label \fIL\fR. The edge is uniquely identified by this triple. A graph can have multiple edges between the same vertices \fIV1\fR and \fIV2\fR but only if the edges have different labels.
+
+.PP
+If \fIG\fR was created with option \fIacyclic\fR, then attempting to add an edge that would introduce a cycle will raise an error \fI{bad_edge, {From, To}}\fR. Note that checking for cyclicity slows down the adding of edges.
+
+
+.RE
+.B
+\fBadd_vertex(graph()) -> {vertex(), graph()}.\fR
+
+.br
+.RS
+.PP
+Adds a new vertex to graph \fIG\fR, returning the created vertex id.
+
+.PP
+The new vertex will have the empty list \fI[]\fR as label.
+
+.PP
+Note: Vertex ID:s are assigned as integers in increasing order starting from zero. If you use \fIadd_vertex/2\fR or \fIadd_vertex/3\fR to insert vertices with your own identifiers, this function could generate an ID that already exists in the graph.
+
+
+.RE
+.B
+\fBadd_vertex(graph(), vertex(), label()) -> graph().\fR
+
+.br
+.RS
+.PP
+Creates or modifies vertex \fIV\fR of graph \fIG\fR, using \fIL\fR as the (new) label of the vertex.
+
+
+.RE
+.B
+\fBarborescence_root(graph()) -> no | {yes, vertex()}.\fR
+
+.br
+.RS
+.PP
+Returns \fI{yes, V}\fR if \fIG\fR is an arborescence (a directed tree) with vertex \fIV\fR as the root, otherwise \fIno\fR.
+
+
+.RE
+.B
+\fBcomponents(graph()) -> [[vertex()]].\fR
+
+.br
+.RS
+.PP
+Returns a list of connected components.
+
+.PP
+Each component is represented by its vertices. The order of the vertices and the order of the components are arbitrary. Each vertex of graph \fIG\fR occurs in exactly one component.
+
+
+.RE
+.B
+\fBcondensation(graph()) -> graph().\fR
+
+.br
+.RS
+.PP
+Creates a graph where the vertices are the strongly connected components of \fIG\fR as returned by \fIstrong_components/1\fR.
+
+.PP
+If X and Y are two different strongly connected components, and vertices x and y exist in X and Y, respectively, such that there is an edge emanating from x and incident on y, then an edge emanating from X and incident on Y is created.
+
+.PP
+The created graph has the same type as \fIG\fR. All vertices and edges have the default label \fI[]\fR.
+
+.PP
+Each cycle is included in some strongly connected component, which implies that a topological ordering of the created graph always exists.
+
+
+.RE
+.B
+\fBcyclic_strong_components(graph()) -> [[vertex()]].\fR
+
+.br
+.RS
+.PP
+Returns a list of cyclic strongly connected components.
+
+.PP
+Each strongly component is represented by its vertices. The order of the vertices and the order of the components are arbitrary. Only vertices that are included in some cycle in \fIG\fR are returned, otherwise the returned list is equal to that returned by \fIstrong_components/1\fR.
+
+
+.RE
+.B
+\fBdel_edge(G :: graph(), E :: edge()) -> graph().\fR
+
+.br
+.RS
+.PP
+Deletes edge \fIE\fR from graph \fIG\fR.
+
+
+.RE
+.B
+\fBdel_edges(graph(), [edge()]) -> graph().\fR
+
+.br
+.RS
+.PP
+Deletes the edges in list \fIEs\fR from graph \fIG\fR.
+
+
+.RE
+.B
+\fBdel_edges(graph(), vertex(), vertex()) -> graph().\fR
+
+.br
+.RS
+.PP
+Deletes all edges from vertex \fIV1\fR to vertex \fIV2\fR in graph \fIG\fR.
+
+
+.RE
+.B
+\fBdel_path(graph(), vertex(), vertex()) -> graph().\fR
+
+.br
+.RS
+.PP
+Deletes edges from graph \fIG\fR until there are no paths from vertex \fIV1\fR to vertex \fIV2\fR.
+
+.PP
+A sketch of the procedure employed:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Find an arbitrary simple path v[1], v[2], ..., v[k] from \fIV1\fR to \fIV2\fR in \fIG\fR.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Remove all edges of \fIG\fR emanating from v[i] and incident to v[i+1] for 1 <= i < k (including multiple edges).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Repeat until there is no path between \fIV1\fR and \fIV2\fR.
+
+.RE
+
+
+.RE
+.B
+\fBdel_vertex(graph(), vertex()) -> graph().\fR
+
+.br
+.RS
+.PP
+Deletes vertex \fIV\fR from graph \fIG\fR.
+
+.PP
+Any edges emanating from \fIV\fR or incident on \fIV\fR are also deleted.
+
+
+.RE
+.B
+\fBdel_vertices(G :: graph(), Vs :: [vertex()]) -> graph().\fR
+
+.br
+.RS
+.PP
+Deletes the vertices in list \fIVs\fR from graph \fIG\fR.
+
+
+.RE
+.B
+\fBedges(G :: graph()) -> [edge()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all edges of graph \fIG\fR, in some unspecified order.
+
+
+.RE
+.B
+\fBedges(G :: graph(), V :: vertex()) -> [edge()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all edges emanating from or incident on \fIV\fR of graph \fIG\fR, in some unspecified order.
+
+.PP
+Edges may occur twice in the list. Use \fIordsets:from_list/1\fR on the result if you need to remove duplicates.
+
+
+.RE
+.B
+\fBedges(G :: graph(), V1 :: vertex(), V2 :: vertex()) ->\fR
+\fB               ordsets:ordset(edge()).\fR
+
+.br
+.RS
+.PP
+Returns the ordered set of edges from V1 to V2.
+
+
+.RE
+.B
+\fBfold_vertices(G, Fun, Acc) -> any()\fR
+\fB                       when\fR
+\fB                           G :: graph(),\fR
+\fB                           Fun ::\fR
+\fB                               fun((vertex(), label(), any()) -> any()),\fR
+\fB                           Acc :: any().\fR
+
+.br
+.RS
+.PP
+Fold \fIFun\fR over the vertices of graph \fIG\fR, in some unspecified order.
+
+
+.RE
+.B
+\fBget_cycle(graph(), vertex()) -> [vertex(), ...] | false.\fR
+
+.br
+.RS
+.PP
+Tries to find a cycle in \fIG\fR which includes vertex \fIV\fR.
+
+.PP
+If a simple cycle of length two or more exists through vertex \fIV\fR, the cycle is returned as a list \fI[V, ..., V]\fR of vertices. If a loop through \fIV\fR exists, the loop is returned as a list \fI[V]\fR. If no cycles through \fIV\fR exist, \fIfalse\fR is returned.
+
+
+.RE
+.B
+\fBget_path(graph(), vertex(), vertex()) -> [vertex(), ...] | false.\fR
+
+.br
+.RS
+.PP
+Tries to find a simple path from vertex \fIV1\fR to vertex \fIV2\fR of graph \fIG\fR.
+
+.PP
+Returns the path as a list \fI[V1, ..., V2]\fR of vertices, or \fIfalse\fR if no simple path from \fIV1\fR to \fIV2\fR of length one or more exists.
+
+.PP
+The graph is traversed in a depth-first manner, and the first found path is returned.
+
+
+.RE
+.B
+\fBget_short_cycle(graph(), vertex()) -> [vertex(), ...] | false.\fR
+
+.br
+.RS
+.PP
+Like \fIget_cycle/2\fR, but a cycle of length one is preferred.
+
+.PP
+Tries to find an as short as possible simple cycle through vertex \fIV\fR of graph \fIG\fR. Returns the cycle as a list \fI[V, ..., V]\fR of vertices, or \fIfalse\fR if no simple cycle through \fIV\fR exists. Notice that a loop through \fIV\fR is returned as list \fI[V, V]\fR.
+
+
+.RE
+.B
+\fBget_short_path(graph(), vertex(), vertex()) ->\fR
+\fB                        [vertex(), ...] | false.\fR
+
+.br
+.RS
+.PP
+Like \fIget_path/3\fR, but using a breadth-first search to find a short path.
+
+.PP
+Tries to find an as short as possible simple path from vertex \fIV1\fR to vertex \fIV2\fR of graph \fIG\fR. Returns the path as a list \fI[V1, ..., V2]\fR of vertices, or \fIfalse\fR if no simple path from \fIV1\fR to \fIV2\fR of length one or more exists.
+
+.PP
+Graph \fIG\fR is traversed in a breadth-first manner, and the first found path is returned.
+
+
+.RE
+.B
+\fBhas_edge(G :: graph(), E :: edge()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if \fIG\fR contains edge \fIE\fR.
+
+.PP
+Note that the identity of an edge includes its label. To check for an arbitrary edge between two vertices, use \fIhas_edge/3\fR.
+
+
+.RE
+.B
+\fBhas_edge(G :: graph(), V1 :: vertex(), V2 :: vertex()) ->\fR
+\fB                  boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if \fIG\fR contains some edge from \fIV1\fR to \fIV2\fR.
+
+
+.RE
+.B
+\fBhas_path(G :: graph(), V1 :: vertex(), V2 :: vertex()) ->\fR
+\fB                  boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if there is a path in \fIG\fR from vertex \fIV1\fR to vertex \fIV2\fR.
+
+
+.RE
+.B
+\fBhas_vertex(G :: graph(), V :: vertex()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if \fIG\fR contains vertex \fIV\fR.
+
+
+.RE
+.B
+\fBin_degree(G :: graph(), V :: vertex()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the in-degree of vertex \fIV\fR of graph \fIG\fR.
+
+
+.RE
+.B
+\fBin_edges(G :: graph(), V :: vertex()) -> [edge()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all edges incident on \fIV\fR of graph \fIG\fR, in some unspecified order.
+
+
+.RE
+.B
+\fBin_neighbours(G :: graph(), V :: vertex()) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all in-neighbors of \fIV\fR of graph \fIG\fR, in some unspecified order.
+
+
+.RE
+.B
+\fBinfo(graph()) -> [{cyclicity, graph_cyclicity()}].\fR
+
+.br
+.RS
+.PP
+Returns a list of \fI{Tag, Value}\fR pairs describing graph \fIG\fR.
+
+.PP
+The following pairs are returned:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fI{cyclicity, Cyclicity}\fR, where \fICyclicity\fR is \fIcyclic\fR or \fIacyclic\fR, according to the options given to \fInew\fR.
+
+.RE
+
+
+.RE
+.B
+\fBis_acyclic(graph()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if graph \fIG\fR is acyclic.
+
+
+.RE
+.B
+\fBis_arborescence(graph()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if graph \fIG\fR is an arborescence (a directed tree with a unique root).
+
+
+.RE
+.B
+\fBis_tree(graph()) -> boolean().\fR
+
+.br
+.RS
+.PP
+Returns \fItrue\fR if and only if graph \fIG\fR is a tree, considering all edges undirected.
+
+
+.RE
+.B
+\fBloop_vertices(graph()) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all vertices of \fIG\fR that are included in some loop.
+
+
+.RE
+.B
+\fBnew([graph_type()]) -> graph().\fR
+
+.br
+.RS
+.PP
+Creates a new graph.
+
+.PP
+Returns an empty graph with properties according to the options in \fIOptions\fR:
+
+cyclic
+.RS 2
+Allows cycles in the graph (default).
+
+
+.RE
+
+acyclic
+.RS 2
+The graph is to be kept acyclic. Attempting to add an edge that would introduce a cycle will raise an error 
+\fI{bad_edge, {From, To}}\fR. Note that this slows down the adding of edges.
+
+.RE
+
+.PP
+If an unrecognized option is specified or \fIOptions\fR is not a proper list, a \fIbadarg\fR exception is raised.
+
+
+.RE
+.B
+\fBno_edges(G :: graph()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of edges of graph \fIG\fR.
+
+
+.RE
+.B
+\fBno_vertices(G :: graph()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the number of vertices of graph \fIG\fR.
+
+
+.RE
+.B
+\fBout_degree(G :: graph(), V :: vertex()) -> non_neg_integer().\fR
+
+.br
+.RS
+.PP
+Returns the out-degree of vertex \fIV\fR of graph \fIG\fR.
+
+
+.RE
+.B
+\fBout_edges(G :: graph(), V :: vertex()) -> [edge()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all edges emanating from \fIV\fR of graph \fIG\fR, in some unspecified order.
+
+
+.RE
+.B
+\fBout_neighbours(G :: graph(), V :: vertex()) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all out-neighbors of \fIV\fR of graph \fIG\fR, in some unspecified order.
+
+
+.RE
+.B
+\fBpostorder(graph(), [vertex()]) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns the vertices of graph \fIG\fR reachable from \fIVs\fR, listed in post-order.
+
+.PP
+The order is given by a depth-first traversal of the graph, collecting visited vertices in postorder. More precisely, the vertices visited while searching from an arbitrarily chosen vertex are collected in postorder, and all those collected vertices are placed before the subsequently visited vertices.
+
+
+.RE
+.B
+\fBpreorder(graph(), [vertex()]) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns all vertices of graph \fIG\fR reachable from \fIVs\fR, listed in pre-order.
+
+.PP
+The order is given by a depth-first traversal of the graph, collecting visited vertices in preorder.
+
+
+.RE
+.B
+\fBreachable(graph(), [vertex()]) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns an unsorted list of graph vertices such that for each vertex in the list, there is a path in \fIG\fR from some vertex of \fIVs\fR to the vertex.
+
+.PP
+In particular, as paths can have length zero, the vertices of \fIVs\fR are all included in the returned list.
+
+
+.RE
+.B
+\fBreachable_via_neighbours(graph(), [vertex()]) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns an unsorted list of graph vertices such that for each vertex in the list, there is a path in \fIG\fR of length one or more from some vertex of \fIVs\fR to the vertex.
+
+.PP
+Hence, vertices in \fIVs\fR will only be included in the result if they are part of some cycle.
+
+
+.RE
+.B
+\fBreaching(graph(), [vertex()]) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns an unsorted list of graph vertices such that for each vertex in the list, there is a path from the vertex to some vertex of \fIVs\fR.
+
+.PP
+In particular, as paths can have length zero, the vertices of \fIVs\fR are all included in the returned list.
+
+
+.RE
+.B
+\fBreaching_via_neighbours(graph(), [vertex()]) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns an unsorted list of graph vertices such that for each vertex in the list, there is a path of length one or more from the vertex to some vertex of \fIVs\fR.
+
+.PP
+Hence, vertices in \fIVs\fR will only be included in the result if they are part of some cycle.
+
+
+.RE
+.B
+\fBreverse_postorder(graph(), [vertex()]) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns the vertices of graph \fIG\fR reachable from \fIVs\fR, listed in reverse post-order.
+
+.PP
+This effectively performs a topological sort of the reachable nodes.
+
+.PP
+The graph is traversed as for \fIpostorder/2\fR, but producing the result in reverse order.
+
+
+.RE
+.B
+\fBroots(graph()) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a minimal list of vertices of \fIG\fR from which all vertices of \fIG\fR can be reached.
+
+
+.RE
+.B
+\fBsink_vertices(G :: graph()) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all vertices of graph \fIG\fR with out-degree zero.
+
+
+.RE
+.B
+\fBsource_vertices(G :: graph()) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all vertices of graph \fIG\fR with in-degree zero.
+
+
+.RE
+.B
+\fBstrong_components(graph()) -> [[vertex()]].\fR
+
+.br
+.RS
+.PP
+Returns a list of strongly connected components.
+
+.PP
+Each strongly component is represented by its vertices. The order of the vertices and the order of the components are arbitrary. Each vertex of graph \fIG\fR occurs in exactly one strong component.
+
+
+.RE
+.B
+\fBsubgraph(graph(), [vertex()], Options) -> graph()\fR
+\fB                  when\fR
+\fB                      Options ::\fR
+\fB                          [{type, SubgraphType} |\fR
+\fB                           {keep_labels, boolean()}],\fR
+\fB                      SubgraphType :: inherit | [graph_type()].\fR
+
+.br
+.RS
+.PP
+Creates a maximal subgraph of \fIG\fR restricted to the vertices listed in \fIVs\fR.
+
+.PP
+If the value of option \fItype\fR is \fIinherit\fR, which is the default, the type of \fIG\fR is used for the subgraph as well (for example, whether the graph allows cycles). Otherwise the value of the \fItype\fR option is used as argument to \fInew/1\fR.
+
+.PP
+If the value of option \fIkeep_labels\fR is \fItrue\fR, which is the default, the labels of vertices and edges of \fIG\fR are used for the subgraph as well. If the value is \fIfalse\fR, the vertices and edges of the subgraph will have the default labels.
+
+.PP
+If any of the arguments are invalid, a \fIbadarg\fR exception is raised.
+
+
+.RE
+.B
+\fBtopsort(graph()) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a topological ordering of the vertices of graph \fIG\fR if such an ordering exists, otherwise \fIfalse\fR.
+
+.PP
+For each vertex in the returned list, no out-neighbors occur earlier in the list.
+
+.PP
+This is currently implemented simply as \fIreverse_postorder(G)\fR, but this detail is subject to change and should not be relied on.
+
+
+.RE
+.B
+\fBvertex(G :: graph(), V :: vertex()) -> label().\fR
+
+.br
+.RS
+.PP
+Returns the label of the vertex \fIV\fR of graph \fIG\fR.
+
+.PP
+An exception is raised if \fIV\fR does not exist in \fIG\fR.
+
+
+.RE
+.B
+\fBvertex(G :: graph(), V :: vertex(), Default :: label()) -> label().\fR
+
+.br
+.RS
+.PP
+Returns the label of the vertex \fIV\fR of graph \fIG\fR, or returns \fIDefault\fR if \fIV\fR does not exist in \fIG\fR.
+
+
+.RE
+.B
+\fBvertices(G :: graph()) -> [vertex()].\fR
+
+.br
+.RS
+.PP
+Returns a list of all vertices of graph \fIG\fR, in some unspecified order.
+
+
+.RE
+.B
+\fBvertices_with_labels(G :: graph()) -> [{vertex(), label()}].\fR
+
+.br
+.RS
+.PP
+Returns a list of all pairs \fI{V, L}\fR of vertices of graph \fIG\fR and their respective labels, in some unspecified order.
+
+
+.RE

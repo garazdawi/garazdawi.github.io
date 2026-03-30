@@ -1,0 +1,2029 @@
+.TH rand 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+rand \- Pseudo random number generation
+
+.SH DESCRIPTION
+.PP
+This module provides Pseudo Random Number Generation and implements a number of base generator algorithms.  Most are provided through a plug-in framework that adds essential features to the base generators.
+
+.PP
+PRNGs in general, and so the algorithms in this module, are mostly used for test and simulation.  They are designed for good statistical quality and high generation speed.
+
+.PP
+A generator algorithm, for each iteration, takes a state as input and produces a raw pseudo random number and a new state to be used for the next iteration.
+
+.PP
+A particular state always produces the same raw number and new state. The initial state is produced from a seed. This makes it possible to reproduce for example a simulation with the same pseudo random number sequence, by using the same seed. There are also the functions \fIexport_seed/0\fR and \fIexport_seed_s/1\fR that capture the PRNG state in an \fIexport_state/0\fR, that can be used to start from a known state.
+
+.PP
+This property, and others, make the algorithms in this module unsuitable for cryptographical applications, but in the \fIcrypto\fR module there are such generators, for this module's plug-in framework. See \fIcrypto:rand_seed_s/0\fR and \fIcrypto:rand_seed_alg_s/1\fR.
+
+.PP
+At the end of this module documentation there are some niche algorithms that do not use this module's normal plug-in framework. They are useful for special purposes like fast generation when quality is not essential, for seeding other generators, and such.
+
+.SS " Plug-in framework"
+
+.PP
+The raw pseudo random numbers produced by the base generators are only appropriate in some cases such as power of two ranges less than the generator size, and some have quirks, for example weak low bits.  Therefore, the Plug-in Framework implements a common API for all base generators, that add essential or useful funcionality:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Keeping the generator state in the process dictionary.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Automatic seeding.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Seeding support for manual seeding to avoid common pitfalls.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Generating integers with uniform distribution, on \fIany\fR range, without bias.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Generating floating-point numbers with uniform distribution.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Generating floating-point numbers with normal distribution, standard normal distribution or specified mean and variance.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Generating any number of bytes.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Jumping the generator ahead (multiple non-overlapping sequences), in algorithms that support that.
+
+.RE
+
+.PP
+\fBUsage and examples\fR
+
+.PP
+Decide if the PRNG state should be stored in the process dictionary of the calling process (implicit state), or in a state variable for the calling code to keep track of (explicit state).
+
+.PP
+Initialize (seed) a generator, which selects the PRNG algorithm and creates the initial state.  Either use an explicit \fISeed\fR value which makes it possible to reproduce the PRNG sequence, or use an automatic seed.  If you use the implicit state and omit this step, you will get the \fIdefault algorithm\fR with an automatic seed.
+
+.PP
+Then the generator functions that, for example; generate range limited uniformly distributed integers, shuffle a list, and so on, can be called.
+
+.PP
+\fBSeeding the generator\fR
+
+.PP
+Seeding (initializing) is done by calling one of the \fIseed/1\fR or \fIseed_s/1\fR functions, which also selects which algorithm to use.  The \fIseed/1\fR functions store the generator and initial state in the process dictionary, while the \fIseed_s/1\fR functions only return the initial state.
+
+.PP
+The seed functions that do not have a \fISeed\fR argument create an automatic seed which is designed to be unique to the created generator instance; see \fIseed_s/1\fR.
+
+.PP
+If an automatic seed is not desired, the seed functions that have a \fISeed\fR argument should be used.  The argument has 3 possible formats; see the \fIseed/0\fR type description.
+
+.PP
+There are also seeding functions for generators in the \fIcrypto\fR module. See the section Plug-In Generators.
+
+.PP
+\fBUsing the generator\fR
+
+.PP
+The Plug-in framework API generator functions named with the suffix \fI_s\fR, with a few exceptions, take an explicit state as their last argument and return the new state as the last element in the returned tuple.  The new state shall be used when calling the next generator function, and so on.  The process dictionary is not used.
+
+.PP
+Sibling functions without that suffix operate on the implicit state stored in the process dictionary, and only return their "interesting" output value.  If the process dictionary has no stored implicit state, \fIseed(default)\fR is called to create an automatic seed for the \fIdefault algorithm\fR, as initial state.
+
+.PP
+\fIGenerator functions\fR:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIuniform/1\fR and \fIuniform_s/2\fR generate \fIuniformly distributed integers\fR on \fBany\fR (unlimited) specified range, without bias.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIuniform/0\fR, \fIuniform_s/1\fR, \fIuniform_real/0\fR and \fIuniform_real_s/1\fR generate \fIuniformly distributed floating point numbers\fR on the range [0.0, 1.0).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIbytes/1\fR and \fIbytes_s/2\fR generate \fIuniformly distributed bytes\fR. See the note under \fIbytes_s/2\fR about efficiency.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIshuffle/1\fR and \fIshuffle_s/2\fR \fIshuffle a list\fR.
+
+.RE
+
+.PP
+Those generator functions use one or more raw numbers from the generator to do perform their tasks, which actually may be a bit tricky to do correctly and efficiently.
+
+.PP
+\fIGenerator functions\fR:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInormal/0\fR and \fInormal_s/1\fR generate \fIstandard normal distribution\fR floating point numbers.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fInormal/2\fR and \fInormal_s/3\fR generate \fInormal distribution\fR floating poing numbers with specified \fImean value and variance\fR.
+
+.RE
+
+.PP
+Those generator functions have to use a number of floating point calculations, that on different platforms with different math library implementations, optimizations, compilation flags such as gcc's \fI-ffast-math\fR, etc, may produce slightly different values.
+
+.PP
+Furthermore these slightly different values may cause the implementation to do a recursive retry on one platform that is not done on another, so the produced sequences may derail and get out of sync.
+
+.PP
+In other words, using these generator functions may cause the generated number sequence to be different on a different platform or on a different Erlang/OTP systems.  Despite using the same seed.
+
+.PP
+In the Shell Examples section just below, it is mentioned how to generate a textbook Box-Müller method standard distribution number, which is much slower than the Ziggurat Method used by the  \fInormal\fR* functions:
+
+.IP
+.nf
+ math:sqrt(-2 * math:log(rand:uniform_real()))
+ * math:cos(math:pi() * rand:uniform())
+
+.fi
+
+.PP
+That method always uses 2 raw generator numbers, so it will not derail, but may still produce slightly different numbers on different platforms.
+
+.PP
+\fB\fIShell Examples\fR\fR
+
+.IP
+.nf
+
+%% Generate two uniformly distibuted floating point numbers.
+%%
+%% By not calling a [seed](`seed/1`) function, this uses
+%% the generator state and algorithm in the process dictionary.
+%% If there is no state there, [`seed(default)`](`seed/1`)
+%% is implicitly called first:
+%%
+1> R0 = rand:uniform(),
+   is_float(R0) andalso 0.0 =< R0 andalso R0 < 1.0.
+true
+2> R1 = rand:uniform(),
+   is_float(R1) andalso 0.0 =< R1 andalso R1 < 1.0.
+true
+
+%% Generate a uniformly distributed integer in the range 1 .. 4711:
+%%
+3> K0 = rand:uniform(4711),
+   is_integer(K0) andalso 1 =< K0 andalso K0 =< 4711.
+true
+
+%% Generate a binary with 16 bytes, uniformly distributed:
+%%
+4> B0 = rand:bytes(16),
+   byte_size(B0) == 16.
+true
+
+%% Select and initialize a specified algorithm,
+%% with an automatic default seed, then generate
+%% a floating point number:
+%%
+5> rand:seed(exro928ss).
+6> R2 = rand:uniform(),
+   is_float(R2) andalso 0.0 =< R2 andalso R2 < 1.0.
+true
+
+%% Select and initialize a specified algorithm
+%% with a specified seed, then generate
+%% a floating point number:
+%%
+7> rand:seed(exro928ss, 123456789).
+8> R3 = rand:uniform().
+0.48303622772415256
+
+%% Select and initialize a specific algorithm,
+%% with an automatic default seed, using the functional API
+%% with explicit generator state, then generate
+%% two floating point numbers.
+%%
+9>  S0 = rand:seed_s(exsss).
+10> {R4, S1} = rand:uniform_s(S0),
+    is_float(R4) andalso 0.0 =< R4 andalso R4 < 1.0.
+true
+11> {R5, S2} = rand:uniform_s(S1),
+    is_float(R5) andalso 0.0 =< R5 andalso R5 < 1.0.
+true
+%% Repeat the first after seed
+12> {R4, _} = rand:uniform_s(S0).
+
+%% Generate a standard normal distribution number
+%% using the built-in fast Ziggurat Method:
+%%
+13> {SND0, S3} = rand:normal_s(S2),
+    is_float(SND0).
+true
+
+%% Generate a normal distribution number
+%% with mean -3 and variance 0.5:
+%%
+14> {ND0, S4} = rand:normal_s(-3, 0.5, S3),
+    is_float(ND0).
+true
+
+%% Generate a textbook basic form Box-Müller
+%% standard normal distribution number, which has the same
+%% distribution as the built-in Ziggurat Method above,
+%% but is much slower:
+%%
+15> R6 = rand:uniform_real(),
+    is_float(R6) andalso 0.0 < R6 andalso R6 < 1.0.
+true
+16> R7 = rand:uniform(),
+    is_float(R7) andalso 0.0 =< R7 andalso R7 < 1.0.
+true
+%% R6 cannot be equal to 0.0 so math:log/1 will never fail
+17> SND1 = math:sqrt(-2 * math:log(R6)) * math:cos(math:pi() * R7).
+
+%% Shuffle a deck of cards from a fixed seed,
+%% with a cryptographically unpredictable algorithm:
+18> Deck0 = [{Rank,Suit} ||
+     Rank <- lists:seq(2, 14),
+     Suit <- [clubs,diamonds,hearts,spades]].
+19> S5 = crypto:rand_seed_alg(crypto_aes, "Nothing up my sleeve").
+20> {Deck, S6} = rand:shuffle_s(Deck0, S5).
+21> Deck.
+[{2,spades},    {12,spades},   {14,diamonds}, {11,clubs},
+ {6,spades},    {2,hearts},    {13,diamonds}, {12,hearts},
+ {10,clubs},    {7,diamonds},  {2,diamonds},  {9,diamonds},
+ {4,hearts},    {9,hearts},    {6,clubs},     {3,spades},
+ {3,diamonds},  {14,clubs},    {9,spades},    {10,hearts},
+ {3,hearts},    {4,spades},    {13,hearts},   {5,hearts},
+ {7,hearts},    {7,clubs},     {8,spades},    {14,spades},
+ {11,spades},   {12,clubs},    {5,diamonds},  {12,diamonds},
+ {4,diamonds},  {9,clubs},     {14,hearts},   {2,clubs},
+ {10,diamonds}, {13,spades},   {6,hearts},    {4,clubs},
+ {7,spades},    {5,spades},    {10,spades},   {5,clubs},
+ {8,diamonds},  {6,diamonds},  {8,clubs},     {11,hearts},
+ {13,clubs},    {11,diamonds}, {3,clubs},     {8,hearts}]
+
+.fi
+
+.SS " Algorithms"
+
+.PP
+The base generator algorithms implement the Xoroshiro and Xorshift algorithms by Sebastiano Vigna.  During an iteration they generate an integer (at least 58-bit) and operate on a state of several integers. The size of these integers is chosen to not require bignum arithmetic on 64-bit platforms, which facilitates fast integer operations, in particular when handled by the JIT VM.
+
+.PP
+For most algorithms, jump functions are provided for generating non-overlapping sequences. A jump function perform a calculation equivalent to a large number of repeated state iterations, but execute in a time roughly equivalent to one regular iteration per generator bit.
+
+.PP
+By using a jump function instead of starting several generators from different seeds it is assured that the generated sequences do not overlap.  The alternative of using different seeds may accidentally start the generators in sequence positions that are close to each other, but a jump function jumps to a sequence position so far ahead that the generator at the jumped from position will never arrive at the jumped to position.
+
+.PP
+To create numbers with normal distribution the Ziggurat Method by Marsaglia and Tsang is used on the output from a base generator.
+
+.PP
+The following algorithms are provided:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIexsss\fR\fR, the \fIdefault algorithm\fR \fI(Since OTP 22.0)\fR  Xorshift116**, 58 bits precision and period of 2^116-1.
+
+.PP
+Jump function: equivalent to 2^64 calls.
+
+.PP
+This is the Xorshift116 generator combined with the StarStar scrambler from the 2018 paper by David Blackman and Sebastiano Vigna: Scrambled Linear Pseudorandom Number Generators
+
+.PP
+The generator does not use 58-bit rotates so it is faster than the Xoroshiro116 generator, and when combined with the StarStar scrambler it does not have any weak low bits like \fIexrop\fR (Xoroshiro116+).
+
+.PP
+Alas, this combination is about 10% slower than \fIexrop\fR, but despite that it is the \fIdefault algorithm\fR thanks to its statistical qualities.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIexro928ss\fR\fR \fI(Since OTP 22.0)\fR  Xoroshiro928**, 58 bits precision and a period of 2^928-1.
+
+.PP
+Jump function: equivalent to 2^512 calls.
+
+.PP
+This is a 58 bit version of Xoroshiro1024**, from the 2018 paper by David Blackman and Sebastiano Vigna: Scrambled Linear Pseudorandom Number Generators that on a 64 bit Erlang system executes only about 40% slower than the \fIdefault \fIexsss\fR algorithm\fR but with much longer period and better statistical properties, but on the flip side a larger state.
+
+.PP
+Many thanks to Sebastiano Vigna for his help with the 58 bit adaption.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIexrop\fR\fR \fI(Since OTP 20.0)\fR  Xoroshiro116+, 58 bits precision and period of 2^116-1.
+
+.PP
+Jump function: equivalent to 2^64 calls.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIexs1024s\fR\fR \fI(Since OTP 20.0)\fR  Xorshift1024*, 64 bits precision and a period of 2^1024-1
+
+.PP
+Jump function: equivalent to 2^512 calls.
+
+.PP
+Since this generator operates on 64-bit integers that are bignums on 64 bit platforms, it is much slower than \fIexro928ss\fR above.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fB\fIexsp\fR\fR \fI(Since OTP 20.0)\fR  Xorshift116+, 58 bits precision and period of 2^116-1
+
+.PP
+Jump function: equivalent to 2^64 calls.
+
+.PP
+This is a corrected version of a previous \fIdefault algorithm\fR (\fIexsplus\fR, \fIdeprecated\fR), that was superseded by Xoroshiro116+ (\fIexrop\fR).  Since this algorithm does not use rotate operations it executes a little (say < 15%) faster than \fIexrop\fR (that has to do a 58 bit rotate, for which there is no native instruction). See the algorithms' homepage.
+
+.RE
+
+.PP
+\fBDefault Algorithm\fR
+
+.PP
+The current \fIdefault algorithm\fR is \fIexsss\fR (Xorshift116**). If a specific algorithm is required, ensure to always use \fIseed/1\fR to initialize the state.
+
+.PP
+In many API functions in this module, the atom \fIdefault\fR can be used instead of an algorithm name, and is currently an alias for \fIexsss\fR. In a future Erlang/OTP release this might be a different algorithm. The \fIdefault algorithm\fR is selected to be one with high speed, small state and "good enough" statistical properties.
+
+.PP
+If it is essential to reproduce the same PRNG sequence on a later Erlang/OTP release, use \fIseed/2\fR or \fIseed_s/2\fR to select \fIboth\fR a specific algorithm and the seed value.
+
+.PP
+\fBOld Algorithms\fR
+
+.PP
+Undocumented (old) algorithms are deprecated but still implemented so old code relying on them will produce the same pseudo random sequences as before.
+
+.PP
+\fBNOTE: \fRThere were a number of problems in the implementation of the now undocumented algorithms, which is why they are deprecated. The new algorithms are a bit slower but do not have these problems: Uniform integer ranges had a skew in the probability distribution that was not noticeable for small ranges but for large ranges less than the generator's precision the probability to produce a low number could be twice the probability for a high. Uniform integer ranges larger than or equal to the generator's precision used a floating point fallback that only calculated with 52 bits which is smaller than the requested range and therefore all numbers in the requested range were not even possible to produce. Uniform floats had a non-uniform density so small values for example less than 0.5 had got smaller intervals decreasing as the generated value approached 0.0 although still uniformly distributed for sufficiently large subranges. The new algorithms produces uniformly distributed floats of the form \fIN * 2.0^(-53)\fR hence they are equally spaced.
+
+
+.PP
+\fBQuality of the Generated Numbers\fR
+
+.PP
+\fBNOTE: \fRThe builtin random number generator algorithms are not cryptographically strong. If a \fIcryptographically strong\fR random number generator is needed, use for example \fIcrypto:rand_seed_s/0\fR or \fIcrypto:rand_seed_alg_s/1\fR. There are also generators for \fIcryptographically unpredictable\fR pseudo random numbers: see \fIcrypto:rand_seed_alg/2\fR and \fIcrypto:rand_seed_alg_s/2\fR.  They are generated using cryptographical primitives so the statistical quality is impeccable, but the generated sequence can be repeated, and therefore cannot be regarded as \fIcryptographically strong\fR. The generators in the \fIcrypto\fR module are much slower at generating numbers and/or require a much larger state than the generators in this module.
+
+
+.PP
+For all these generators except \fIexro928ss\fR and \fIexsss\fR the lowest bit(s) have got a slightly less random behaviour than all other bits. 1 bit for \fIexrop\fR (and \fIexsp\fR), and 3 bits for \fIexs1024s\fR. See for example this explanation in the Xoroshiro128+ generator source code:
+
+.RS 4
+.PP
+Beside passing BigCrush, this generator passes the PractRand test suite up to (and included) 16TB, with the exception of binary rank tests, which fail due to the lowest bit being an LFSR; all other bits pass all tests. We suggest to use a sign test to extract a random Boolean value.
+
+.RE
+
+.PP
+If this is a problem; to generate a boolean with these algorithms, use something like this:
+
+.IP
+.nf
+(rand:uniform(256) > 128) % -> boolean()
+
+.fi
+
+.IP
+.nf
+((rand:uniform(256) - 1) bsr 7) % -> 0 | 1
+
+.fi
+
+.PP
+For a general range, with \fIN = 1\fR for \fIexrop\fR, and \fIN = 3\fR for \fIexs1024s\fR:
+
+.IP
+.nf
+(((rand:uniform(Range bsl N) - 1) bsr N) + 1)
+
+.fi
+
+.PP
+The floating point generating functions in this module waste the lowest bits when converting from an integer so they avoid this snag.
+
+.SS " Niche algorithms"
+
+.PP
+The niche algorithms API contains special purpose algorithms that do not use the plug-in framework, mainly for performance reasons.
+
+.PP
+Since these algorithms lack the plug-in framework support, generating numbers on a range other than the base generator's range may become a problem.
+
+.PP
+There are at least four ways to do this, assuming the \fIRange\fR is less than the generator's range:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBModulo\fR  To generate a number \fIV\fR on the range \fI0 .. Range-1\fR:
+
+.RS 4
+.PP
+Generate a number \fIX\fR.  Use \fIV = X rem Range\fR as your value.
+
+.RE
+
+.PP
+This method uses \fIrem\fR, that is, the remainder of an integer division, which is a slow operation.
+
+.PP
+Low bits from the generator propagate straight through to the generated value, so if the generator has got weaknesses in the low bits this method propagates them too.
+
+.PP
+If \fIRange\fR is not a divisor of the generator range, the generated numbers have a bias.  Example:
+
+.PP
+Say the generator generates a byte, that is, the generator range is \fI0 .. 255\fR, and the desired range is \fI0 .. 99\fR (\fIRange = 100\fR). Then there are 3 generator outputs that produce the value \fI0\fR, these are \fI0\fR, \fI100\fR and \fI200\fR. But there are only 2 generator outputs that produce the value \fI99\fR, which are \fI99\fR and \fI199\fR. So the probability for a value \fIV\fR in \fI0 .. 55\fR is 3/2 times the probability for the other values \fI56 .. 99\fR.
+
+.PP
+If \fIRange\fR is much smaller than the generator range, then this bias gets hard to detect. The rule of thumb is that if \fIRange\fR is smaller than the square root of the generator range, the bias is small enough. Example:
+
+.PP
+A byte generator when \fIRange = 20\fR. There are 12 (\fI256 div 20\fR) possibilities to generate the highest numbers and one more to generate a number \fIV < 16\fR (\fI256 rem 20\fR). So the probability is 13/12 for a low number versus a high. To detect that difference with some confidence you would need to generate a lot more numbers than the generator range, \fI256\fR in this small example.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBTruncated multiplication\fR  To generate a number \fIV\fR in the range \fI0 .. Range-1\fR, when you have a generator with a power of 2 range (\fI0 .. 2^Bits-1\fR):
+
+.RS 4
+.PP
+Generate a number \fIX\fR.  Use \fIV = X * Range bsr Bits\fR as your value.
+
+.RE
+
+.PP
+If the multiplication \fIX * Range\fR creates a bignum this method becomes very slow.
+
+.PP
+High bits from the generator propagate through to the generated value, so if the generator has got weaknesses in the high bits this method propagates them too.
+
+.PP
+If \fIRange\fR is not a divisor of the generator range, the generated numbers have a bias, pretty much as for the Modulo method above.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBShift or mask\fR  To generate a number in a power of 2 range (\fI0 .. 2^RBits-1\fR), when you have a generator with a power of 2 range (\fI0 .. 2^Bits\fR):
+
+.RS 4
+.PP
+Generate a number \fIX\fR.  Use \fIV = X band ((1 bsl RBits)-1)\fR or \fIV = X bsr (Bits-RBits)\fR as your value.
+
+.RE
+
+.PP
+Masking with \fIband\fR preserves the low bits, and right shifting with \fIbsr\fR preserves the high, so if the generator has got weaknesses in high or low bits; choose the right operator.
+
+.PP
+If the generator has got a range that is not a power of 2 and this method is used anyway, it introduces bias in the same way as for the Modulo method above.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fBRejection\fR  
+
+.RS 4
+.PP
+Generate a number \fIX\fR.  If \fIX\fR is in the range, use it as your value, otherwise reject it and repeat.
+
+.RE
+
+.PP
+In theory it is not certain that this method will ever complete, but in practice you ensure that the probability of rejection is low. Then the probability for yet another iteration decreases exponentially so the expected mean number of iterations will often be between 1 and 2. Also, since base generators in general are full length generators, they traverse all values of their state, so a value that will break the loop must eventually be generated.
+
+.RE
+
+.PP
+These methods can be combined, such as using the Modulo method and only if the generator value would create bias use Rejection. Or using Shift or mask to reduce the size of a generator value so that Truncated multiplication will not create a bignum.
+
+.PP
+The recommended way to generate a floating point number (IEEE 745 Double, that has got a 53-bit mantissa) in the range \fI0 .. 1\fR, that is \fI0.0 =< V < 1.0\fR is to generate a 53-bit number \fIX\fR and then use \fIV = X * 2#1.0*e-53\fR as your value. This will create a value of the form N*2^-53 with equal probability for every possible N for the range.
+
+.SH DATA TYPES
+.LP
+.B
+\fBalg() :: builtin_alg() | atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBalg_handler() :: alg_handler(alg()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBalg_handler(Alg) ::\fR
+\fB          #{type := Alg,\fR
+\fB            bits => non_neg_integer(),\fR
+\fB            weak_low_bits => 0..3,\fR
+\fB            max => non_neg_integer(),\fR
+\fB            next :=\fR
+\fB                fun((alg_state()) -> {non_neg_integer(), alg_state()}),\fR
+\fB            uniform => fun((state()) -> {float(), state()}),\fR
+\fB            uniform_n =>\fR
+\fB                fun((pos_integer(), state()) -> {pos_integer(), state()}),\fR
+\fB            jump => fun((state()) -> state()),\fR
+\fB            bytes =>\fR
+\fB                fun((non_neg_integer(), state()) -> {binary(), state()})}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBalg_state() ::\fR
+\fB          exsplus_state() |\fR
+\fB          exro928_state() |\fR
+\fB          exrop_state() |\fR
+\fB          exs1024_state() |\fR
+\fB          exs64_state() |\fR
+\fB          dummy_state() |\fR
+\fB          term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbuiltin_alg() ::\fR
+\fB          exsss | exro928ss | exrop | exs1024s | exsp | exs64 |\fR
+\fB          exsplus | exs1024 | dummy.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBdummy_state() :: uint58().\fR
+
+.br
+.RS
+.PP
+Algorithm specific internal state
+
+
+.RE
+.B
+\fBexport_state() :: {alg(), alg_state()}.\fR
+
+.br
+.RS
+.PP
+Algorithm-dependent state that can be printed or saved to file.
+
+
+.RE
+.B
+\fB-opaque exro928_state() \fR
+
+.br
+.RS
+.PP
+Algorithm specific internal state
+
+
+.RE
+.B
+\fB-opaque exrop_state() \fR
+
+.br
+.RS
+.PP
+Algorithm specific internal state
+
+
+.RE
+.B
+\fB-opaque exs1024_state() \fR
+
+.br
+.RS
+.PP
+Algorithm specific internal state
+
+
+.RE
+.B
+\fB-opaque exs64_state() \fR
+
+.br
+.RS
+.PP
+Algorithm specific internal state
+
+
+.RE
+.B
+\fB-opaque exsplus_state() \fR
+
+.br
+.RS
+.PP
+Algorithm specific internal state
+
+
+.RE
+.B
+\fBmwc59_state() :: 1..133850370 bsl 32 - 1 - 1.\fR
+
+.br
+.RS
+.PP
+\fI1 .. (16#1ffb072 bsl 29) - 2\fR
+
+
+.RE
+.B
+\fBseed() ::\fR
+\fB          [integer()] | integer() | {integer(), integer(), integer()}.\fR
+
+.br
+.RS
+.PP
+Generator seed value.
+
+.PP
+A single integer is the easiest to use.  It is set as the initial state of a SplitMix64 generator.  The sequential output values of that generator are then used for setting the actual generator's internal state, after masking to the proper word size and avoiding zero values, if necessary.
+
+.PP
+A list of integers sets the generator's internal state directly, after algorithm-dependent checks of the value and masking to the proper word size. The number of integers must be equal to the number of state words in the generator.  This format would only be needed in special cases.
+
+.PP
+A traditional 3-tuple of integers is passed through algorithm-dependent hashing functions to create the generator's initial state.  This format is inherited from this module's predecessor, the \fIrandom\fR module, where the 3-tuple from \fIerlang:now/0\fR (also now deprectated) was often used for seeding to get some uniqueness.
+
+
+.RE
+.B
+\fBsplitmix64_state() :: uint64().\fR
+
+.br
+.RS
+.PP
+Algorithm specific state
+
+
+.RE
+.B
+\fBstate() :: {alg_handler(), alg_state()}.\fR
+
+.br
+.RS
+.PP
+Algorithm-dependent state.
+
+
+.RE
+.B
+\fBuint58() :: 0..1 bsl 58 - 1.\fR
+
+.br
+.RS
+.PP
+\fI0 .. (2^58 - 1)\fR
+
+
+.RE
+.B
+\fBuint64() :: 0..1 bsl 64 - 1.\fR
+
+.br
+.RS
+.PP
+\fI0 .. (2^64 - 1)\fR
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBbytes(N :: non_neg_integer()) -> Bytes :: binary().\fR
+
+.br
+.RS
+.PP
+Generate random bytes as a \fIbinary()\fR, using the state in the process dictionary.
+
+.PP
+Like \fIbytes_s/2\fR but operates on the state stored in the process dictionary.  Returns the generated \fIBytes\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> rand:seed(exsss, 4711).
+%% Generate 10 bytes
+2> rand:bytes(10).
+<<72,232,227,197,77,149,79,57,9,136>>
+
+.fi
+
+
+.RE
+.B
+\fBbytes_s(N :: non_neg_integer(), State :: state()) ->\fR
+\fB                 {Bytes :: binary(), NewState :: state()}.\fR
+
+.br
+.RS
+.PP
+Generate random bytes as a \fIbinary()\fR.
+
+.PP
+For a specified integer \fIN >= 0\fR, generates a \fIbinary/0\fR with that number of random bytes.
+
+.PP
+The selected algorithm is used to generate as many random numbers as required to compose the \fIbinary/0\fR.  Returns the generated \fIBytes\fR and the \fINewState\fR.
+
+.RS 4
+.PP
+\fBNote \fR
+
+.PP
+The \fIcrypto\fR module contains a function \fIcrypto:strong_rand_bytes/1\fR that does the same thing, but cryptographically secure. It is pretty fast and efficient on modern systems. This function, however, offers the possibility to reproduce a byte sequence by re-using seed, which a cryptographically secure function cannot do. Alas, when this function is based on a PRNG that produces random integers, such as any in this module's algorithms section, bytes have to be created from integers, which becomes rather slow. A plug-in generator may implement a dedicated callback for generating bytes, to mitigate this problem, which in that case is stated in the generator's documentation.  See \fIcrypto:rand_seed_alg(crypto_prng1, Seed)\fR, which is repeatable and efficient.
+
+.RE
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S0 = rand:seed_s(exsss, 4711).
+%% Generate 10 bytes
+2> {Bytes, S1} = rand:bytes_s(10, S0).
+3> Bytes.
+<<72,232,227,197,77,149,79,57,9,136>>
+
+.fi
+
+
+.RE
+.B
+\fBexport_seed() -> undefined | export_state().\fR
+
+.br
+.RS
+.PP
+Export the seed value.
+
+.PP
+Returns the random number state in an external format. To be used with \fIseed/1\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S = rand:seed(exsss, 4711).
+%% Export the (initial) state
+2> E = rand:export_seed().
+%% Generate an integer N in the interval 1 .. 1_000_000
+3> rand:uniform(1_000_000).
+334013
+%% Start over with E that may have been stored
+%% in ETS, on file, etc...
+4> rand:seed(E).
+5> rand:uniform(1_000_000).
+334013
+%% Within the same node this works just as well
+6> rand:seed(S).
+7> rand:uniform(1_000_000).
+334013
+
+.fi
+
+
+.RE
+.B
+\fBexport_seed_s(State :: state()) -> export_state().\fR
+
+.br
+.RS
+.PP
+Export the seed value.
+
+.PP
+Returns the random number generator state in an external format. To be used with \fIseed_s/1\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S0 = rand:seed_s(exsss, 4711).
+%% Export the (initial) state
+2> E = rand:export_seed_s(S0).
+%% Generate an integer N in the interval 1 .. 1_000_000
+3> {N, S1} = rand:uniform_s(1_000_000, S0).
+4> N.
+334013
+%% Start over with E that may have been stored
+%% in ETS, on file, etc...
+5> S2 = rand:seed_s(E).
+%% S2 is equivalent to S0
+6> {N, S3} = rand:uniform_s(1_000_000, S2).
+%% S3 is equivalent to S1
+7> N.
+334013
+%% Within the same node this works just as well
+8> {N, S4} = rand:uniform_s(1_000_000, S0).
+%% S4 is equivalent to S1
+9> N.
+334013
+
+.fi
+
+
+.RE
+.B
+\fBexsp_jump(AlgState :: exsplus_state()) ->\fR
+\fB                   NewAlgState :: exsplus_state().\fR
+
+.br
+.RS
+.PP
+Jump the generator state forward.
+
+.PP
+Performs a \fIState\fR jump calculation that is equivalent to a 2^64 state iterations.
+
+.PP
+Returns the \fINewState\fR.
+
+.PP
+This feature can be used to create many non-overlapping random number sequences from one start state.
+
+.PP
+See the description of jump functions at the top of this module description.
+
+.PP
+See \fIexsp_next/1\fR about why this internal implementation function has been exposed.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize an 'exsp' PRNG
+1> {_, Ra0} = rand:seed_s(exsp, 4711).
+2> Rb0 = rand:exsp_jump(Ra0).
+3> {A1, Ra1} = rand:exsp_next(Ra0).
+4> {B1, Rb1} = rand:exsp_next(Rb0).
+%% A1 and B1 are the start of two non-overlapping PRNG sequences
+5> A1.
+146509126700279260
+6> B1.
+141632021409309024
+
+.fi
+
+
+.RE
+.B
+\fBexsp_next(AlgState :: exsplus_state()) ->\fR
+\fB                   {X :: uint58(), NewAlgState :: exsplus_state()}.\fR
+
+.br
+.RS
+.PP
+Generate an Xorshift116+ random integer and new algorithm state.
+
+.PP
+From the specified \fIAlgState\fR, generates a random 58-bit integer \fIX\fR and a new algorithm state \fINewAlgState\fR, according to the Xorshift116+ algorithm.
+
+.PP
+This is an API function exposing the internal implementation of the \fIexsp\fR algorithm that enables using it without the overhead of the plug-in framework, which might be useful for time critial applications. On a typical 64 bit Erlang VM this approach executes in just above 30% (1/3) of the time for the default algorithm through this module's normal plug-in framework.
+
+.PP
+To seed this generator use \fI{_, AlgState} = rand:seed_s(exsp)\fR or \fI{_, AlgState} = rand:seed_s(exsp, Seed)\fR with a specific \fISeed\fR.
+
+.PP
+\fBNOTE: \fRThis function offers no help in generating a number on a selected range, nor in generating floating point numbers.  It is easy to accidentally mess up the statistical properties of this generator or to loose the performance advantage when doing either. See the recipes in section Niche algorithms. Note also the caveat about weak low bits that this generator suffers from. The generator is exported in this form primarily for performance reasons.
+
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> {_, R0} = rand:seed(exsp, 4711).
+%% Generate a 32-bit random integer
+2> {X, R1} = rand:exsp_next(R0).
+3> V = X bsr (58 - 32).
+2183156113
+
+.fi
+
+
+.RE
+.B
+\fBjump() -> NewState :: state().\fR
+
+.br
+.RS
+.PP
+Jump the generator state forward.
+
+.PP
+Like \fIjump/1\fR but operates on the state stored in the process dictionary.  Returns the \fINewState\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S = rand:seed(exsss, 4711).
+2> Parent = self().
+3> Pid = spawn(
+     fun() ->
+       rand:seed(S),
+       rand:jump(),
+       Parent ! {self(), rand:bytes(10)}
+     end).
+%% Parent and Pid now produce non-overlapping PRNG
+%% sequences since they are separated by 2^64 iterations
+4> rand:bytes(10).
+<<72,232,227,197,77,149,79,57,9,136>>
+5> receive {Pid, Bytes} -> Bytes end.
+<<105,25,180,32,189,44,213,220,254,22>>
+
+.fi
+
+
+.RE
+.B
+\fBjump(State :: state()) -> NewState :: state().\fR
+
+.br
+.RS
+.PP
+Jump the generator state forward.
+
+.PP
+Performs an algorithm specific \fIState\fR jump calculation that is equivalent to a large number of state iterations. See this module's algorithms list.
+
+.PP
+Returns the \fINewState\fR.
+
+.PP
+This feature can be used to create many non-overlapping random number sequences from one start state; see the start of section Algorithms describing jump functions.
+
+.PP
+This function raises a \fInot_implemented\fR error exception if there is no jump function implemented for the \fIState\fR's algorithm.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> Sa0 = rand:seed_s(exsss, 4711).
+2> Sb0 = rand:jump(Sa0).
+%% Sa and Sb can now be used for non-overlapping PRNG
+%% sequences since they are separated by 2^64 iterations
+3> {BytesA, Sa1} = rand:bytes_s(10, Sa0).
+4> {BytesB, Sb1} = rand:bytes_s(10, Sb0).
+5> BytesA.
+<<72,232,227,197,77,149,79,57,9,136>>
+6> BytesB.
+<<105,25,180,32,189,44,213,220,254,22>>
+
+.fi
+
+
+.RE
+.B
+\fBmwc59(CX0 :: mwc59_state()) -> CX1 :: mwc59_state().\fR
+
+.br
+.RS
+.PP
+Generate a new MWC59 state.
+
+.PP
+From the specified generator state \fICX0\fR generate a new state \fICX1\fR, according to a Multiply With Carry generator, which is an efficient implementation of a Multiplicative Congruential Generator with a power of 2 multiplier and a prime modulus.
+
+.PP
+This generator uses the multiplier \fI2^32\fR and the modulus \fI16#7fa6502 * 2^32 - 1\fR, which have been selected, in collaboration with Sebastiano Vigna, to avoid bignum operations and still get good statistical quality. It has been named "MWC59" and can be written as:
+
+.IP
+.nf
+C = CX0 bsr 32
+X = CX0 band ((1 bsl 32)-1))
+CX1 = 16#7fa6502 * X + C
+
+.fi
+
+.PP
+Because the generator uses a multiplier that is a power of 2 it gets statistical flaws for collision tests and birthday spacings tests in 2 and 3 dimensions, and these caveats apply even when looking only at the MWC "digit", that is the low 32 bits (the multiplier) of the generator state.  The higher bits of the state are worse.
+
+.PP
+The quality of the output value improves much by using a scrambler, instead of just taking the low bits. Function \fImwc59_value32\fR is a fast scrambler that returns a decent 32-bit number. The slightly slower \fImwc59_value\fR scrambler returns 59 bits of very good quality, and \fImwc59_float\fR returns a \fIfloat/0\fR of very good quality.
+
+.PP
+The low bits of the base generator are surprisingly good, so the lowest 16 bits actually pass fairly strict PRNG tests, despite the generator's weaknesses that lie in the high bits of the 32-bit MWC "digit". It is recommended to use \fIrem\fR on the the generator state, or bit mask extracting the lowest bits to produce numbers in a range 16 bits or less. See the recipes in section Niche algorithms.
+
+.PP
+On a typical 64 bit Erlang VM this generator executes in below 8% (1/13) of the time for the default algorithm in the plug-in framework API of this module. With the \fImwc59_value32\fR scrambler the total time becomes 16% (1/6), and with \fImwc59_value\fR it becomes 20% (1/5) of the time for the default algorithm. With \fImwc59_float\fR the total time is 60% of the time for the default algorithm generating a \fIfloat/0\fR.
+
+.PP
+\fBNOTE: \fRThis generator is a niche generator for high speed applications. It has a much shorter period than the default generator, which in itself is a quality concern, although when used with the value scramblers it passes strict PRNG tests.  The generator is much faster than \fIexsp_next/1\fR but with a bit lower quality and much shorter period.
+
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> CX0 = rand:mwc59_seed(4711).
+%% Generate a 16 bit integer
+2> CX1 = rand:mwc59(CX0).
+3> CX1 band 65535.
+7714
+%% Generate an integer 0 .. 999 with not noticeable bias
+4> CX2 = rand:mwc59(CX1).
+5> CX2 rem 1_000.
+86
+
+.fi
+
+
+.RE
+.B
+\fBmwc59_float(CX :: mwc59_state()) -> V :: float().\fR
+
+.br
+.RS
+.PP
+Calculate a scrambled \fIfloat/0\fR from a MWC59 state.
+
+.PP
+Returns a value \fIV ::\fR \fIfloat/0\fR from a generator state \fICX\fR, in the range \fI0.0 =< V < 1.0\fR like for example \fIuniform_s/1\fR.
+
+.PP
+The generator state is scrambled as with \fImwc59_value/1\fR before converted to a \fIfloat/0\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> CX0 = rand:mwc59_seed(4711).
+%% Generate a float() F in [0.0, 1.0)
+2> CX1 = rand:mwc59(CX0).
+3> rand:mwc59_float(CX1).
+0.28932119128137423
+
+.fi
+
+
+.RE
+.B
+\fBmwc59_seed() -> CX :: mwc59_state().\fR
+
+.br
+.RS
+.PP
+Create a MWC59 generator state.
+
+.PP
+Like \fImwc59_seed/1\fR but creates a reasonably unpredictable seed just like \fIseed_s(atom())\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize the 'mwc59' PRNG
+1> CX0 = rand:mwc59_seed().
+%% Generate an integer 0 .. 999 with not noticeable bias
+2> CX1 = rand:mwc59(CX0).
+3> CX1 rem 1_000.
+
+.fi
+
+
+.RE
+.B
+\fBmwc59_seed(S :: 0..1 bsl 58 - 1) -> CX :: mwc59_state().\fR
+
+.br
+.RS
+.PP
+Create a MWC59 generator state.
+
+.PP
+Returns a generator state \fICX\fR. The 58-bit seed value \fIS\fR is hashed to create the generator state, to avoid that similar seeds create similar sequences.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> CX0 = rand:mwc59_seed(4711).
+%% Generate a 16 bit integer
+2> CX1 = rand:mwc59(CX0).
+3> CX1 band 65535.
+7714
+
+.fi
+
+
+.RE
+.B
+\fBmwc59_value(CX :: mwc59_state()) -> V :: 0..1 bsl 59 - 1.\fR
+
+.br
+.RS
+.PP
+Calculate a 59-bit scrambled value from a MWC59 state.
+
+.PP
+Returns a 59-bit value \fIV\fR from a generator state \fICX\fR. The generator state is scrambled using an 4-bit followed by a 27-bit xorshift, which masks the statistical imperfecions of the MWC59 base generator enough that all 59 bits are of very good quality.
+
+.PP
+Be careful to not accidentaly create a bignum when handling the value \fIV\fR.
+
+.PP
+It is in general general better to use the high bits from this scrambler than the low.  See the recipes in section Niche algorithms.
+
+.PP
+For a non power of 2 range less than about 20 bits (to not get too much bias and to avoid bignums) truncated multiplication can be used, which is much faster than using \fIrem\fR. Example for range 1 000 000; the range is 20 bits, we use 39 bits from the generator, adding up to 59 bits, which is not a bignum (on a 64-bit VM ): \fI(1_000_000 * (V bsr (59-39))) bsr 39\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> CX0 = rand:mwc59_seed(4711).
+%% Generate a 48 bit integer
+2> CX1 = rand:mwc59(CX0).
+3> rand:mwc59_value(CX1) bsr (59-48).
+247563052677727
+%% Generate an integer 0 .. 1_000_000 with not noticeable bias
+4> CX2 = rand:mwc59(CX1).
+5> ((rand:mwc59_value(CX2) bsr (59-39)) * 1_000_000) bsr 39.
+144457
+%% Generate an integer 0 .. 1_000_000_000 with not noticeable bias
+6> CX3 = rand:mwc59(CX2).
+7> rand:mwc59_value(CX3) rem 1_000_000_000.
+949193925
+
+.fi
+
+
+.RE
+.B
+\fBmwc59_value32(CX :: mwc59_state()) -> V :: 0..1 bsl 32 - 1.\fR
+
+.br
+.RS
+.PP
+Calculate a 32-bit scrambled value from a MWC59 state.
+
+.PP
+Returns a 32-bit value \fIV\fR from a generator state \fICX\fR. The generator state is scrambled using an 8-bit xorshift which masks the statistical imperfecions of the base generator \fImwc59\fR enough to produce numbers of decent quality. Still some problems in 2- and 3-dimensional birthday spacing and collision tests show through.
+
+.PP
+When using this scrambler it is in general better to use the high bits of the value than the low. The lowest 8 bits are of good quality and are passed right through from the base generator. They are combined with the next 8 in the xorshift making the low 16 good quality, but in the range 16 .. 31 bits there are weaker bits that should not become high bits of the generated values.
+
+.PP
+Therefore it is in general safer to shift out low bits. See the recipes in section Niche algorithms.
+
+.PP
+For a non power of 2 range less than about 16 bits (to not get too much bias and to avoid bignums) truncated multiplication can be used, that is: \fI(Range*V) bsr 32\fR, which is much faster than using \fIrem\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> CX0 = rand:mwc59_seed(4711).
+%% Generate a 32 bit integer
+2> CX1 = rand:mwc59(CX0).
+3> rand:mwc59_value32(CX1).
+2935831586
+%% Generate an integer 0 .. 999 with not noticeable bias
+4> CX2 = rand:mwc59(CX1).
+5> (rand:mwc59_value32(CX2) * 1_000) bsr 32.
+540
+
+.fi
+
+
+.RE
+.B
+\fBnormal() -> X :: float().\fR
+
+.br
+.RS
+.PP
+Generate a random number with standard normal distribution.
+
+.PP
+Like \fInormal_s/1\fR but operates on the state stored in the process dictionary.  Returns the generated number \fIX\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> rand:seed(exsss, 4711).
+%% Generate a float() with distribution 𝒩 (0.0, 1.0)
+2> rand:normal().
+0.5235119324419965
+
+.fi
+
+
+.RE
+.B
+\fBnormal(Mean :: number(), Variance :: number()) -> X :: float().\fR
+
+.br
+.RS
+.PP
+Generate a random number with specified normal distribution 𝒩 \fI(μ, σ²)\fR.
+
+.PP
+Like \fInormal_s/3\fR but operates on the state stored in the process dictionary.  Returns the generated number \fIX\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> rand:seed(exsss, 4711).
+%% Generate a float() with distribution 𝒩 (-3.0, 0.5)
+2> rand:normal(-3.0, 0.5).
+-2.6298211625381906
+
+.fi
+
+
+.RE
+.B
+\fBnormal_s(State :: state()) -> {X :: float(), NewState :: state()}.\fR
+
+.br
+.RS
+.PP
+Generate a random number with standard normal distribution.
+
+.PP
+From the specified \fIState\fR, generates a random number \fIX ::\fR \fIfloat/0\fR, with standard normal distribution, that is with mean value \fI0.0\fR and variance \fI1.0\fR.
+
+.PP
+Returns the generated number \fIX\fR and the \fINewState\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S0 = rand:seed_s(exsss, 4711).
+%% Generate a float() F with distribution 𝒩 (0.0, 1.0)
+2> {F, S1} = rand:normal_s(S0).
+3> F.
+0.5235119324419965
+
+.fi
+
+.PP
+\fBNOTE: \fRSee the generator functions description in the Usage and Examples section about why this function may produce different number sequences on different platforms.
+
+
+
+.RE
+.B
+\fBnormal_s(Mean, Variance, State) ->\fR
+\fB                  {X :: float(), NewState :: state()}\fR
+\fB                  when\fR
+\fB                      Mean :: number(),\fR
+\fB                      Variance :: number(),\fR
+\fB                      State :: state().\fR
+
+.br
+.RS
+.PP
+Generate a random number with specified normal distribution 𝒩 \fI(μ, σ²)\fR.
+
+.PP
+From the specified \fIState\fR, generates a random number \fIX ::\fR \fIfloat/0\fR, with normal distribution 𝒩 \fI(μ, σ²)\fR, that is 𝒩 (Mean, Variance) where \fIVariance >= 0.0\fR.
+
+.PP
+Returns \fIX\fR and the \fINewState\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S0 = rand:seed_s(exsss, 4711).
+%% Generate a float() F with distribution 𝒩 (-3.0, 0.5)
+2> {F, S1} = rand:normal_s(-3.0, 0.5, S0).
+3> F.
+-2.6298211625381906
+
+.fi
+
+.PP
+\fBNOTE: \fRSee the generator functions description in the Usage and Examples section about why this function may produce different number sequences on different platforms.
+
+
+
+.RE
+.B
+\fBseed(Alg | State) -> state()\fR
+\fB              when\fR
+\fB                  Alg :: builtin_alg() | default,\fR
+\fB                  State :: state() | export_state().\fR
+
+.br
+.RS
+.PP
+Seed the random number generator and select algorithm.
+
+.PP
+The same as \fIseed_s(Alg_or_State)\fR, but also stores the generated state in the process dictionary.
+
+.PP
+The argument \fIdefault\fR is an alias for the \fIdefault algorithm\fR that has been implemented \fI(Since OTP 24.0)\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a PRNG sequence
+%% with the default algorithm and automatic seed.
+%% The return value from rand:seed/1 is normally
+%% not used, but here we use it to verify equality
+1> S = rand:seed(default).
+%% Start from a state exported from
+%% the process dictionary is equivalent
+2> S = rand:seed(rand:export_seed()).
+%% A state can also be used as a start state
+3> S = rand:seed(S).
+%% With a heavier algorithm
+4> SS = rand:seed(exro928ss).
+5> SS = rand:seed(rand:export_seed()).
+
+.fi
+
+
+.RE
+.B
+\fBseed(Alg, Seed) -> state()\fR
+\fB              when Alg :: builtin_alg() | default, Seed :: seed().\fR
+
+.br
+.RS
+.PP
+Seed the random number generator and select algorithm.
+
+.PP
+The same as \fIseed_s(Alg, Seed)\fR, but also stores the generated state in the process dictionary.
+
+.PP
+\fIAlg = default\fR is an alias for the \fIdefault algorithm\fR that has been implemented \fI(Since OTP 24.0)\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Create a predictable PRNG sequence initial state,
+%% in the process dictionary
+1> rand:seed(exsss, 4711).
+
+.fi
+
+.PP
+\fBNOTE: \fRUsing \fIAlg = default\fR is \fInot\fR perfectly predictable since \fIdefault\fR may be an alias for a different algorithm in a future OTP release.
+
+
+
+.RE
+.B
+\fBseed_s(Alg | State) -> state()\fR
+\fB                when\fR
+\fB                    Alg :: builtin_alg() | default,\fR
+\fB                    State :: state() | export_state().\fR
+
+.br
+.RS
+.PP
+Seed the random number generator and select algorithm.
+
+.PP
+With the argument \fIAlg\fR, select that algorithm and seed random number generation with reasonably unpredictable time dependent data that should be unique to the created generator instance. It is (for now) based on the node name, the calling \fIpid/0\fR, the system time, and a system unique integer.  This set of fairly unique items may change in the future, if necessary.
+
+.PP
+\fIAlg = default\fR is an alias for the \fIdefault algorithm\fR \fI(Since OTP 24.0)\fR.
+
+.PP
+With the argument \fIState\fR, re-creates the state and returns it. See also \fIexport_seed/0\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a PRNG sequence
+%% with the default algorithm and automatic seed
+1> S = rand:seed_s(default).
+%% Start from an exported state is equivalent
+2> S = rand:seed_s(rand:export_seed_s(S)).
+%% A state can also be used as a start state
+3> S = rand:seed_s(S).
+%% With a heavier algorithm
+4> SS = rand:seed_s(exro928ss).
+5> SS = rand:seed_s(rand:export_seed_s(SS)).
+
+.fi
+
+
+.RE
+.B
+\fBseed_s(Alg, Seed) -> state()\fR
+\fB                when Alg :: builtin_alg() | default, Seed :: seed().\fR
+
+.br
+.RS
+.PP
+Seed the random number generator and select algorithm.
+
+.PP
+Creates and returns a generator state for the specified algorithm from the specified \fIseed/0\fR integers.
+
+.PP
+\fIAlg = default\fR is an alias for the \fIdefault algorithm\fR that has been implemented \fIsince OTP 24.0\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Create a predictable PRNG sequence initial state
+1> S = rand:seed(exsss, 4711).
+
+.fi
+
+.PP
+\fBNOTE: \fRUsing \fIAlg = default\fR is \fInot\fR perfectly predictable since \fIdefault\fR may be an alias for a different algorithm in a future OTP release.
+
+
+
+.RE
+.B
+\fBshuffle(List :: list()) -> ShuffledList :: list().\fR
+
+.br
+.RS
+.PP
+Shuffle a list.
+
+.PP
+Like \fIshuffle_s/2\fR but operates on the state stored in the process dictionary.  Returns the shuffled list.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> rand:seed(exsss, 4711).
+%% Create a list
+2> L = lists:seq($A, $Z).
+"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+%% Shuffle the list
+3> rand:shuffle(L).
+"KRCYQBUXTIWHMEJGFNODAZPSLV"
+
+.fi
+
+
+.RE
+.B
+\fBshuffle_s(List, State) ->\fR
+\fB                   {ShuffledList :: list(), NewState :: state()}\fR
+\fB                   when List :: list(), State :: state().\fR
+
+.br
+.RS
+.PP
+Shuffle a list.
+
+.PP
+From the specified \fIState\fR shuffles the elements in argument \fIList\fR so that, given that the PRNG algorithm in \fIState\fR is perfect, every possible permutation of the elements in the returned \fIShuffledList\fR has the same probability.
+
+.PP
+In other words, the quality of the shuffling depends only on the quality of the backend random number generator and seed.  If a cryptographical quality shuffling is needed, use for example \fIcrypto:rand_seed_alg_s/2\fR to initialize the random number generator.
+
+.PP
+Returns the shuffled list \fIShuffledList\fR and the \fINewState\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S0 = rand:seed_s(exsss, 4711).
+%% Create a list
+2> L0 = lists:seq($A, $Z).
+"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+%% Shuffle the list
+3> {L1, S1} = rand:shuffle_s(L0, S0).
+4> L1.
+"KRCYQBUXTIWHMEJGFNODAZPSLV"
+
+.fi
+
+
+.RE
+.B
+\fBsplitmix64_next(AlgState :: integer()) ->\fR
+\fB                         {X :: uint64(),\fR
+\fB                          NewAlgState :: splitmix64_state()}.\fR
+
+.br
+.RS
+.PP
+Generate a SplitMix64 random 64-bit integer and new algorithm state.
+
+.PP
+From the specified \fIAlgState\fR generates a random 64-bit integer \fIX\fR and a new generator state \fINewAlgState\fR, according to the SplitMix64 algorithm.
+
+.PP
+This generator is used internally in the \fIrand\fR module for seeding other generators since it is of a quite different breed which reduces the probability for creating an accidentally bad seed.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> {_, R0} = rand:splitmix64_next(erlang:phash2(4711)).
+%% Generate a 64 bit integer
+2> {X, R1} = rand:splitmix64_next(R0).
+3> X.
+8700325640925601664
+
+.fi
+
+
+.RE
+.B
+\fBuniform() -> X :: float().\fR
+
+.br
+.RS
+.PP
+Generate a uniformly distributed random number \fI0.0 =< X < 1.0\fR, using the state in the process dictionary.
+
+.PP
+Like \fIuniform_s/1\fR but operates on the state stored in the process dictionary.  Returns the generated number \fIX\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> rand:seed(exsss, 4711).
+%% Generate a float() in [0.0, 1.0)
+2> rand:uniform().
+0.28480361525506226
+
+.fi
+
+
+.RE
+.B
+\fBuniform(N :: pos_integer()) -> X :: pos_integer().\fR
+
+.br
+.RS
+.PP
+Generate a uniformly distributed random integer \fI1 =< X =< N\fR, using the state in the process dictionary.
+
+.PP
+Like \fIuniform_s/2\fR but operates on the state stored in the process dictionary.  Returns the generated number \fIX\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> rand:seed(exsss, 4711).
+%% Generate an integer in the interval 1 .. 1_000_000
+2> rand:uniform(1_000_000).
+334013
+
+.fi
+
+
+.RE
+.B
+\fBuniform_real() -> X :: float().\fR
+
+.br
+.RS
+.PP
+Generate a uniformly distributed random number \fI0.0 < X < 1.0\fR, using the state in the process dictionary.
+
+.PP
+Like \fIuniform_real_s/1\fR but operates on the state stored in the process dictionary.  Returns the generated number \fIX\fR.
+
+.PP
+See \fIuniform_real_s/1\fR.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence (bad seed)
+1> S = rand:seed(exsss, [4711,0]).
+%% Generate a float() in [0.0, 1.0)
+2> rand:uniform().
+0.0
+%% But, with uniform_real/1 we get better precision;
+%% generate a float() with distribution [0.0, 1.0) in (0.0, 1.0)
+3> rand:seed(S).
+4> rand:uniform_real().
+2.1911861999281885e-20
+
+.fi
+
+
+.RE
+.B
+\fBuniform_real_s(State :: state()) ->\fR
+\fB                        {X :: float(), NewState :: state()}.\fR
+
+.br
+.RS
+.PP
+Generate a uniformly distributed random number \fI0.0 < X < 1.0\fR.
+
+.PP
+From the specified state, generates a random float, uniformly distributed in the value range \fIDBL_MIN =< X < 1.0\fR.
+
+.PP
+Conceptually, a random real number \fIR\fR is generated from the interval \fI0.0 =< R < 1.0\fR and then the closest rounded down nonzero normalized number in the IEEE 754 Double Precision Format is returned.
+
+.PP
+\fBNOTE: \fRThe generated numbers from this function has got better granularity for small numbers than the regular \fIuniform_s/1\fR because all bits in the mantissa are random. This property, in combination with the fact that exactly zero is never returned is useful for algorithms doing for example \fI1.0 / X\fR or \fImath:log(X)\fR.
+
+
+.PP
+The concept implicates that the probability to get exactly zero is extremely low; so low that this function in fact never returns \fI0.0\fR. The smallest number that it \fImight\fR return is \fIDBL_MIN\fR, which is \fI2.0^(-1022)\fR.  However, the generators in this module have technical limitations on how many zero words in a row they \fIcan\fR return, which limits the number of leading zeros that \fIcan\fR be generated, which sets an upper limit for the smallest generated number, that is still extremely small.
+
+.PP
+The value range stated at the top of this function description is technically correct, but \fI0.0 =< X < 1.0\fR is a better description of the generated numbers' statistical distribution.  That this function never returns exactly \fI0.0\fR is impossible to observe.
+
+.PP
+For all sub ranges \fIN*2.0^(-53) =< X < (N+1)*2.0^(-53)\fR where \fI0 =< integer(N) < 2.0^53\fR, the probability to generate a number in a sub range is the same, very much like the numbers generated by \fIuniform_s/1\fR.
+
+.PP
+Having to generate extra random bits for occasional small numbers costs a little performance. This function is about 20% slower than the regular \fIuniform_s/1\fR
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence (bad seed)
+1> S0 = rand:seed_s(exsss, [4711,0]).
+%% Generate a float() F in [0.0, 1.0)
+2> {F, S1} = rand:uniform_s(S0).
+3> F.
+0.0
+%% But, with uniform_real/1 we get better precision;
+%% generate a float() R with distribution [0.0, 1.0) in (0.0, 1.0)
+4> {R, S2} = rand:uniform_real_s(S0).
+5> R.
+2.1911861999281885e-20
+
+.fi
+
+
+.RE
+.B
+\fBuniform_s(State :: state()) -> {X :: float(), NewState :: state()}.\fR
+
+.br
+.RS
+.PP
+Generate a uniformly distributed random number \fI0.0 =< X < 1.0\fR.
+
+.PP
+From the specified \fIState\fR, generates a random number \fIX ::\fR \fIfloat/0\fR, uniformly distributed in the value range \fI0.0 =< X < 1.0\fR. Returns the number \fIX\fR and the updated \fINewState\fR.
+
+.PP
+The generated numbers are of the form \fIN * 2.0^(-53)\fR, that is; equally spaced in the interval.
+
+.PP
+\fBWARNING: \fRThis function may return exactly \fI0.0\fR which can be fatal for certain applications. If that is undesired you can use \fI(1.0 - rand:uniform())\fR to get the interval \fI0.0 < X =< 1.0\fR, or instead use \fIuniform_real/0\fR. If neither endpoint is desired you can achieve the range \fI0.0 < X < 1.0\fR using test and re-try like this:
+
+.IP
+.nf
+my_uniform() ->
+    case rand:uniform() of
+        X when 0.0 < X -> X;
+        _ -> my_uniform()
+    end.
+
+.fi
+
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S0 = rand:seed_s(exsss, 4711).
+%% Generate a float() F in [0.0, 1.0)
+2> {F, S1} = rand:uniform_s(S0).
+3> F.
+0.28480361525506226
+
+.fi
+
+
+.RE
+.B
+\fBuniform_s(N :: pos_integer(), State :: state()) ->\fR
+\fB                   {X :: pos_integer(), NewState :: state()}.\fR
+
+.br
+.RS
+.PP
+Generate a uniformly distributed random integer \fI1 =< X =< N\fR.
+
+.PP
+From the specified \fIState\fR, generates a random number \fIX ::\fR \fIinteger/0\fR, uniformly distributed in the specified range \fI1 =< X =< N\fR. Returns the number \fIX\fR and the updated \fINewState\fR.
+
+.PP
+The range is not limited, it may be larger than the base generator's size, although that costs some performance since multiple base generator numbers have to be used and probably also bignum operations.
+
+.PP
+The generated numbers are bias free, even if the range is not a divisor of the base generator size, or larger than the same.
+
+.PP
+\fB\fIShell Example\fR\fR
+
+.IP
+.nf
+%% Initialize a predictable PRNG sequence
+1> S0 = rand:seed_s(exsss, 4711).
+%% Generate an integer N in the interval 1 .. 1_000_000
+2> {N, S1} = rand:uniform_s(1_000_000, S0).
+3> N.
+334013
+
+.fi
+
+
+.RE

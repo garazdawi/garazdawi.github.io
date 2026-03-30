@@ -1,0 +1,541 @@
+.TH sofs 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+sofs \- Functions for manipulating sets of sets.
+
+.SH DESCRIPTION
+.PP
+This module provides operations on finite sets and relations represented as sets. Intuitively, a set is a collection of elements; every element belongs to the set, and the set contains every element.
+
+.PP
+The data representing \fIsofs\fR as used by this module is to be regarded as opaque by other modules. In abstract terms, the representation is a composite type of existing Erlang terms. See note on data types. Any code assuming knowledge of the format is running on thin ice.
+
+.SS "Getting started"
+
+.PP
+A recommended starting point for the first-time user is the examples for the following functions:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrelation_to_family/1\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIrestriction/2\fR and \fIdrestriction/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIimage/2\fR and \fIinverse_image/2\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIconverse/1\fR
+
+.RE
+
+.SS "Set theory"
+
+.PP
+Given a set A and a sentence S(x), where x is a free variable, a new set B whose elements are exactly those elements of A for which S(x) holds can be formed, this is denoted B = {x in A : S(x)}. Sentences are expressed using the logical operators "for some" (or "there exists"), "for all", "and", "or", "not". If the existence of a set containing all the specified elements is known (as is always the case in this module), this is denoted B = {x : S(x)}.
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIunordered set\fR containing the elements a, b, and c is denoted {a, b, c}. This notation is not to be confused with tuples.
+
+.PP
+The \fIordered pair\fR of a and b, with first \fIcoordinate\fR a and second coordinate b, is denoted (a, b). An ordered pair is an \fIordered set\fR of two elements. In this module, ordered sets can contain one, two, or more elements, and parentheses are used to enclose the elements.
+
+.PP
+Unordered sets and ordered sets are orthogonal, again in this module; there is no unordered set equal to any ordered set.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fIempty set\fR contains no elements.
+
+.PP
+Set A is \fIequal\fR to set B if they contain the same elements, which is denoted A = B. Two ordered sets are equal if they contain the same number of elements and have equal elements at each coordinate.
+
+.PP
+Set B is a \fIsubset\fR of set A if A contains all elements that B contains.
+
+.PP
+The \fIunion\fR of two sets A and B is the smallest set that contains all elements of A and all elements of B.
+
+.PP
+The \fIintersection\fR of two sets A and B is the set that contains all elements of A that belong to B.
+
+.PP
+Two sets are \fIdisjoint\fR if their intersection is the empty set.
+
+.PP
+The \fIdifference\fR of two sets A and B is the set that contains all elements of A that do not belong to B.
+
+.PP
+The \fIsymmetric difference\fR of two sets is the set that contains those element that belong to either of the two sets, but not both.
+
+.PP
+The \fIunion\fR of a collection of sets is the smallest set that contains all the elements that belong to at least one set of the collection.
+
+.PP
+The \fIintersection\fR of a non-empty collection of sets is the set that contains all elements that belong to every set of the collection.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+The \fICartesian product\fR of two sets X and Y, denoted X × Y, is the set {a : a = (x, y) for some x in X and for some y in Y}.
+
+.PP
+A \fIrelation\fR is a subset of X × Y. Let R be a relation. The fact that (x, y) belongs to R is written as x R y. As relations are sets, the definitions of the last item (subset, union, and so on) apply to relations as well.
+
+.PP
+The \fIdomain\fR of R is the set {x : x R y for some y in Y}.
+
+.PP
+The \fIrange\fR of R is the set {y : x R y for some x in X}.
+
+.PP
+The \fIconverse\fR of R is the set {a : a = (y, x) for some (x, y) in R}.
+
+.PP
+If A is a subset of X, the \fIimage\fR of A under R is the set {y : x R y for some x in A}. If B is a subset of Y, the \fIinverse image\fR of B is the set {x : x R y for some y in B}.
+
+.PP
+If R is a relation from X to Y, and S is a relation from Y to Z, the \fIrelative product\fR of R and S is the relation T from X to Z defined so that x T z if and only if there exists an element y in Y such that x R y and y S z.
+
+.PP
+The \fIrestriction\fR of R to A is the set S defined so that x S y if and only if there exists an element x in A such that x R y.
+
+.PP
+If S is a restriction of R to A, then R is an \fIextension\fR of S to X.
+
+.PP
+If X = Y, then R is called a relation \fIin\fR X.
+
+.PP
+The \fIfield\fR of a relation R in X is the union of the domain of R and the range of R.
+
+.PP
+If R is a relation in X, and if S is defined so that x S y if x R y and not x = y, then S is the \fIstrict\fR relation corresponding to
+
+.nr li 0 1
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+Conversely, if S is a relation in X, and if R is defined so that x R y if x S y or x = y, then R is the \fIweak\fR relation corresponding to S.
+
+.RE
+
+.PP
+A relation R in X is \fIreflexive\fR if x R x for every element x of X, it is \fIsymmetric\fR if x R y implies that y R x, and it is \fItransitive\fR if x R y and y R z imply that x R z.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIfunction\fR F is a relation, a subset of X × Y, such that the domain of F is equal to X and such that for every x in X there is a unique element y in Y with (x, y) in F. The latter condition can be formulated as follows: if x F y and x F z, then y = z. In this module, it is not required that the domain of F is equal to X for a relation to be considered a function.
+
+.PP
+Instead of writing (x, y) in F or x F y, we write F(x) = y when F is a function, and say that F maps x onto y, or that the value of F at x is y.
+
+.PP
+As functions are relations, the definitions of the last item (domain, range, and so on) apply to functions as well.
+
+.PP
+If the converse of a function F is a function F', then F' is called the \fIinverse\fR of F.
+
+.PP
+The relative product of two functions F1 and F2 is called the \fIcomposite\fR of F1 and F2 if the range of F1 is a subset of the domain of F2.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Sometimes, when the range of a function is more important than the function itself, the function is called a \fIfamily\fR.
+
+.PP
+The domain of a family is called the \fIindex set\fR, and the range is called the \fIindexed set\fR.
+
+.PP
+If x is a family from I to X, then x[i] denotes the value of the function at index i. The notation "a family in X" is used for such a family.
+
+.PP
+When the indexed set is a set of subsets of a set X, we call x a \fIfamily of subsets\fR of X.
+
+.PP
+If x is a family of subsets of X, the union of the range of x is called the \fIunion of the family\fR x.
+
+.PP
+If x is non-empty (the index set is non-empty), the \fIintersection of the family\fR x is the intersection of the range of x.
+
+.PP
+In this module, the only families that are considered are families of subsets of some set X; in the following, the word "family" is used for such families of subsets.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIpartition\fR of a set X is a collection S of non-empty subsets of X whose union is X and whose elements are pairwise disjoint.
+
+.PP
+A relation in a set is an \fIequivalence relation\fR if it is reflexive, symmetric, and transitive.
+
+.PP
+If R is an equivalence relation in X, and x is an element of X, the \fIequivalence class\fR of x with respect to R is the set of all those elements y of X for which x R y holds. The equivalence classes constitute a partitioning of X. Conversely, if C is a partition of X, the relation that holds for any two elements of X if they belong to the same equivalence class, is an equivalence relation induced by the partition C.
+
+.PP
+If R is an equivalence relation in X, the \fIcanonical map\fR is the function that maps every element of X onto its equivalence class.
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Relations as defined above (as sets of ordered pairs) are from now on referred to as \fIbinary relations\fR.
+
+.PP
+We call a set of ordered sets (x[1], ..., x[n]) an \fI(n-ary) relation\fR, and say that the relation is a subset of the  Cartesian product X[1] × ... × X[n], where x[i] is an element of X[i], 1 <= i <= n.
+
+.PP
+The \fIprojection\fR of an n-ary relation R onto coordinate i is the set {x[i] : (x[1], ..., x[i], ..., x[n]) in R for some x[j] in X[j], 1 <= j <= n and not i = j}. The projections of a binary relation R onto the first and second coordinates are the domain and the range of R, respectively.
+
+.PP
+The relative product of binary relations can be generalized to n-ary relations as follows. Let TR be an ordered set (R[1], ..., R[n]) of binary relations from X to Y[i] and S a binary relation from (Y[1] × ... × Y[n]) to Z. The \fIrelative product\fR of TR and S is the binary relation T from X to Z defined so that x T z if and only if there exists an element y[i] in Y[i] for each 1 <= i <= n such that x R[i] y[i] and (y[1], ..., y[n]) S z. Now let TR be a an ordered set (R[1], ..., R[n]) of binary relations from X[i] to Y[i] and S a subset of X[1] × ... × X[n].
+
+.PP
+The \fImultiple relative product\fR of TR and S is defined to be the set {z : z = ((x[1], ..., x[n]), (y[1],...,y[n])) for some (x[1], ..., x[n]) in S and for some (x[i], y[i]) in R[i], 1 <= i <= n}.
+
+.PP
+The \fInatural join\fR of an n-ary relation R and an m-ary relation S on coordinate i and j is defined to be the set {z : z = (x[1], ..., x[n],  y[1], ..., y[j-1], y[j+1], ..., y[m]) for some (x[1], ..., x[n]) in R and for some (y[1], ..., y[m]) in S such that x[i] = y[j]}.
+
+.RE
+
+.SS "Sets handled by this module"
+
+.PP
+The sets recognized by this module are represented by elements of the relation Sets, which is defined as the smallest set such that:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For every atom T, except '_', and for every term X, (T, X) belongs to Sets (\fIatomic sets\fR).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+(['_'], []) belongs to Sets (the \fIuntyped empty set\fR).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For every tuple T = {T[1], ..., T[n]} and for every tuple X = {X[1], ..., X[n]}, if (T[i], X[i]) belongs to Sets for every 1 <= i <= n, then (T, X) belongs to Sets (\fIordered sets\fR).
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+For every term T, if X is the empty list or a non-empty sorted list [X[1], ..., X[n]] without duplicates such that (T, X[i]) belongs to Sets for every 1 <= i <= n, then ([T], X) belongs to Sets (\fItyped unordered sets\fR).
+
+.RE
+
+.PP
+An \fIexternal set\fR is an element of the range of Sets.
+
+.PP
+A \fItype\fR is an element of the domain of Sets.
+
+.PP
+If S is an element (T, X) of Sets, then T is a \fIvalid type\fR of X, T is the type of S, and X is the external set of S. \fIfrom_term/2\fR creates a set from a type and an Erlang term turned into an external set.
+
+.PP
+The sets represented by Sets are the elements of the range of function Set from Sets to Erlang terms and sets of Erlang terms:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Set(T,Term) = Term, where T is an atom
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Set({T[1], ..., T[n]}, {X[1], ...,  X[n]}) = (Set(T[1], X[1]), ...,  Set(T[n], X[n]))
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Set([T], [X[1], ..., X[n]]) = {Set(T, X[1]), ..., Set(T, X[n])}
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Set([T], []) = {}
+
+.RE
+
+.PP
+When there is no risk of confusion, elements of Sets are identified with the sets they represent. For example, if U is the result of calling \fIunion/2\fR with S1 and S2 as arguments, then U is said to be the union of S1 and S2. A more precise formulation is that Set(U) is the union of Set(S1) and Set(S2).
+
+.PP
+The types are used to implement the various conditions that sets must fulfill. As an example, consider the relative product of two sets R and S, and recall that the relative product of R and S is defined if R is a binary relation to Y and S is a binary relation from Y. The function that implements the relative product, \fIrelative_product/2\fR, checks that the arguments represent binary relations by matching [{A,B}] against the type of the first argument (Arg1 say), and [{C,D}] against the type of the second argument (Arg2 say). The fact that [{A,B}] matches the type of Arg1 is to be interpreted as Arg1 representing a binary relation from X to Y, where X is defined as all sets Set(x) for some element x in Sets the type of which is A, and similarly for Y. In the same way Arg2 is interpreted as representing a binary relation from W to
+
+.nr li 0 1
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\n+[li].\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP "\n+[li]." 4
+.\}.PP
+Finally it is checked that B matches C, which is sufficient to ensure that W is equal to Y. The untyped empty set is handled separately: its type, ['_'], matches the type of any unordered set.
+
+.RE
+
+.PP
+A few functions of this module (\fIdrestriction/3\fR, \fIfamily_projection/2\fR, \fIpartition/2\fR, \fIpartition_family/2\fR, \fIprojection/2\fR, \fIrestriction/3\fR, \fIsubstitution/2\fR) accept an Erlang function as a means to modify each element of a given unordered set.  Such a function, called SetFun in the following, can be specified as a functional object (fun), a tuple \fI{external, Fun}\fR, or an integer:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If SetFun is specified as a fun, the fun is applied to each element of the given set and the return value is assumed to be a set.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+If SetFun is specified as a tuple \fI{external, Fun}\fR, Fun is applied to the external set of each element of the given set and the return value is assumed to be an external set. Selecting the elements of an unordered set as external sets and assembling a new unordered set from a list of external sets is in the present implementation more efficient than modifying each element as a set. However, this optimization can only be used when the elements of the unordered set are atomic or ordered sets. It must also be the case that the type of the elements matches some clause of Fun (the type of the created set is the result of applying Fun to the type of the given set), and that Fun does nothing but selecting, duplicating, or rearranging parts of the elements.
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Specifying a SetFun as an integer I is equivalent to specifying \fI{external, fun(X) -> element(I, X) end}\fR, but is to be preferred, as it makes it possible to handle this case even more efficiently.
+
+.RE
+
+.PP
+Examples of valid SetFuns:
+
+.IP
+.nf
+fun sofs:union/1
+fun(S) -> sofs:partition(1, S) end
+fun(S) -> sofs:from_term(sofs:no_elements(S)) end
+{external, fun(A) -> A end}
+{external, fun({A,_,C}) -> {C,A} end}
+{external, fun({_,{_,C}}) -> C end}
+{external, fun({_,{_,{_,E}=C}}) -> {E,{E,C}} end}
+2
+
+.fi
+
+.PP
+Examples of invalid SetFuns:
+
+.IP
+.nf
+fun sofs:no_elements/1
+{external, fun(A) -> 2 * A end}
+{external, fun({A,B,C}) -> A + B + C end}
+{external, fun lists:sum/1}
+
+.fi
+
+.PP
+The order in which a SetFun is applied to the elements of an unordered set is not specified, and can change in future versions of this module.
+
+.PP
+The execution time of the functions of this module is dominated by the time it takes to sort lists. When no sorting is needed, the execution time is in the worst case proportional to the sum of the sizes of the input arguments and the returned value. A few functions execute in constant time: \fIfrom_external/2\fR, \fIis_empty_set/1\fR, \fIis_set/1\fR, \fIis_sofs_set/1\fR, \fIto_external/1\fR \fItype/1\fR.
+
+.PP
+The functions of this module exit the process with a \fIbadarg\fR, \fIbad_function\fR, or \fItype_mismatch\fR message when given badly formed arguments or sets the types of which are not compatible.
+
+.PP
+When comparing external sets, operator \fI==/2\fR is used.
+
+.PP
+\fBSee Also\fR
+
+.PP
+\fIdigraph\fR, \fIgb_sets\fR, \fIgb_trees\fR, \fImaps\fR, \fIorddict\fR, \fIordsets\fR, \fIsets\fR
+

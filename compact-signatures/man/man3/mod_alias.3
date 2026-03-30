@@ -1,0 +1,89 @@
+.TH mod_alias 3 "inets 9.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+mod_alias \- URL aliasing.
+
+.SH DESCRIPTION
+.PP
+Erlang web server internal API for handling of, for example, interaction data exported by module \fImod_alias\fR.
+
+.SH FUNCTIONS
+.LP
+.B
+\fBdefault_index(ConfigDB, Path) -> NewPath\fR
+\fB                       when\fR
+\fB                           ConfigDB :: ets:tid(),\fR
+\fB                           Path :: string(),\fR
+\fB                           NewPath :: string().\fR
+
+.br
+.RS
+.PP
+If \fIPath\fR is a directory, \fIdefault_index/2\fR, it starts searching for resources or files that are specified in the config directive \fIDirectoryIndex\fR. If an appropriate resource or file is found, it is appended to the end of \fIPath\fR and then returned. \fIPath\fR is returned unaltered if no appropriate file is found or if \fIPath\fR is not a directory. \fIconfig_db()\fR is the server config file in ETS table format as described in Inets User's Guide.
+
+
+.RE
+.B
+\fBpath(Data, ConfigDB, RequestURI) -> Path\fR
+\fB              when\fR
+\fB                  Data :: [{real_name, {Path, AfterPath}}],\fR
+\fB                  ConfigDB :: ets:tid(),\fR
+\fB                  RequestURI :: string(),\fR
+\fB                  AfterPath :: string(),\fR
+\fB                  Path :: string().\fR
+
+.br
+.RS
+.PP
+\fIpath/3\fR returns the file \fIPath\fR in the \fIRequestURI\fR (see RFC 1945). If the interaction data \fI{real_name, {Path, AfterPath}}\fR has been exported by \fImod_alias\fR, \fIPath\fR is returned. If no interaction data has been exported, \fIServerRoot\fR is used to generate a file \fIPath\fR. \fIconfig_db()\fR and \fIinteraction_data()\fR are as defined in Inets User's Guide.
+
+
+.RE
+.B
+\fBreal_name(ConfigDB, RequestURI, Aliases) -> ReturnPath\fR
+\fB                   when\fR
+\fB                       ConfigDB :: ets:tid(),\fR
+\fB                       RequestURI :: string(),\fR
+\fB                       Aliases :: [{FakeName, RealName}],\fR
+\fB                       ReturnPath :: {ShortPath, Path, AfterPath},\fR
+\fB                       FakeName ::\fR
+\fB                           re:mp() |\fR
+\fB                           iodata() |\fR
+\fB                           unicode:charlist() |\fR
+\fB                           string(),\fR
+\fB                       RealName :: string(),\fR
+\fB                       ShortPath :: string(),\fR
+\fB                       Path :: string(),\fR
+\fB                       AfterPath :: string().\fR
+
+.br
+.RS
+.PP
+\fIreal_name/3\fR traverses \fIAliases\fR, typically extracted from \fIConfigDB\fR, and matches each \fIFakeName\fR with \fIRequestURI\fR. If a match is found, \fIFakeName\fR is replaced with \fIRealName\fR in the match. The resulting path is split into two parts, \fIShortPath\fR and \fIAfterPath\fR, as defined in \fIhttpd_util:split_path/1\fR. \fIPath\fR is generated from \fIShortPath\fR, that is, the result from \fIdefault_index/2\fR with \fIShortPath\fR as an argument. \fIconfig_db()\fR is the server config file in ETS table format as described in Inets User's Guide.
+
+
+.RE
+.B
+\fBreal_script_name(ConfigDB, RequestURI, ScriptAliases) ->\fR
+\fB                          ReturnPath | not_a_script\fR
+\fB                          when\fR
+\fB                              ConfigDB :: ets:tid(),\fR
+\fB                              RequestURI :: string(),\fR
+\fB                              ScriptAliases ::\fR
+\fB                                  list() | [{FakeName, RealName}],\fR
+\fB                              ReturnPath :: {ShortPath, AfterPath},\fR
+\fB                              FakeName ::\fR
+\fB                                  re:mp() |\fR
+\fB                                  iodata() |\fR
+\fB                                  unicode:charlist() |\fR
+\fB                                  string(),\fR
+\fB                              RealName :: string(),\fR
+\fB                              ShortPath :: string(),\fR
+\fB                              AfterPath :: term().\fR
+
+.br
+.RS
+.PP
+\fIreal_script_name/3\fR traverses \fIScriptAliases\fR, typically extracted from \fIConfigDB\fR, and matches each \fIFakeName\fR with \fIRequestURI\fR. If a match is found, \fIFakeName\fR is replaced with \fIRealName\fR in the match. If the resulting match is not an executable script, \fInot_a_script\fR is returned. If it is a script, the resulting script path is in two parts, \fIShortPath\fR and \fIAfterPath\fR, as defined in \fIhttpd_util:split_script_path/1\fR. \fIconfig_db()\fR is the server config file in ETS table format as described in Inets User's Guide.
+
+
+.RE

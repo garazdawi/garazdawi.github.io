@@ -1,0 +1,583 @@
+.TH lcnt 3 "tools 4.1.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+lcnt \- A runtime system Lock Profiling tool.
+
+.SH DESCRIPTION
+.PP
+The \fIlcnt\fR module is used to profile the internal ethread locks in the Erlang Runtime System. With \fIlcnt\fR enabled, internal counters in the runtime system are updated each time a lock is taken. The counters stores information about the number of acquisition tries and the number of collisions that has occurred during the acquisition tries. The counters also record the waiting time a lock has caused for a blocked thread when a collision has occurred.
+
+.PP
+The data produced by the lock counters will give an estimate on how well the runtime system will behave from a parallelizable view point for the scenarios tested. This tool was mainly developed to help Erlang runtime developers iron out potential and generic bottlenecks.
+
+.PP
+Locks in the emulator are named after what type of resource they protect and where in the emulator they are initialized, those are lock 'classes'. Most of those locks are also instantiated several times, and given unique identifiers, to increase locking granularity. Typically an instantiated lock protects a disjunct set of the resource, for example ets tables, processes or ports. In other cases it protects a specific range of a resource, for example \fIpix_lock\fR which protects index to process mappings, and is given a unique number within the class. A unique lock in \fIlcnt\fR is referenced by a name (class) and an identifier: \fI{Name, Id}\fR.
+
+.PP
+Some locks in the system are static and protects global resources, for example \fIbif_timers\fR and the \fIrun_queue\fR locks. Other locks are dynamic and not necessarily long lived, for example process locks and ets-table locks. The statistics data from short lived locks can be stored separately when the locks are deleted. This behavior is by default turned off to save memory but can be turned on via \fIlcnt:rt_opt({copy_save, true})\fR. The \fIlcnt:apply/1,2,3\fR functions enables this behavior during profiling.
+
+.PP
+\fBSee Also\fR
+
+.PP
+LCNT User's Guide
+
+.SH DATA TYPES
+.LP
+.B
+\fBcategory_atom() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlock_counter_data() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {sort, Sort :: sort()} |\fR
+\fB          {reverse, boolean()} |\fR
+\fB          {locations, boolean()} |\fR
+\fB          {thresholds, Thresholds :: [threshold()]} |\fR
+\fB          {print,\fR
+\fB           PrintOptions :: [print() | {print(), non_neg_integer()}]} |\fR
+\fB          {max_locks, MaxLocks :: non_neg_integer() | none} |\fR
+\fB          {combine, boolean()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBprint() ::\fR
+\fB          colls | duration | entry | id | name | ratio | time | tries |\fR
+\fB          type.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsort() :: colls | entry | id | name | ratio | time | tries | type.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBthreshold() ::\fR
+\fB          {colls, non_neg_integer()} |\fR
+\fB          {time, non_neg_integer()} |\fR
+\fB          {tries, non_neg_integer()}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBapply(Fun, Args) -> term() when Fun :: fun(), Args :: [term()].\fR
+
+.br
+.RS
+.PP
+Sets up lock counters, applies \fIFun\fR with \fIArgs\fR, and cleans up.
+
+.PP
+Clears the lock counters and then setups the instrumentation to save all destroyed locks. After setup the function is called, passing the elements in \fIArgs\fR as arguments. When the function returns the statistics are immediately collected to the server. After the collection the instrumentation is returned to its previous behavior. The result of the applied function is returned.
+
+.PP
+\fBWARNING: \fRThis function should only be used for micro-benchmarks; it sets \fIcopy_save\fR to \fItrue\fR for the duration of the call, which can quickly lead to running out of memory.
+
+
+
+.RE
+.B
+\fBclear(Node) -> ok when Node :: node().\fR
+
+.br
+.RS
+.PP
+Clears the internal lock statistics from the runtime system.
+
+.PP
+This clears the data in the runtime system but not in server.  All counters for static locks are zeroed, all dynamic locks currently alive are zeroed and all saved locks now destroyed are removed. It also resets the duration timer.
+
+
+.RE
+.B
+\fBcollect(Node) -> ok when Node :: node().\fR
+
+.br
+.RS
+.PP
+Collects lock statistics from the runtime system.
+
+.PP
+The function starts a server if it is not already started. It then populates the server with lock statistics.  If the server held any lock statistics data before the collect then that data is lost.
+
+
+.RE
+.B
+\fBconflicts(Options) -> ok when Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Prints a list of internal locks and its statistics.
+
+.PP
+For option description, see \fIlcnt:inspect/2\fR.
+
+
+.RE
+.B
+\fBinformation() -> ok.\fR
+
+.br
+.RS
+.PP
+Prints \fIlcnt\fR server state and generic information about collected lock statistics.
+
+
+.RE
+.B
+\fBinspect(Lock, Options) -> ok\fR
+\fB                 when\fR
+\fB                     Lock :: Name | {Name, Id | [Id]},\fR
+\fB                     Name :: atom() | pid() | port(),\fR
+\fB                     Id :: atom() | integer() | pid() | port(),\fR
+\fB                     Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Prints a list of internal lock counters for a specific lock.
+
+.PP
+Lock \fIName\fR and \fIId\fR for ports and processes are interchangeable with the use of \fIlcnt:swap_pid_keys/0\fR and is the reason why \fIpid/0\fR and \fIport/0\fR options can be used in both \fIName\fR and \fIId\fR space. Both pids and ports are special identifiers with stripped creation and can be recreated with \fIlcnt:pid/2,3\fR and \fIlcnt:port/1,2\fR.
+
+.PP
+Option description:
+
+{combine, boolean()}
+.RS 2
+Combine the statistics from different instances of a lock class.  Default: 
+\fItrue\fR
+
+.RE
+
+{locations, boolean()}
+.RS 2
+Print the statistics by source file and line numbers.  Default: 
+\fIfalse\fR
+
+.RE
+
+{max_locks, MaxLocks}
+.RS 2
+Maximum number of locks printed or no limit with 
+\fInone\fR.  Default: \fI20\fR
+
+.RE
+
+{print, PrintOptions}
+.RS 2
+Printing options:
+
+name
+.RS 2
+Named lock or named set of locks (classes). The same name used for initializing the lock in the VM.
+
+
+.RE
+
+id
+.RS 2
+Internal id for set of locks, not always unique. This could be table name for ets tables (db_tab), port id for ports, integer identifiers for allocators, etc.
+
+
+.RE
+
+type
+.RS 2
+Type of lock: 
+\fIrw_mutex\fR, \fImutex\fR, \fIspinlock\fR, \fIrw_spinlock\fR or \fIproclock\fR.
+
+.RE
+
+entry
+.RS 2
+In combination with 
+\fI{locations, true}\fR this option prints the lock operations source file and line number entry-points along with statistics for each entry.
+
+.RE
+
+tries
+.RS 2
+Number of acquisitions of this lock.
+
+
+.RE
+
+colls
+.RS 2
+Number of collisions when a thread tried to acquire this lock. This is when a trylock is EBUSY, a write try on read held rw_lock, a try read on write held rw_lock, a thread tries to lock an already locked lock. (Internal states supervises this.)
+
+
+.RE
+
+ratio
+.RS 2
+The ratio between the number of collisions and the number of tries (acquisitions) in percentage.
+
+
+.RE
+
+time
+.RS 2
+Accumulated waiting time for this lock. This could be greater than actual wall clock time, it is accumulated for all threads. Trylock conflicts does not accumulate time.
+
+
+.RE
+
+duration
+.RS 2
+Percentage of accumulated waiting time of wall clock time. This percentage can be higher than 100% since accumulated time is from all threads.
+
+
+.RE
+
+.PP
+Default: \fI[name,id,tries,colls,ratio,time,duration]\fR
+
+
+.RE
+
+{reverse, boolean()}
+.RS 2
+Reverses the order of sorting.  Default: 
+\fIfalse\fR
+
+.RE
+
+{sort, Sort}
+.RS 2
+Column sorting orders.  Default: 
+\fItime\fR
+
+.RE
+
+{thresholds, Thresholds}
+.RS 2
+Filtering thresholds. Anything values above the threshold value are passed through.  Default: 
+\fI[{tries, 0}, {colls, 0}, {time, 0}]\fR
+
+.RE
+
+
+.RE
+.B
+\fBload(Filename) -> ok when Filename :: file:filename().\fR
+
+.br
+.RS
+.PP
+Restores previously saved data to the server.
+
+
+.RE
+.B
+\fBlocations(Options) -> ok when Options :: [option()].\fR
+
+.br
+.RS
+.PP
+Prints a list of internal lock counters by source code locations.
+
+.PP
+For option description, see \fIlcnt:inspect/2\fR.
+
+
+.RE
+.B
+\fBpid(Node, Id, Serial) -> pid()\fR
+\fB             when Node :: node(), Id :: integer(), Serial :: integer().\fR
+
+.br
+.RS
+.PP
+Creates a process id with creation 0.
+
+
+.RE
+.B
+\fBport(Node, Id) -> port() when Node :: node(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Creates a port id with creation 0.
+
+
+.RE
+.B
+\fBrt_clear(Node) -> ok when Node :: node().\fR
+
+.br
+.RS
+.PP
+Clear the internal counters.
+
+.PP
+Equivalent to \fIlcnt:clear(Node)\fR.
+
+
+.RE
+.B
+\fBrt_collect(Node) -> [lock_counter_data()] when Node :: node().\fR
+
+.br
+.RS
+.PP
+Returns a list of raw lock counter data.
+
+
+.RE
+.B
+\fBrt_mask() -> [category_atom()].\fR
+
+.br
+.RS
+.PP
+Return the current category mask for the current node.
+
+
+.RE
+.B
+\fBrt_mask(Node) -> [category_atom()] when Node :: node();\fR
+\fB             (Categories) -> ok | {error, copy_save_enabled}\fR
+\fB                 when Categories :: [category_atom()].\fR
+
+.br
+.RS
+.PP
+Sets the current lock category mask for the current node or retrieves the current mask for a remote node.
+
+.PP
+If \fIArg\fR is an atom, it is assumed to be a node, and this call returns the current lock category mask for node \fIArg\fR.
+
+.PP
+If \fIArg\fR is a list, this call is equivalent to \fIrt_mask(node(), Arg)\fR.
+
+
+.RE
+.B
+\fBrt_mask(Node, Categories) -> ok | {error, copy_save_enabled}\fR
+\fB                 when Node :: node(), Categories :: [category_atom()].\fR
+
+.br
+.RS
+.PP
+Sets the lock category mask according to \fICategories\fR on node \fINode\fR.
+
+.PP
+This call will fail if the \fIcopy_save\fR option is enabled; see \fIlcnt:rt_opt/2\fR.
+
+.PP
+Valid categories are:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIallocator\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdb\fR (ETS tables)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdebug\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdistribution\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgeneric\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIio\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIprocess\fR
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIscheduler\fR
+
+.RE
+
+.PP
+This list is subject to change at any time, as is the category any given lock belongs to.
+
+
+.RE
+.B
+\fBrt_opt(Node, Option) -> boolean()\fR
+\fB                when\fR
+\fB                    Node :: node(),\fR
+\fB                    Option :: {Type, Value :: boolean()},\fR
+\fB                    Type :: copy_save | process_locks.\fR
+
+.br
+.RS
+.PP
+Sets a single option on node \fINode\fR.
+
+.PP
+Option description:
+
+{copy_save, boolean()}
+.RS 2
+Retains the statistics of destroyed locks.  Default: 
+\fIfalse\fR
+.PP
+\fBWARNING: \fRThis option will use a lot of memory when enabled, which must be reclaimed with \fIlcnt:rt_clear/0,1\fR. Note that it makes no distinction between locks that  were destroyed and locks for which counting was disabled, so enabling this option will disable changes to the lock category mask.
+
+
+
+.RE
+
+{process_locks, boolean()}
+.RS 2
+Profile process locks, equal to adding 
+\fIprocess\fR to the lock category mask; see \fIlcnt:rt_mask/2\fR.  Default: \fItrue\fR
+
+.RE
+
+
+.RE
+.B
+\fBsave(Filename) -> ok when Filename :: file:filename().\fR
+
+.br
+.RS
+.PP
+Saves the collected data to file.
+
+
+.RE
+.B
+\fBstart() -> {ok, Pid} | {error, {already_started, Pid}}\fR
+\fB               when Pid :: pid().\fR
+
+.br
+.RS
+.PP
+Starts the lock profiler server.
+
+.PP
+The server only act as a medium for the user and performs filtering and printing of data collected by \fIlcnt:collect/1\fR.
+
+
+.RE
+.B
+\fBstop() -> ok.\fR
+
+.br
+.RS
+.PP
+Stops the lock profiler server.
+
+
+.RE
+.B
+\fBswap_pid_keys() -> ok.\fR
+
+.br
+.RS
+.PP
+Swaps places on \fIName\fR and \fIId\fR space for ports and processes.
+
+
+.RE

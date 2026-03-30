@@ -1,0 +1,146 @@
+.TH wxSetCursorEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxSetCursorEvent \- A \fIwxSetCursorEvent\fR is generated from \fIwxWindow\fR when the mouse cursor is about to be set as a result of mouse motion.
+
+.SH DESCRIPTION
+.PP
+This event gives the application the chance to perform specific mouse cursor processing based on the current position of the mouse within the window. Use \fIsetCursor/2\fR to specify the cursor you want to be displayed.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwx_misc:setCursor/1\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow:setCursor/2\fR
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxSetCursorEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxSetCursorEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxSetCursor() :: #wxSetCursor{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxSetCursorEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxSetCursorEventType() :: set_cursor.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetCursor(This) -> wxCursor:wxCursor()\fR
+\fB                   when This :: wxSetCursorEvent().\fR
+
+.br
+.RS
+.PP
+Returns a reference to the cursor specified by this event.
+
+
+.RE
+.B
+\fBgetX(This) -> integer() when This :: wxSetCursorEvent().\fR
+
+.br
+.RS
+.PP
+Returns the X coordinate of the mouse in client coordinates.
+
+
+.RE
+.B
+\fBgetY(This) -> integer() when This :: wxSetCursorEvent().\fR
+
+.br
+.RS
+.PP
+Returns the Y coordinate of the mouse in client coordinates.
+
+
+.RE
+.B
+\fBhasCursor(This) -> boolean() when This :: wxSetCursorEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the cursor specified by this event is a valid cursor.
+
+.PP
+Remark: You cannot specify wxNullCursor with this event, as it is not considered a valid cursor.
+
+
+.RE
+.B
+\fBsetCursor(This, Cursor) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxSetCursorEvent(),\fR
+\fB                       Cursor :: wxCursor:wxCursor().\fR
+
+.br
+.RS
+.PP
+Sets the cursor associated with this event.
+
+
+.RE

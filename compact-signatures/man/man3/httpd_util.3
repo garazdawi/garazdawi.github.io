@@ -1,0 +1,265 @@
+.TH httpd_util 3 "inets 9.6.1" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+httpd_util \- Miscellaneous utility functions to be used when implementing Erlang web server API modules.
+
+.SH DESCRIPTION
+.PP
+This module provides the Erlang web server API module programmer with miscellaneous utility functions.
+
+.PP
+\fBNOTE: \fRNote the module is only recommended for using with httpd - for other cases it should be considered as deprecated.
+
+
+.PP
+\fBSee also\fR
+
+.PP
+\fIhttpd\fR
+
+.SH FUNCTIONS
+.LP
+.B
+\fBconvert_request_date(DateString) -> ErlDate | bad_date\fR
+\fB                              when\fR
+\fB                                  DateString :: string(),\fR
+\fB                                  ErlDate :: calendar:datetime().\fR
+
+.br
+.RS
+.PP
+\fIconvert_request_date/1\fR converts \fIDateString\fR to the Erlang date format. \fIDateString\fR must be in one of the three date formats defined in RFC 2616.
+
+
+.RE
+.B
+\fBcreate_etag(FileInfo) -> Etag\fR
+\fB                     when FileInfo :: file:file_info(), Etag :: string().\fR
+
+.br
+.RS
+.PP
+\fIcreate_etag/1\fR calculates the Etag for a file from its size and time for last modification. \fIFileInfo\fR is a record defined in \fIkernel/include/file.hrl\fR.
+
+
+.RE
+.B
+\fBday(NthDayOfWeek) -> DayOfWeek\fR
+\fB             when NthDayOfWeek :: 1..7, DayOfWeek :: string().\fR
+
+.br
+.RS
+.PP
+\fIday/1\fR converts the day of the week (\fINthDayOfWeek\fR) from an integer (1-7) to an abbreviated string, that is:
+
+.PP
+1 = "Mon", 2 = "Tue", ..., 7 = "Sat".
+
+
+.RE
+.B
+\fBlookup(EtsTable, Key, Undefined) -> Result\fR
+\fB                when\fR
+\fB                    EtsTable :: ets:table(),\fR
+\fB                    Key :: term(),\fR
+\fB                    Undefined :: term(),\fR
+\fB                    Result :: term() | Undefined.\fR
+
+.br
+.RS
+.PP
+\fIlookup\fR extracts \fI{Key, Value}\fR tuples from \fIETSTable\fR and returns the \fIValue\fR associated with \fIKey\fR. If \fIETSTable\fR is of type \fIbag\fR, only the first \fIValue\fR associated with \fIKey\fR is returned. \fIlookup/2\fR returns \fIundefined\fR and \fIlookup/3\fR returns \fIUndefined\fR if no \fIValue\fR is found.
+
+
+.RE
+.B
+\fBlookup_mime(ConfigDB, Suffix, Undefined) -> MimeType\fR
+\fB                     when\fR
+\fB                         ConfigDB :: ets:tid(),\fR
+\fB                         Suffix :: string(),\fR
+\fB                         Undefined :: term(),\fR
+\fB                         MimeType :: string() | Undefined.\fR
+
+.br
+.RS
+.PP
+\fIlookup_mime\fR returns the MIME type associated with a specific file suffix as specified in the file \fImime.types\fR (located in the config directory).
+
+
+.RE
+.B
+\fBlookup_mime_default(ConfigDB, Suffix, Undefined) -> MimeType\fR
+\fB                             when\fR
+\fB                                 ConfigDB :: ets:tid(),\fR
+\fB                                 Suffix :: string(),\fR
+\fB                                 Undefined :: term(),\fR
+\fB                                 MimeType :: string() | Undefined.\fR
+
+.br
+.RS
+.PP
+\fIlookup_mime_default\fR returns the MIME type associated with a specific file suffix as specified in the \fImime.types\fR file (located in the config directory). If no appropriate association is found, the value of \fIDefaultType\fR is returned.
+
+
+.RE
+.B
+\fBmessage(StatusCode, PhraseArgs, ConfigDB) -> Message\fR
+\fB                 when\fR
+\fB                     StatusCode ::\fR
+\fB                         301 | 304 | 400 | 401 | 403 | 404 | 408 | 412 |\fR
+\fB                         413 | 414 | 500 | 501 | 503 | 504,\fR
+\fB                     PhraseArgs :: term(),\fR
+\fB                     ConfigDB :: ets:tid(),\fR
+\fB                     Message :: string().\fR
+
+.br
+.RS
+.PP
+\fImessage/3\fR returns an informative HTTP 1.1 status string in HTML. Each \fIStatusCode\fR requires a specific \fIPhraseArgs\fR:
+
+301
+.RS 2
+
+\fIstring/0\fR: A URL pointing at the new document position.
+
+.RE
+
+400 | 401 | 500
+.RS 2
+
+\fInone\fR (no \fIPhraseArgs\fR).
+
+.RE
+
+403 | 404
+.RS 2
+
+\fIstring/0\fR: A \fIRequest-URI\fR as described in RFC 2616.
+
+.RE
+
+501
+.RS 2
+
+\fI{Method, RequestURI, HTTPVersion}\fR: The HTTP \fIMethod\fR, \fIRequest-URI\fR, and \fIHTTP-Version\fR as defined in RFC 2616.
+
+.RE
+
+504
+.RS 2
+
+\fIstring/0\fR: A string describing why the service was unavailable.
+
+.RE
+
+
+.RE
+.B
+\fBmonth(NthMonth) -> Month when NthMonth :: 1..12, Month :: string().\fR
+
+.br
+.RS
+.PP
+\fImonth/1\fR converts the month \fINthMonth\fR as an integer (1-12) to an abbreviated string, that is:
+
+.PP
+1 = "Jan", 2 = "Feb", ..., 12 = "Dec".
+
+
+.RE
+.B
+\fBmulti_lookup(EtsTable, Key) -> Result\fR
+\fB                      when\fR
+\fB                          EtsTable :: ets:tid(),\fR
+\fB                          Key :: term(),\fR
+\fB                          Result :: list() | [term()].\fR
+
+.br
+.RS
+.PP
+\fImulti_lookup\fR extracts all \fI{Key, Value}\fR tuples from an \fIETSTable\fR and returns \fIall\fR \fIValues\fR associated with \fIKey\fR in a list.
+
+
+.RE
+.B
+\fBreason_phrase(StatusCode) -> Description\fR
+\fB                       when\fR
+\fB                           StatusCode ::\fR
+\fB                               100 | 101 | 102 | 200 | 201 | 202 | 203 |\fR
+\fB                               204 | 205 | 206 | 207 | 226 | 300 | 301 |\fR
+\fB                               302 | 303 | 304 | 305 | 306 | 307 | 308 |\fR
+\fB                               400 | 401 | 402 | 403 | 404 | 405 | 406 |\fR
+\fB                               407 | 408 | 409 | 410 | 411 | 412 | 413 |\fR
+\fB                               414 | 415 | 416 | 417 | 422 | 423 | 424 |\fR
+\fB                               425 | 426 | 500 | 501 | 502 | 503 | 504 |\fR
+\fB                               505 | 507,\fR
+\fB                           Description :: string().\fR
+
+.br
+.RS
+.PP
+\fIreason_phrase\fR returns \fIDescription\fR of an HTTP 1.1 \fIStatusCode\fR, for example, 200 is "OK" and 201 is "Created". For more information, see RFC 2616.
+
+
+.RE
+.B
+\fBrfc1123_date(LocalTime) -> RFC1123Date\fR
+\fB                      when\fR
+\fB                          LocalTime :: calendar:datetime() | undefined,\fR
+\fB                          RFC1123Date :: string() | undefined.\fR
+
+.br
+.RS
+.PP
+\fIrfc1123_date/0\fR returns the current date in RFC 1123 format. \fIrfc_date/1\fR converts the date in the Erlang format to the RFC 1123 date format.
+
+
+.RE
+.B
+\fBsplit(String, RegExp, N) -> SplitRes\fR
+\fB               when\fR
+\fB                   String :: string(),\fR
+\fB                   RegExp :: string(),\fR
+\fB                   N :: non_neg_integer(),\fR
+\fB                   SplitRes :: {ok, FieldList} | {error, term()},\fR
+\fB                   FieldList :: [string()].\fR
+
+.br
+.RS
+.PP
+\fIsplit/3\fR splits \fIString\fR in \fIN\fR chunks using \fIRegExp\fR. \fIsplit/3\fR is equivalent to \fIre:split/3\fR with the exception that \fIN\fR defines the maximum number of fields in \fIFieldList\fR.
+
+
+.RE
+.B
+\fBsplit_path(URIString) -> {Path, QueryStringOrPathInfo}\fR
+\fB                    when\fR
+\fB                        URIString :: string(),\fR
+\fB                        Path :: string(),\fR
+\fB                        QueryStringOrPathInfo :: string().\fR
+
+.br
+.RS
+.PP
+\fIsplit_path/1\fR splits \fIRequestLine\fR in a file reference (\fIPath\fR), and a \fIQueryString\fR or a \fIPathInfo\fR string as specified in RFC 2616. A \fIQueryString\fR is isolated from \fIPath\fR with a question mark (\fI?\fR) and \fIPathInfo\fR with a slash (/). In the case of a \fIQueryString\fR, everything before \fI?\fR is a \fIPath\fR and everything after \fI?\fR is a \fIQueryString\fR. In the case of a \fIPathInfo\fR, \fIRequestLine\fR is scanned from left-to-right on the hunt for longest possible \fIPath\fR being a file or a directory. Everything after the longest possible \fIPath\fR, isolated with a \fI/\fR, is regarded as \fIPathInfo\fR
+
+
+.RE
+.B
+\fBsplit_script_path(URIString) -> Split\fR
+\fB                           when\fR
+\fB                               URIString :: string(),\fR
+\fB                               Split ::\fR
+\fB                                   not_a_script |\fR
+\fB                                   {Path, {PathInfo, QueryString}} |\fR
+\fB                                   {Path, []},\fR
+\fB                               Path :: string(),\fR
+\fB                               QueryString :: string(),\fR
+\fB                               PathInfo :: string().\fR
+
+.br
+.RS
+.PP
+\fIsplit_script_path/1\fR is equivalent to \fIsplit_path/1\fR with one exception. If the longest possible path is not a regular, accessible, and executable file, then \fInot_a_script\fR is returned.
+
+
+.RE

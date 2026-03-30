@@ -1,0 +1,658 @@
+.TH wxMenuBar 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxMenuBar \- A menu bar is a series of menus accessible from the top of a frame.
+
+.SH DESCRIPTION
+.PP
+Remark: To respond to a menu selection, provide a handler for EVT_MENU, in the frame that contains the menu bar.
+
+.PP
+If you have a toolbar which uses the same identifiers as your EVT_MENU entries, events from the toolbar will also be processed by your EVT_MENU event handlers.
+
+.PP
+Tip: under Windows, if you discover that menu shortcuts (for example, Alt-F to show the file menu) are not working, check any EVT_CHAR events you are handling in child windows. If you are not calling event.Skip() for events that you don't process in these event handlers, menu shortcuts may cease to work.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxMenu\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+Overview events
+
+.RE
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxWindow\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvtHandler\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxMenuBar
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxMenuBar() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBappend(This, Menu, Title) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxMenuBar(),\fR
+\fB                    Menu :: wxMenu:wxMenu(),\fR
+\fB                    Title :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Adds the item to the end of the menu bar.
+
+.PP
+Return: true on success, false if an error occurred.
+
+.PP
+See: \fIinsert/4\fR
+
+
+.RE
+.B
+\fBcheck(This, Id, Check) -> ok\fR
+\fB               when\fR
+\fB                   This :: wxMenuBar(),\fR
+\fB                   Id :: integer(),\fR
+\fB                   Check :: boolean().\fR
+
+.br
+.RS
+.PP
+Checks or unchecks a menu item.
+
+.PP
+Remark: Only use this when the menu bar has been associated with a frame; otherwise, use the \fIwxMenu\fR equivalent call.
+
+
+.RE
+.B
+\fBdestroy(This :: wxMenuBar()) -> ok.\fR
+
+.br
+.RS
+.PP
+Destroys the object
+
+
+.RE
+.B
+\fBenable(This, Id, Enable) -> ok\fR
+\fB                when\fR
+\fB                    This :: wxMenuBar(),\fR
+\fB                    Id :: integer(),\fR
+\fB                    Enable :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables or disables (greys out) a menu item.
+
+.PP
+Remark: Only use this when the menu bar has been associated with a frame; otherwise, use the \fIwxMenu\fR equivalent call.
+
+
+.RE
+.B
+\fBenableTop(This, Pos, Enable) -> ok\fR
+\fB                   when\fR
+\fB                       This :: wxMenuBar(),\fR
+\fB                       Pos :: integer(),\fR
+\fB                       Enable :: boolean().\fR
+
+.br
+.RS
+.PP
+Enables or disables a whole menu.
+
+.PP
+Remark: Only use this when the menu bar has been associated with a frame.
+
+
+.RE
+.B
+\fBfindItem(This, Id) -> wxMenuItem:wxMenuItem()\fR
+\fB                  when This :: wxMenuBar(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Finds the menu item object associated with the given menu item identifier.
+
+.PP
+Return: The found menu item object, or NULL if one was not found.
+
+
+.RE
+.B
+\fBfindMenu(This, Title) -> integer()\fR
+\fB                  when This :: wxMenuBar(), Title :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Returns the index of the menu with the given \fItitle\fR or \fIwxNOT\\_FOUND\fR if no such menu exists in this menubar.
+
+.PP
+The \fItitle\fR parameter may specify either the menu title (with accelerator characters, i.e. \fI"&File"\fR) or just the menu label (\fI"File"\fR) indifferently.
+
+
+.RE
+.B
+\fBfindMenuItem(This, MenuString, ItemString) -> integer()\fR
+\fB                      when\fR
+\fB                          This :: wxMenuBar(),\fR
+\fB                          MenuString :: unicode:chardata(),\fR
+\fB                          ItemString :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Finds the menu item id for a menu name/menu item string pair.
+
+.PP
+Return: The menu item identifier, or wxNOT_FOUND if none was found.
+
+.PP
+Remark: Any special menu codes are stripped out of source and target strings before matching.
+
+
+.RE
+.B
+\fBgetAutoWindowMenu() -> boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetHelpString(This, Id) -> unicode:charlist()\fR
+\fB                       when This :: wxMenuBar(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Gets the help string associated with the menu item identifier.
+
+.PP
+Return: The help string, or the empty string if there was no help string or the menu item was not found.
+
+.PP
+See: \fIsetHelpString/3\fR
+
+
+.RE
+.B
+\fBgetLabel(This, Id) -> unicode:charlist()\fR
+\fB                  when This :: wxMenuBar(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Gets the label associated with a menu item.
+
+.PP
+Return: The menu item label, or the empty string if the item was not found.
+
+.PP
+Remark: Use only after the menubar has been associated with a frame.
+
+
+.RE
+.B
+\fBgetLabelTop(This, Pos) -> unicode:charlist()\fR
+\fB                     when This :: wxMenuBar(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIgetMenuLabel/2\fR
+
+
+.RE
+.B
+\fBgetMenu(This, MenuIndex) -> wxMenu:wxMenu()\fR
+\fB                 when This :: wxMenuBar(), MenuIndex :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the menu at \fImenuIndex\fR (zero-based).
+
+
+.RE
+.B
+\fBgetMenuCount(This) -> integer() when This :: wxMenuBar().\fR
+
+.br
+.RS
+.PP
+Returns the number of menus in this menubar.
+
+
+.RE
+.B
+\fBgetMenuLabel(This, Pos) -> unicode:charlist()\fR
+\fB                      when This :: wxMenuBar(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the label of a top-level menu.
+
+.PP
+Note that the returned string includes the accelerator characters that have been specified in the menu title string during its construction.
+
+.PP
+Return: The menu label, or the empty string if the menu was not found.
+
+.PP
+Remark: Use only after the menubar has been associated with a frame.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMenuLabelText/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetMenuLabel/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetMenuLabelText(This, Pos) -> unicode:charlist()\fR
+\fB                          when This :: wxMenuBar(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Returns the label of a top-level menu.
+
+.PP
+Note that the returned string does not include any accelerator characters that may have been specified in the menu title string during its construction.
+
+.PP
+Return: The menu label, or the empty string if the menu was not found.
+
+.PP
+Remark: Use only after the menubar has been associated with a frame.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIgetMenuLabel/2\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIsetMenuLabel/3\fR
+
+.RE
+
+
+.RE
+.B
+\fBinsert(This, Pos, Menu, Title) -> boolean()\fR
+\fB                when\fR
+\fB                    This :: wxMenuBar(),\fR
+\fB                    Pos :: integer(),\fR
+\fB                    Menu :: wxMenu:wxMenu(),\fR
+\fB                    Title :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Inserts the menu at the given position into the menu bar.
+
+.PP
+Inserting menu at position 0 will insert it in the very beginning of it, inserting at position \fIgetMenuCount/1\fR is the same as calling \fIappend/3\fR.
+
+.PP
+Return: true on success, false if an error occurred.
+
+.PP
+See: \fIappend/3\fR
+
+
+.RE
+.B
+\fBisChecked(This, Id) -> boolean()\fR
+\fB                   when This :: wxMenuBar(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Determines whether an item is checked.
+
+.PP
+Return: true if the item was found and is checked, false otherwise.
+
+
+.RE
+.B
+\fBisEnabled(This, Id) -> boolean()\fR
+\fB                   when This :: wxMenuBar(), Id :: integer().\fR
+
+.br
+.RS
+.PP
+Determines whether an item is enabled.
+
+.PP
+Return: true if the item was found and is enabled, false otherwise.
+
+
+.RE
+.B
+\fBmacGetCommonMenuBar() -> wxMenuBar().\fR
+
+.br
+.RS
+.PP
+Enables you to get the global menubar on Mac, that is, the menubar displayed when the app is running without any frames open.
+
+.PP
+Return: The global menubar.
+
+.PP
+Remark: Only exists on Mac, other platforms do not have this method.
+
+.PP
+Only for:wxosx
+
+
+.RE
+.B
+\fBmacSetCommonMenuBar(Menubar) -> ok when Menubar :: wxMenuBar().\fR
+
+.br
+.RS
+.PP
+Enables you to set the global menubar on Mac, that is, the menubar displayed when the app is running without any frames open.
+
+.PP
+Remark: Only exists on Mac, other platforms do not have this method.
+
+.PP
+Only for:wxosx
+
+
+.RE
+.B
+\fBnew() -> wxMenuBar().\fR
+
+.br
+.RS
+.PP
+Construct an empty menu bar.
+
+
+.RE
+.B
+\fBnew(Style) -> wxMenuBar() when Style :: integer().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBoSXGetAppleMenu(This) -> wxMenu:wxMenu() when This :: wxMenuBar().\fR
+
+.br
+.RS
+.PP
+Returns the Apple menu.
+
+.PP
+This is the leftmost menu with application's name as its title. You shouldn't remove any items from it, but it is safe to insert extra menu items or submenus into it.
+
+.PP
+Only for:wxosx
+
+.PP
+Since: 3.0.1
+
+
+.RE
+.B
+\fBremove(This, Pos) -> wxMenu:wxMenu()\fR
+\fB                when This :: wxMenuBar(), Pos :: integer().\fR
+
+.br
+.RS
+.PP
+Removes the menu from the menu bar and returns the menu object - the caller is responsible for deleting it.
+
+.PP
+This function may be used together with \fIinsert/4\fR to change the menubar dynamically.
+
+.PP
+See: \fIreplace/4\fR
+
+
+.RE
+.B
+\fBreplace(This, Pos, Menu, Title) -> wxMenu:wxMenu()\fR
+\fB                 when\fR
+\fB                     This :: wxMenuBar(),\fR
+\fB                     Pos :: integer(),\fR
+\fB                     Menu :: wxMenu:wxMenu(),\fR
+\fB                     Title :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Replaces the menu at the given position with another one.
+
+.PP
+Return: The menu which was previously at position pos. The caller is responsible for deleting it.
+
+.PP
+See:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIinsert/4\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIremove/2\fR
+
+.RE
+
+
+.RE
+.B
+\fBsetAutoWindowMenu(Enable) -> ok when Enable :: boolean().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsetHelpString(This, Id, HelpString) -> ok\fR
+\fB                       when\fR
+\fB                           This :: wxMenuBar(),\fR
+\fB                           Id :: integer(),\fR
+\fB                           HelpString :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the help string associated with a menu item.
+
+.PP
+See: \fIgetHelpString/2\fR
+
+
+.RE
+.B
+\fBsetLabel(This, Id, Label) -> ok\fR
+\fB                  when\fR
+\fB                      This :: wxMenuBar(),\fR
+\fB                      Id :: integer(),\fR
+\fB                      Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the label of a menu item.
+
+.PP
+Remark: Use only after the menubar has been associated with a frame.
+
+.PP
+See: \fIgetLabel/2\fR
+
+
+.RE
+.B
+\fBsetLabelTop(This, Pos, Label) -> ok\fR
+\fB                     when\fR
+\fB                         This :: wxMenuBar(),\fR
+\fB                         Pos :: integer(),\fR
+\fB                         Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Equivalent to: \fIsetMenuLabel/3\fR
+
+
+.RE
+.B
+\fBsetMenuLabel(This, Pos, Label) -> ok\fR
+\fB                      when\fR
+\fB                          This :: wxMenuBar(),\fR
+\fB                          Pos :: integer(),\fR
+\fB                          Label :: unicode:chardata().\fR
+
+.br
+.RS
+.PP
+Sets the label of a top-level menu.
+
+.PP
+Remark: Use only after the menubar has been associated with a frame.
+
+
+.RE

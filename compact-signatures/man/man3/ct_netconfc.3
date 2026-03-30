@@ -1,0 +1,951 @@
+.TH ct_netconfc 3 "common_test 1.30" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+ct_netconfc \- NETCONF client module.
+
+.SH DESCRIPTION
+.PP
+NETCONF client module compliant with RFC 6241, NETCONF Configuration Protocol, and RFC 6242, Using the NETCONF Configuration Protocol over Secure SHell (SSH), and with support for RFC 5277, NETCONF Event Notifications.
+
+.PP
+\fIConnecting to a NETCONF server\fR
+
+.PP
+Call \fIconnect/1,2\fR to establish a connection to a server, then pass the returned handle to \fIsession/1-3\fR to establish a NETCONF session on a new SSH channel. Each call to \fIsession/1-3\fR establishes a new session on the same connection, and results in a hello message to the server.
+
+.PP
+Alternately, \fIopen/1,2\fR can be used to establish a single session on a dedicated connection. (Or, equivalently, \fIonly_open/1,2\fR followed by \fIhello/1-3\fR.)
+
+.PP
+Connect/session options can be specified in a configuration file with entries like the following.
+
+.IP
+.nf
+{server_id(), [option()]}.
+
+.fi
+
+.PP
+The \fIserver_id/0\fR or an associated \fIct:target_name/0\fR can then be passed to the aforementioned functions to use the referenced configuration.
+
+.PP
+\fISignaling\fR
+
+.PP
+Protocol operations in the NETCONF protocol are realized as remote procedure calls (RPCs) from client to server and a corresponding reply from server to client. RPCs are sent using like-named functions (eg. \fIedit_config/3-5\fR to send an edit-config RPC), with the server reply as return value. There are functions for each RPC defined in RFC 6241 and the create-subscription RPC from RFC 5277, all of which are wrappers on \fIsend_rpc/2,3\fR, that can be used to send an arbitrary RPC not defined in RFC 6241 or RFC 5277.
+
+.PP
+All of the signaling functions have one variant with a \fITimeout\fR argument and one without, corresponding to an infinite timeout. The latter is inappropriate in most cases since a non-response by the server or a missing message-id causes the call to hang indefinitely.
+
+.PP
+\fILogging\fR
+
+.PP
+The NETCONF server uses \fIerror_logger\fR for logging of NETCONF traffic. A special purpose error handler is implemented in \fIct_conn_log_h\fR. To use this error handler, add the \fIcth_conn_log\fR hook in the test suite, for example:
+
+.IP
+.nf
+suite() ->
+    [{ct_hooks, [{cth_conn_log, [{ct:conn_log_mod(), ct:conn_log_options()}]}]}].
+
+.fi
+
+.PP
+\fIconn_log_mod()\fR is the name of the \fICommon Test\fR module implementing the connection protocol, for example, \fIct_netconfc\fR.
+
+.PP
+Hook option \fIlog_type\fR specifies the type of logging:
+
+raw
+.RS 2
+The sent and received NETCONF data is logged to a separate text file "as is" without any formatting. A link to the file is added to the test case HTML log.
+
+
+.RE
+
+pretty
+.RS 2
+The sent and received NETCONF data is logged to a separate text file with XML data nicely indented. A link to the file is added to the test case HTML log.
+
+
+.RE
+
+html (default)
+.RS 2
+The sent and received NETCONF traffic is pretty printed directly in the test case HTML log.
+
+
+.RE
+
+silent
+.RS 2
+NETCONF traffic is not logged.
+
+
+.RE
+
+.PP
+By default, all NETCONF traffic is logged in one single log file. However, different connections can be logged in separate files. To do this, use hook option \fIhosts\fR and list the names of the servers/connections to be used in the suite. The connections must be named for this to work, that is, they must be opened with \fIopen/2\fR.
+
+.PP
+Option \fIhosts\fR has no effect if \fIlog_type\fR is set to \fIhtml\fR or \fIsilent\fR.
+
+.PP
+The hook options can also be specified in a configuration file with configuration variable \fIct_conn_log\fR:
+
+.IP
+.nf
+{ct_conn_log,[{ct:conn_log_mod(), ct:conn_log_options()}]}.
+
+.fi
+
+.PP
+For example:
+
+.IP
+.nf
+{ct_conn_log,[{ct_netconfc,[{log_type,pretty},
+                            {hosts,[ct:key_or_name()]}]}]}
+
+.fi
+
+.PP
+\fBNOTE: \fRHook options specified in a configuration file overwrite the hard-coded hook options in the test suite.
+
+
+.PP
+\fILogging Example 1:\fR
+
+.PP
+The following \fIct_hooks\fR statement causes pretty printing of NETCONF traffic to separate logs for the connections named \fInc_server1\fR and \fInc_server2\fR. Any other connections are logged to default NETCONF log.
+
+.IP
+.nf
+suite() ->
+   [{ct_hooks, [{cth_conn_log, [{ct_netconfc,[{log_type,pretty}},
+                                              {hosts,[nc_server1,nc_server2]}]}
+                               ]}]}].
+
+.fi
+
+.PP
+Connections must be opened as follows:
+
+.IP
+.nf
+open(nc_server1,[...]),
+open(nc_server2,[...]).
+
+.fi
+
+.PP
+\fILogging Example 2:\fR
+
+.PP
+The following configuration file causes raw logging of all NETCONF traffic in to one single text file:
+
+.IP
+.nf
+{ct_conn_log,[{ct_netconfc,[{log_type,raw}]}]}.
+
+.fi
+
+.PP
+The \fIct_hooks\fR statement must look as follows:
+
+.IP
+.nf
+suite() ->
+    [{ct_hooks, [{cth_conn_log, []}]}].
+
+.fi
+
+.PP
+The same \fIct_hooks\fR statement without the configuration file would cause HTML logging of all NETCONF connections in to the test case HTML log.
+
+.SH DATA TYPES
+.LP
+.B
+\fBclient() :: handle() | server_id() | ct:target_name().\fR
+
+.br
+.RS
+.PP
+Handle to a NETCONF session, as required by signaling functions.
+
+
+.RE
+.B
+\fBerror_reason() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fB-opaque handle() \fR
+
+.br
+.RS
+.PP
+Handle to a connection to a NETCONF server as returned by \fIconnect/1,2\fR, or to a session as returned by \fIsession/1-3\fR, \fIopen/1,2\fR, or \fIonly_open/1,2\fR.
+
+
+.RE
+.B
+\fBhost() :: inet:hostname() | inet:ip_address().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnetconf_db() :: running | startup | candidate.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBnotification() :: {notification, xml_attributes(), [simple_xml()]}.\fR
+
+.br
+.RS
+.PP
+Event notification messages sent as a result of calls to \fIcreate_subscription/2,3\fR.
+
+
+.RE
+.B
+\fBoption() ::\fR
+\fB          {host | ssh, host()} |\fR
+\fB          {port, inet:port_number()} |\fR
+\fB          {timeout, timeout()} |\fR
+\fB          {capability, string() | [string()]} |\fR
+\fB          {receiver, term()} |\fR
+\fB          ssh:client_option().\fR
+
+.br
+.RS
+.PP
+Options \fIhost\fR and \fIport\fR specify the server endpoint to which to connect, and are passed directly to \fIssh:connect/4\fR, as are arbitrary ssh options. Common options are \fIuser\fR, \fIpassword\fR and \fIuser_dir\fR.
+
+.PP
+Option \fItimeout\fR specifies the number of milliseconds to allow for connection establishment and, if the function in question results in an outgoing hello message, reception of the server hello. The timeout applies to connection and hello independently; one timeout for connection establishment, another for hello reception.
+
+.PP
+Option \fIreceiver\fR specifies a destination for incoming notification messages; a left operand of the send operator (\fI!\fR). If not specified then a process calling \fIcreate_subscription/2,3\fR becomes the receiver, but explicitly setting a receiver makes it possible to receive notifications that are not ordered by calling this function. Multiple receiver options can be specified.
+
+.PP
+Receiver options are ignored by connect/1-3.
+
+.PP
+Option \fIcapability\fR specifies the content of a corresponding element in an outgoing hello message, each option specifying the content of a single element. If no base NETCONF capability is configured then the RFC 4741 1.0 capability, "urn:ietf:params:netconf:base:1.0", is added, otherwise not. In particular, the RFC 6241 1.1 capability must be explicitly configured. NETCONF capabilities can be specified using the shorthand notation defined in RFC 6241, any capability string starting with a colon being prefixed by either "urn:ietf:params:netconf" or "urn:ietf:params:netconf:capability", as appropriate.
+
+.PP
+Capability options are ignored by connect/1-3 and only_open/1-2, which don't result in an outgoing hello message.
+
+
+.RE
+.B
+\fBserver_id() :: atom().\fR
+
+.br
+.RS
+.PP
+Identity of connection or session configuration in a configuration file.
+
+
+.RE
+.B
+\fBsession_option() ::\fR
+\fB          {timeout, timeout()} |\fR
+\fB          {receiver, term()} |\fR
+\fB          {capability, string() | [string()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsimple_xml() ::\fR
+\fB          {xml_tag(), xml_attributes(), xml_content()} |\fR
+\fB          {xml_tag(), xml_content()} |\fR
+\fB          xml_tag().\fR
+
+.br
+.RS
+.PP
+Representation of XML, as described in application \fIxmerl\fR.
+
+
+.RE
+.B
+\fBstream_data() ::\fR
+\fB          {description, string()} |\fR
+\fB          {replaySupport, string()} |\fR
+\fB          {replayLogCreationTime, string()} |\fR
+\fB          {replayLogAgedTime, string()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstream_name() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBstreams() :: [{stream_name(), [stream_data()]}].\fR
+
+.br
+.RS
+.PP
+Stream information as returned by \fIget_event_streams/1-3\fR. See RFC 5277, "XML Schema for Event Notifications", for detail on the format of the string values.
+
+
+.RE
+.B
+\fBxml_attribute_tag() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxml_attribute_value() :: string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxml_attributes() :: [{xml_attribute_tag(), xml_attribute_value()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxml_content() :: [simple_xml() | iolist()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxml_tag() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxpath() :: {xpath, string()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBxs_datetime() :: string().\fR
+
+.br
+.RS
+.PP
+Date and time of a startTime/stopTime element in an RFC 5277 create-subscription request. Of XML primitive type \fIdateTime\fR, which has the (informal) form
+
+.IP
+.nf
+[-]YYYY-MM-DDThh:mm:ss.s
+
+.fi
+
+.PP
+where \fIT\fR and \fIZ\fR are literal and \fI.s\fR is one or more fractional seconds.
+
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBaction(Client, Action, Timeout) -> Result\fR
+\fB                when\fR
+\fB                    Client :: client(),\fR
+\fB                    Action :: simple_xml(),\fR
+\fB                    Timeout :: timeout(),\fR
+\fB                    Result ::\fR
+\fB                        ok |\fR
+\fB                        {ok, [simple_xml()]} |\fR
+\fB                        {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Executes an action. If the return type is void, \fIok\fR is returned instead of \fI{ok,[simple_xml()]}\fR.
+
+
+.RE
+.B
+\fBclose_session(Client, Timeout) -> Result\fR
+\fB                       when\fR
+\fB                           Client :: client(),\fR
+\fB                           Timeout :: timeout(),\fR
+\fB                           Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Requests graceful termination of the session associated with the client.
+
+.PP
+When a NETCONF server receives a \fIclose-session\fR request, it gracefully closes the session. The server releases any locks and resources associated with the session and gracefully closes any associated connections. Any NETCONF requests received after a \fIclose-session\fR request are ignored.
+
+
+.RE
+.B
+\fBconnect(Options) -> Result\fR
+\fB                 when\fR
+\fB                     Options :: [option()],\fR
+\fB                     Result :: {ok, handle()} | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Opens an SSH connection to a NETCONF server.
+
+.PP
+If the server options are specified in a configuration file, use \fIconnect/2\fR instead.
+
+.PP
+The opaque \fIhandle/0\fR reference returned from this function is required as connection identifier when opening sessions over this connection, see \fIsession/1-3\fR.
+
+
+.RE
+.B
+\fBconnect(KeyOrName, ExtraOptions) -> Result\fR
+\fB                 when\fR
+\fB                     KeyOrName :: ct:key_or_name(),\fR
+\fB                     ExtraOptions :: [option()],\fR
+\fB                     Result :: {ok, handle()} | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Open an SSH connection to a named NETCONF server.
+
+.PP
+If \fIKeyOrName\fR is a configured \fIserver_id/0\fR or a \fItarget_name()\fR associated with such an Id, then the options for this server are fetched from the configuration file.
+
+.PP
+The options list is added to those of the configuration file. If an option is specified in both lists, the configuration file takes precedence.
+
+.PP
+If the server is not specified in a configuration file, use \fIconnect/1\fR instead.
+
+.PP
+The opaque \fIhandle/0\fR reference returned from this function can be used as connection identifier when opening sessions over this connection, see \fIsession/1-3\fR. However, if \fIKeyOrName\fR is a \fItarget_name()\fR, that is, if the server is named through a call to \fIct:require/2\fR or a \fIrequire\fR statement in the test suite, then this name can be used instead of \fIhandle/0\fR.
+
+
+.RE
+.B
+\fBcopy_config(Client, Target, Source, Timeout) -> Result\fR
+\fB                     when\fR
+\fB                         Client :: client(),\fR
+\fB                         Target :: netconf_db(),\fR
+\fB                         Source :: netconf_db(),\fR
+\fB                         Timeout :: timeout(),\fR
+\fB                         Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Copies configuration data.
+
+.PP
+Which source and target options that can be issued depends on the capabilities supported by the server. That is, \fI:candidate\fR and/or \fI:startup\fR are required.
+
+
+.RE
+.B
+\fBcreate_subscription(Client, Values, Timeout) -> Result\fR
+\fB                             when\fR
+\fB                                 Client :: client(),\fR
+\fB                                 Values ::\fR
+\fB                                     #{stream => Stream,\fR
+\fB                                       filter => Filter,\fR
+\fB                                       start => StartTime,\fR
+\fB                                       stop => StopTime},\fR
+\fB                                 Stream :: stream_name(),\fR
+\fB                                 Filter :: simple_xml() | [simple_xml()],\fR
+\fB                                 StartTime :: xs_datetime(),\fR
+\fB                                 StopTime :: xs_datetime(),\fR
+\fB                                 Timeout :: timeout(),\fR
+\fB                                 Result :: ok | {error, error_reason()};\fR
+\fB                         (Client, list(), list() | timeout()) -> Result\fR
+\fB                             when\fR
+\fB                                 Client :: client(),\fR
+\fB                                 Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Creates a subscription for event notifications by sending an RFC 5277 create-subscription RPC to the server. The calling process receives events as messages of type \fInotification/0\fR.
+
+.PP
+From RFC 5722, 2.1 Subscribing to Receive Event Notifications:
+
+Stream
+.RS 2
+Indicates which stream of event is of interest. If not present, events in the default NETCONF stream are sent.
+
+
+.RE
+
+Filter
+.RS 2
+Indicates which subset of all possible events is of interest. The parameter format is the same as that of the filter parameter in the NETCONF protocol operations. If not present, all events not precluded by other parameters are sent.
+
+
+.RE
+
+StartTime
+.RS 2
+Used to trigger the replay feature and indicate that the replay is to start at the time specified. If 
+\fIStartTime\fR is not present, this is not a replay subscription. It is not valid to specify start times that are later than the current time. If \fIStartTime\fR is specified earlier than the log can support, the replay begins with the earliest available notification. This parameter is of type \fIdateTime\fR and compliant to RFC 3339. Implementations must support time zones.
+
+.RE
+
+StopTime
+.RS 2
+Used with the optional replay feature to indicate the newest notifications of interest. If 
+\fIStopTime\fR is not present, the notifications continues until the subscription is terminated. Must be used with and be later than \fIStartTime\fR. Values of \fIStopTime\fR in the future are valid. This parameter is of type \fIdateTime\fR and compliant to RFC 3339. Implementations must support time zones.
+
+.RE
+
+.PP
+See RFC 5277 for more details. The requirement that \fIStopTime\fR must only be used with \fIStartTime\fR is not enforced, to allow an invalid request to be sent to the server.
+
+.PP
+Prior to OTP 22.1, this function was documented as having 15 variants in 6 arities. These are still exported for backwards compatibility, but no longer documented. The map-based variants documented above provide the same functionality with simpler arguments.
+
+.PP
+\fBNOTE: \fRcreate-subscription is no longer the only RPC with which NETCONF notifications can be ordered: RFC 8639 adds establish-subscription and future RFCs may add other methods. Specify a \fIreceiver\fR option at session creation to provide a destination for incoming notifications independently of a call to \fIcreate_subscription/2,3\fR, and use \fIsend_rpc/2,3\fR to send establish-subscription and other arbitrary RPCs.
+
+
+
+.RE
+.B
+\fBdelete_config(Client, Target, Timeout) -> Result\fR
+\fB                       when\fR
+\fB                           Client :: client(),\fR
+\fB                           Target :: startup | candidate,\fR
+\fB                           Timeout :: timeout(),\fR
+\fB                           Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Deletes configuration data.
+
+.PP
+The running configuration cannot be deleted and \fI:candidate\fR or \fI:startup\fR must be advertised by the server.
+
+
+.RE
+.B
+\fBdisconnect(Conn) -> ok | {error, error_reason()}\fR
+\fB                    when Conn :: handle().\fR
+
+.br
+.RS
+.PP
+Closes the given SSH connection.
+
+.PP
+If there are open NETCONF sessions on the connection, these will be brutally aborted. To avoid this, close each session with \fIclose_session/1,2\fR
+
+
+.RE
+.B
+\fBedit_config(Client, Target, Config, OptParams, Timeout) -> Result\fR
+\fB                     when\fR
+\fB                         Client :: client(),\fR
+\fB                         Target :: netconf_db(),\fR
+\fB                         Config :: simple_xml() | [simple_xml()],\fR
+\fB                         OptParams :: [simple_xml()],\fR
+\fB                         Timeout :: timeout(),\fR
+\fB                         Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Edits configuration data.
+
+.PP
+By default only the running target is available, unless the server includes \fI:candidate\fR or \fI:startup\fR in its list of capabilities.
+
+.PP
+\fIOptParams\fR can be used for specifying optional parameters (\fIdefault-operation\fR, \fItest-option\fR, or \fIerror-option\fR) to be added to the \fIedit-config\fR request. The value must be a list containing valid simple XML, for example:
+
+.IP
+.nf
+[{'default-operation', ["none"]},
+ {'error-option', ["rollback-on-error"]}]
+
+.fi
+
+.PP
+If \fIOptParams\fR is not given, the default value \fI[]\fR is used.
+
+
+.RE
+.B
+\fBget(Client, Filter, Timeout) -> Result\fR
+\fB             when\fR
+\fB                 Client :: client(),\fR
+\fB                 Filter :: simple_xml() | xpath(),\fR
+\fB                 Timeout :: timeout(),\fR
+\fB                 Result ::\fR
+\fB                     {ok, [simple_xml()]} | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Gets data.
+
+.PP
+This operation returns both configuration and state data from the server.
+
+.PP
+Filter type \fIxpath\fR can be used only if the server supports \fI:xpath\fR.
+
+
+.RE
+.B
+\fBget_capabilities(Client, Timeout) -> Result\fR
+\fB                          when\fR
+\fB                              Client :: client(),\fR
+\fB                              Timeout :: timeout(),\fR
+\fB                              Result ::\fR
+\fB                                  [string()] | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Returns the server capabilities as received in its hello message.
+
+
+.RE
+.B
+\fBget_config(Client, Source, Filter, Timeout) -> Result\fR
+\fB                    when\fR
+\fB                        Client :: client(),\fR
+\fB                        Source :: netconf_db(),\fR
+\fB                        Filter :: simple_xml() | xpath(),\fR
+\fB                        Timeout :: timeout(),\fR
+\fB                        Result ::\fR
+\fB                            {ok, [simple_xml()]} |\fR
+\fB                            {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Gets configuration data.
+
+.PP
+To be able to access another source than \fIrunning\fR, the server must advertise \fI:candidate\fR and/or \fI:startup\fR.
+
+.PP
+Filter type \fIxpath\fR can be used only if the server supports \fI:xpath\fR.
+
+
+.RE
+.B
+\fBget_event_streams(Client, Streams, Timeout) -> Result\fR
+\fB                           when\fR
+\fB                               Client :: client(),\fR
+\fB                               Streams :: [stream_name()],\fR
+\fB                               Timeout :: timeout(),\fR
+\fB                               Result ::\fR
+\fB                                   {ok, streams()} |\fR
+\fB                                   {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Sends a request to get the specified event streams.
+
+.PP
+\fIStreams\fR is a list of stream names. The following filter is sent to the NETCONF server in a \fIget\fR request:
+
+.IP
+.nf
+<netconf xmlns="urn:ietf:params:xml:ns:netmod:notification">
+  <streams>
+    <stream>
+      <name>StreamName1</name>
+    </stream>
+    <stream>
+      <name>StreamName2</name>
+    </stream>
+    ...
+  </streams>
+</netconf>
+
+.fi
+
+.PP
+If \fIStreams\fR is an empty list, \fIall\fR streams are requested by sending the following filter:
+
+.IP
+.nf
+<netconf xmlns="urn:ietf:params:xml:ns:netmod:notification">
+  <streams/>
+</netconf>
+
+.fi
+
+.PP
+If more complex filtering is needed, use \fIct_netconfc:get/2,3\fR and specify the exact filter according to "XML Schema for Event Notifications" in RFC 5277.
+
+
+.RE
+.B
+\fBget_session_id(Client, Timeout) -> Result\fR
+\fB                        when\fR
+\fB                            Client :: client(),\fR
+\fB                            Timeout :: timeout(),\fR
+\fB                            Result ::\fR
+\fB                                pos_integer() | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Returns the session Id associated with the specified client.
+
+
+.RE
+.B
+\fBhello(Client, Options, Timeout) -> Result\fR
+\fB               when\fR
+\fB                   Client :: handle(),\fR
+\fB                   Options :: [{capability, [string()]}],\fR
+\fB                   Timeout :: timeout(),\fR
+\fB                   Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Exchanges \fIhello\fR messages with the server. Returns when the server hello has been received or after the specified timeout.
+
+.PP
+Note that capabilities for an outgoing hello can be passed directly to \fIopen/2\fR.
+
+
+.RE
+.B
+\fBkill_session(Client, SessionId, Timeout) -> Result\fR
+\fB                      when\fR
+\fB                          Client :: client(),\fR
+\fB                          SessionId :: pos_integer(),\fR
+\fB                          Timeout :: timeout(),\fR
+\fB                          Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Forces termination of the session associated with the supplied session Id.
+
+.PP
+The server side must abort any ongoing operations, release any locks and resources associated with the session, and close any associated connections.
+
+.PP
+Only if the server is in the confirmed commit phase, the configuration is restored to its state before entering the confirmed commit phase. Otherwise, no configuration rollback is performed.
+
+.PP
+If the specified \fISessionId\fR is equal to the current session Id, an error is returned.
+
+
+.RE
+.B
+\fBlock(Client, Target, Timeout) -> Result\fR
+\fB              when\fR
+\fB                  Client :: client(),\fR
+\fB                  Target :: netconf_db(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Locks the configuration target.
+
+.PP
+Which target parameters that can be used depends on if \fI:candidate\fR and/or \fI:startup\fR are supported by the server. If successful, the configuration system of the device is unavailable to other clients (NETCONF, CORBA, SNMP, and so on). Locks are intended to be short-lived.
+
+.PP
+Operation \fIkill_session/2,3\fR can be used to force the release of a lock owned by another NETCONF session. How this is achieved by the server side is implementation-specific.
+
+
+.RE
+.B
+\fBonly_open(Options) -> Result\fR
+\fB                   when\fR
+\fB                       Options :: [option()],\fR
+\fB                       Result ::\fR
+\fB                           {ok, handle()} | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a NETCONF session, but does not send \fIhello\fR.
+
+.PP
+As \fIopen/1\fR, but does not send a \fIhello\fR message.
+
+
+.RE
+.B
+\fBonly_open(KeyOrName, ExtraOptions) -> Result\fR
+\fB                   when\fR
+\fB                       KeyOrName :: ct:key_or_name(),\fR
+\fB                       ExtraOptions :: [option()],\fR
+\fB                       Result ::\fR
+\fB                           {ok, handle()} | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a named NETCONF session, but does not send \fIhello\fR.
+
+.PP
+As \fIopen/2\fR, but does not send a \fIhello\fR message.
+
+
+.RE
+.B
+\fBopen(Options) -> Result\fR
+\fB              when\fR
+\fB                  Options :: [option()],\fR
+\fB                  Result :: {ok, handle()} | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a NETCONF session and exchanges \fIhello\fR messages.
+
+.PP
+If the server options are specified in a configuration file, or if a named client is needed for logging purposes (see section Logging in this module), use \fIopen/2\fR instead.
+
+.PP
+The opaque \fIhandle/0\fR reference returned from this function is required as client identifier when calling any other function in this module.
+
+
+.RE
+.B
+\fBopen(KeyOrName, ExtraOption) -> Result\fR
+\fB              when\fR
+\fB                  KeyOrName :: ct:key_or_name(),\fR
+\fB                  ExtraOption :: [option()],\fR
+\fB                  Result :: {ok, handle()} | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a named NETCONF session and exchanges \fIhello\fR messages.
+
+.PP
+If \fIKeyOrName\fR is a configured \fIserver_id/0\fR or a \fItarget_name()\fR associated with such an Id, then the options for this server are fetched from the configuration file.
+
+.PP
+The options list is added to those of the configuration file. If an option is specified in both lists, the configuration file take precedence.
+
+.PP
+If the server is not specified in a configuration file, use \fIopen/1\fR instead.
+
+.PP
+The opaque \fIhandle/0\fR reference returned from this function can be used as client identifier when calling any other function in this module. However, if \fIKeyOrName\fR is a \fItarget_name()\fR, that is, if the server is named through a call to \fIct:require/2\fR or a \fIrequire\fR statement in the test suite, then this name can be used instead of \fIhandle/0\fR.
+
+.PP
+See also \fIct:require/2\fR.
+
+
+.RE
+.B
+\fBsend(Client, SimpleXml, Timeout) -> Result\fR
+\fB              when\fR
+\fB                  Client :: client(),\fR
+\fB                  SimpleXml :: simple_xml(),\fR
+\fB                  Timeout :: timeout(),\fR
+\fB                  Result :: simple_xml() | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Sends an XML document to the server.
+
+.PP
+The specified XML document is sent "as is" to the server. This function can be used for sending XML documents that cannot be expressed by other interface functions in this module.
+
+
+.RE
+.B
+\fBsend_rpc(Client, SimpleXml, Timeout) -> Result\fR
+\fB                  when\fR
+\fB                      Client :: client(),\fR
+\fB                      SimpleXml :: simple_xml(),\fR
+\fB                      Timeout :: timeout(),\fR
+\fB                      Result :: [simple_xml()] | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Sends a NETCONF \fIrpc\fR request to the server.
+
+.PP
+The specified XML document is wrapped in a valid NETCONF \fIrpc\fR request and sent to the server. The \fImessage-id\fR and namespace attributes are added to element \fIrpc\fR.
+
+.PP
+This function can be used for sending \fIrpc\fR requests that cannot be expressed by other interface functions in this module.
+
+
+.RE
+.B
+\fBsession(KeyOrName, Conn, Options) -> Result\fR
+\fB                 when\fR
+\fB                     Conn :: handle(),\fR
+\fB                     Options :: [session_option()],\fR
+\fB                     KeyOrName :: ct:key_or_name(),\fR
+\fB                     Result :: {ok, handle()} | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Opens a NETCONF session as a channel on the given SSH connection, and exchanges hello messages with the server.
+
+.PP
+The opaque \fIhandle/0\fR reference returned from this function can be used as client identifier when calling any other function in this module. However, if \fIKeyOrName\fR is used and it is a \fItarget_name()\fR, that is, if the server is named through a call to \fIct:require/2\fR or a \fIrequire\fR statement in the test suite, then this name can be used instead of \fIhandle/0\fR.
+
+
+.RE
+.B
+\fBunlock(Client, Target, Timeout) -> Result\fR
+\fB                when\fR
+\fB                    Client :: client(),\fR
+\fB                    Target :: netconf_db(),\fR
+\fB                    Timeout :: timeout(),\fR
+\fB                    Result :: ok | {error, error_reason()}.\fR
+
+.br
+.RS
+.PP
+Unlocks the configuration target.
+
+.PP
+If the client earlier has acquired a lock through \fIlock/2,3\fR, this operation releases the associated lock. To access another target than \fIrunning\fR, the server must support \fI:candidate\fR and/or \fI:startup\fR.
+
+
+.RE

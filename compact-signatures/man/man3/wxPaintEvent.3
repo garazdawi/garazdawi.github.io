@@ -1,0 +1,70 @@
+.TH wxPaintEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxPaintEvent \- A paint event is sent when a window's contents needs to be repainted.
+
+.SH DESCRIPTION
+.PP
+The handler of this event must create a \fIwxPaintDC\fR object and use it for painting the window contents. For example:
+
+.PP
+Notice that you must \fInot\fR create other kinds of \fIwxDC\fR (e.g. \fIwxClientDC\fR or \fIwxWindowDC\fR) in EVT_PAINT handlers and also don't create \fIwxPaintDC\fR outside of this event handlers.
+
+.PP
+You can optimize painting by retrieving the rectangles that have been damaged and only repainting these. The rectangles are in terms of the client area, and are unscrolled, so you will need to do some calculations using the current view position to obtain logical, scrolled units. Here is an example of using the \fIwxRegionIterator\fR (not implemented in wx) class:
+
+.PP
+Remark: Please notice that in general it is impossible to change the drawing of a standard control (such as \fIwxButton\fR) and so you shouldn't attempt to handle paint events for them as even if it might work on some platforms, this is inherently not portable and won't work everywhere.
+
+.PP
+See: Overview events
+
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxPaintEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxPaintEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxPaint() :: #wxPaint{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxPaintEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxPaintEventType() :: paint.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP

@@ -1,0 +1,1550 @@
+.TH erl_parse 3 "stdlib 7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+erl_parse \- This module is the basic Erlang parser that converts tokens into the abstract form of either forms (that is, top-level constructs), expressions, or terms.
+
+.SH DESCRIPTION
+.PP
+The Abstract Format is described in the ERTS User's Guide. Notice that a token list must end with the dot token to be acceptable to the parse functions (see the \fIerl_scan\fR) module.
+
+.SS "Error Information"
+
+.PP
+ErrorInfo is the standard ErrorInfo structure that is returned from all I/O modules. The format is as follows:
+
+.IP
+.nf
+{ErrorLine, Module, ErrorDescriptor}
+
+.fi
+
+.PP
+A string describing the error is obtained with the following call:
+
+.IP
+.nf
+Module:format_error(ErrorDescriptor)
+
+.fi
+
+.SS "See Also"
+
+.PP
+\fIerl_anno\fR, \fIerl_scan\fR, \fIio\fR, section The Abstract Format in the ERTS User's Guide.
+
+.SH DATA TYPES
+.LP
+.B
+\fBabstract_clause() :: af_clause().\fR
+
+.br
+.RS
+.PP
+Abstract form of an Erlang clause.
+
+
+.RE
+.B
+\fBabstract_expr() ::\fR
+\fB          af_literal() |\fR
+\fB          af_match(abstract_expr()) |\fR
+\fB          af_maybe_match() |\fR
+\fB          af_variable() |\fR
+\fB          af_tuple(abstract_expr()) |\fR
+\fB          af_nil() |\fR
+\fB          af_cons(abstract_expr()) |\fR
+\fB          af_bin(abstract_expr()) |\fR
+\fB          af_binary_op(abstract_expr()) |\fR
+\fB          af_unary_op(abstract_expr()) |\fR
+\fB          af_record_creation(abstract_expr()) |\fR
+\fB          af_record_update(abstract_expr()) |\fR
+\fB          af_record_index() |\fR
+\fB          af_record_field_access(abstract_expr()) |\fR
+\fB          af_native_record_creation() |\fR
+\fB          af_native_record_update() |\fR
+\fB          af_map_creation(abstract_expr()) |\fR
+\fB          af_map_update(abstract_expr()) |\fR
+\fB          af_catch() |\fR
+\fB          af_local_call() |\fR
+\fB          af_remote_call() |\fR
+\fB          af_list_comprehension() |\fR
+\fB          af_map_comprehension() |\fR
+\fB          af_binary_comprehension() |\fR
+\fB          af_block() |\fR
+\fB          af_if() |\fR
+\fB          af_case() |\fR
+\fB          af_try() |\fR
+\fB          af_receive() |\fR
+\fB          af_local_fun() |\fR
+\fB          af_remote_fun() |\fR
+\fB          af_fun() |\fR
+\fB          af_named_fun() |\fR
+\fB          af_maybe() |\fR
+\fB          af_maybe_else().\fR
+
+.br
+.RS
+.PP
+Abstract form of an Erlang expression.
+
+
+.RE
+.B
+\fBabstract_form() ::\fR
+\fB          af_module() |\fR
+\fB          af_behavior() |\fR
+\fB          af_behaviour() |\fR
+\fB          af_export() |\fR
+\fB          af_import() |\fR
+\fB          af_import_record() |\fR
+\fB          af_export_type() |\fR
+\fB          af_compile() |\fR
+\fB          af_file() |\fR
+\fB          af_record_decl() |\fR
+\fB          af_native_record_decl() |\fR
+\fB          af_type_decl() |\fR
+\fB          af_function_spec() |\fR
+\fB          af_wild_attribute() |\fR
+\fB          af_function_decl().\fR
+
+.br
+.RS
+.PP
+Abstract form of an Erlang form.
+
+
+.RE
+.B
+\fBabstract_type() ::\fR
+\fB          af_annotated_type() |\fR
+\fB          af_atom() |\fR
+\fB          af_bitstring_type() |\fR
+\fB          af_empty_list_type() |\fR
+\fB          af_fun_type() |\fR
+\fB          af_integer_range_type() |\fR
+\fB          af_map_type() |\fR
+\fB          af_predefined_type() |\fR
+\fB          af_record_type() |\fR
+\fB          af_remote_type() |\fR
+\fB          af_singleton_integer_type() |\fR
+\fB          af_tuple_type() |\fR
+\fB          af_type_union() |\fR
+\fB          af_type_variable() |\fR
+\fB          af_user_defined_type().\fR
+
+.br
+.RS
+.PP
+Abstract form of an Erlang type.
+
+
+.RE
+.B
+\fBaf_anno() :: af_variable().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_annotated_type() ::\fR
+\fB          {ann_type, anno(), [af_anno() | abstract_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_args() :: [abstract_expr()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_assoc(T) :: {map_field_assoc, anno(), T, T} | af_assoc_exact(T).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_assoc_exact(T) :: {map_field_exact, anno(), T, T}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_assoc_type() ::\fR
+\fB          {type, anno(), map_field_assoc, [abstract_type()]} |\fR
+\fB          {type, anno(), map_field_exact, [abstract_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_atom() :: af_lit_atom(atom()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_behavior() :: {attribute, anno(), behavior, behaviour()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_behaviour() :: {attribute, anno(), behaviour, behaviour()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_bin(T) :: {bin, anno(), [af_binelement(T)]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_binary_comprehension() ::\fR
+\fB          {bc, anno(), af_template(), af_qualifier_seq()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_binary_op(T) :: {op, anno(), binary_op(), T, T}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_binelement(T) ::\fR
+\fB          {bin_element,\fR
+\fB           anno(),\fR
+\fB           T,\fR
+\fB           af_binelement_size(),\fR
+\fB           type_specifier_list()}.\fR
+
+.br
+.RS
+.PP
+Abstract representation of an element of a bitstring.
+
+
+.RE
+.B
+\fBaf_binelement_size() :: default | abstract_expr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_bitstring_type() ::\fR
+\fB          {type, anno(), binary, [af_singleton_integer_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_block() :: {block, anno(), af_body()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_body() :: [abstract_expr(), ...].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_case() :: {'case', anno(), abstract_expr(), af_clause_seq()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_catch() :: {'catch', anno(), abstract_expr()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_character() :: {char, anno(), char()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_clause() ::\fR
+\fB          {clause, anno(), [af_pattern()], af_guard_seq(), af_body()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_clause_seq() :: [af_clause(), ...].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_compile() :: {attribute, anno(), compile, any()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_cons(T) :: {cons, anno(), T, T}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_constrained_function_type() ::\fR
+\fB          {type,\fR
+\fB           anno(),\fR
+\fB           bounded_fun,\fR
+\fB           [af_function_type() | af_function_constraint()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_constraint() ::\fR
+\fB          {type,\fR
+\fB           anno(),\fR
+\fB           constraint,\fR
+\fB           [af_lit_atom(is_subtype) |\fR
+\fB            [af_type_variable() | abstract_type()]]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_empty_list_type() :: {type, anno(), nil, []}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_export() :: {attribute, anno(), export, af_fa_list()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_export_type() :: {attribute, anno(), export_type, af_ta_list()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_fa_list() :: [{function_name(), arity()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_field() ::\fR
+\fB          {record_field, anno(), af_field_name()} |\fR
+\fB          {record_field, anno(), af_field_name(), abstract_expr()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_field_decl() :: af_typed_field() | af_field().\fR
+
+.br
+.RS
+.PP
+Abstract representation of a record field.
+
+
+.RE
+.B
+\fBaf_field_name() :: af_atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_file() :: {attribute, anno(), file, {string(), anno()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_filter() :: abstract_expr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_float() :: {float, anno(), float()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_fun() :: {'fun', anno(), {clauses, af_clause_seq()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_fun_type() ::\fR
+\fB          {type, anno(), 'fun', []} |\fR
+\fB          {type, anno(), 'fun', [{type, anno(), any} | abstract_type()]} |\fR
+\fB          af_function_type().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_function_constraint() :: [af_constraint(), ...].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_function_decl() ::\fR
+\fB          {function, anno(), function_name(), arity(), af_clause_seq()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_function_spec() ::\fR
+\fB          {attribute,\fR
+\fB           anno(),\fR
+\fB           spec_attr(),\fR
+\fB           {{function_name(), arity()}, af_function_type_list()}} |\fR
+\fB          {attribute,\fR
+\fB           anno(),\fR
+\fB           spec,\fR
+\fB           {{module(), function_name(), arity()},\fR
+\fB            af_function_type_list()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_function_type() ::\fR
+\fB          {type,\fR
+\fB           anno(),\fR
+\fB           'fun',\fR
+\fB           [{type, anno(), product, [abstract_type()]} | abstract_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_function_type_list() ::\fR
+\fB          [af_constrained_function_type() | af_function_type(), ...].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_generator() ::\fR
+\fB          {generate, anno(), af_pattern(), abstract_expr()} |\fR
+\fB          {generate_strict, anno(), af_pattern(), abstract_expr()} |\fR
+\fB          {m_generate,\fR
+\fB           anno(),\fR
+\fB           af_assoc_exact(af_pattern()),\fR
+\fB           abstract_expr()} |\fR
+\fB          {m_generate_strict,\fR
+\fB           anno(),\fR
+\fB           af_assoc_exact(af_pattern()),\fR
+\fB           abstract_expr()} |\fR
+\fB          {b_generate, anno(), af_pattern(), abstract_expr()} |\fR
+\fB          {b_generate_strict, anno(), af_pattern(), abstract_expr()} |\fR
+\fB          af_zip_generator().\fR
+
+.br
+.RS
+.PP
+Abstract representation of a list, bitstring or map generator.
+
+
+.RE
+.B
+\fBaf_guard() :: [af_guard_test(), ...].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_guard_call() :: {call, anno(), af_atom(), [af_guard_test()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_guard_seq() :: [af_guard()].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_guard_test() ::\fR
+\fB          af_literal() |\fR
+\fB          af_variable() |\fR
+\fB          af_tuple(af_guard_test()) |\fR
+\fB          af_nil() |\fR
+\fB          af_cons(af_guard_test()) |\fR
+\fB          af_bin(af_guard_test()) |\fR
+\fB          af_binary_op(af_guard_test()) |\fR
+\fB          af_unary_op(af_guard_test()) |\fR
+\fB          af_record_creation(af_guard_test()) |\fR
+\fB          af_record_index() |\fR
+\fB          af_record_field_access(af_guard_test()) |\fR
+\fB          af_map_creation(af_guard_test()) |\fR
+\fB          af_map_update(af_guard_test()) |\fR
+\fB          af_guard_call() |\fR
+\fB          af_remote_guard_call().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_if() :: {'if', anno(), af_clause_seq()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_import() ::\fR
+\fB          {attribute, anno(), import, {module(), af_fa_list()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_import_record() ::\fR
+\fB          {attribute, anno(), import_record, {module(), [atom()]}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_integer() :: {integer, anno(), non_neg_integer()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_integer_range_type() ::\fR
+\fB          {type, anno(), range, [af_singleton_integer_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_list_comprehension() ::\fR
+\fB          {lc,\fR
+\fB           anno(),\fR
+\fB           af_template() | [af_template()],\fR
+\fB           af_qualifier_seq()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_lit_atom(A) :: {atom, anno(), A}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_literal() ::\fR
+\fB          af_atom() |\fR
+\fB          af_character() |\fR
+\fB          af_float() |\fR
+\fB          af_integer() |\fR
+\fB          af_string().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_local_call() :: {call, anno(), af_local_function(), af_args()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_local_fun() ::\fR
+\fB          {'fun', anno(), {function, function_name(), arity()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_local_function() :: abstract_expr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_map_comprehension() ::\fR
+\fB          {mc,\fR
+\fB           anno(),\fR
+\fB           af_assoc(abstract_expr()) | [af_assoc(abstract_expr())],\fR
+\fB           af_qualifier_seq()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_map_creation(T) :: {map, anno(), [af_assoc(T)]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_map_pattern() :: {map, anno(), [af_assoc_exact(af_pattern())]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_map_type() ::\fR
+\fB          {type, anno(), map, any} |\fR
+\fB          {type, anno(), map, [af_assoc_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_map_update(T) :: {map, anno(), T, [af_assoc(T)]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_match(T) :: {match, anno(), af_pattern(), T}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_maybe() :: {'maybe', anno(), af_body()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_maybe_else() ::\fR
+\fB          {'maybe',\fR
+\fB           anno(),\fR
+\fB           af_body(),\fR
+\fB           {'else', anno(), af_clause_seq()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_maybe_match() ::\fR
+\fB          {maybe_match, anno(), af_pattern(), abstract_expr()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_module() :: {attribute, anno(), module, module()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_named_fun() :: {named_fun, anno(), fun_name(), af_clause_seq()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_native_record_creation() ::\fR
+\fB          {native_record,\fR
+\fB           anno(),\fR
+\fB           {atom(), atom()} | {},\fR
+\fB           [af_record_field(abstract_expr())]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_native_record_decl() ::\fR
+\fB          {attribute,\fR
+\fB           anno(),\fR
+\fB           native_record,\fR
+\fB           {NativeRecordName :: atom(), [af_field()]}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_native_record_pattern() ::\fR
+\fB          {native_record,\fR
+\fB           anno(),\fR
+\fB           {atom(), atom()} | {},\fR
+\fB           [af_record_field(af_pattern())]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_native_record_update() ::\fR
+\fB          {native_record_update,\fR
+\fB           anno(),\fR
+\fB           abstract_expr(),\fR
+\fB           {atom(), atom()} | {},\fR
+\fB           [af_record_field(abstract_expr())]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_nil() :: {nil, anno()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_pattern() ::\fR
+\fB          af_literal() |\fR
+\fB          af_match(af_pattern()) |\fR
+\fB          af_variable() |\fR
+\fB          af_tuple(af_pattern()) |\fR
+\fB          af_nil() |\fR
+\fB          af_cons(af_pattern()) |\fR
+\fB          af_bin(af_pattern()) |\fR
+\fB          af_binary_op(af_pattern()) |\fR
+\fB          af_unary_op(af_pattern()) |\fR
+\fB          af_record_creation(af_pattern()) |\fR
+\fB          af_record_index() |\fR
+\fB          af_native_record_pattern() |\fR
+\fB          af_map_pattern().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_predefined_type() ::\fR
+\fB          {type, anno(), type_name(), [abstract_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_qualifier() :: af_generator() | af_filter().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_qualifier_seq() :: [af_qualifier(), ...].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_receive() ::\fR
+\fB          {'receive', anno(), af_clause_seq()} |\fR
+\fB          {'receive',\fR
+\fB           anno(),\fR
+\fB           af_clause_seq(),\fR
+\fB           abstract_expr(),\fR
+\fB           af_body()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_record_creation(T) ::\fR
+\fB          {record, anno(), record_name(), [af_record_field(T)]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_record_decl() ::\fR
+\fB          {attribute,\fR
+\fB           anno(),\fR
+\fB           record,\fR
+\fB           {record_name(), [af_field_decl()]}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_record_field(T) :: {record_field, anno(), af_field_name(), T}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_record_field_access(T) ::\fR
+\fB          {record_field, anno(), T, record_name(), af_field_name()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_record_field_type() ::\fR
+\fB          {type,\fR
+\fB           anno(),\fR
+\fB           field_type,\fR
+\fB           [(Name :: af_atom()) | abstract_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_record_index() ::\fR
+\fB          {record_index, anno(), record_name(), af_field_name()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_record_type() ::\fR
+\fB          {type,\fR
+\fB           anno(),\fR
+\fB           record,\fR
+\fB           [(Name :: af_atom()) | af_record_field_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_record_update(T) ::\fR
+\fB          {record,\fR
+\fB           anno(),\fR
+\fB           abstract_expr(),\fR
+\fB           record_name(),\fR
+\fB           [af_record_field(T)]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_remote_call() ::\fR
+\fB          {call, anno(), af_remote_function(), af_args()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_remote_fun() ::\fR
+\fB          {'fun',\fR
+\fB           anno(),\fR
+\fB           {function, module(), function_name(), arity()}} |\fR
+\fB          {'fun',\fR
+\fB           anno(),\fR
+\fB           {function,\fR
+\fB            af_atom() | af_variable(),\fR
+\fB            af_atom() | af_variable(),\fR
+\fB            af_integer() | af_variable()}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_remote_function() ::\fR
+\fB          {remote, anno(), abstract_expr(), abstract_expr()}.\fR
+
+.br
+.RS
+.PP
+Abstract representation of a remote function call.
+
+
+.RE
+.B
+\fBaf_remote_guard_call() ::\fR
+\fB          {call,\fR
+\fB           anno(),\fR
+\fB           {remote, anno(), af_lit_atom(erlang), af_atom()},\fR
+\fB           [af_guard_test()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_remote_type() ::\fR
+\fB          {remote_type,\fR
+\fB           anno(),\fR
+\fB           [(Module :: af_atom()) |\fR
+\fB            (TypeName :: af_atom()) |\fR
+\fB            [abstract_type()]]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_singleton_integer_type() ::\fR
+\fB          af_integer() |\fR
+\fB          af_character() |\fR
+\fB          af_unary_op(af_singleton_integer_type()) |\fR
+\fB          af_binary_op(af_singleton_integer_type()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_string() :: {string, anno(), string()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_ta_list() :: [{type_name(), arity()}].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_template() :: abstract_expr().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_try() ::\fR
+\fB          {'try',\fR
+\fB           anno(),\fR
+\fB           af_body(),\fR
+\fB           af_clause_seq() | [],\fR
+\fB           af_clause_seq() | [],\fR
+\fB           af_body() | []}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_tuple(T) :: {tuple, anno(), [T]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_tuple_type() ::\fR
+\fB          {type, anno(), tuple, any} |\fR
+\fB          {type, anno(), tuple, [abstract_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_type_decl() ::\fR
+\fB          {attribute,\fR
+\fB           anno(),\fR
+\fB           type_attr(),\fR
+\fB           {type_name(), abstract_type(), [af_variable()]}}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_type_union() :: {type, anno(), union, [abstract_type(), ...]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_type_variable() :: {var, anno(), atom()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_typed_field() ::\fR
+\fB          {typed_record_field, af_field(), abstract_type()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_unary_op(T) :: {op, anno(), unary_op(), T}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_user_defined_type() ::\fR
+\fB          {user_type, anno(), type_name(), [abstract_type()]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_variable() :: {var, anno(), atom()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_wild_attribute() :: {attribute, anno(), atom(), any()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBaf_zip_generator() :: {zip, anno(), [af_generator(), ...]}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBanno() :: erl_anno:anno().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbehaviour() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBbinary_op() ::\fR
+\fB          '/' | '*' | 'div' | 'rem' | 'band' | 'and' | '+' | '-' |\fR
+\fB          'bor' | 'bxor' | 'bsl' | 'bsr' | 'or' | 'xor' | '++' | '--' |\fR
+\fB          '==' | '/=' | '=<' | '<' | '>=' | '>' | '=:=' | '=/=' | '!' |\fR
+\fB          'andalso' | 'orelse'.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBencoding_func() :: fun((non_neg_integer()) -> boolean()).\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBendianness() :: big | little | native.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerl_parse_tree() ::\fR
+\fB          abstract_clause() |\fR
+\fB          abstract_expr() |\fR
+\fB          abstract_form() |\fR
+\fB          abstract_type().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerror_description() :: term().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBerror_info() ::\fR
+\fB          {erl_anno:location(), module(), error_description()}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBform_info() ::\fR
+\fB          {eof, erl_anno:location()} |\fR
+\fB          {error, erl_scan:error_info() | error_info()} |\fR
+\fB          {warning, erl_scan:error_info() | error_info()}.\fR
+
+.br
+.RS
+.PP
+Tuples \fI{error, error_info()}\fR and \fI{warning, error_info()}\fR, denoting syntactically incorrect forms and warnings, and \fI{eof, line()}\fR, denoting an end-of-stream encountered before a complete form had been parsed.
+
+
+.RE
+.B
+\fBfun_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBfunction_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBrecord_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBsignedness() :: signed | unsigned.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBspec_attr() :: callback | spec.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtoken() :: erl_scan:token().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtype() ::\fR
+\fB          integer | float | binary | bytes | bitstring | bits | utf8 |\fR
+\fB          utf16 | utf32.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtype_attr() :: nominal | opaque | type.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtype_name() :: atom().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtype_specifier() :: type() | signedness() | endianness() | unit().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBtype_specifier_list() :: default | [type_specifier(), ...].\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBunary_op() :: '+' | '-' | 'bnot' | 'not'.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBunit() :: {unit, 1..256}.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBabstract(Data) -> AbsTerm\fR
+\fB                  when Data :: term(), AbsTerm :: abstract_expr().\fR
+
+.br
+.RS
+.PP
+Converts the Erlang data structure \fIData\fR into an abstract form of type \fIAbsTerm\fR. This function is the inverse of \fInormalise/1\fR.
+
+.PP
+\fIerl_parse:abstract(T)\fR is equivalent to \fIerl_parse:abstract(T, 0)\fR.
+
+
+.RE
+.B
+\fBabstract(Data, Options) -> AbsTerm\fR
+\fB                  when\fR
+\fB                      Data :: term(),\fR
+\fB                      Options :: Location | [Option],\fR
+\fB                      Option ::\fR
+\fB                          {encoding, Encoding} |\fR
+\fB                          {line, Line} |\fR
+\fB                          {location, Location},\fR
+\fB                      Encoding ::\fR
+\fB                          latin1 | unicode | utf8 | none |\fR
+\fB                          encoding_func(),\fR
+\fB                      Line :: erl_anno:line(),\fR
+\fB                      Location :: erl_anno:location(),\fR
+\fB                      AbsTerm :: abstract_expr().\fR
+
+.br
+.RS
+.PP
+Converts the Erlang data structure \fIData\fR into an abstract form of type \fIAbsTerm\fR.
+
+.PP
+Each node of \fIAbsTerm\fR is assigned an annotation, see \fIerl_anno\fR. The annotation contains the location given by option \fIlocation\fR or by option \fIline\fR. Option \fIlocation\fR overrides option \fIline\fR. If neither option \fIlocation\fR nor option \fIline\fR is given, \fI0\fR is used as location.
+
+.PP
+Option \fIEncoding\fR is used for selecting which integer lists to be considered as strings. The default is to use the encoding returned by function \fIepp:default_encoding/0\fR. Value \fInone\fR means that no integer lists are considered as strings. \fIencoding_func()\fR is called with one integer of a list at a time; if it returns \fItrue\fR for every integer, the list is considered a string.
+
+
+.RE
+.B
+\fBanno_from_term(Term) -> erl_parse_tree() | form_info()\fR
+\fB                        when Term :: term().\fR
+
+.br
+.RS
+.PP
+Assumes that \fITerm\fR is a term with the same structure as a \fIerl_parse\fR tree, but with terms, say \fIT\fR, where a \fIerl_parse\fR tree has collections of annotations.
+
+.PP
+Returns a \fIerl_parse\fR tree where each term \fIT\fR is replaced by the value returned by \fIerl_anno:from_term(T)\fR. The term \fITerm\fR is traversed in a depth-first, left-to-right fashion.
+
+
+.RE
+.B
+\fBanno_to_term(Abstr) -> term()\fR
+\fB                      when Abstr :: erl_parse_tree() | form_info().\fR
+
+.br
+.RS
+.PP
+Returns a term where each collection of annotations \fIAnno\fR of the nodes of the \fIerl_parse\fR tree \fIAbstr\fR is replaced by the term returned by \fIerl_anno:to_term(Anno)\fR. The \fIerl_parse\fR tree is traversed in a depth-first, left-to-right fashion.
+
+
+.RE
+.B
+\fBfold_anno(Fun, Acc0, Abstr) -> Acc1\fR
+\fB                   when\fR
+\fB                       Fun :: fun((Anno, AccIn) -> AccOut),\fR
+\fB                       Anno :: erl_anno:anno(),\fR
+\fB                       Acc0 :: term(),\fR
+\fB                       Acc1 :: term(),\fR
+\fB                       AccIn :: term(),\fR
+\fB                       AccOut :: term(),\fR
+\fB                       Abstr :: erl_parse_tree() | form_info().\fR
+
+.br
+.RS
+.PP
+Updates an accumulator by applying \fIFun\fR on each collection of annotations of the \fIerl_parse\fR tree \fIAbstr\fR.
+
+.PP
+The first call to \fIFun\fR has \fIAccIn\fR as argument, the returned accumulator \fIAccOut\fR is passed to the next call, and so on. The final value of the accumulator is returned. The \fIerl_parse\fR tree is traversed in a depth-first, left-to-right fashion.
+
+
+.RE
+.B
+\fBformat_error(any()) -> [char() | list()].\fR
+
+.br
+.RS
+.PP
+Uses an ErrorDescriptor and returns a string that describes the error.
+
+.PP
+This function is usually called implicitly when an ErrorInfo structure is processed (see section Error Information).
+
+
+.RE
+.B
+\fBmap_anno(Fun, Abstr) -> NewAbstr\fR
+\fB                  when\fR
+\fB                      Fun :: fun((Anno) -> NewAnno),\fR
+\fB                      Anno :: erl_anno:anno(),\fR
+\fB                      NewAnno :: erl_anno:anno(),\fR
+\fB                      Abstr :: erl_parse_tree() | form_info(),\fR
+\fB                      NewAbstr :: erl_parse_tree() | form_info().\fR
+
+.br
+.RS
+.PP
+Modifies the \fIerl_parse\fR tree \fIAbstr\fR by applying \fIFun\fR on each collection of annotations of the nodes of the \fIerl_parse\fR tree. The \fIerl_parse\fR tree is traversed in a depth-first, left-to-right fashion.
+
+
+.RE
+.B
+\fBmapfold_anno(Fun, Acc0, Abstr) -> {NewAbstr, Acc1}\fR
+\fB                      when\fR
+\fB                          Fun :: fun((Anno, AccIn) -> {NewAnno, AccOut}),\fR
+\fB                          Anno :: erl_anno:anno(),\fR
+\fB                          NewAnno :: erl_anno:anno(),\fR
+\fB                          Acc0 :: term(),\fR
+\fB                          Acc1 :: term(),\fR
+\fB                          AccIn :: term(),\fR
+\fB                          AccOut :: term(),\fR
+\fB                          Abstr :: erl_parse_tree() | form_info(),\fR
+\fB                          NewAbstr :: erl_parse_tree() | form_info().\fR
+
+.br
+.RS
+.PP
+Modifies the \fIerl_parse\fR tree \fIAbstr\fR by applying \fIFun\fR on each collection of annotations of the nodes of the \fIerl_parse\fR tree, while at the same time updating an accumulator.
+
+.PP
+The first call to \fIFun\fR has \fIAccIn\fR as second argument, the returned accumulator \fIAccOut\fR is passed to the next call, and so on. The modified \fIerl_parse\fR tree and the final value of the accumulator are returned. The \fIerl_parse\fR tree is traversed in a depth-first, left-to-right fashion.
+
+
+.RE
+.B
+\fBnew_anno(Term) -> Abstr\fR
+\fB                  when\fR
+\fB                      Term :: term(),\fR
+\fB                      Abstr :: erl_parse_tree() | form_info().\fR
+
+.br
+.RS
+.PP
+Assumes that \fITerm\fR is a term with the same structure as a \fIerl_parse\fR tree, but with locations where a \fIerl_parse\fR tree has collections of annotations.
+
+.PP
+Returns a \fIerl_parse\fR tree where each location \fIL\fR is replaced by the value returned by \fIerl_anno:new(L)\fR. The term \fITerm\fR is traversed in a depth-first, left-to-right fashion.
+
+
+.RE
+.B
+\fBnormalise(AbsTerm) -> Data\fR
+\fB                   when AbsTerm :: abstract_expr(), Data :: term().\fR
+
+.br
+.RS
+.PP
+Converts the abstract form \fIAbsTerm\fR of a term into a conventional Erlang data structure (that is, the term itself). This function is the inverse of \fIabstract/1\fR.
+
+
+.RE
+.B
+\fBparse_exprs(Tokens) -> {ok, ExprList} | {error, ErrorInfo}\fR
+\fB                     when\fR
+\fB                         Tokens :: [token()],\fR
+\fB                         ExprList :: [abstract_expr()],\fR
+\fB                         ErrorInfo :: error_info().\fR
+
+.br
+.RS
+.PP
+Parses \fITokens\fR as if it was a list of expressions.
+
+.PP
+Returns one of the following:
+
+{ok, ExprList}
+.RS 2
+The parsing was successful. 
+\fIExprList\fR is a list of the abstract forms of the parsed expressions.
+
+.RE
+
+{error, ErrorInfo}
+.RS 2
+An error occurred.
+
+
+.RE
+
+
+.RE
+.B
+\fBparse_form(Tokens) -> {ok, AbsForm} | {error, ErrorInfo}\fR
+\fB                    when\fR
+\fB                        Tokens :: [token()],\fR
+\fB                        AbsForm :: abstract_form(),\fR
+\fB                        ErrorInfo :: error_info().\fR
+
+.br
+.RS
+.PP
+Parses \fITokens\fR as if it was a form.
+
+.PP
+Returns one of the following:
+
+{ok, AbsForm}
+.RS 2
+The parsing was successful. 
+\fIAbsForm\fR is the abstract form of the parsed form.
+
+.RE
+
+{error, ErrorInfo}
+.RS 2
+An error occurred.
+
+
+.RE
+
+
+.RE
+.B
+\fBparse_term(Tokens) -> {ok, Term} | {error, ErrorInfo}\fR
+\fB                    when\fR
+\fB                        Tokens :: [token()],\fR
+\fB                        Term :: term(),\fR
+\fB                        ErrorInfo :: error_info().\fR
+
+.br
+.RS
+.PP
+Parses \fITokens\fR as if it was a term.
+
+.PP
+Returns one of the following:
+
+{ok, Term}
+.RS 2
+The parsing was successful. 
+\fITerm\fR is the Erlang term corresponding to the token list.
+
+.RE
+
+{error, ErrorInfo}
+.RS 2
+An error occurred.
+
+
+.RE
+
+
+.RE
+.B
+\fBtokens(AbsTerm, MoreTokens) -> Tokens\fR
+\fB                when\fR
+\fB                    AbsTerm :: abstract_expr(),\fR
+\fB                    MoreTokens :: [token()],\fR
+\fB                    Tokens :: [token()].\fR
+
+.br
+.RS
+.PP
+Generates a list of tokens representing the abstract form \fIAbsTerm\fR of an expression. Optionally, \fIMoreTokens\fR is appended.
+
+
+.RE

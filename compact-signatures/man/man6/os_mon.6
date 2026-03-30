@@ -1,0 +1,109 @@
+.TH OS Monitoring Application 6 "os_mon 2.11.2" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+OS Monitoring Application
+.SH DESCRIPTION
+.SS "Description"
+
+.PP
+The operating system monitor, OS_Mon, provides the following services:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIcpu_sup\fR CPU load and utilization supervision (Unix)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIdisksup\fR Disk supervision(Unix, Windows)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fImemsup\fR Memory supervision (Unix, Windows)
+
+.RE
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIos_sup\fR Interface to OS system messages (Solaris, Windows)
+
+.RE
+
+.PP
+To simplify usage of OS_Mon on distributed Erlang systems, it is not considered an error trying to use a service at a node where it is not available (either because OS_Mon is not running, or because the service is not available for that OS, or because the service is not started). Instead, a warning message is issued via \fIerror_logger\fR and a dummy value is returned, which one is specified in the man pages for the respective services.
+
+.SS "Configuration"
+
+.PP
+When OS_Mon is started, by default all services available for the OS, except \fIos_sup\fR, are automatically started. This configuration can be changed using the following application configuration parameters:
+
+start_cpu_sup = bool()
+.RS 2
+Specifies if 
+\fIcpu_sup\fR should be started. Defaults to \fItrue\fR.
+
+.RE
+
+start_disksup = bool()
+.RS 2
+Specifies if 
+\fIdisksup\fR should be started. Defaults to \fItrue\fR.
+
+.RE
+
+start_memsup = bool()
+.RS 2
+Specifies if 
+\fImemsup\fR should be started. Defaults to \fItrue\fR.
+
+.RE
+
+start_os_sup = bool()
+.RS 2
+Specifies if 
+\fIos_sup\fR should be started. Defaults to \fIfalse\fR.
+
+.RE
+
+.PP
+Configuration parameters effecting the different OS_Mon services are described in the respective man pages.
+
+.PP
+See config for information about how to change the value of configuration parameters.
+
+.SS "See Also"
+
+.PP
+\fIcpu_sup\fR, \fIdisksup\fR, \fImemsup\fR, \fIos_sup\fR, \fInteventlog\fR, \fIsnmp\fR.
+

@@ -1,0 +1,1669 @@
+.TH wxStyledTextEvent 3 "wx 2.5.4" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+wxStyledTextEvent \- The type of events sent from \fIwxStyledTextCtrl\fR.
+
+.SH DESCRIPTION
+.PP
+This class is derived, and can use functions, from:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxCommandEvent\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEvent\fR
+
+.RE
+
+.PP
+wxWidgets docs: wxStyledTextEvent
+
+.SS "Events"
+
+.PP
+Use \fIwxEvtHandler:connect/3\fR with \fIwxStyledTextEventType\fR to subscribe to events of this type.
+
+.SH DATA TYPES
+.LP
+.B
+\fBwxStyledText() :: #wxStyledText{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxStyledTextEvent() :: wx:wx_object().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBwxStyledTextEventType() ::\fR
+\fB          stc_autocomp_cancelled | stc_autocomp_char_deleted |\fR
+\fB          stc_autocomp_selection | stc_calltip_click | stc_change |\fR
+\fB          stc_charadded | stc_do_drop | stc_doubleclick |\fR
+\fB          stc_drag_over | stc_dwellend | stc_dwellstart |\fR
+\fB          stc_hotspot_click | stc_hotspot_dclick |\fR
+\fB          stc_hotspot_release_click | stc_indicator_click |\fR
+\fB          stc_indicator_release | stc_macrorecord | stc_marginclick |\fR
+\fB          stc_modified | stc_needshown | stc_painted |\fR
+\fB          stc_romodifyattempt | stc_savepointleft |\fR
+\fB          stc_savepointreached | stc_start_drag | stc_styleneeded |\fR
+\fB          stc_updateui | stc_userlistselection | stc_zoom.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBgetAlt(This) -> boolean() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the Alt key is pressed.
+
+.PP
+This method is valid for the following event types:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DOUBLECLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGINCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_DCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_RELEASE_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_RELEASE\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGIN_RIGHT_CLICK\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetControl(This) -> boolean() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the Control key is pressed.
+
+.PP
+This method is valid for the following event types:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DOUBLECLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGINCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_DCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_RELEASE_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_RELEASE\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGIN_RIGHT_CLICK\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetDragAllowMove(This) -> boolean()\fR
+\fB                          when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBgetDragResult(This) -> wx:wx_enum()\fR
+\fB                       when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns drag result for this event.
+
+.PP
+This method is valid for \fIwxEVT_STC_DRAG_OVER\fR and \fIwxEVT_STC_DO_DROP\fR events.
+
+
+.RE
+.B
+\fBgetDragText(This) -> unicode:charlist()\fR
+\fB                     when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Deprecated:
+
+.PP
+Use \fIwxCommandEvent:getString/1\fR instead.
+
+
+.RE
+.B
+\fBgetFoldLevelNow(This) -> integer()\fR
+\fB                         when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the current fold level for the line.
+
+.PP
+This method is valid for \fIwxEVT_STC_MODIFIED\fR events when the result of \fIgetModificationType/1\fR includes ?wxSTC_MOD_CHANGEFOLD.
+
+
+.RE
+.B
+\fBgetFoldLevelPrev(This) -> integer()\fR
+\fB                          when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns previous fold level for the line.
+
+.PP
+This method is valid for \fIwxEVT_STC_MODIFIED\fR events when the result of \fIgetModificationType/1\fR includes ?wxSTC_MOD_CHANGEFOLD.
+
+
+.RE
+.B
+\fBgetKey(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the key code of the key that generated this event.
+
+.PP
+This method is valid for the following event types:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_CHARADDED\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_USERLISTSELECTION\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_AUTOCOMP_SELECTION\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_AUTOCOMP_COMPLETED\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetLParam(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the value of the LParam field for this event.
+
+.PP
+This method is valid for \fIwxEVT_STC_MACRORECORD\fR events.
+
+
+.RE
+.B
+\fBgetLength(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the length (number of characters) of this event.
+
+.PP
+This method is valid for \fIwxEVT_STC_MODIFIED\fR and \fIwxEVT_STC_NEEDSHOWN\fR events.
+
+
+.RE
+.B
+\fBgetLine(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns zero-based line number for this event.
+
+.PP
+This method is valid for \fIwxEVT_STC_DOUBLECLICK\fR and \fIwxEVT_STC_MODIFIED\fR events.
+
+
+.RE
+.B
+\fBgetLinesAdded(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the number of lines added or deleted with this event.
+
+.PP
+This method is valid for \fIwxEVT_STC_MODIFIED\fR events when the result of \fIgetModificationType/1\fR includes ?wxSTC_MOD_INSERTTEXT or ?wxSTC_MOD_DELETETEXT.
+
+
+.RE
+.B
+\fBgetListType(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the list type for this event.
+
+.PP
+The list type is an integer passed to a list when it is created with the \fIwxStyledTextCtrl:userListShow/3\fR method and can be used to distinguish lists if more than one is used.
+
+.PP
+This method is valid for \fIwxEVT_STC_AUTOCOMP_SELECTION_CHANGE\fR and \fIwxEVT_STC_USERLISTSELECTION\fR events.
+
+
+.RE
+.B
+\fBgetMargin(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the zero-based index of the margin that generated this event.
+
+.PP
+This method is valid for \fIwxEVT_STC_MARGINCLICK\fR and \fIwxEVT_STC_MARGIN_RIGHT_CLICK\fR events.
+
+
+.RE
+.B
+\fBgetMessage(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns a message number while a macro is being recorded.
+
+.PP
+Many of the \fIwxStyledTextCtrl\fR methods such as \fIwxStyledTextCtrl:insertText/3\fR and \fIwxStyledTextCtrl:paste/1\fR have an event number associated with them. This method returns that number while a macro is being recorded so that the macro can be played back later.
+
+.PP
+This method is valid for \fIwxEVT_STC_MACRORECORD\fR events.
+
+
+.RE
+.B
+\fBgetModificationType(This) -> integer()\fR
+\fB                             when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the modification type for this event.
+
+.PP
+The modification type is a bit list that describes the change that generated this event. It may contain one or more of the following values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_INSERTTEXT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_DELETETEXT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CHANGESTYLE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CHANGEFOLD
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_PERFORMED_USER
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_PERFORMED_UNDO
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_PERFORMED_REDO
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MULTISTEPUNDOREDO
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_LASTSTEPINUNDOREDO
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CHANGEMARKER
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_BEFOREINSERT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_BEFOREDELETE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MULTILINEUNDOREDO
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_STARTACTION
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CHANGEINDICATOR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CHANGELINESTATE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CHANGEMARGIN
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CHANGEANNOTATION
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CONTAINER
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_LEXERSTATE
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_INSERTCHECK
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_MOD_CHANGETABSTOPS
+
+.RE
+
+.PP
+This method is valid for \fIwxEVT_STC_MODIFIED\fR events.
+
+
+.RE
+.B
+\fBgetModifiers(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the modifiers of the key press or mouse click for this event.
+
+.PP
+The returned value is a bit list that may contain one or more of the following values:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_KEYMOD_SHIFT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_KEYMOD_CTRL
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_KEYMOD_ALT
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_KEYMOD_SUPER
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+?wxSTC_KEYMOD_META
+
+.RE
+
+.PP
+In addition, the value can be checked for equality with ?wxSTC_KEYMOD_NORM to test if no modifiers are present.
+
+.PP
+This method is valid for the following event types:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DOUBLECLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGINCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_DCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_RELEASE_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_RELEASE\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGIN_RIGHT_CLICK\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetPosition(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the zero-based text position associated this event.
+
+.PP
+This method is valid for the following event types:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_STYLENEEDED\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DOUBLECLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MODIFIED\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGINCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_NEEDSHOWN\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_USERLISTSELECTION\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DWELLSTART\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DWELLEND\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_DCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_RELEASE_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_RELEASE\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_CALLTIP_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_AUTOCOMP_SELECTION\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_AUTOCOMP_SELECTION_CHANGE\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_AUTOCOMP_COMPLETED\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGIN_RIGHT_CLICK\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetShift(This) -> boolean() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns true if the Shift key is pressed.
+
+.PP
+This method is valid for the following event types:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DOUBLECLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGINCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_DCLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_HOTSPOT_RELEASE_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_CLICK\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_INDICATOR_RELEASE\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_MARGIN_RIGHT_CLICK\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetText(This) -> unicode:charlist()\fR
+\fB                 when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Deprecated:
+
+.PP
+Use \fIwxCommandEvent:getString/1\fR instead.
+
+
+.RE
+.B
+\fBgetWParam(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns value of the WParam field for this event.
+
+.PP
+This method is valid for \fIwxEVT_STC_MACRORECORD\fR events.
+
+
+.RE
+.B
+\fBgetX(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the X coordinate of the mouse for this event.
+
+.PP
+This method is valid for the following event types:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DWELLSTART\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DWELLEND\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_START_DRAG\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DRAG_OVER\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DO_DROP\fR
+
+.RE
+
+
+.RE
+.B
+\fBgetY(This) -> integer() when This :: wxStyledTextEvent().\fR
+
+.br
+.RS
+.PP
+Returns the Y coordinate of the mouse for this event.
+
+.PP
+This method is valid for the following event types:
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DWELLSTART\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DWELLEND\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_START_DRAG\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DRAG_OVER\fR
+
+.RE
+
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}.PP
+\fIwxEVT_STC_DO_DROP\fR
+
+.RE
+
+
+.RE

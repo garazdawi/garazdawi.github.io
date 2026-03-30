@@ -1,0 +1,202 @@
+.TH et_selector 3 "et 1.7.3" "Ericsson AB" "Erlang Module Definition"
+.SH NAME
+et_selector \- Define event transforms and trace patterns
+
+.SH DESCRIPTION
+.SH DATA TYPES
+.LP
+.B
+\fBevent() :: #event{}.\fR
+
+.br
+.RS
+
+.RE
+.B
+\fBlevel() :: 0..100.\fR
+
+.br
+.RS
+
+.RE
+.SH FUNCTIONS
+.LP
+.B
+\fBchange_pattern({Mod :: module(), Pattern}) -> ok\fR
+\fB                        when\fR
+\fB                            Pattern ::\fR
+\fB                                DetailLevel | TracePattern |\fR
+\fB                                EmptyTracePattern,\fR
+\fB                            DetailLevel :: level(),\fR
+\fB                            TracePattern ::\fR
+\fB                                [{[term()] | '_' | atom(),\fR
+\fB                                  [term()],\fR
+\fB                                  [term()]}],\fR
+\fB                            EmptyTracePattern :: [].\fR
+
+.br
+.RS
+.PP
+Activates/deactivates tracing by changing the current trace pattern.
+
+.PP
+\fImin\fR detail level deactivates tracing of calls to \fIet:trace_me/4,5\fR
+
+.PP
+\fImax\fR detail level activates tracing of all calls to \fIet:trace_me/4,5\fR
+
+.PP
+\fIinteger(X)\fR detail level activates tracing of all calls to \fIet:trace_me/4,5\fR whose detail level argument is lesser than \fIX\fR.
+
+.PP
+An empty match spec deactivates tracing of calls to \fIet:trace_me/4,5\fR
+
+.PP
+Other match specs activates tracing of calls to \fIet:trace_me/4,5\fR accordingly with \fIerlang:trace_pattern/2\fR.
+
+
+.RE
+.B
+\fBmake_pattern({Mod :: module(), RawPattern}) ->\fR
+\fB                      {Mod :: module(), TracePattern}\fR
+\fB                      when\fR
+\fB                          RawPattern :: level(),\fR
+\fB                          TracePattern ::\fR
+\fB                              [{[term()] | '_' | atom(),\fR
+\fB                                [term()],\fR
+\fB                                [term()]}].\fR
+
+.br
+.RS
+.PP
+Makes a trace pattern suitable to feed change_pattern/1
+
+.PP
+Min detail level deactivates tracing of calls to \fIet:trace_me/4,5\fR
+
+.PP
+Max detail level activates tracing of all calls to \fIet:trace_me/4,5\fR
+
+.PP
+integer(X) detail level activates tracing of all calls to \fIet:trace_me/4,5\fR whose detail level argument is lesser than X.
+
+.PP
+See also \fIerlang:trace_pattern/2\fR for more info about its \fImatch_spec()\fR
+
+
+.RE
+.B
+\fBparse_event(Mod, ValidTraceData) -> boolean | {true, event()}\fR
+\fB                     when\fR
+\fB                         Mod :: module(),\fR
+\fB                         ValidTraceData :: ErlangTraceData | event(),\fR
+\fB                         ErlangTraceData ::\fR
+\fB                             {trace, pid(), atom(), term()} |\fR
+\fB                             {trace, pid(), atom(), term(), term()} |\fR
+\fB                             {trace_ts,\fR
+\fB                              pid(),\fR
+\fB                              atom(),\fR
+\fB                              term(),\fR
+\fB                              TS :: {integer(), integer(), integer()}} |\fR
+\fB                             {trace_ts,\fR
+\fB                              pid(),\fR
+\fB                              atom(),\fR
+\fB                              term(),\fR
+\fB                              term(),\fR
+\fB                              TS :: {integer(), integer(), integer()}} |\fR
+\fB                             {seq_trace, atom(), term()} |\fR
+\fB                             {seq_trace,\fR
+\fB                              atom(),\fR
+\fB                              term(),\fR
+\fB                              TS :: {integer(), integer(), integer()}} |\fR
+\fB                             {drop, integer()}.\fR
+
+.br
+.RS
+.PP
+Transforms trace data and makes an event record out of it.
+
+.PP
+See \fIerlang:trace/3\fR for more info about the semantics of the trace data.
+
+.PP
+An event record consists of the following fields:
+
+detail_level
+.RS 2
+Noise has a high level as opposed to essentials.
+
+
+.RE
+
+trace_ts
+.RS 2
+Time when the trace was generated. Same as event_ts if omitted in trace data.
+
+
+.RE
+
+event_ts
+.RS 2
+Time when the event record was created.
+
+
+.RE
+
+from
+.RS 2
+From actor, such as sender of a message.
+
+
+.RE
+
+to
+.RS 2
+To actor, such as receiver of message.
+
+
+.RE
+
+label
+.RS 2
+Label intended to provide a brief event summary.
+
+
+.RE
+
+contents
+.RS 2
+All nitty gritty details of the event.
+
+
+.RE
+
+.PP
+See \fIet:trace_me/4\fRand \fIet:trace_me/5\fR for details.
+
+.PP
+Returns:
+
+{true, Event}
+.RS 2
+where Event is an #event{} record representing the trace data
+
+
+.RE
+
+true
+.RS 2
+means that the trace data already is an event record and that it is valid as it is. No transformation is needed.
+
+
+.RE
+
+false
+.RS 2
+means that the trace data is uninteresting and should be dropped
+
+
+.RE
+
+
+.RE
